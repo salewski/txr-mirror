@@ -92,7 +92,7 @@ typedef struct lino_os {
   wide_disp                                                             \
 }
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 
 typedef struct lino_completions {
     size_t len;

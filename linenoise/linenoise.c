@@ -56,7 +56,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include "config.h"
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -94,23 +94,23 @@ struct lino_state {
     lino_t *next, *prev;        /* Links for global list: must be first */
 
     /* Lifetime enduring state */
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     lino_compl_cb_t *completion_callback;
 #endif
     void *cb_ctx;               /* User context for completion callback */
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     lino_atom_cb_t *atom_callback;
     void *ca_ctx;               /* User context for atom callback */
 #endif
     lino_enter_cb_t *enter_callback;
     void *ce_ctx;               /* User context for enter callback */
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     struct termios orig_termios;        /* In order to restore at exit.*/
 #endif
 #ifdef __CYGWIN__
     int orig_imode, orig_omode;
 #endif
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     int rawmode;        /* For atexit() function to check if restore is needed*/
     int mlmode;         /* Multi line mode. Default is single line. */
 #endif
@@ -118,7 +118,7 @@ struct lino_state {
     int history_len;
     int loaded_lines;   /* How many lines come from load. */
     wchar_t **history;
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     wchar_t *clip;      /* Selection */
     wchar_t *result;    /* Previous command result. */
 #endif
@@ -127,13 +127,13 @@ struct lino_state {
     int save_hist_idx;  /* Jump to history position on entry into edit */
 
     /* Volatile state pertaining to just one linenoise call */
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     wchar_t buf[LINENOISE_MAX_DISP];    /* Displayed line buffer. */
 #endif
     wchar_t data[LINENOISE_MAX_LINE];   /* True data corresponding to display */
     const wchar_t *prompt;      /* Prompt to display. */
     const char *suffix;         /* Suffix when creating temp file. */
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     int plen;           /* Prompt length. */
     int pos;            /* Current cursor position. */
     int sel;            /* Selection start in terms of display. */
@@ -154,7 +154,7 @@ struct lino_state {
     int noninteractive; /* No character editing, even if input is tty. */
 #endif
     int show_prompt;    /* Show prompting in non-interactive mode. */
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     struct lino_undo *undo_stack;
 #endif
     lino_error_t error; /* Most recent error. */
@@ -180,13 +180,13 @@ enum key_action {
 static lino_os_t lino_os;
 static lino_t lino_list;
 volatile sig_atomic_t lino_list_busy;
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 static int atexit_registered = 0; /* Register atexit just 1 time. */
 #endif
 
 #define nelem(array) (sizeof (array) / sizeof (array)[0])
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 
 static int wcsnprintf(wchar_t *s, size_t nchar, const wchar_t *fmt, ...)
 {
@@ -204,7 +204,7 @@ static int wcsnprintf(wchar_t *s, size_t nchar, const wchar_t *fmt, ...)
 
 /* ======================= Low level terminal handling ====================== */
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 /* Set if to use or not the multi line mode. */
 void lino_set_multiline(lino_t *ls, int ml) {
     ls->mlmode = ml;
@@ -241,7 +241,7 @@ void lino_enable_noninteractive_prompt(lino_t *ls, int enable)
     ls->show_prompt = enable;
 }
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 
 void lino_set_atom_cb(lino_t *l, lino_atom_cb_t *cb, void *ctx)
 {
@@ -257,7 +257,7 @@ void lino_set_enter_cb(lino_t *l, lino_enter_cb_t *cb, void *ctx)
     l->ce_ctx = ctx;
 }
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 
 static void atexit_handler(void);
 
@@ -2568,7 +2568,7 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
 {
     int ifd = lino_os.fileno_fn(ls->tty_ifs);
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     int noninteractive = ls->noninteractive;
     int plain = noninteractive || !isatty(ifd);
 #else
@@ -2632,7 +2632,7 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
         return ret;
     } else {
         wchar_t *ret = 0;
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
         int count;
 #ifdef SIGWINCH
         static struct sigaction blank;
@@ -2707,7 +2707,7 @@ lino_t *lino_copy(lino_t *le)
         *ls = *le;
         ls->history_len = 0;
         ls->history = 0;
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
         ls->rawmode = 0;
         ls->clip = 0;
         ls->result = 0;
@@ -2725,11 +2725,11 @@ static void free_hist(lino_t *ls);
 
 static void lino_cleanup(lino_t *ls)
 {
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     disable_raw_mode(ls);
 #endif
     free_hist(ls);
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     free_undo_stack(ls);
     lino_os.free_fn(ls->clip);
     ls->clip = 0;
@@ -2781,7 +2781,7 @@ static void free_hist(lino_t *ls) {
     }
 }
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 
 /* At exit we'll try to fix the terminal to the initial conditions. */
 static void atexit_handler(void) {
@@ -2832,7 +2832,7 @@ int lino_hist_add(lino_t *ls, const wchar_t *line) {
     }
     ls->history[ls->history_len] = linecopy;
     ls->history_len++;
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
     undo_renumber_hist_idx(ls, 1);
 #endif
     return 1;
@@ -2935,7 +2935,7 @@ int lino_have_new_lines(lino_t *ls)
     return ls->history_len > ls->loaded_lines;
 }
 
-#if HAVE_TERMIOS
+#if CONFIG_FULL_REPL
 
 void lino_set_result(lino_t *ls, wchar_t *res)
 {

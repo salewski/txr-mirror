@@ -63,10 +63,10 @@
 #endif
 #include "txr.h"
 
-#if HAVE_TERMIOS
-#define if_termios(THEN, ELSE) (THEN)
+#if CONFIG_FULL_REPL
+#define if_full_repl(THEN, ELSE) (THEN)
 #else
-#define if_termios(THEN, ELSE) (ELSE)
+#define if_full_repl(THEN, ELSE) (ELSE)
 #endif
 
 const wchli_t *version = wli(TXR_VER);
@@ -76,7 +76,7 @@ const wchli_t *build_id = wli(TXR_BUILD_ID);
 wchar_t *progname;
 static const char *progname_u8;
 static val prog_path = nil, sysroot_path = nil;
-int opt_noninteractive = if_termios(0, 1);
+int opt_noninteractive = if_full_repl(0, 1);
 int opt_noprofile;
 int opt_compat;
 int opt_dbg_expansion;
@@ -195,10 +195,10 @@ static void banner(val self)
          if3(opt_noninteractive,
              lit("This is the TXR Lisp plain mode listener of TXR ~a.\n"
                  "Quit with :quit or Ctrl-D on an empty line.\n"),
-             if_termios(lit("This is the TXR Lisp interactive "
-                            "listener of TXR ~a.\n"
-                            "Quit with :quit or Ctrl-D on an empty line. "
-                            "Ctrl-X ? for cheatsheet.\n"), nil)),
+             if_full_repl(lit("This is the TXR Lisp interactive "
+                              "listener of TXR ~a.\n"
+                              "Quit with :quit or Ctrl-D on an empty line. "
+                              "Ctrl-X ? for cheatsheet.\n"), nil)),
          static_str(version), nao);
 }
 

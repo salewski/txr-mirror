@@ -186,6 +186,7 @@ extra_debugging=
 debug_support=y
 gen_gc=y
 small_mem=
+full_repl=y
 have_dbl_decimal_dig=
 have_unistd=
 have_sys_stat=
@@ -545,6 +546,12 @@ small-mem [$small_mem]
   run-time penalty. Objects are allocated in smaller blocks,
   and certain global book-keeping arrays in the generational garbage
   collector are smaller, resulting in more frequent collections.
+
+full-repl [$full_repl]
+
+  Support the full listener with editing features. If this is disabled,
+  only the plain-mode listener is available. Failure to detect the
+  presence of termios at build configuration time time also disables it.
 
 build-id [$build_id]
 
@@ -3231,6 +3238,7 @@ if conftest ; then
   have_termios=y
 else
   printf "no\n"
+  full_repl=
 fi
 
 printf "Checking for struct winsize ... "
@@ -3815,6 +3823,12 @@ $make conftest.clean
 [ -n "$debug_support" ] && printf "#define CONFIG_DEBUG_SUPPORT 1\n" >> config.h
 [ -n "$gen_gc" ] && printf "#define CONFIG_GEN_GC 1\n" >> config.h
 [ "$small_mem" ] && printf "#define CONFIG_SMALL_MEM 1\n" >> config.h
+
+[ "$full_repl" ] && cat >> config.h <<!
+#if HAVE_TERMIOS
+#define CONFIG_FULL_REPL 1
+#endif
+!
 
 #
 # Regenerate config.make
