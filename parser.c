@@ -1491,8 +1491,10 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val rcfile = if2(home && !opt_noprofile, scat2(home, lit("/.txr_profile")));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
+#if HAVE_TERMIOS
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);
   val sel_inclusive_var = lookup_global_var(listener_sel_inclusive_p_s);
+#endif
   val pprint_var = lookup_global_var(listener_pprint_s);
   val greedy_eval = lookup_global_var(listener_greedy_eval_s);
   val rw_f = func_f1v(out_stream, repl_warning);
@@ -1541,7 +1543,9 @@ val repl(val bindings, val in_stream, val out_stream, val env)
     }
   }
 
+#if HAVE_TERMIOS
   lino_set_noninteractive(ls, opt_noninteractive);
+#endif
 
   while (!done) {
     val prompt = format(nil, lit("~d~a "), counter, brackets,nao);
@@ -1552,13 +1556,17 @@ val repl(val bindings, val in_stream, val out_stream, val env)
     uw_frame_t uw_handler;
 
     lino_hist_set_max_len(ls, c_num(cdr(hist_len_var), self));
+#if HAVE_TERMIOS
     lino_set_multiline(ls, cdr(multi_line_var) != nil);
     lino_set_selinclusive(ls, cdr(sel_inclusive_var) != nil);
+#endif
     reg_varl(counter_sym, counter);
     reg_varl(var_counter_sym, var_counter);
     line_w = linenoise(ls, c_str(prompt, self));
 
+#if HAVE_TERMIOS
     rplacd(multi_line_var, tnil(lino_get_multiline(ls)));
+#endif
 
     if (line_w == 0) {
       switch (lino_get_error(ls)) {
@@ -1620,11 +1628,15 @@ val repl(val bindings, val in_stream, val out_stream, val env)
                                            in_stream, out_stream));
         val pprin = cdr(pprint_var);
         val (*pfun)(val, val) = if3(pprin, pprinl, prinl);
+#if HAVE_TERMIOS
         val (*tsfun)(val) = if3(pprin, tostringp, tostring);
+#endif
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         pfun(value, out_stream);
+#if HAVE_TERMIOS
         lino_set_result(ls, chk_strdup(c_str(tsfun(value), self)));
+#endif
         lino_hist_add(ls, line_w);
         if (cdr(greedy_eval)) {
           val error_p = nil;

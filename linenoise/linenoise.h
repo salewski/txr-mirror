@@ -120,6 +120,7 @@ int lino_hist_set_max_len(lino_t *, int len);
 int lino_hist_save(lino_t *, const wchar_t *filename, int new_only);
 int lino_hist_load(lino_t *, const wchar_t *filename);
 int lino_have_new_lines(lino_t *);
+#if HAVE_TERMIOS
 void lino_set_result(lino_t *, wchar_t *); /* takes ownership of malloced mem; modifies it */
 int lino_clear_screen(lino_t *);
 void lino_set_multiline(lino_t *, int ml);
@@ -128,10 +129,13 @@ void lino_set_selinclusive(lino_t *, int si);
 int lino_get_selinculsive(lino_t *);
 void lino_set_noninteractive(lino_t *, int ni);
 int lino_get_noninteractive(lino_t *);
+#endif
 void lino_enable_noninteractive_prompt(lino_t *, int enable);
 
+#if HAVE_TERMIOS
 typedef wchar_t *lino_atom_cb_t(lino_t *, const wchar_t *line, int n, void *ctx);
 void lino_set_atom_cb(lino_t *, lino_atom_cb_t *, void *ctx);
+#endif
 
 typedef int lino_enter_cb_t(const wchar_t *line, void *ctx);
 void lino_set_enter_cb(lino_t *, lino_enter_cb_t *, void *ctx);
