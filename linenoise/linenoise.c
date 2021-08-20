@@ -42,8 +42,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <termios.h>
-#include <unistd.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <stdlib.h>
@@ -52,13 +50,16 @@
 #include <string.h>
 #include <ctype.h>
 #include <wctype.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
 #include <signal.h>
 #include <limits.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <unistd.h>
 #include "config.h"
+#if HAVE_TERMIOS
+#include <termios.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
 #if HAVE_POLL
 #include <poll.h>
 #endif
@@ -66,6 +67,7 @@
 #include <sys/utsname.h>
 #include <sys/fcntl.h>
 #include <io.h>
+#endif
 #endif
 #include "linenoise.h"
 
@@ -92,13 +94,17 @@ struct lino_state {
     lino_t *next, *prev;        /* Links for global list: must be first */
 
     /* Lifetime enduring state */
+#if HAVE_TERMIOS
     lino_compl_cb_t *completion_callback;
+#endif
     void *cb_ctx;               /* User context for completion callback */
     lino_atom_cb_t *atom_callback;
     void *ca_ctx;               /* User context for atom callback */
     lino_enter_cb_t *enter_callback;
     void *ce_ctx;               /* User context for enter callback */
+#if HAVE_TERMIOS
     struct termios orig_termios;        /* In order to restore at exit.*/
+#endif
 #ifdef __CYGWIN__
     int orig_imode, orig_omode;
 #endif
@@ -162,9 +168,13 @@ enum key_action {
 static lino_os_t lino_os;
 static lino_t lino_list;
 volatile sig_atomic_t lino_list_busy;
+#if HAVE_TERMIOS
 static int atexit_registered = 0; /* Register atexit just 1 time. */
+#endif
 
 #define nelem(array) (sizeof (array) / sizeof (array)[0])
+
+#if HAVE_TERMIOS
 
 static int wcsnprintf(wchar_t *s, size_t nchar, const wchar_t *fmt, ...)
 {
@@ -177,6 +187,8 @@ static int wcsnprintf(wchar_t *s, size_t nchar, const wchar_t *fmt, ...)
         return ret;
     return wcslen(s);
 }
+
+#endif
 
 /* ======================= Low level terminal handling ====================== */
 
@@ -224,6 +236,8 @@ void lino_set_enter_cb(lino_t *l, lino_enter_cb_t *cb, void *ctx)
     l->enter_callback = cb;
     l->ce_ctx = ctx;
 }
+
+#if HAVE_TERMIOS
 
 static void atexit_handler(void);
 
@@ -2523,6 +2537,8 @@ static void sigwinch_handler(int sig)
 }
 #endif
 
+#endif
+
 /* The main function of the linenoise library
  * handles a non-TTY input file descriptor by opening
  * a standard I/O stream on it and reading lines
@@ -2530,7 +2546,6 @@ static void sigwinch_handler(int sig)
  * the edit function.  */
 wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
 {
-    int count;
     int ifd = lino_os.fileno_fn(ls->tty_ifs);
 
     if (ls->noninteractive || !isatty(ifd)) {
@@ -2589,6 +2604,8 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
         return ret;
     } else {
         wchar_t *ret = 0;
+#if HAVE_TERMIOS
+        int count;
 #ifdef SIGWINCH
         static struct sigaction blank;
         struct sigaction sa = blank, oa;
@@ -2613,6 +2630,7 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
 
 #ifdef SIGWINCH
         sigaction(SIGWINCH, &oa, 0);
+#endif
 #endif
         return ret;
     }
@@ -2648,6 +2666,9 @@ lino_t *lino_make(mem_t *ifs, mem_t *ofs)
         ls->tty_ofs = ofs;
 
         link_into_list(&lino_list, ls);
+#if !HAVE_TERMIOS
+        ls->noninteractive = 1;
+#endif
     }
 
     return ls;
@@ -2677,9 +2698,13 @@ static void free_hist(lino_t *ls);
 
 static void lino_cleanup(lino_t *ls)
 {
+#if HAVE_TERMIOS
     disable_raw_mode(ls);
+#endif
     free_hist(ls);
+#if HAVE_TERMIOS
     free_undo_stack(ls);
+#endif
     lino_os.free_fn(ls->clip);
     ls->clip = 0;
     lino_os.free_fn(ls->result);
@@ -2729,6 +2754,8 @@ static void free_hist(lino_t *ls) {
     }
 }
 
+#if HAVE_TERMIOS
+
 /* At exit we'll try to fix the terminal to the initial conditions. */
 static void atexit_handler(void) {
     lino_t *ls;
@@ -2736,6 +2763,8 @@ static void atexit_handler(void) {
     for (ls = lino_list.next; ls != &lino_list; ls = ls->next)
         lino_cleanup(ls);
 }
+
+#endif
 
 /* This is the API call to add a new entry in the linenoise history.
  * It uses a fixed array of char pointers that are shifted (memmoved)
@@ -2776,7 +2805,9 @@ int lino_hist_add(lino_t *ls, const wchar_t *line) {
     }
     ls->history[ls->history_len] = linecopy;
     ls->history_len++;
+#if HAVE_TERMIOS
     undo_renumber_hist_idx(ls, 1);
+#endif
     return 1;
 }
 

@@ -66,9 +66,7 @@
 #include "vm.h"
 #include "ffi.h"
 #include "txr.h"
-#if HAVE_TERMIOS
 #include "linenoise/linenoise.h"
-#endif
 
 val parser_s, unique_s, circref_s;
 val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
@@ -863,8 +861,6 @@ val txr_parse(val source_in, val error_stream,
   return pi->syntax_tree;
 }
 
-#if HAVE_TERMIOS
-
 static void report_security_problem(val name)
 {
   val self = lit("listener");
@@ -927,6 +923,8 @@ static void load_rcfile(val name)
 
   uw_catch_end;
 }
+
+#if HAVE_TERMIOS
 
 static val get_visible_syms(val package, int include_fallback)
 {
@@ -1158,6 +1156,8 @@ static wchar_t *provide_atom(lino_t *l, const wchar_t *str, int n, void *ctx)
 
   return out;
 }
+
+#endif
 
 static val repl_intr(val signo, val async_p)
 {
@@ -1520,8 +1520,11 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 
   reg_varl(result_hash_sym, result_hash);
 
+#if HAVE_TERMIOS
   lino_set_completion_cb(ls, provide_completions, 0);
   lino_set_atom_cb(ls, provide_atom, 0);
+#endif
+
   lino_set_enter_cb(ls, is_balanced_line, 0);
   lino_set_tempfile_suffix(ls, ".tl");
 
@@ -1679,8 +1682,6 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   gc_hint(histfile);
   return nil;
 }
-
-#endif
 
 val parser_errors(val parser)
 {

@@ -56,6 +56,7 @@ OBJS += arith.o hash.o utf8.o filter.o eval.o parser.o rand.o combi.o sysif.o
 OBJS += args.o lisplib.o cadr.o struct.o itypes.o buf.o jmp.o protsym.o ffi.o
 OBJS += strudel.o vm.o chksum.o chksums/sha256.o chksums/crc32.o chksums/md5.o
 OBJS += tree.o time.o
+OBJS += linenoise/linenoise.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
@@ -63,7 +64,6 @@ OBJS-$(have_ftw) += ftw.o
 OBJS-$(have_posix_sigs) += signal.o
 OBJS-$(have_sockets) += socket.o
 OBJS-$(have_termios) += termios.o
-OBJS-$(have_termios) += linenoise/linenoise.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 
 STDLIB_SRCS := $(wildcard stdlib/*.tl)

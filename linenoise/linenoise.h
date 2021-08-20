@@ -92,6 +92,8 @@ typedef struct lino_os {
   wide_disp                                                             \
 }
 
+#if HAVE_TERMIOS
+
 typedef struct lino_completions {
     size_t len;
     wchar_t **cvec;
@@ -101,6 +103,8 @@ typedef struct lino_completions {
 typedef void lino_compl_cb_t(const wchar_t *, lino_completions_t *, void *ctx);
 void lino_set_completion_cb(lino_t *, lino_compl_cb_t *, void *ctx);
 void lino_add_completion(lino_completions_t *, const wchar_t *);
+
+#endif
 
 void lino_init(lino_os_t *);
 lino_t *lino_make(mem_t *istream, mem_t *ostream);

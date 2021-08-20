@@ -138,9 +138,7 @@ val read_eval_stream(val self, val stream, val error_stream);
 val read_compiled_file(val self, val stream, val error_stream);
 val txr_parse(val source, val error_stream,
               val error_return_val, val name_in);
-#if HAVE_TERMIOS
 val repl(val bindings, val in_stream, val out_stream, val env);
-#endif
 void parser_common_init(parser_t *);
 void parser_cleanup(parser_t *);
 val parser(val stream, val name, val lineno);

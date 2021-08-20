@@ -63,6 +63,12 @@
 #endif
 #include "txr.h"
 
+#if HAVE_TERMIOS
+#define if_termios(THEN, ELSE) (THEN)
+#else
+#define if_termios(THEN, ELSE) (ELSE)
+#endif
+
 const wchli_t *version = wli(TXR_VER);
 #ifdef TXR_BUILD_ID
 const wchli_t *build_id = wli(TXR_BUILD_ID);
@@ -70,7 +76,7 @@ const wchli_t *build_id = wli(TXR_BUILD_ID);
 wchar_t *progname;
 static const char *progname_u8;
 static val prog_path = nil, sysroot_path = nil;
-int opt_noninteractive;
+int opt_noninteractive = if_termios(0, 1);
 int opt_noprofile;
 int opt_compat;
 int opt_dbg_expansion;
@@ -87,10 +93,8 @@ static void help(void)
 "\n"
 "  ~a [ options ] script-file { argument }*\n"
 "\n"
-#if HAVE_TERMIOS
 "If no arguments are present, TXR will enter into interactive listener mode.\n"
 "\n"
-#endif
 "The script-file or data-file arguments may be specified as -, in which case\n"
 "standard input is used. All data-file arguments which begin with a !\n"
 "character are treated as command pipes. Those which begin with a $\n"
@@ -182,7 +186,6 @@ static void help(void)
   format(std_output, text, static_str(version), prog_string, nao);
 }
 
-#if HAVE_TERMIOS
 static void banner(val self)
 {
   if (!isatty(c_int(stream_fd(std_input), self)))
@@ -192,18 +195,12 @@ static void banner(val self)
          if3(opt_noninteractive,
              lit("This is the TXR Lisp plain mode listener of TXR ~a.\n"
                  "Quit with :quit or Ctrl-D on an empty line.\n"),
-             lit("This is the TXR Lisp interactive listener of TXR ~a.\n"
-                 "Quit with :quit or Ctrl-D on an empty line. "
-                 "Ctrl-X ? for cheatsheet.\n")),
+             if_termios(lit("This is the TXR Lisp interactive "
+                            "listener of TXR ~a.\n"
+                            "Quit with :quit or Ctrl-D on an empty line. "
+                            "Ctrl-X ? for cheatsheet.\n"), nil)),
          static_str(version), nao);
 }
-#else
-static void hint(void)
-{
-  format(std_error, lit("~a: incorrect arguments: try --help\n"),
-         prog_string, nao);
-}
-#endif
 
 static val check_hash_bang(val stream, val args, int *occurs)
 {
@@ -577,13 +574,8 @@ int txr_main(int argc, char **argv)
     arg_list = list(string_utf8(alt_args), nao);
   } else if (argc <= 1) {
     drop_privilege();
-#if HAVE_TERMIOS
     banner(self);
     goto repl;
-#else
-    hint();
-    return EXIT_FAILURE;
-#endif
   }
 
   for (ref_arg_list = arg_list, arg = upop(&arg_list, &arg_undo);
@@ -1047,15 +1039,8 @@ int txr_main(int argc, char **argv)
           break;
         case 'i':
           drop_privilege();
-#if HAVE_TERMIOS
           enter_repl = t;
           break;
-#else
-          format(std_error,
-                 lit("~a: option ~a requires a platform with termios\n"),
-                 prog_string, arg, nao);
-          return EXIT_FAILURE;
-#endif
         case 'd':
           drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
@@ -1111,13 +1096,8 @@ int txr_main(int argc, char **argv)
         goto repl;
       if (evaled)
         return EXIT_SUCCESS;
-#if HAVE_TERMIOS
       banner(self);
       goto repl;
-#else
-      hint();
-      return EXIT_FAILURE;
-#endif
     }
 
     drop_privilege();
@@ -1199,7 +1179,6 @@ int txr_main(int argc, char **argv)
   }
 
 repl:
-#if HAVE_TERMIOS
   if (compat_val)
     format(std_output,
            lit("Note: operating in TXR ~a compatibility mode "
@@ -1211,6 +1190,5 @@ repl:
             opt_compat && opt_compat <= 190 ? user_package : public_package);
   env_vbind(dyn_env, load_recursive_s, nil);
   repl(bindings, std_input, std_output, nil);
-#endif
   return 0;
 }
