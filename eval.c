@@ -4291,12 +4291,16 @@ static val me_case(val form, val menv)
 
 static val me_ecase(val form, val menv)
 {
+  val form_orig = form;
   val casesym = pop(&form);
   val orig_args = form;
   val testform = pop(&form);
   val tgtsym = intern(cdr(symbol_name(casesym)), user_package);
   val clauses = form;
   val lastclause = car(lastcons(clauses));
+
+  if (!orig_args)
+    expand_error(form_orig, lit("~s: missing test form"), casesym, nao);
 
   if (consp(lastclause) && car(lastclause) == t) {
     return cons(tgtsym, orig_args);
