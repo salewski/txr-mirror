@@ -987,6 +987,11 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         }
       }
     }
+    if (it->inf.obj->co.cls == seq_iter_cls)
+    {
+      *it = *coerce(struct seq_iter *, it->inf.obj->co.handle);
+      break;
+    }
     if (it->inf.obj->co.cls == tree_iter_cls)
     {
       it->ui.iter = if3(support_rewind,
