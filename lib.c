@@ -2399,13 +2399,11 @@ val sub_list(val list, val from, val to)
 {
   val len = nil;
 
-  if (!list)
+  if (!list || from == t)
     return nil;
 
   if (null_or_missing_p(from))
     from = zero;
-  else if (from == t)
-    from = nil;
   else if (minusp(from)) {
     from = plus(from, len = length(list));
     if (to == zero)
@@ -2425,7 +2423,7 @@ val sub_list(val list, val from, val to)
     val i;
 
     for (i = zero; list; list = cdr(list), i = plus(i, one)) {
-      if (from && ge(i, from))
+      if (ge(i, from))
         break;
     }
     return list;
