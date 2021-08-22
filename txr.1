@@ -35626,7 +35626,9 @@ is iterable, an object of type
 .code seq-iter
 is returned.
 
-Range objects are iterable.
+Range objects are iterable if they are numeric. A range consisting of
+two strings may also be iterable, as described below.
+
 A range is considered to be a numeric or character range if the
 .code from
 element is a number or character. The
@@ -35645,6 +35647,55 @@ and
 .code "(iter-begin X..t)"
 are equivalent to
 .codn "(iter-begin X)" .
+Numeric ranges are half-open: the
+.code to
+value of ascending ranges is excluded, as is the
+.code from
+value of descending ranges, so that
+.code 0..10
+steps through the values
+.code 0
+through
+.codn 9 ,
+and
+.code 10..0
+steps through the same values in reverse order.
+
+A string range consists of two strings of equal length. If the strings are
+of unequal length, an error exception is thrown. For the range to operate
+as intended, the strings must meet some additional requirements. If the
+.code from
+string is lexicographically lesser than the
+.code to
+string, as determined by the
+.code less
+function, then the range is ascending, otherwise it is descending. The string
+range iterates by incrementing (or decrementing, in the case of a descending range)
+the characters of the
+.code from
+string until they are equal to those of the
+.code to
+string. The last character has priority. For instance, the range
+.code "\(dqAA\(dq..\(dqCC\(dq"
+iterates over the strings
+.codn "AA" ,
+.codn "AB" ,
+.codn "AC" ,
+.codn "BA" ,
+.codn "BB" ,
+.codn "BC" ,
+.codn "CA" ,
+.code "CB"
+and
+.codn "CC" .
+The descending range
+.code "\(dqCC\(dq..\(dqAA\(dq"
+iterates over the same strings, in reverse order. Whenever the incrementing
+character attains the value of the corresponding character in the
+.code to
+string, that character is reset to its starting value, and its left neighbor,
+if it exists, is incremented instead. If no left neighbor exists, the
+iteration terminates.
 
 Search trees are iterable. Iteration entails an in-order visits of the elements
 of a tree. A tree iterator created by
