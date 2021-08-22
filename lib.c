@@ -1172,6 +1172,14 @@ val iter_begin(val obj)
   }
 }
 
+static val iter_dynamic(struct seq_iter *si_orig)
+{
+  struct seq_iter *si = coerce(struct seq_iter *,
+                               chk_copy_obj(coerce(mem_t *, si_orig),
+                                            sizeof *si));
+  return cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+}
+
 val iter_more(val iter)
 {
   switch (type(iter)) {
@@ -2445,6 +2453,47 @@ val sub_list(val list, val from, val to)
 
     return out;
   }
+}
+
+static val sub_iter(val obj, val from, val to)
+{
+  val self = lit("sub");
+  seq_iter_t iter;
+  seq_iter_init(self, &iter, obj);
+  val idx = zero, elem;
+  list_collect_decl (out, ptail);
+
+  if (from == t)
+    return nil;
+
+  if (null_or_missing_p(from))
+    from = zero;
+  else if (minusp(from))
+    goto list;
+
+  if (to == t || null_or_missing_p(to))
+    to = nil;
+  else if (!null_or_missing_p(to) && minusp(to))
+    goto list;
+
+  if (!to) {
+    do {
+      if (ge(idx, from))
+        return iter_dynamic(&iter);
+      idx = succ(idx);
+    } while (seq_get(&iter, &elem));
+  } else {
+    for (; seq_get(&iter, &elem) && lt(idx, to); idx = succ(idx))
+      if (ge(idx, from))
+        ptail = list_collect(ptail, elem);
+  }
+
+  return out;
+
+list:
+  while (seq_get(&iter, &elem))
+    ptail = list_collect(ptail, elem);
+  return sub_list(out, from, to);
 }
 
 val replace_list(val list, val items, val from, val to)
@@ -7727,6 +7776,7 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
   case LSTR:
   case BUF:
   carray:
+  default:
     bug_unless (args->argc >= ARGS_MIN);
     args_normalize_least(args, 3);
 
@@ -7815,9 +7865,6 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
       fun = method(fun, lambda_s);
       break;
     }
-    /* fallthrough */
-  default:
-    callerror(fun, lit("object is not callable"));
   }
 
   variadic = fun->f.variadic;
@@ -11990,7 +12037,7 @@ val sub(val seq, val from, val to)
     }
     /* fallthrough */
   default:
-    type_mismatch(lit("sub: ~s is not a sequence"), seq, nao);
+    return sub_iter(seq, from, to);
   }
 }
 

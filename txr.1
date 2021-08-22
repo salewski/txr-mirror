@@ -15533,6 +15533,15 @@ is a list, then the
 .meta sequence
 form itself must be a place.
 
+This form is implemented using the
+.code ref
+accessor such that, except for the argument evaluation semantics of the DWIM
+brackets, it is equivalent to using the
+.mono
+.meti (ref < sequence << index )
+.onom
+syntax.
+
 .meIP >> [ sequence << from-index..to-below-index ]
 Retrieve the specified range of elements.
 The range of elements is specified in the
@@ -15563,6 +15572,19 @@ argument in a range assignment can be a string, vector or list,
 regardless of whether the target is a string, vector or list.
 If the target is a string, the replacement sequence must be
 a string, or a list or vector of characters.
+
+The semantics is implemented using the
+.code sub
+accessor, such that the following equivalence holds:
+
+.verb
+  [seq from..to]  <--> (sub seq from..to)
+.brev
+
+For this reason,
+.meta sequence
+may be any object that is iterable by
+.codn iter-begin .
 
 .meIP >> [ sequence << index-list ]
 Elements specified
@@ -31511,6 +31533,23 @@ Note: because
 is not an accessor, assigning to the
 .code sub
 syntax in this case will produce an error.
+
+The
+.meta sequence
+argument may also be any other object type that is suitable as input to the
+.code iter-begin
+function. In this situation, assigning to
+.code sub
+syntax produces an error. The behavior is complex. In cases where the
+.meta from
+and
+.meta to
+arguments imply that a suffix of
+.meta sequence
+is required, an iterator may be returned which traverses the suffix
+of the sequence. In other cases, a list of the elements selected by
+.code sub
+is returned.
 
 If
 .meta sequence
