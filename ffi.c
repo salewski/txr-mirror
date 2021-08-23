@@ -44,6 +44,11 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_MMAP
+#include <sys/mman.h>
+#include <unistd.h>
+#include <errno.h>
+#endif
 #include "alloca.h"
 #include "lib.h"
 #include "stream.h"
@@ -59,6 +64,9 @@
 #include "args.h"
 #include "utf8.h"
 #include "hash.h"
+#if HAVE_MMAP
+#include "sysif.h"
+#endif
 #include "ffi.h"
 #include "txr.h"
 
@@ -5262,6 +5270,9 @@ struct carray {
   val ref;
   cnum offs;
   val artype[2];
+#if HAVE_MMAP
+  size_t mm_len;
+#endif
 };
 
 static struct carray *carray_struct(val carray)
@@ -5330,6 +5341,9 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
   scry->eltype = type;
   scry->ref = ref;
   scry->offs = offs;
+#if HAVE_MMAP
+  scry->mm_len = 0;
+#endif
   return obj;
 }
 
@@ -6045,6 +6059,289 @@ val fill_carray(val carray, val offs, val stream)
   return ret;
 }
 
+#if HAVE_MMAP
+
+#ifndef MAP_GROWSDOWN
+#define MAP_GROWSDOWN 0
+#endif
+#ifndef MAP_LOCKED
+#define MAP_LOCKED 0
+#endif
+#ifndef MAP_NORESERVE
+#define MAP_NORESERVE 0
+#endif
+#ifndef MAP_POPULATE
+#define MAP_POPULATE 0
+#endif
+#ifndef MAP_NONBLOCK
+#define MAP_NONBLOCK 0
+#endif
+#ifndef MAP_STACK
+#define MAP_STACK 0
+#endif
+#ifndef MAP_HUGETLB
+#define MAP_HUGETLB 0
+#endif
+#ifndef MAP_SHARED
+#define MAP_SHARED 0
+#endif
+#ifndef MAP_PRIVATE
+#define MAP_PRIVATE 0
+#endif
+#ifndef MAP_FIXED
+#define MAP_FIXED 0
+#endif
+#if !defined MAP_ANON && defined MAP_ANONYMOUS
+#define MAP_ANON MAP_ANONYMOUS
+#elif !defined MAP_ANON
+#define MAP_ANON 0
+#endif
+#ifndef MAP_HUGE_SHIFT
+#define MAP_HUGE_SHIFT 0
+#endif
+#ifndef MAP_HUGE_MASK
+#define MAP_HUGE_MASK 0
+#endif
+
+#ifndef PROT_READ
+#define PROT_READ 0
+#endif
+#ifndef PROT_WRITE
+#define PROT_WRITE 0
+#endif
+#ifndef PROT_EXEC
+#define PROT_EXEC 0
+#endif
+#ifndef PROT_NONE
+#define PROT_NONE 0
+#endif
+#ifndef PROT_GROWSDOWN
+#define PROT_GROWSDOWN 0
+#endif
+#ifndef PROT_GROWSUP
+#define PROT_GROWSUP 0
+#endif
+
+#ifndef MADV_NORMAL
+#define MADV_NORMAL 0
+#endif
+#ifndef MADV_RANDOM
+#define MADV_RANDOM 0
+#endif
+#ifndef MADV_SEQUENTIAL
+#define MADV_SEQUENTIAL 0
+#endif
+#ifndef MADV_WILLNEED
+#define MADV_WILLNEED 0
+#endif
+#ifndef MADV_DONTNEED
+#define MADV_DONTNEED 0
+#endif
+#ifndef MADV_FREE
+#define MADV_FREE 0
+#endif
+#ifndef MADV_REMOVE
+#define MADV_REMOVE 0
+#endif
+#ifndef MADV_DONTFORK
+#define MADV_DONTFORK 0
+#endif
+#ifndef MADV_DOFORK
+#define MADV_DOFORK 0
+#endif
+#ifndef MADV_MERGEABLE
+#define MADV_MERGEABLE 0
+#endif
+#ifndef MADV_UNMERGEABLE
+#define MADV_UNMERGEABLE 0
+#endif
+#ifndef MADV_HUGEPAGE
+#define MADV_HUGEPAGE 0
+#endif
+#ifndef MADV_NOHUGEPAGE
+#define MADV_NOHUGEPAGE 0
+#endif
+#ifndef MADV_DONTDUMP
+#define MADV_DONTDUMP 0
+#endif
+#ifndef MADV_DODUMP
+#define MADV_DODUMP 0
+#endif
+#ifndef MADV_WIPEONFORK
+#define MADV_WIPEONFORK 0
+#endif
+#ifndef MADV_KEEPONFORK
+#define MADV_KEEPONFORK 0
+#endif
+#ifndef MADV_HWPOISON
+#define MADV_HWPOISON 0
+#endif
+
+#ifndef MS_ASYNC
+#define MS_ASYNC 0
+#endif
+#ifndef MS_SYNC
+#define MS_SYNC 0
+#endif
+#ifndef MS_INVALIDATE
+#define MS_INVALIDATE 0
+#endif
+
+static void carray_munmap_op(val obj)
+{
+  struct carray *scry = carray_struct(obj);
+  munmap(scry->data, scry->mm_len);
+  scry->data = 0;
+  free(scry);
+}
+
+static struct cobj_ops carray_mmap_ops =
+  cobj_ops_init(eq,
+                carray_print_op,
+                carray_munmap_op,
+                carray_mark_op,
+                cobj_eq_hash_op);
+
+val mmap_wrap(val type, val len, val prot, val flags,
+              val source_opt, val offset_opt, val addr_opt)
+{
+  val self = lit("mmap");
+  val source = default_null_arg(source_opt);
+  val offset = default_arg_strict(offset_opt, zero);
+  val addr = default_null_arg(addr_opt);
+  void *ad_req = if3(addr, coerce(void *, c_unum(addr, self)), 0);
+  mem_t *ad_out;
+  int fd = -1;
+  ucnum ln = c_unum(len, self);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
+  cnum nelem = if3(tft->size, ln / tft->size, 0);
+  int pro = c_int(prot, self);
+  int flg = c_int(flags, self);
+
+  if (ln != 0 && nelem == 0)
+    uw_throwf(error_s, lit("~a: zero-sized element type ~s specified"),
+              self, type, nao);
+
+  if (streamp(source)) {
+    val fileno = stream_fd(source);
+    if (!fileno)
+      uw_throwf(type_error_s, lit("~a: stream ~s has no file descriptor"),
+                self, source, nao);
+    fd = c_int(fileno, self);
+  } else if (integerp(source)) {
+    fd = c_int(source, self);
+  } else if (stringp(source)) {
+    val mode = if3(pro & PROT_WRITE, lit("r+"), lit("r"));
+    val stream = open_file(source, mode);
+    val map = nil;
+    uw_simple_catch_begin;
+    map = mmap_wrap(type, len, prot, flags, stream, offset_opt, addr_opt);
+    uw_unwind {
+      close_stream(stream, nil);
+    }
+    uw_catch_end;
+    return map;
+  } else if (source) {
+    uw_throwf(type_error_s, lit("~a: unsupported map source object ~s"),
+              self, source, nao);
+  }
+
+  ad_out = coerce(mem_t *,
+                  mmap(ad_req, ln, pro, flg, fd, c_u64(offset, self)));
+
+  if (ad_out == MAP_FAILED) {
+    int eno = errno;
+    uw_throwf(system_error_s, lit("~a: mmap failed: ~d/~s"),
+              self, num(eno), errno_to_str(eno), nao);
+  } else {
+    val ca = make_carray(type, ad_out, nelem, nil, 0);
+    struct carray *scry = carray_struct(ca);
+    scry->mm_len = ln;
+    ca->co.ops = &carray_mmap_ops;
+    return ca;
+  }
+}
+
+val munmap_wrap(val carray)
+{
+  val self = lit("munmap");
+  struct carray *scry = carray_struct_checked(self, carray);
+
+  if (carray->co.ops != &carray_mmap_ops)
+    uw_throwf(type_error_s, lit("~a: ~s isn't a mmapped carray"),
+              self, carray, nao);
+  if (scry->data != 0) {
+    munmap(scry->data, scry->mm_len);
+    scry->data = 0;
+    return t;
+  }
+
+  return nil;
+}
+
+static val mmap_op(val carray, val offset_in, val size_in,
+                   val arg, int (*op_fn)(void *, size_t, int),
+                   val self)
+{
+  struct carray *scry = carray_struct_checked(self, carray);
+  size_t off = 0, sz;
+
+  if (carray->co.ops != &carray_mmap_ops)
+    uw_throwf(type_error_s, lit("~a: ~s isn't a mmaped carray"),
+              self, carray, nao);
+
+  if (missingp(offset_in) && missingp(size_in)) {
+    sz = scry->mm_len;
+  } else if (missingp(offset_in)) {
+    sz = c_unum(size_in, self);
+  } else if (missingp(size_in)) {
+    off = c_unum(offset_in, self);
+    sz = scry->mm_len - off;
+  } else {
+    off = c_unum(offset_in, self);
+    sz = c_unum(size_in, self);
+  }
+
+  if (off > scry->mm_len)
+    uw_throwf(error_s, lit("~a: ~s: offset ~s lies beyond ~s byte mapping"),
+              self, carray, unum(off), unum(scry->mm_len), nao);
+
+  if (off + sz < off)
+    uw_throwf(error_s,
+              lit("~a: ~s: size ~s from offset ~s wraps around"),
+              self, carray, unum(sz), unum(off), nao);
+
+  if (off + sz > scry->mm_len)
+    uw_throwf(error_s,
+              lit("~a: ~s: size ~s from offset ~s extends beyond ~s byte mapping"),
+              self, carray, unum(sz), unum(off), unum(scry->mm_len), nao);
+
+  if (op_fn(scry->data + off, sz, c_int(arg, self)) < 0) {
+    int eno = errno;
+    uw_throwf(system_error_s, lit("~a: ~s: ~a failed: ~d/~s"),
+              self, carray, self, num(eno), errno_to_str(eno), nao);
+  }
+
+  return t;
+}
+
+val mprotect_wrap(val carray, val prot, val offset, val size)
+{
+  return mmap_op(carray, offset, size, prot, mprotect, lit("mprotect"));
+}
+
+val madvise_wrap(val carray, val advice, val offset, val size)
+{
+  return mmap_op(carray, offset, size, advice, madvise, lit("madvise"));
+}
+
+val msync_wrap(val carray, val flags, val offset, val size)
+{
+  return mmap_op(carray, offset, size, flags, msync, lit("msync"));
+}
+
+#endif
+
 static val cptr_getobj(val cptr, val type_in)
 {
   val self = lit("cptr-get");
@@ -6469,6 +6766,54 @@ void ffi_init(void)
   reg_fun(intern(lit("fill-carray"), user_package), func_n3o(fill_carray, 1));
   reg_fun(intern(lit("cptr-get"), user_package), func_n2o(cptr_getobj, 1));
   reg_fun(intern(lit("cptr-out"), user_package), func_n3o(cptr_out, 2));
+#if HAVE_MMAP
+  reg_fun(intern(lit("mmap"), user_package), func_n7o(mmap_wrap, 4));
+  reg_fun(intern(lit("munmap"), user_package), func_n1(munmap_wrap));
+  reg_fun(intern(lit("mprotect"), user_package), func_n4o(mprotect_wrap, 2));
+  reg_fun(intern(lit("madvise"), user_package), func_n4o(madvise_wrap, 2));
+  reg_fun(intern(lit("msync"), user_package), func_n4o(msync_wrap, 2));
+  reg_varl(intern(lit("map-growsdown"), user_package), num_fast(MAP_GROWSDOWN));
+  reg_varl(intern(lit("map-locked"), user_package), num_fast(MAP_LOCKED));
+  reg_varl(intern(lit("map-noreserve"), user_package), num_fast(MAP_NORESERVE));
+  reg_varl(intern(lit("map-populate"), user_package), num_fast(MAP_POPULATE));
+  reg_varl(intern(lit("map-nonblock"), user_package), num_fast(MAP_NONBLOCK));
+  reg_varl(intern(lit("map-stack"), user_package), num_fast(MAP_STACK));
+  reg_varl(intern(lit("map-hugetlb"), user_package), num_fast(MAP_HUGETLB));
+  reg_varl(intern(lit("map-shared"), user_package), num_fast(MAP_SHARED));
+  reg_varl(intern(lit("map-private"), user_package), num_fast(MAP_PRIVATE));
+  reg_varl(intern(lit("map-fixed"), user_package), num_fast(MAP_FIXED));
+  reg_varl(intern(lit("map-anon"), user_package), num_fast(MAP_ANON));
+  reg_varl(intern(lit("map-huge-shift"), user_package), num_fast(MAP_HUGE_SHIFT));
+  reg_varl(intern(lit("map-huge-mask"), user_package), num_fast(MAP_HUGE_MASK));
+  reg_varl(intern(lit("prot-read"), user_package), num_fast(PROT_READ));
+  reg_varl(intern(lit("prot-write"), user_package), num_fast(PROT_WRITE));
+  reg_varl(intern(lit("prot-exec"), user_package), num_fast(PROT_EXEC));
+  reg_varl(intern(lit("prot-none"), user_package), num_fast(PROT_NONE));
+  reg_varl(intern(lit("prot-growsdown"), user_package), num_fast(PROT_GROWSDOWN));
+  reg_varl(intern(lit("prot-growsup"), user_package), num_fast(PROT_GROWSUP));
+  reg_varl(intern(lit("madv-normal"), user_package), num_fast(MADV_NORMAL));
+  reg_varl(intern(lit("madv-random"), user_package), num_fast(MADV_RANDOM));
+  reg_varl(intern(lit("madv-sequential"), user_package), num_fast(MADV_SEQUENTIAL));
+  reg_varl(intern(lit("madv-willneed"), user_package), num_fast(MADV_WILLNEED));
+  reg_varl(intern(lit("madv-dontneed"), user_package), num_fast(MADV_DONTNEED));
+  reg_varl(intern(lit("madv-free"), user_package), num_fast(MADV_FREE));
+  reg_varl(intern(lit("madv-remove"), user_package), num_fast(MADV_REMOVE));
+  reg_varl(intern(lit("madv-dontfork"), user_package), num_fast(MADV_DONTFORK));
+  reg_varl(intern(lit("madv-dofork"), user_package), num_fast(MADV_DOFORK));
+  reg_varl(intern(lit("madv-mergeable"), user_package), num_fast(MADV_MERGEABLE));
+  reg_varl(intern(lit("madv-unmergeable"), user_package), num_fast(MADV_UNMERGEABLE));
+  reg_varl(intern(lit("madv-hugepage"), user_package), num_fast(MADV_HUGEPAGE));
+  reg_varl(intern(lit("madv-nohugepage"), user_package), num_fast(MADV_NOHUGEPAGE));
+  reg_varl(intern(lit("madv-dontdump"), user_package), num_fast(MADV_DONTDUMP));
+  reg_varl(intern(lit("madv-dodump"), user_package), num_fast(MADV_DODUMP));
+  reg_varl(intern(lit("madv-wipeonfork"), user_package), num_fast(MADV_WIPEONFORK));
+  reg_varl(intern(lit("madv-keeponfork"), user_package), num_fast(MADV_KEEPONFORK));
+  reg_varl(intern(lit("madv-hwpoison"), user_package), num_fast(MADV_HWPOISON));
+  reg_varl(intern(lit("ms-async"), user_package), num_fast(MS_ASYNC));
+  reg_varl(intern(lit("ms-sync"), user_package), num_fast(MS_SYNC));
+  reg_varl(intern(lit("ms-invalidate"), user_package), num_fast(MS_INVALIDATE));
+  reg_varl(intern(lit("page-size"), user_package), num_fast(sysconf(_SC_PAGESIZE)));
+#endif
   reg_fun(intern(lit("make-union"), user_package), func_n3o(make_union, 1));
   reg_fun(intern(lit("union-members"), user_package), func_n1(union_members));
   reg_fun(intern(lit("union-get"), user_package), func_n2(union_get));

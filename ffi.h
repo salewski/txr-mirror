@@ -129,6 +129,14 @@ val uint_carray(val carray);
 val int_carray(val carray);
 val put_carray(val carray, val offs, val stream);
 val fill_carray(val carray, val offs, val stream);
+#if HAVE_MMAP
+val mmap_wrap(val type, val len, val prot, val flags,
+              val source_opt, val offset_opt, val addr_opt);
+val munmap_wrap(val carray);
+val mprotect_wrap(val carray, val prot, val offset, val size);
+val madvise_wrap(val carray, val advice, val offset, val size);
+val msync_wrap(val carray, val flags, val offset, val size);
+#endif
 mem_t *union_get_ptr(val self, val uni);
 val make_union(val type, val init, val memb);
 val union_members(val uni);

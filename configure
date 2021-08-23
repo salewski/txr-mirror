@@ -3781,6 +3781,35 @@ else
   printf "no\n"
 fi
 
+printf "Checking for mmap ... "
+cat > conftest.c <<!
+#include <sys/mman.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+int main(void)
+{
+  size_t pgsz = sysconf(_SC_PAGE_SIZE);
+  void *addr = mmap(0, pgsz, PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_PRIVATE | MAP_SHARED, -1, 0);
+  if (addr == MAP_FAILED)
+    return EXIT_FAILURE;
+  mprotect(addr, pgsz, PROT_WRITE);
+  madvise(addr, pgsz, MADV_SEQUENTIAL);
+  msync(addr, pgsz, MS_SYNC);
+  munmap(addr, pgsz);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_MMAP 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+
 #
 # Dependent variables
 #

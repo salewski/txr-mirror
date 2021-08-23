@@ -72101,6 +72101,497 @@ returns
 Further information about resource limits is available in the POSIX standard
 and platform documentation.
 
+.SS Unix Memory Mapping
+
+The \*(TL interface to the POSIX
+.code mmap
+family of functions is based around the
+.code carray
+type. The
+.code mmap
+function returns a special variant of a
+.code carray
+object which keeps track of the memory mapping. When such an object
+becomes unreachable and is reclaimed by garbage collection, the mapping
+is automatically unmapped.
+
+In addition to
+.codn mmap ,
+the functions
+.codn munmap ,
+.codn mprotect ,
+.code madvise
+and
+.code msync
+are provided, all taking a
+.code carray
+as their leftmost argument.
+
+The \*(TL functions do not strictly follow the argument conventions of the
+same-named, corresponding POSIX functions. Adjustments which are likely to
+be defaulted are moved to the right.
+For instance, the
+.code msync
+operation is often applied to the entire memory mapping. Therefore,
+the first argument is the
+.code carray
+object which keeps track of the mapping. The second argument specifies
+the flags to be applied, which constitute the last argument of the
+underlying POSIX function.
+The remaining two arguments are the size and offset. If these are omitted,
+then
+.code msync
+applies to the entire region, whose address and size are known to the
+.code carray
+object.
+
+Cautionary note: misuse of
+.code mmap
+and related functions can easily cause the \*(TX image to receive
+a fatal signal due to a bad memory access. Care must be taken to prevent
+such a situation, or else to catch such signals and recover.
+
+.coNP Function @ mmap
+.synb
+.mets (mmap < ffi-type < length < prot < flags
+.mets \ \ \ \ \  >> [ source >> [ offset <> [ addr ]]])
+.syne
+.desc
+The
+.code mmap
+function provides access to the same-named POSIX platform function
+for creating memory mappings. The POSIX function cab be used for creating
+virtual memory views of files and special devices. Views can be read-only,
+and they can be mutable. They can be in such a way that changes appear
+only in the mapping itself, or in such a way that the changes are actually
+propagated to the mapped object itself. Mappings can be shared among
+processes, providing a shared memory mechanism: for instance, if
+.code fork
+is called, any
+.code map-shared
+mappings created by the parent are shared with the child: the child
+process does not get a copy of a shared mapping, but a reference to it.
+The function can also be used simply for allocating memory: on some
+platforms, the POSIX
+.code mmap
+is used as the basis for the
+.code malloc
+function. It behaves as a pure allocator when asked to create a mapping which
+is private, and anonymous (not backed by an object).
+
+The \*(TL
+.code mmap
+function is integrated with the
+.code carray
+type and the FFI type system. A mapping returned by
+.code mmap
+is represented by a
+.code carray
+object.
+
+The required
+.meta ffi-type
+argument specifies the element type of the array; it must be a compiled
+FFI type. Note: this may be produced by the
+.code ffi
+macro. For instance, the type
+.code int
+may be specified using the expression
+.codn "(ffi int)" .
+The type must be a complete type suitable as the element type of an array;
+a type with a zero size such as
+.code void
+is invalid.
+
+The
+.meta length
+argument specifies the length in bytes. Note that
+.code mmap
+works allocates or configures virtual memory pages, not bytes. Internally
+to the system, the
+.meta length
+argument is converted to a number of pages. If it specifies a fractional
+number of pages, it is rounded up. For instance, if the page size is 4096
+bytes, and
+.meta length
+is specified as 5000, it will be internally rounded up to 8192.
+The returned \*(TL
+.code carray
+object, is oblivious to this padding: it works with the given 5000 byte size.
+Note: the
+.code page-size
+variable holds the system's page size. However, by the use of
+.code mmap
+extensions, it is possible for individual mappings to have their own page size.
+Mixed page size virtual memory systems exist.
+
+The
+.code mmap
+function determines the number of elements in the array by dividing the
+.meta length
+by the size of
+.metn type ,
+using a division that truncates toward zero. The returned
+.code carray
+shall have that many elements. If the division is inexact, it means that
+some bytes from the underlying memory mapping are unused, even if
+.code length
+is a multiple of the page size.
+
+The required
+.meta prot
+argument must some bitwise combination of the portable values
+.codn prot-read ,
+.code prot-write
+and
+.codn prot-exec .
+Additional system-specific
+.code prot-
+values may be available also for specifying additional properties. If
+.meta prot
+is specified as zero, then the mapping, if successfully created, may be
+inaccessible:
+.code prot-read
+must be present to ensure read access, and
+.code prot-write
+to ensure write access.
+
+The
+.meta flags
+argument is a bitwise combination of values given by various
+.code map-
+variables. At the very least, it must contain exactly one of
+.code map-shared
+or
+.codn map-private ,
+to request a shared or private mapping, respectively.
+If a mapping is requested which is neither shared nor private,
+the underlying POSIX function will likely fail.
+If a
+.meta source
+is being specified, indicating a filesystem object to be mapped, the
+.code map-anon
+flag must be omitted. Vice versa, if
+.meta source
+is not being specified, this means that the mapping will be anonymous.
+In this situation, the
+.code map-anon
+flag must be present.
+
+Note: in the context of
+.codn mmap ,
+"anonymous" means "not associated with a filesystem object referenced by a
+descriptor". It does not mean "without a name", but refers to a pure memory
+allocation from virtual memory. Memory maps do not have a name, whether
+anonymous or not. Moreover, the filesystem object associated with a memory map
+itself does not necessarily have a name.  An open file that has been deleted
+from the directory structure is anonymous, yet a memory mapping can be created
+using its descriptor, and that mapping is not "anonymous".
+
+The
+.meta offset
+argument is used with a non-anonymous mapping. It specifies that the mapping
+doesn't begin at the start of the file or file-like object, but rather at
+the specified offset. The offset may not be an arbitrary integer; it must be
+multiples of the page size. Unless certain nonportable
+.meta flags
+are used to specify an alternative page size, the value of the
+.code page-size
+variable may be relied upon to indicate the page size.  If an
+.meta offset
+is specified for an anonymous mapping, with a nonzero value, the
+underlying POSIX function may indicate failure.
+
+If the
+.meta length
+and
+.meta offset
+values cause one or more pages to be mapped which are beyond the end of the
+file, then accessing those pages may produce a signal which is fatal if
+not handled.
+
+The
+.meta addr
+argument is used for specifying the address in conjunction with the
+.code map-fixed
+flag. Possibly, certain nonportable values in the
+.meta flags
+field may similarly require
+.metn addr .
+If no bit is present to
+.meta flags
+which requires
+.metn addr ,
+then
+.meta addr
+should either not be specified, or specified as zero.
+A non-zero value of
+.meta addr
+must be a multiple of the page size.
+
+The
+.code mmap
+function returns a
+.code carray
+object if successful. Upon failure, an exception derived from
+.code error
+is thrown.
+
+Note: when a
+.code carray
+object returned by
+.code mmap
+is identified by the garbage collector as unreachable, and reclaimed,
+the memory mapping is unmapped. The
+.code munmap
+function can be invoked on the
+.code carray
+to release the mapping before the object becomes garbage. The
+.code carray-free
+function cannot be used on a mapped
+.codn carray .
+
+.coNP Function @ munmap
+.synb
+.mets (munmap << carray )
+.syne
+.desc
+The
+.code munmap
+function releases the memory mapping tracked by
+.metn carray ,
+which must be an object previously returned by
+.codn mmap .
+An exception is thrown if the object is any other kind of
+.codn carray .
+
+Note: the memory mapping is released by means of the same-named POSIX function.
+No provision is made for selectively unmapping the pages of a mapping;
+the entire mapping associated with a
+.meta carray
+is removed.
+
+when the memory mapping is released,
+.code munmap
+returns
+.codn t .
+Thereafter, the
+.meta carray
+contents may no longer be accessed, subject to
+.code error
+exceptions being thrown.
+
+If
+.code munmap
+is called again on a
+.code carray
+on which it had previously been successfully called, the additional calls
+return
+.codn nil .
+
+.coNP Functions @, mprotect @ madvise and @ msync
+.synb
+.mets (mprotect < carray < prot >> [ offset <> [ size ]])
+.mets (madvise < carray < advice >> [ offset <> [ size ]])
+.mets (msync < carray < flags >> [ offset <> [ size ]])
+.syne
+.desc
+The functions
+.codn mprotect ,
+.code madvise
+and
+.code msync
+perform various operations and adjustments on a memory mapping, using the
+same-named, corresponding POSIX functions.
+
+All functions follow the same argument conventions with regard to the
+.meta carray
+argument and the optional
+.meta offset
+and
+.meta size
+arguments. The respective second arguments
+.metn prot ,
+.meta advice
+and
+.meta flags
+are all integers. Of these,
+.meta prot
+and
+.meta flags
+are bitmapped flags, whereas
+.meta advice
+specifies an enumerated command.
+
+The
+.meta prot
+argument is a bitwise combination of
+.code prot-
+values such as
+.codn prot-read ,
+.code prot-write
+and
+.codn prot-exec .
+The
+.code mprotect
+function adjusts the protection bits of the mapping accordingly.
+
+The
+.meta advice
+command of
+.code madvise
+should specify one of the following portable values, or else some
+system-specific nonportable
+.code madv-
+value:
+.codn madv-normal ,
+.codn madv-random ,
+.codn madv-sequential ,
+.code madv-willneed
+or
+.codn madv-dontneed .
+
+The
+.code flags
+argument of
+.code msync
+should specify exactly one of the values
+.code ms-async
+or
+.codn ms-sync .
+Additional
+.code ms-
+values such as
+.code ms-invalidate
+may be combined in.
+
+If
+.meta offset
+and
+.meta size
+are omitted, they default to zero, and the size of the entire mapping, respectively,
+so the operation applies to the entire mapping.
+
+If only a
+.meta size
+is specified, it must not exceed the mapping size, or an error exception is
+thrown. The
+.meta offset
+argument defaults to zero.
+
+If only the
+.meta offset
+is specified, it must not exceed the length of the mapping, or else
+an error exception is thrown.  The size is calculated as the difference between
+the offset and the length. It may be zero.
+
+If both
+.meta offset
+and
+.meta size
+are specified, they must not specify a region any portion of which lies outside
+of the mapping. If
+.meta size
+is zero,
+.meta offset
+may be equal to the length of the mapping.
+
+The
+.meta offset
+must be a multiple of the page size, or else the operation will fail,
+since these functions work with virtual memory pages, and not individual
+bytes. The
+.meta length
+is adjusted by the system to a multiple of the applicable page size,
+as noted in the description of
+.codn mmap .
+
+When any of these three functions succeeds, it returns
+.codn t .
+Otherwise, it throws an exception.
+
+.coNP Variables @, map-shared @, map-private @ map-anon and @ map-fixed
+.desc
+The integer values of these variables are bitmasks, intended to be combined with
+.code logior
+to prepare a value for the
+.meta flags
+argument of
+.codn mmap .
+
+Additional nonportable, system-dependent
+.code map-
+variables may be available. Their names are derived by taking the
+.codn MAP_ -prefixed
+symbol from the platform header file, converting it to lower case and
+replacing underscores by hyphen characters.
+Any such variable which exists, but has a value of zero, is
+present only for compatibility with another system. For instance
+.code map-huge-shift
+may be present in non-Linux ports of \*(TX, but with a zero value; it has
+a nonzero value on Linux systems to which it specific.  Applications critically
+relying on certain flags should test the corresponding variables for nonzero to
+make sure they are actually available.
+
+.coNP Variables @, prot-none @, prot-read @ prot-write and @ prot-exec
+.desc
+The integer values of these variable are bitmasks, intended to be combined with
+.code logior
+to prepare a value for the
+.meta prot
+argument of
+.code mmap
+and
+.codn mprotect .
+
+Additional nonportable, system-dependent
+.code prot-
+variables may be available. Their names are derived by taking the
+.codn PROT_ -prefixed
+symbol from the platform header file, converting it to lower case and
+replacing underscores by hyphen characters.
+Any such variable which exists, but has a value of zero, is
+present only for compatibility with another system.
+
+.coNP Variables @, madv-normal @, madv-random @, madv-sequential @ madv-willneed and @ madv-dontneed
+.desc
+The integer values of these variable are bitmasks, intended to be combined with
+.code logior
+to prepare a value for the
+.meta advice
+argument of the
+.code madvise
+function.
+
+Additional nonportable, system-dependent
+.code madv-
+variables may be available. Their names are derived by taking the
+.codn MADV_ -prefixed
+symbol from the platform header file, converting it to lower case and
+replacing underscores by hyphen characters.
+Any such variable which exists, but has a value of zero, is
+present only for compatibility with another system.
+
+.coNP Variables @, ms-async @ ms-sync and @ ms-invalidate
+.desc
+The integer values of these variable are bitmasks, intended to be combined with
+.code logior
+to prepare a value for the
+.meta advice
+argument of the
+.code msync
+function.
+
+As described under
+.codn  msync ,
+at least one of
+.code ms-async
+and
+.code ms-sync
+should be present;
+.code ms-invalidate
+is optional.
+
 .SS* Web Programming Support
 
 .coNP Functions @ url-encode and @ url-decode
@@ -76734,6 +77225,13 @@ It is possible to create a
 .code carray
 view over a buffer, using
 .codn carray-buf .
+
+Lastly, the
+.code carray
+type is the basis for the \*(TL
+.code mmap
+function, which is documented in the section
+.BR "Unix Memory Mapping" .
 
 .coNP FFI type @ cptr
 .synb
