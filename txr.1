@@ -64290,11 +64290,16 @@ expression yields a Boolean true value when it is evaluated in the context
 of processing any of the records which are included in the range.
 
 The table below summarizes the semantic variations of these nine
-range macro operators. The leftmost column represents the file of records
-being processed. The remaining columns indicate, using the character
+range macro operators. The leftmost column labeled
+.code DATA
+represents the stream of records being processed. Each entry in this column gives
+the literal piece of text which comprises the content of one record in the stream.
+The remaining nine columns, labeled with the nine range operators, inform about
+the behavior of these operators with respect to these records. In each of these
+columns the letter
 .code X
-those rows for each of the nine range operators yield true. Each operator
-is assumed to be invoked with the arguments
+marks those records for which the column's range operator yields true,
+if it is invoked with the arguments
 .code #/H/
 and
 .code #/T/
@@ -64302,10 +64307,16 @@ as its
 .meta from-condition
 and
 .metn to-condition ,
-respectively: for example,
+respectively.
+For example, the
+.code rng
+column the values of the
 .code "(rng #/H/ #/T/)"
-in the case of
-.codn rng :
+expression, indicating that the expression starts being true when the
+.code H1
+record is seen, stays true for the
+.code T1
+record, and then reverts to false:
 
 .verb
   DATA    rng -rng rng- -rng- --rng --rng- rng+ -rng+ --rng+
@@ -64322,7 +64333,8 @@ in the case of
   EPILOG
 .brev
 
-The prefix or suffix characters are mnemonic. A single
+The prefix and suffix characters of the operator names are intended
+to be mnemonic. A single
 .code -
 (dash) indicates the exclusion of one record. A double
 .code --
