@@ -5916,21 +5916,35 @@ val carray_putz(val carray, val seq)
   return carray;
 }
 
-val carray_pun(val carray, val type)
+val carray_pun(val carray, val type, val offset_in, val lim_in)
 {
   val self = lit("carray-pun");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-  cnum len = scry->nelem;
-  cnum elsize = scry->eltft->size;
-  cnum size = (ucnum) len * (ucnum) elsize;
+  ucnum len = scry->nelem;
+  ucnum elsize = scry->eltft->size;
+  ucnum size = len * elsize;
+  ucnum off = if3(missingp(offset_in), 0, c_unum(offset_in, self));
+  ucnum lim = if3(missingp(lim_in), size - off, c_unum(lim_in, self));
 
   carray_elem_check(tft, self);
 
   if (len != 0 && size / elsize != len)
     uw_throwf(error_s, lit("~a: carray size overflow"), self, nao);
 
-  return make_carray(type, scry->data, size / tft->size, carray, 0);
+  if (off > size)
+    uw_throwf(error_s, lit("~a: ~s: offset ~a is out of bounds"),
+              self, carray, unum(off), nao);
+
+  if (off + lim < off)
+    uw_throwf(error_s, lit("~a: ~s: limit ~a from offset ~a wraps around"),
+              self, carray, unum(lim), unum(off), nao);
+
+  if (off + lim > size)
+    uw_throwf(error_s, lit("~a: ~s: limit ~a from offset ~a extends out of bounds"),
+              self, carray, unum(lim), unum(off), nao);
+
+  return make_carray(type, scry->data + off, lim / tft->size, carray, 0);
 }
 
 val carray_uint(val num, val eltype_in)
@@ -6750,7 +6764,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-getz"), user_package), func_n1(carray_getz));
   reg_fun(intern(lit("carray-put"), user_package), func_n2(carray_put));
   reg_fun(intern(lit("carray-putz"), user_package), func_n2(carray_putz));
-  reg_fun(intern(lit("carray-pun"), user_package), func_n2(carray_pun));
+  reg_fun(intern(lit("carray-pun"), user_package), func_n4o(carray_pun, 2));
   {
     val ca_uint = func_n2o(carray_uint, 1);
     val ca_int = func_n2o(carray_int, 1);

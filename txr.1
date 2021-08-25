@@ -80428,7 +80428,7 @@ itself.
 
 .coNP Function @ carray-pun
 .synb
-.mets (carray-pun < carray << type )
+.mets (carray-pun < carray < type >> [ offset <> [ size-limit ]])
 .syne
 .desc
 The
@@ -80444,13 +80444,37 @@ The
 .meta type
 argument specifies the element type used by the returned aliasing array.
 
+If the
+.meta offset
+argument is specified, then the aliased view is displaced by that many
+bytes from the start of the
+.meta carray
+object. The
+.meta offset
+argument must not be larger than the bytewise length of the array,
+or an error exception is thrown. The bytewise length of the array
+is the product of the number of elements and the element size.
+The default value of
+.meta offset
+is zero: no displacement.
+
+If
+.meta size-limit
+is specified, it indicates the size, in bytes, of the aliased view.
+This limit must not be such that the aliased view would extend beyond the
+array, or an error exception is thrown. If omitted,
+.meta size-limit
+defaults to the entire remainder of the array, after the offset.
+The number of elements of the returned array are then calculated from
+.metn size-limit .
+
 The
 .code carray-pun
-function considers the byte size of the array, which is a product of
-the original length and element size. It then calculates how many elements of
+function calculates how many elements of
 .meta type
-fit into this size. This value becomes the length of the aliasing array
-which is returned.
+fit into
+.metn size-limit .
+This value becomes the length of the aliasing array which is returned.
 
 Since the returned aliasing array and the original refer to the same
 storage, modifications performed in one view are reflected in the other.
@@ -80463,6 +80487,19 @@ is invoked on the aliasing array.
 
 The meaning of the aliasing depends entirely on the bitwise representations of
 the types involved.
+
+Note:
+.code carray-pun
+does not check whether
+.meta offset
+is a value that is suitably aligned for accessing elements of
+.metn type ;
+on some platforms that must be ensured.
+
+The
+.code carray-pun
+function may be invoked on an object that was itself returned by
+.codn carray-pun .
 
 .coNP Functions @ carray-uint and @ carray-int
 .synb

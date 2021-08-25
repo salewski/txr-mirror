@@ -122,7 +122,7 @@ val carray_get(val carray);
 val carray_getz(val carray);
 val carray_put(val array, val seq);
 val carray_putz(val array, val seq);
-val carray_pun(val carray, val type);
+val carray_pun(val carray, val type, val offset_in, val lim_in);
 val carray_uint(val num, val type);
 val carray_int(val num, val type);
 val uint_carray(val carray);
