@@ -68832,7 +68832,7 @@ and
 
 .coNP Function @ daemon
 .synb
-.mets (daemon < nochdir-p << noclose-p )
+.mets (daemon < nochdir << noclose )
 .syne
 .desc
 This is a wrapper for the function
@@ -68846,6 +68846,12 @@ if successful,
 otherwise, and the
 .code errno
 variable is set in that case.
+
+Unlike in the underlying same-named platform function, the
+.meta nochdir
+and
+.meta noclose
+arguments are Boolean, rather than integer values.
 
 .SS* Unix File Descriptors
 
