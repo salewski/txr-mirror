@@ -366,12 +366,12 @@ val random(val state, val modulus)
     if (m == 1) {
       return zero;
     } else if (m > 1) {
-      int bits = highest_bit(m - 1);
+      unsigned bits = highest_bit(m - 1);
 #if CHAR_BIT * SIZEOF_PTR >= 64
       ucnum rands_needed = (bits + 32 - 1) / 32;
 #endif
-      ucnum msb_rand_bits = bits % 32;
-      rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
+      ucnum msb_rand_bit_shift = (- bits) % 32;
+      rand32_t msb_rand_mask = convert(rand32_t, -1) >> msb_rand_bit_shift;
       for (;;) {
         cnum out = 0;
 #if CHAR_BIT * SIZEOF_PTR >= 64
