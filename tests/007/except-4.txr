@@ -1,3 +1,7 @@
+@(include "../common")
+@(if (eq (os-symbol) :solaris))
+@  (do (put-line "bar") (exit t))
+@(end)
 @(try)
 @(next (open-command "echo foo; kill $$"))
 @a
