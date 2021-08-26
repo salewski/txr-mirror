@@ -27,10 +27,8 @@
 
 (assert (plusp page-size))
 
-(let* ((buf-mod (trunc (expt 256 page-size) 2))
-       (mk-rnd-buf (ret (flow buf-mod rand (+ buf-mod) buf-uint)))
-       (rndbuf0 [mk-rnd-buf])
-       (rndbuf1 [mk-rnd-buf])
+(let* ((rndbuf0 (random-buf page-size))
+       (rndbuf1 (random-buf page-size))
        (fname "rand.bin"))
   (unwind-protect
     (progn
