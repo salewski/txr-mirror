@@ -29,6 +29,7 @@
 #include <stddef.h>
 #include <wchar.h>
 #include <signal.h>
+#include <stdlib.h>
 #include "config.h"
 #include "lib.h"
 #include "signal.h"
@@ -261,4 +262,18 @@ unsigned long c_ulong(val n, val self)
 #else
 #error portme
 #endif
+}
+
+size_t c_size(val n, val self)
+{
+  switch (sizeof (size_t)) {
+  case sizeof (unsigned):
+    return c_uint(n, self);
+#if SIZEOF_LONG != SIZEOF_INT
+  case sizeof (unsigned long):
+    return c_ulong(n, self);
+#endif
+  default:
+    abort();
+  }
 }

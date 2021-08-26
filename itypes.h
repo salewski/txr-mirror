@@ -117,3 +117,5 @@ unsigned int c_uint(val, val self);
 
 long c_long(val, val self);
 unsigned long c_ulong(val, val self);
+
+size_t c_size(val, val self);
