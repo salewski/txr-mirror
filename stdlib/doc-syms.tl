@@ -1504,6 +1504,7 @@
       ("raise" "N-0108FFCE")
       ("rand" "N-03A57C86")
       ("random" "N-03A57C86")
+      ("random-buf" "N-00161346")
       ("random-fixnum" "N-03A57C86")
       ("random-float" "N-01572D27")
       ("random-state-get-vec" "N-005C0F98")

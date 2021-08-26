@@ -62307,6 +62307,30 @@ random state object given by the argument to the optional
 parameter, which defaults to the value of
 .codn *random-state* .
 
+.coNP Function @ random-buf
+.synb
+.mets (random-buf << size <> [ random-state ])
+.syne
+.desc
+The
+.code random-buf
+function creates a
+.code buf
+object of the specified
+.meta size
+fills it with pseudorandom bytes, and returns it.
+
+The bytes are obtained from the random state object given by the optional
+.meta random-state
+parameter, which defaults to the value of
+.codn *random-state* .
+
+See the section
+.B Buffers
+for a description of
+.code buf
+objects.
+
 .SS* Time
 .coNP Functions @, time @ time-usec and @ time-nsec
 .synb

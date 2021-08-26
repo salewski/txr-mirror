@@ -35,5 +35,6 @@ val random_state_p(val obj);
 val random_fixnum(val state);
 val random(val state, val modulus);
 val rnd(val modulus, val state);
+val random_buf(val size, val state);
 void rand_compat_fixup(int compat_ver);
 void rand_init(void);

@@ -43,6 +43,8 @@
 #include "time.h"
 #include "buf.h"
 #include "txr.h"
+#include "buf.h"
+#include "itypes.h"
 #include "rand.h"
 
 #define random_warmup (deref(lookup_var_l(nil, random_warmup_s)))
@@ -404,6 +406,44 @@ val rnd(val modulus, val state)
   return random(state, modulus);
 }
 
+val random_buf(val size, val state)
+{
+  val self = lit("random-buf");
+  struct rand_state *r = coerce(struct rand_state *,
+                                cobj_handle(self,
+                                            default_arg(state, random_state),
+                                            random_state_cls));
+  size_t sz = c_size(size, self);
+  mem_t *data = chk_malloc(sz);
+  val buf = make_owned_buf(size, data);
+
+  for (; sz >= 4; sz -= 4, data += 4) {
+    rand32_t rnd = rand32(r);
+#if HAVE_LITTLE_ENDIAN
+    *(rand32_t *) data = rnd;
+#else
+    rnd = (0xFF00FF00U & rnd) >> 8 | (0x00FF00FFU & rnd) << 8;
+    *(rand32_t *) data = (rnd << 16 | rnd >> 16);
+#endif
+  }
+
+  if (sz > 0) {
+    rand32_t rnd = rand32(r);
+    switch (sz % 4) {
+    case 3:
+      data[2] = rnd >> 16;
+      /* fallthrough */
+    case 2:
+      data[1] = rnd >> 8;
+      /* fallthrough */
+    case 1:
+      data[0] = rnd;
+    }
+  }
+
+  return buf;
+}
+
 void rand_compat_fixup(int compat_ver)
 {
   if (compat_ver <= 243) {
@@ -438,4 +478,5 @@ void rand_init(void)
   reg_fun(intern(lit("random-float"), user_package), func_n1o(random_float, 0));
   reg_fun(intern(lit("random"), user_package), func_n2(random));
   reg_fun(intern(lit("rand"), user_package), func_n2o(rnd, 1));
+  reg_fun(intern(lit("random-buf"), user_package), func_n2o(random_buf, 1));
 }
