@@ -924,322 +924,241 @@ static val ffi_val_get(struct txr_ffi_type *tft, mem_t *src, val self)
   align_sw_end;
 }
 
-static void ffi_be_i16_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
+static u16_t ffi_swap_u16(u16_t n)
 {
-  cnum v = c_num(n, self);
-
-  (void) tft;
-
-  if (v < -32768 || v > 32767)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 16 bit range"),
-              self, n, nao);
-
-  dst[0] = (v >> 8) & 0xff;
-  dst[1] = v & 0xff;
+  return (n << 8 | n >> 8);
 }
 
-static val ffi_be_i16_get(struct txr_ffi_type *tft, mem_t *src, val self)
+static u32_t ffi_swap_u32(u32_t n)
 {
-  cnum n = (src[0] << 8) | src[1];
-  (void) tft;
-  (void) self;
-  if ((n & 0x8000) != 0)
-    n = -((n ^ 0xFFFF) + 1);
-  return num(n);
+  n = (n & 0xFF00FF00U) >> 8 | (n & 0x00FF00FF) << 8;
+  return n << 16 | n >> 16;
 }
 
-static void ffi_be_u16_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
+static u64_t ffi_swap_u64(u64_t n)
 {
-  cnum v = c_num(n, self);
-
-  (void) tft;
-
-  if (v < -32768 || v > 32767)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 16 bit range"),
-              self, n, nao);
-
-  dst[0] = (v >> 8) & 0xff;
-  dst[1] = v & 0xff;
+  n = (n & 0xFF00FF00FF00FF00U) >>  8 | (n & 0x00FF00FF00FF00FF) <<  8;
+  n = (n & 0xFFFF0000FFFF0000U) >> 16 | (n & 0x0000FFFF0000FFFF) << 16;
+  return n << 32 | n >> 32;
 }
 
-static val ffi_be_u16_get(struct txr_ffi_type *tft, mem_t *src, val self)
+#if HAVE_I16
+static i16_t ffi_swap_i16(i16_t n)
 {
-  cnum n = (src[0] << 8) | src[1];
+  return convert(i16_t, ffi_swap_u16(convert(u16_t, n)));
+}
+#endif
+
+#if HAVE_I32
+static i32_t ffi_swap_i32(i32_t n)
+{
+  return convert(i32_t, ffi_swap_u32(convert(u32_t, n)));
+}
+#endif
+
+#if HAVE_I64
+static i64_t ffi_swap_i64(i64_t n)
+{
+  return convert(i64_t, ffi_swap_u64(convert(u64_t, n)));
+}
+#endif
+
+#if HAVE_I16
+static void ffi_swap_i16_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
+{
+  i16_t v = ffi_swap_i16(c_i16(n, self));
   (void) tft;
-  (void) self;
-  return num(n);
+  align_sw_put(i16_t, dst, *coerce(i16_t *, dst) = v);
 }
 
-static void ffi_le_i16_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
+
+static val ffi_swap_i16_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  cnum v = c_num(n, self);
-
-  (void) tft;
-
-  if (v < -32768 || v > 32767)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 16 bit range"),
-              self, n, nao);
-
-  dst[1] = (v >> 8) & 0xff;
-  dst[0] = v & 0xff;
-}
-
-static val ffi_le_i16_get(struct txr_ffi_type *tft, mem_t *src, val self)
-{
-  cnum n = (src[1] << 8) | src[0];
+  align_sw_get(i16_t, src);
+  i16_t n = ffi_swap_i16(*coerce(i16_t *, src));
   (void) tft;
   (void) self;
-  if ((n & 0x8000) != 0)
-    n = -((n ^ 0xFFFF) + 1);
-  return num(n);
+  return num_fast(n);
+  align_sw_end;
 }
 
-static void ffi_le_u16_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
+static void ffi_swap_u16_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
 {
-  cnum v = c_num(n, self);
-
+  u16_t v = ffi_swap_u16(c_u16(n, self));
   (void) tft;
-
-  if (v < 0|| v > 65535)
-    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 16 bit range"),
-              self, n, nao);
-
-  dst[1] = (v >> 8) & 0xff;
-  dst[0] = v & 0xff;
+  align_sw_put(u16_t, dst, *coerce(u16_t *, dst) = v);
 }
 
-static val ffi_le_u16_get(struct txr_ffi_type *tft, mem_t *src, val self)
+static val ffi_swap_u16_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  cnum n = (src[1] << 8) | src[0];
+  align_sw_get(u16_t, src);
+  u16_t n = ffi_swap_u16(*coerce(u16_t *, src));
+  (void) tft;
+  (void) self;
+  return num_fast(n);
+  align_sw_end;
+}
+#endif
+
+#if HAVE_I32
+static void ffi_swap_i32_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
+{
+  i32_t v = ffi_swap_i32(c_i32(n, self));
+  (void) tft;
+  align_sw_put(i32_t, dst, *coerce(i32_t *, dst) = v);
+}
+
+static val ffi_swap_i32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  align_sw_get(i32_t, src);
+  i32_t n = ffi_swap_i32(*coerce(i32_t *, src));
   (void) tft;
   (void) self;
   return num(n);
+  align_sw_end;
 }
 
-static void ffi_be_i32_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
+static void ffi_swap_u32_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
 {
-  cnum v = c_num(n, self);
-
+  u32_t v = ffi_swap_u32(c_u32(n, self));
   (void) tft;
-
-  if (v < -convert(cnum, 0x7FFFFFFF) - 1 || v > 0x7FFFFFFF)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
-              self, n, nao);
-
-  dst[0] = (v >> 24) & 0xff;
-  dst[1] = (v >> 16) & 0xff;
-  dst[2] = (v >> 8) & 0xff;
-  dst[3] = v & 0xff;
+  align_sw_put(u32_t, dst, *coerce(u32_t *, dst) = v);
 }
 
-static val ffi_be_i32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+static val ffi_swap_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  cnum n = (convert(cnum, src[0]) << 24 | convert(cnum, src[1]) << 16 |
-            convert(cnum, src[2]) << 8 | src[3]);
-  (void) tft;
-  (void) self;
-  if ((n & 0x80000000) != 0)
-    n = -((n ^ 0xFFFFFFFF) + 1);
-  return num(n);
-}
-
-static void ffi_be_u32_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
-{
-  ucnum v = c_unum(n, self);
-
-  (void) tft;
-
-  if (v > 0xFFFFFFFF)
-    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 32 bit range"),
-              self, n, nao);
-
-  dst[0] = (v >> 24) & 0xff;
-  dst[1] = (v >> 16) & 0xff;
-  dst[2] = (v >> 8) & 0xff;
-  dst[3] = v & 0xff;
-}
-
-static val ffi_be_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
-{
-  ucnum n = (convert(ucnum, src[0]) << 24 | convert(ucnum, src[1]) << 16 |
-             convert(ucnum, src[2]) << 8 | src[3]);
+  align_sw_get(u32_t, src);
+  u32_t n = ffi_swap_u32(*coerce(u32_t *, src));
   (void) tft;
   (void) self;
   return unum(n);
+  align_sw_end;
 }
+#endif
 
-static void ffi_le_i32_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
+#if HAVE_I64
+static void ffi_swap_i64_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
 {
-  cnum v = c_num(n, self);
-
+  i64_t v = ffi_swap_i64(c_i64(n, self));
   (void) tft;
-
-  if (v < - convert(cnum, 0x7fffffff) - 1 || v > 0x7FFFFFFF)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
-              self, n, nao);
-
-  dst[3] = (v >> 24) & 0xff;
-  dst[2] = (v >> 16) & 0xff;
-  dst[1] = (v >> 8) & 0xff;
-  dst[0] = v & 0xff;
+  align_sw_put(i64_t, dst, *coerce(i64_t *, dst) = v);
 }
 
-static val ffi_le_i32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+static val ffi_swap_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  cnum n = (convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
-            convert(cnum, src[1]) << 8 | src[0]);
+  align_sw_get(i64_t, src);
+  i64_t n = ffi_swap_i64(*coerce(i64_t *, src));
+
   (void) tft;
   (void) self;
-  if ((n & 0x80000000) != 0)
-    n = -((n ^ 0xFFFFFFFF) + 1);
-  return num(n);
+
+  if (sizeof (i64_t) <= sizeof (cnum)) {
+    return num(n);
+  } else {
+    val high = num(n >> 32);
+    val low = unum(n & 0xFFFFFFFF);
+    return logior(ash(high, num_fast(32)), low);
+  }
+  align_sw_end;
 }
 
-static void ffi_le_u32_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
+static void ffi_swap_u64_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
 {
-  ucnum v = c_unum(n, self);
-
+  u64_t v = ffi_swap_u64(c_u64(n, self));
   (void) tft;
-
-  if (v > 0xFFFFFFFF)
-    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 32 bit range"),
-              self, n, nao);
-
-  dst[3] = (v >> 24) & 0xff;
-  dst[2] = (v >> 16) & 0xff;
-  dst[1] = (v >> 8) & 0xff;
-  dst[0] = v & 0xff;
+  align_sw_put(u64_t, dst, *coerce(u64_t *, dst) = v);
 }
 
-static val ffi_le_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+static val ffi_swap_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  ucnum n = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
-             convert(ucnum, src[1]) << 8 | src[0]);
+  align_sw_get(u64_t, src);
+  u64_t n = ffi_swap_u64(*coerce(u64_t *, src));
+
   (void) tft;
   (void) self;
-  return unum(n);
+
+  if (sizeof (u64_t) <= sizeof (uint_ptr_t)) {
+    return unum(n);
+  } else {
+    val high = unum(n >> 32);
+    val low = unum(n & 0xFFFFFFFF);
+    return logior(ash(high, num_fast(32)), low);
+  }
+  align_sw_end;
 }
+#endif
 
-static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
-{
-  i64_t v = c_i64(n, self);
+#if HAVE_LITTLE_ENDIAN
 
-  (void) tft;
+#define ffi_be_i16_put ffi_swap_i16_put
+#define ffi_be_i16_get ffi_swap_i16_get
+#define ffi_be_u16_put ffi_swap_u16_put
+#define ffi_be_u16_get ffi_swap_u16_get
 
-  dst[0] = (v >> 56) & 0xff;
-  dst[1] = (v >> 48) & 0xff;
-  dst[2] = (v >> 40) & 0xff;
-  dst[3] = (v >> 32) & 0xff;
-  dst[4] = (v >> 24) & 0xff;
-  dst[5] = (v >> 16) & 0xff;
-  dst[6] = (v >> 8) & 0xff;
-  dst[7] = v & 0xff;
-}
+#define ffi_be_i32_put ffi_swap_i32_put
+#define ffi_be_i32_get ffi_swap_i32_get
+#define ffi_be_u32_put ffi_swap_u32_put
+#define ffi_be_u32_get ffi_swap_u32_get
 
-static val ffi_be_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
-{
-  i64_t n = (convert(i64_t, src[0]) << 56 | convert(i64_t, src[1]) << 48 |
-             convert(i64_t, src[2]) << 40 | convert(i64_t, src[3]) << 32 |
-             convert(i64_t, src[4]) << 24 | convert(i64_t, src[5]) << 16 |
-             convert(i64_t, src[6]) << 8 | src[7]);
-  (void) tft;
-  (void) self;
-  return num_64(n);
-}
+#define ffi_be_i64_put ffi_swap_i64_put
+#define ffi_be_i64_get ffi_swap_i64_get
+#define ffi_be_u64_put ffi_swap_u64_put
+#define ffi_be_u64_get ffi_swap_u64_get
 
-static void ffi_be_u64_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
-{
-  u64_t v = c_u64(n, self);
+#define ffi_le_i16_put ffi_i16_put
+#define ffi_le_i16_get ffi_i16_get
+#define ffi_le_u16_put ffi_u16_put
+#define ffi_le_u16_get ffi_u16_get
 
-  (void) tft;
+#define ffi_le_i32_put ffi_i32_put
+#define ffi_le_i32_get ffi_i32_get
+#define ffi_le_u32_put ffi_u32_put
+#define ffi_le_u32_get ffi_u32_get
 
-  dst[0] = (v >> 56) & 0xff;
-  dst[1] = (v >> 48) & 0xff;
-  dst[2] = (v >> 40) & 0xff;
-  dst[3] = (v >> 32) & 0xff;
-  dst[4] = (v >> 24) & 0xff;
-  dst[5] = (v >> 16) & 0xff;
-  dst[6] = (v >> 8) & 0xff;
-  dst[7] = v & 0xff;
-  return;
-}
+#define ffi_le_i64_put ffi_i64_put
+#define ffi_le_i64_get ffi_i64_get
+#define ffi_le_u64_put ffi_u64_put
+#define ffi_le_u64_get ffi_u64_get
 
-static val ffi_be_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
-{
-  u64_t n = (convert(u64_t, src[0]) << 56 | convert(u64_t, src[1]) << 48 |
-             convert(u64_t, src[2]) << 40 | convert(u64_t, src[3]) << 32 |
-             convert(u64_t, src[4]) << 24 | convert(u64_t, src[5]) << 16 |
-             convert(u64_t, src[6]) << 8 | src[7]);
-  (void) tft;
-  (void) self;
-  return unum_64(n);
-}
+#else
 
-static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
-{
-  i64_t v = c_i64(n, self);
+#define ffi_be_i16_put ffi_i16_put
+#define ffi_be_i16_get ffi_i16_get
+#define ffi_be_u16_put ffi_u16_put
+#define ffi_be_u16_get ffi_u16_get
 
-  (void) tft;
+#define ffi_be_i32_put ffi_i32_put
+#define ffi_be_i32_get ffi_i32_get
+#define ffi_be_u32_put ffi_u32_put
+#define ffi_be_u32_get ffi_u32_get
 
-  dst[7] = (v >> 56) & 0xff;
-  dst[6] = (v >> 48) & 0xff;
-  dst[5] = (v >> 40) & 0xff;
-  dst[4] = (v >> 32) & 0xff;
-  dst[3] = (v >> 24) & 0xff;
-  dst[2] = (v >> 16) & 0xff;
-  dst[1] = (v >> 8) & 0xff;
-  dst[0] = v & 0xff;
-}
+#define ffi_be_i64_put ffi_i64_put
+#define ffi_be_i64_get ffi_i64_get
+#define ffi_be_u64_put ffi_u64_put
+#define ffi_be_u64_get ffi_u64_get
 
-static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
-{
-  u64_t n = (convert(u64_t, src[7]) << 56 | convert(u64_t, src[6]) << 48 |
-             convert(u64_t, src[5]) << 40 | convert(u64_t, src[4]) << 32 |
-             convert(u64_t, src[3]) << 24 | convert(u64_t, src[2]) << 16 |
-             convert(u64_t, src[1]) << 8 | src[0]);
-  (void) tft;
-  (void) self;
-  return num_64(n);
-}
+#define ffi_le_i16_put ffi_swap_i16_put
+#define ffi_le_i16_get ffi_swap_i16_get
+#define ffi_le_u16_put ffi_swap_u16_put
+#define ffi_le_u16_get ffi_swap_u16_get
 
-static void ffi_le_u64_put(struct txr_ffi_type *tft, val n,
-                           mem_t *dst, val self)
-{
-  u64_t v = c_u64(n, self);
+#define ffi_le_i32_put ffi_swap_i32_put
+#define ffi_le_i32_get ffi_swap_i32_get
+#define ffi_le_u32_put ffi_swap_u32_put
+#define ffi_le_u32_get ffi_swap_u32_get
 
-  (void) tft;
+#define ffi_le_i64_put ffi_swap_i64_put
+#define ffi_le_i64_get ffi_swap_i64_get
+#define ffi_le_u64_put ffi_swap_u64_put
+#define ffi_le_u64_get ffi_swap_u64_get
 
-  dst[7] = (v >> 56) & 0xff;
-  dst[6] = (v >> 48) & 0xff;
-  dst[5] = (v >> 40) & 0xff;
-  dst[4] = (v >> 32) & 0xff;
-  dst[3] = (v >> 24) & 0xff;
-  dst[2] = (v >> 16) & 0xff;
-  dst[1] = (v >> 8) & 0xff;
-  dst[0] = v & 0xff;
-}
-
-static val ffi_le_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
-{
-  u64_t n = (convert(u64_t, src[7]) << 56 | convert(u64_t, src[6]) << 48 |
-             convert(u64_t, src[5]) << 40 | convert(u64_t, src[4]) << 32 |
-             convert(u64_t, src[3]) << 24 | convert(u64_t, src[2]) << 16 |
-             convert(u64_t, src[1]) << 8 | src[0]);
-  (void) tft;
-  (void) self;
-  return unum_64(n);
-}
+#endif
 
 static void ffi_be_float_put(struct txr_ffi_type *tft, val n,
                              mem_t *dst, val self)
@@ -1807,6 +1726,8 @@ static val ffi_wchar_rget(struct txr_ffi_type *tft, mem_t *src, val self)
   return chr(c);
 }
 
+#if HAVE_I16
+
 static void ffi_be_i16_rput(struct txr_ffi_type *tft, val n, mem_t *dst,
                             val self)
 {
@@ -1830,6 +1751,10 @@ static val ffi_be_u16_rget(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   return ffi_be_u16_get(tft, src + 6, self);
 }
+
+#endif
+
+#if HAVE_I32
 
 static void ffi_be_i32_rput(struct txr_ffi_type *tft, val n, mem_t *dst,
                             val self)
@@ -1855,6 +1780,10 @@ static val ffi_be_u32_rget(struct txr_ffi_type *tft, mem_t *src, val self)
   return ffi_be_u32_get(tft, src + 4, self);
 }
 
+#endif
+
+#if HAVE_I16
+
 static void ffi_le_i16_rput(struct txr_ffi_type *tft, val n, mem_t *dst,
                             val self)
 {
@@ -1879,6 +1808,10 @@ static val ffi_le_u16_rget(struct txr_ffi_type *tft, mem_t *src, val self)
   return ffi_le_u16_get(tft, src + 6, self);
 }
 
+#endif
+
+#if HAVE_I32
+
 static void ffi_le_i32_rput(struct txr_ffi_type *tft, val n, mem_t *dst,
                             val self)
 {
@@ -1902,6 +1835,8 @@ static val ffi_le_u32_rget(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   return ffi_le_u32_get(tft, src + 4, self);
 }
+
+#endif
 
 static void ffi_bool_rput(struct txr_ffi_type *tft, val truth,
                           mem_t *dst, val self)
@@ -4390,6 +4325,8 @@ static void ffi_init_types(void)
                                            &ffi_type_pointer,
                                            ffi_val_put, ffi_val_get,
                                            0, 0));
+
+#if HAVE_I16
   ffi_typedef(be_uint16_s, make_ffi_type_builtin(be_uint16_s, integer_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (u16_t),
@@ -4408,6 +4345,9 @@ static void ffi_init_types(void)
                                                 ffi_be_i16_get,
                                                 ifbe(ffi_be_i16_rput),
                                                 ifbe(ffi_be_i16_rget)));
+#endif
+
+#if HAVE_I32
   ffi_typedef(be_uint32_s, make_ffi_type_builtin(be_uint32_s, integer_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (u32_t),
@@ -4426,6 +4366,9 @@ static void ffi_init_types(void)
                                                 ffi_be_i32_get,
                                                 ifbe(ffi_be_i32_rput),
                                                 ifbe(ffi_be_i32_rget)));
+#endif
+
+#if HAVE_I64
   ffi_typedef(be_uint64_s, make_ffi_type_builtin(be_uint64_s, integer_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (u64_t),
@@ -4440,6 +4383,8 @@ static void ffi_init_types(void)
                                                 &ffi_type_sint64,
                                                 ffi_be_i64_put,
                                                 ffi_be_i64_get, 0, 0));
+#endif
+
   ffi_typedef(be_float_s, make_ffi_type_builtin(be_float_s, integer_s,
                                                 FFI_KIND_NUM,
                                                 sizeof (float),
@@ -4454,6 +4399,8 @@ static void ffi_init_types(void)
                                                  &ffi_type_double,
                                                  ffi_be_double_put,
                                                  ffi_be_double_get, 0, 0));
+
+#if HAVE_I16
   ffi_typedef(le_uint16_s, make_ffi_type_builtin(le_uint16_s, integer_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (u16_t),
@@ -4472,6 +4419,9 @@ static void ffi_init_types(void)
                                                 ffi_le_i16_get,
                                                 ifbe(ffi_le_i16_rput),
                                                 ifbe(ffi_le_i16_rget)));
+#endif
+
+#if HAVE_I32
   ffi_typedef(le_uint32_s, make_ffi_type_builtin(le_uint32_s, integer_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (u32_t),
@@ -4490,6 +4440,9 @@ static void ffi_init_types(void)
                                                 ffi_le_i32_get,
                                                 ifbe(ffi_le_i32_rput),
                                                 ifbe(ffi_le_i32_rget)));
+#endif
+
+#if HAVE_I64
   ffi_typedef(le_uint64_s, make_ffi_type_builtin(le_uint64_s, integer_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (u64_t),
@@ -4504,6 +4457,8 @@ static void ffi_init_types(void)
                                                 &ffi_type_sint64,
                                                 ffi_le_i64_put,
                                                 ffi_le_i64_get, 0, 0));
+#endif
+
   ffi_typedef(le_float_s, make_ffi_type_builtin(le_float_s, integer_s,
                                                 FFI_KIND_NUM,
                                                 sizeof (float),
