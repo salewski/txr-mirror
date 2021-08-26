@@ -27,7 +27,8 @@
 
 (assert (plusp page-size))
 
-(let* ((mk-rnd-buf (opip (expt 256 page-size) rand buf-uint))
+(let* ((buf-mod (trunc (expt 256 page-size) 2))
+       (mk-rnd-buf (ret (flow buf-mod rand (+ buf-mod) buf-uint)))
        (rndbuf0 [mk-rnd-buf])
        (rndbuf1 [mk-rnd-buf])
        (fname "rand.bin"))
