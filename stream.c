@@ -1471,9 +1471,8 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
 
   if (*ms == '+') {
     ms++;
-    if (m.read)
-      m.write = 1;
     m.read = 1;
+    m.write = 1;
   }
 
   if (!m.read && !m.write)
