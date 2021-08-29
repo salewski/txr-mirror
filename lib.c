@@ -943,9 +943,15 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
 
       if (less(rf, rt)) switch (type(rf)) {
       case NUM:
-        it->ui.cn = c_num(rf, self);
-        it->ul.cbound = c_num(rt, self);
-        it->ops = &si_range_cnum_ops;
+        if (bignump(rt) && !mp_in_intptr_range(mp(rt))) {
+          it->ui.vn = rf;
+          it->ul.vbound = rt;
+          it->ops = &si_range_bignum_ops;
+        } else {
+          it->ui.cn = c_num(rf, self);
+          it->ul.cbound = c_num(rt, self);
+          it->ops = &si_range_cnum_ops;
+        }
         break;
       case CHR:
         it->ui.cn = c_chr(rf);
@@ -970,9 +976,15 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         unsup_obj(self, it->inf.obj);
       } else if (!equal(rf, rt)) switch (type(rf)) {
       case NUM:
-        it->ui.cn = c_num(rf, self);
-        it->ul.cbound = c_num(rt, self);
-        it->ops = &si_rev_range_cnum_ops;
+        if (bignump(rt) && !mp_in_intptr_range(mp(rt))) {
+          it->ui.vn = rf;
+          it->ul.vbound = rt;
+          it->ops = &si_rev_range_bignum_ops;
+        } else {
+          it->ui.cn = c_num(rf, self);
+          it->ul.cbound = c_num(rt, self);
+          it->ops = &si_rev_range_cnum_ops;
+        }
         break;
       case CHR:
         it->ui.cn = c_chr(rf);
