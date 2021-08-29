@@ -56510,7 +56510,7 @@ Note that it permits no whitespace characters:
 .mets < mode-string := [ < mode ] [ < options ]
 .mets < mode := { < selector [ + ] | + }
 .mets < selector := { r | w | a | m }
-.mets < options := { b | l | u | i | n | < digit | < redirection }
+.mets < options := { b | x | l | u | i | n | < digit | < redirection }
 .mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
 .onom
 
@@ -56578,6 +56578,16 @@ The file is opened in binary mode: no line ending translation takes place.
 In the absence of this option, files are opened in text mode, in which newline
 characters in the stream are an abstract indication of the end of a line,
 translate to a system-specific way of terminating lines in text files.
+.coIP x
+The file is created and opened only if it does not already exist.
+Otherwise, a
+.code file-error
+exception is thrown.
+This option is allowed only with the
+.code w
+and
+.code w+
+modes.
 .coIP l
 Specifies that the stream will be line buffered.  This means that an implicit
 flush operation takes place whenever the newline character is output.

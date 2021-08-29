@@ -111,6 +111,7 @@ struct stdio_mode {
   unsigned append : 1;
   unsigned binary : 1;
   unsigned notrunc : 1;
+  unsigned excl : 1;
   unsigned nonblock : 1;
   unsigned interactive : 1;
   unsigned unbuf : 1;
@@ -119,9 +120,9 @@ struct stdio_mode {
   int redir[STDIO_MODE_NREDIRS][2];
 };
 
-#define stdio_mode_init_blank { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
-#define stdio_mode_init_r     { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
-#define stdio_mode_init_rpb   { 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, -1, { { 0 } } }
+#define stdio_mode_init_blank { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
+#define stdio_mode_init_r     { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
+#define stdio_mode_init_rpb   { 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
 
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
 #define std_output (deref(lookup_var_l(nil, stdout_s)))

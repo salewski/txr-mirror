@@ -1130,6 +1130,7 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
                if3(m.create || m.append,
                    if3(!m.notrunc, O_TRUNC, 0) | O_CREAT, 0) |
                if3(m.append, O_APPEND, 0) |
+               if3(m.excl, O_EXCL, 0) |
                if3(m.nonblock, O_NONBLOCK, 0));
   char *stkname = coerce(char *, alloca(nsiz));
   int fd;
@@ -1143,7 +1144,8 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
 
   return (fd < 0) ? NULL : w_fdopen(fd, mode);
 #else
-  if (m.notrunc || m.nonblock)
+  /* TODO: detect if fopen supports "x" in mode */
+  if (m.notrunc || m.excl || m.nonblock)
     uw_throwf(file_error_s,
               lit("open-file: specified mode not supported on this system"),
                   nao);
@@ -1483,6 +1485,14 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
     switch (*ms) {
     case 'b':
       m.binary = 1;
+      break;
+    case 'x':
+      /* Ensure only "w" and "w+" can have the "x" option. */
+      if (!m.write || !m.create || m.notrunc) {
+        m.malformed = 1;
+        return m;
+      }
+      m.excl = 1;
       break;
     case 'i':
       m.interactive = 1;
