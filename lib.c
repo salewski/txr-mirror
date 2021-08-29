@@ -861,6 +861,11 @@ static void seq_iter_rewind(seq_iter_t *it, val self)
   }
 }
 
+static void seq_iter_mark_op(struct seq_iter *it)
+{
+  gc_mark(it->ui.iter);
+}
+
 struct seq_iter_ops si_null_ops = seq_iter_ops_init(seq_iter_get_nil,
                                                     seq_iter_peek_nil);
 
@@ -877,12 +882,12 @@ struct seq_iter_ops si_tree_ops = seq_iter_ops_init(seq_iter_get_tree,
                                                     seq_iter_peek_tree);
 
 struct seq_iter_ops si_range_cnum_ops =
-  seq_iter_ops_init(seq_iter_get_range_cnum,
-                    seq_iter_peek_range_cnum);
+  seq_iter_ops_init_nomark(seq_iter_get_range_cnum,
+                           seq_iter_peek_range_cnum);
 
 struct seq_iter_ops si_range_chr_ops =
-  seq_iter_ops_init(seq_iter_get_range_chr,
-                    seq_iter_peek_range_chr);
+  seq_iter_ops_init_nomark(seq_iter_get_range_chr,
+                           seq_iter_peek_range_chr);
 
 struct seq_iter_ops si_range_bignum_ops =
   seq_iter_ops_init(seq_iter_get_range_bignum,
@@ -893,12 +898,12 @@ struct seq_iter_ops si_range_str_ops =
                     seq_iter_peek_range_str);
 
 struct seq_iter_ops si_rev_range_cnum_ops =
-  seq_iter_ops_init(seq_iter_get_rev_range_cnum,
-                    seq_iter_peek_rev_range_cnum);
+  seq_iter_ops_init_nomark(seq_iter_get_rev_range_cnum,
+                           seq_iter_peek_rev_range_cnum);
 
 struct seq_iter_ops si_rev_range_chr_ops =
-  seq_iter_ops_init(seq_iter_get_rev_range_chr,
-                    seq_iter_peek_rev_range_chr);
+  seq_iter_ops_init_nomark(seq_iter_get_rev_range_chr,
+                           seq_iter_peek_rev_range_chr);
 
 struct seq_iter_ops si_rev_range_bignum_ops =
   seq_iter_ops_init(seq_iter_get_rev_range_bignum,
@@ -908,8 +913,8 @@ struct seq_iter_ops si_rev_range_str_ops =
   seq_iter_ops_init(seq_iter_get_rev_range_str,
                     seq_iter_peek_range_str);
 
-struct seq_iter_ops si_chr_ops = seq_iter_ops_init(seq_iter_get_chr,
-                                                   seq_iter_peek_chr);
+struct seq_iter_ops si_chr_ops = seq_iter_ops_init_nomark(seq_iter_get_chr,
+                                                          seq_iter_peek_chr);
 
 struct seq_iter_ops si_num_ops = seq_iter_ops_init(seq_iter_get_num,
                                                    seq_iter_peek_num);
@@ -1127,20 +1132,8 @@ static void seq_iter_mark(val seq_iter)
 
   gc_mark(si->inf.obj);
 
-  switch (si->inf.kind) {
-  case SEQ_LISTLIKE:
-  case SEQ_HASHLIKE:
-  case SEQ_TREELIKE:
-    gc_mark(si->ui.iter);
-    break;
-  case SEQ_NOTSEQ:
-    if (cobjp(si->inf.obj) && obj_struct_p(si->inf.obj))
-      gc_mark(si->ui.iter);
-    break;
-  case SEQ_NIL:
-  case SEQ_VECLIKE:
-    break;
-  }
+  if (si->ops->mark)
+    si->ops->mark(si);
 }
 
 static struct cobj_ops seq_iter_ops = cobj_ops_init(eq,
@@ -1165,7 +1158,9 @@ val seq_next(val iter, val end_val)
   struct seq_iter *si = coerce(struct seq_iter *,
                                cobj_handle(self, iter, seq_iter_cls));
   val item = nil;
-  return if3(seq_get(si, &item), item, end_val);
+  val ret = if3(seq_get(si, &item), item, end_val);
+  mut(iter);
+  return ret;
 }
 
 val seq_reset(val iter, val obj)
@@ -1300,6 +1295,8 @@ val iter_step(val iter)
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       val item = nil;
       (void) seq_get(si, &item);
+      if (si->ops->mark)
+        mut(iter);
       return iter;
     }
     if (obj_struct_p(iter)) {

@@ -421,9 +421,11 @@ typedef struct seq_iter {
 struct seq_iter_ops {
   int (*get)(struct seq_iter *, val *pval);
   int (*peek)(struct seq_iter *, val *pval);
+  void (*mark)(struct seq_iter *);
 };
 
-#define seq_iter_ops_init(get, peek) { get, peek }
+#define seq_iter_ops_init(get, peek) { get, peek, seq_iter_mark_op }
+#define seq_iter_ops_init_nomark(get, peek) { get, peek, 0 }
 
 extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
 
