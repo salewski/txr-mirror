@@ -1127,8 +1127,7 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
   int flags = (if3(m.read && m.write, O_RDWR, 0) |
                if3(m.read && !m.write, O_RDONLY, 0) |
                if3(!m.read && m.write, O_WRONLY, 0) |
-               if3(m.create || m.append,
-                   if3(!m.notrunc, O_TRUNC, 0) | O_CREAT, 0) |
+               if3(m.create, if3(!m.notrunc, O_TRUNC, 0) | O_CREAT, 0) |
                if3(m.append, O_APPEND, 0) |
                if3(m.excl, O_EXCL, 0) |
                if3(m.nonblock, O_NONBLOCK, 0));
@@ -1459,6 +1458,7 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
   case 'a':
     ms++;
     m.write = 1;
+    m.create = 1;
     m.append = 1;
     m.notrunc = 1;
     break;
