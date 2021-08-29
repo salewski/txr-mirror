@@ -76,10 +76,10 @@ STDLIB_LATE_TLOS := $(filter-out $(STDLIB_EARLY_TLOS),$(STDLIB_TLOS))
 ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir),\
                     $(filter-out lex.yy.c y.tab.c y.tab.h,\
-                                 $(shell git $(if $(top_srcdir), \
-						--work-tree=$(top_srcdir)) \
+                                 $(shell git $(if $(top_srcdir),\
+                                               --work-tree=$(top_srcdir)) \
                                              --git-dir=$(top_srcdir).git \
-                                              ls-files "*.c" "*.h" "*.l" "*.y")))
+                                             ls-files "*.c" "*.h" "*.l" "*.y")))
 endif
 
 SHIPPED := lex.yy.c y.tab.c y.tab.h
