@@ -1126,8 +1126,9 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
   size_t nsiz = strlen(name) + 1;
   int flags = (if3(m.read && m.write, O_RDWR, 0) |
                if3(m.read && !m.write, O_RDONLY, 0) |
-               if3(!m.read && m.write,
-                   if3(!m.notrunc, O_TRUNC, 0) | O_WRONLY | O_CREAT, 0) |
+               if3(!m.read && m.write, O_WRONLY, 0) |
+               if3(m.create || m.append,
+                   if3(!m.notrunc, O_TRUNC, 0) | O_CREAT, 0) |
                if3(m.append, O_APPEND, 0) |
                if3(m.nonblock, O_NONBLOCK, 0));
   char *stkname = coerce(char *, alloca(nsiz));
