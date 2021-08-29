@@ -804,7 +804,7 @@ static int seq_iter_peek_fast_oop(seq_iter_t *it, val *pval)
 val seq_geti(seq_iter_t *it)
 {
   val v = nil;
-  (void) it->get(it, &v);
+  (void) it->ops->get(it, &v);
   return v;
 }
 
@@ -861,6 +861,65 @@ static void seq_iter_rewind(seq_iter_t *it, val self)
   }
 }
 
+struct seq_iter_ops si_null_ops = seq_iter_ops_init(seq_iter_get_nil,
+                                                    seq_iter_peek_nil);
+
+struct seq_iter_ops si_list_ops = seq_iter_ops_init(seq_iter_get_list,
+                                                    seq_iter_peek_list);
+
+struct seq_iter_ops si_vec_ops = seq_iter_ops_init(seq_iter_get_vec,
+                                                   seq_iter_peek_vec);
+
+struct seq_iter_ops si_hash_ops = seq_iter_ops_init(seq_iter_get_hash,
+                                                    seq_iter_peek_hash);
+
+struct seq_iter_ops si_tree_ops = seq_iter_ops_init(seq_iter_get_tree,
+                                                    seq_iter_peek_tree);
+
+struct seq_iter_ops si_range_cnum_ops =
+  seq_iter_ops_init(seq_iter_get_range_cnum,
+                    seq_iter_peek_range_cnum);
+
+struct seq_iter_ops si_range_chr_ops =
+  seq_iter_ops_init(seq_iter_get_range_chr,
+                    seq_iter_peek_range_chr);
+
+struct seq_iter_ops si_range_bignum_ops =
+  seq_iter_ops_init(seq_iter_get_range_bignum,
+                    seq_iter_peek_range_bignum);
+
+struct seq_iter_ops si_range_str_ops =
+  seq_iter_ops_init(seq_iter_get_range_str,
+                    seq_iter_peek_range_str);
+
+struct seq_iter_ops si_rev_range_cnum_ops =
+  seq_iter_ops_init(seq_iter_get_rev_range_cnum,
+                    seq_iter_peek_rev_range_cnum);
+
+struct seq_iter_ops si_rev_range_chr_ops =
+  seq_iter_ops_init(seq_iter_get_rev_range_chr,
+                    seq_iter_peek_rev_range_chr);
+
+struct seq_iter_ops si_rev_range_bignum_ops =
+  seq_iter_ops_init(seq_iter_get_rev_range_bignum,
+                    seq_iter_peek_rev_range_bignum);
+
+struct seq_iter_ops si_rev_range_str_ops =
+  seq_iter_ops_init(seq_iter_get_rev_range_str,
+                    seq_iter_peek_range_str);
+
+struct seq_iter_ops si_chr_ops = seq_iter_ops_init(seq_iter_get_chr,
+                                                   seq_iter_peek_chr);
+
+struct seq_iter_ops si_num_ops = seq_iter_ops_init(seq_iter_get_num,
+                                                   seq_iter_peek_num);
+
+struct seq_iter_ops si_oop_ops = seq_iter_ops_init(seq_iter_get_oop,
+                                                   seq_iter_peek_oop);
+
+struct seq_iter_ops si_fast_oop_ops = seq_iter_ops_init(seq_iter_get_fast_oop,
+                                                        seq_iter_peek_fast_oop);
+
 void seq_iter_init_with_info(val self, seq_iter_t *it,
                              seq_info_t si, int support_rewind)
 {
@@ -881,28 +940,24 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
       case NUM:
         it->ui.cn = c_num(rf, self);
         it->ul.cbound = c_num(rt, self);
-        it->get = seq_iter_get_range_cnum;
-        it->peek = seq_iter_peek_range_cnum;
+        it->ops = &si_range_cnum_ops;
         break;
       case CHR:
         it->ui.cn = c_chr(rf);
         it->ul.cbound = c_chr(rt);
-        it->get = seq_iter_get_range_chr;
-        it->peek = seq_iter_peek_range_chr;
+        it->ops = &si_range_chr_ops;
         break;
       case BGNUM:
         it->ui.vn = rf;
         it->ul.vbound = rt;
-        it->get = seq_iter_get_range_bignum;
-        it->peek = seq_iter_peek_range_bignum;
+        it->ops = &si_range_bignum_ops;
         break;
       case LIT:
       case STR:
       case LSTR:
         it->ui.vn = copy_str(rf);
         it->ul.vbound = rt;
-        it->get = seq_iter_get_range_str;
-        it->peek = seq_iter_peek_range_str;
+        it->ops = &si_range_str_ops;
         if (eql(length_str(rf), length_str(rt)))
           break;
         /* fallthrough */
@@ -912,28 +967,24 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
       case NUM:
         it->ui.cn = c_num(rf, self);
         it->ul.cbound = c_num(rt, self);
-        it->get = seq_iter_get_rev_range_cnum;
-        it->peek = seq_iter_peek_rev_range_cnum;
+        it->ops = &si_rev_range_cnum_ops;
         break;
       case CHR:
         it->ui.cn = c_chr(rf);
         it->ul.cbound = c_chr(rt);
-        it->get = seq_iter_get_rev_range_chr;
-        it->peek = seq_iter_peek_rev_range_chr;
+        it->ops = &si_rev_range_chr_ops;
         break;
       case BGNUM:
         it->ui.vn = rf;
         it->ul.vbound = rt;
-        it->get = seq_iter_get_rev_range_bignum;
-        it->peek = seq_iter_peek_rev_range_bignum;
+        it->ops = &si_rev_range_bignum_ops;
         break;
       case LIT:
       case STR:
       case LSTR:
         it->ui.vn = copy_str(rf);
         it->ul.vbound = rt;
-        it->get = seq_iter_get_rev_range_str;
-        it->peek = seq_iter_peek_range_str;
+        it->ops = &si_rev_range_str_ops;
         if (eql(length_str(rf), length_str(rt)))
           break;
         /* fallthrough */
@@ -948,16 +999,14 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
   case CHR:
     it->ui.cn = c_chr(it->inf.obj);
     it->ul.cbound = 0;
-    it->get = seq_iter_get_chr;
-    it->peek = seq_iter_peek_chr;
+    it->ops = &si_chr_ops;
     break;
   case NUM:
   case BGNUM:
   case FLNUM:
     it->ui.vn = it->inf.obj;
     it->ul.vbound = nil;
-    it->get = seq_iter_get_num;
-    it->peek = seq_iter_peek_num;
+    it->ops = &si_num_ops;
     break;
   case COBJ:
     if (obj_struct_p(it->inf.obj)) {
@@ -967,21 +1016,18 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         if (iter == nil) {
           it->ui.iter = nil;
           it->ul.len = 0;
-          it->get = seq_iter_get_nil;
-          it->peek = seq_iter_peek_nil;
+          it->ops = &si_null_ops;
           break;
         } else {
           val iter_more_meth = get_special_slot(iter, iter_more_m);
           if (iter_more_meth) {
             it->ui.iter = iter;
             it->ul.next = nao;
-            it->get = seq_iter_get_oop;
-            it->peek = seq_iter_peek_oop;
+            it->ops = &si_oop_ops;
           } else {
             it->ui.iter = iter;
             it->ul.next = nao;
-            it->get = seq_iter_get_fast_oop;
-            it->peek = seq_iter_peek_fast_oop;
+            it->ops = &si_fast_oop_ops;
           }
           break;
         }
@@ -998,8 +1044,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
                         copy_tree_iter(it->inf.obj),
                         it->inf.obj);
       it->ul.len = 0;
-      it->get = seq_iter_get_tree;
-      it->peek = seq_iter_peek_tree;
+      it->ops = &si_tree_ops;
       break;
     }
     /* fallthrough */
@@ -1008,34 +1053,29 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
     case SEQ_NIL:
       it->ui.iter = nil;
       it->ul.len = 0;
-      it->get = seq_iter_get_nil;
-      it->peek = seq_iter_peek_nil;
+      it->ops = &si_null_ops;
       break;
     case SEQ_LISTLIKE:
       it->ui.iter = it->inf.obj;
       it->ul.len = 0;
-      it->get = seq_iter_get_list;
-      it->peek = seq_iter_peek_list;
+      it->ops = &si_list_ops;
       if (!support_rewind)
         it->inf.obj = nil;
       break;
     case SEQ_VECLIKE:
       it->ui.index = 0;
       it->ul.len = c_num(length(it->inf.obj), self);
-      it->get = seq_iter_get_vec;
-      it->peek = seq_iter_peek_vec;
+      it->ops = &si_vec_ops;
       break;
     case SEQ_HASHLIKE:
       it->ui.iter = hash_begin(it->inf.obj);
       it->ul.len = 0;
-      it->get = seq_iter_get_hash;
-      it->peek = seq_iter_peek_hash;
+      it->ops = &si_hash_ops;
       break;
     case SEQ_TREELIKE:
       it->ui.iter = tree_begin(it->inf.obj, colon_k, colon_k);
       it->ul.len = 0;
-      it->get = seq_iter_get_tree;
-      it->peek = seq_iter_peek_tree;
+      it->ops = &si_tree_ops;
       break;
     default:
       unsup_obj(self, it->inf.obj);
