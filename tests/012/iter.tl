@@ -59,3 +59,11 @@
 
 (test
   [mapcar identity [0..10 3 6]] (3 4 5))
+
+;; iterating from fixnum to bignum was rejected in up to txr-269.
+(test (each ((x fixnum-max..(* 5 fixnum-max))) (return 42)) 42)
+
+(test (progn (each ((x "A".."Z")) (sys:gc)) 42) 42)
+
+(let ((big (* fixnum-max 8)))
+  (test (progn (each ((x big..(+ 10 big))) (sys:gc)) 42) 42))
