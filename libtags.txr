@@ -1,5 +1,5 @@
 #!/usr/bin/env txr
-@(do
+@(mdo
   ;; TODO
   ;; #. etags support (update to new hash table format, etc.).
   ;; #. Remove obsolete symbols (flip, etc.).
@@ -65,14 +65,6 @@
   (defvarl emacs)
   (defvarl verbose)
 
-  (let ((o (new libtags-opts)))
-    o.(getopts *args*)
-    (set output (cond (o.output o.output)
-                      (o.emacs "TAGS")
-                      (t "tags")))
-    (set emacs o.emacs)
-    (set verbose o.verbose))
-
   (defvarl ix-tags (hash :equal-based))
   ;; FIXME Rename to sym-vars?
   (defvarl var-syms (hash :equal-based))
@@ -83,7 +75,7 @@
     ;; actual function.
     (when oldkey
       (del [ix-tags oldkey]))
-    (upd [ix-tags newkey] (append @1 (list tag))))
+    (upd [ix-tags newkey] (append (sys:var 1) (list tag))))
 
   (defun qualify-sym (sym pkg)
     (join (casequal pkg
@@ -99,6 +91,14 @@
     (mequal fun
             "op_error" "op_meta_error"
             "op_qquote_error" "op_unquote_error")))
+@(do
+   (let ((o (new libtags-opts)))
+     o.(getopts *args*)
+     (set output (cond (o.output o.output)
+                   (o.emacs "TAGS")
+                   (t "tags")))
+     (set emacs o.emacs)
+     (set verbose o.verbose)))
 @(bind var_s #/\w[\w\d]*_s/)
 @(bind cident #/\w[\w\d]*/)
 @(bind regfun #/reg_(op|mac|fun)/)
