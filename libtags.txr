@@ -314,7 +314,8 @@
 @;; However, if we ever need to do it, we could add the tags in question
 @;; to another hash table and replace the _f variables in question as soon
 @;; as we found suitable candidates.
-@(next :list (cons "lib.c" (remqual "lib.c" (glob "*.c"))))
+@(next :list (cons "lib.c" (remqual "lib.c"
+                                    (command-get-lines "git ls-files '*.c'"))))
 @(repeat)
 @  file.c
 @  (get-file-ix-tags `@file.c`)
