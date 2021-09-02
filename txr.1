@@ -22277,6 +22277,77 @@ can be expressed as:
                    (conses list1) ... (conses listn))
 .brev
 
+.coNP Function @ delcons
+.synb
+.mets (delcons < cons << list )
+.syne
+.desc
+The
+.code delcons
+function destructively removes a cons cell from a list. The
+.meta list
+is searched to see whether one of its cons cells is the same object as
+.metn cons .
+If so, that cell is removed from the list.
+
+The
+.meta list
+argument may be a proper or improper list, possibly empty. It may also be an
+atom other than
+.codn nil ,
+which is regarded as being, effectively, am empty improper list terminated by
+that atom.
+
+The operation of
+.code delcons
+is divided into the following three cases. If
+.meta cons
+is the first cons cell of
+.metn list ,
+then the
+.code cdr
+of
+.meta list
+is returned. If
+.meta cons
+is the second or subsequent cons of
+.metn list ,
+then
+.meta list
+is destructively altered to remove
+.meta cons
+and then returned.  This means that the
+.code cdr
+field of the predecessor of
+.meta cons
+is altered from referencing
+.meta cons
+to referencing
+.mono
+.meti (cdr << cons )
+.onom
+instead.
+The returned value is the same cons cell as
+.metn list .
+The third case occurs when
+.meta cons
+is not found in
+.metn list .
+In this situation,
+.meta list
+is returned unchanged.
+
+.TP* Examples:
+.verb
+  (let ((x (list 1 2 3)))
+    (delcons x x))
+  -> (2 3)
+
+  (let ((x (list 1 2 . 3)))
+    (delcons (cdr x) x))
+  -> (1 . 3)
+.brev
+
 .SS* Association Lists
 
 Association lists are ordinary lists formed according to a special convention.

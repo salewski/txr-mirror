@@ -2796,6 +2796,28 @@ val tailp(val obj, val list)
   return t;
 }
 
+val delcons(val cons, val list)
+{
+  val iter = list;
+
+  if (!consp(cons))
+    return list;
+
+  if (cons == iter)
+    return cdr(iter);
+
+  while (consp(iter)) {
+    val d = us_cdr(iter);
+    if (cons == d) {
+      us_rplacd(iter, us_cdr(cons));
+      break;
+    }
+    iter = d;
+  }
+
+  return list;
+}
+
 val memq(val obj, val list)
 {
   val list_orig = list;

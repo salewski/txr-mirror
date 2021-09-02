@@ -482,6 +482,7 @@
       ("del" "D-0022")
       ("del*" "N-0166445C")
       ("delay" "N-00DCE524")
+      ("delcons" "N-03A1ABA8")
       ("delete-package" "N-02E687F3")
       ("derived" "N-0151798B")
       ("dev-t" "N-01D716FE")
