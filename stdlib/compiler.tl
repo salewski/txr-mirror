@@ -2173,7 +2173,7 @@
                     (path-cat (dir-name parent) in-path)
                     in-path))
          (suff (short-suffix in-path))
-         (ip-nosuff (trim-right in-path suff))
+         (ip-nosuff (trim-right suff in-path))
          in-stream out-stream)
     (casequal suff
       (".txr" (error "~s: cannot compile TXR files" 'compile-file))
