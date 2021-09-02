@@ -6265,7 +6265,7 @@ static val mmap_op(val carray, val offset_in, val size_in,
   size_t off = 0, sz;
 
   if (carray->co.ops != &carray_mmap_ops)
-    uw_throwf(type_error_s, lit("~a: ~s isn't a mmaped carray"),
+    uw_throwf(type_error_s, lit("~a: ~s isn't a mmapped carray"),
               self, carray, nao);
 
   if (missingp(offset_in) && missingp(size_in)) {
