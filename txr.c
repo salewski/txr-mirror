@@ -1125,7 +1125,7 @@ int txr_main(int argc, char **argv)
     gc_state(gc);
 
     close_stream(parse_stream, nil);
-
+    run_load_hooks(dyn_env);
     uw_release_deferred_warnings();
 
     spec = parser->syntax_tree;
@@ -1172,6 +1172,7 @@ int txr_main(int argc, char **argv)
   } else if (enter_repl) {
     read_eval_stream_noerr(self, parse_stream, spec_file_str, std_error);
     close_stream(parse_stream, nil);
+    run_load_hooks(dyn_env);
     uw_release_deferred_warnings();
   } else {
     val result = read_eval_stream(self, parse_stream, std_error);

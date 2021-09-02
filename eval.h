@@ -34,7 +34,7 @@ extern val eval_error_s, if_s, call_s, identity_s;
 extern val eq_s, eql_s, equal_s, less_s;
 extern val car_s, cdr_s;
 extern val last_form_evaled;
-extern val load_path_s, load_recursive_s;
+extern val load_path_s, load_hooks_s, load_recursive_s;
 extern val special_s, struct_s;
 
 extern val dyn_env;
@@ -82,6 +82,7 @@ void trace_check(val name);
 val format_field(val string_or_list, val modifier, val filter, val eval_fun);
 val subst_vars(val forms, val env, val filter);
 val expand_quasi(val quasi_forms, val menv);
+void run_load_hooks(val load_dyn_env);
 val load(val target);
 val expand(val form, val menv);
 val expand_forms(val forms, val menv);

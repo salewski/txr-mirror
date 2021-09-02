@@ -102,7 +102,7 @@ val vector_lit_s, vec_list_s, tree_lit_s, tree_construct_s;
 val macro_time_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s, struct_s;
 val fbind_s, lbind_s, flet_s, labels_s;
-val load_path_s, load_recursive_s;
+val load_path_s, load_hooks_s, load_recursive_s;
 val load_time_s, load_time_lit_s;
 val eval_only_s, compile_only_s;
 val const_foldable_s;
@@ -4579,6 +4579,23 @@ static val me_load_for(val form, val menv)
   return cons(rt_load_for_s, out);
 }
 
+void run_load_hooks(val load_dyn_env)
+{
+  val hooks_binding = lookup_var(load_dyn_env, load_hooks_s);
+  val hooks = cdr(hooks_binding);
+
+  if (hooks) {
+    for (; hooks; hooks = cdr(hooks))
+      funcall(car(hooks));
+    rplacd(hooks_binding, nil);
+  }
+}
+
+static void run_load_hooks_atexit(void)
+{
+  run_load_hooks(dyn_env);
+}
+
 val load(val target)
 {
   val self = lit("load");
@@ -4592,6 +4609,7 @@ val load(val target)
   val name, stream;
   val txr_lisp_p = t;
   val saved_dyn_env = dyn_env;
+  val load_dyn_env = make_env(nil, nil, dyn_env);
   val rec = cdr(lookup_var(saved_dyn_env, load_recursive_s));
 
   open_txr_file(path, &txr_lisp_p, &name, &stream, self);
@@ -4603,11 +4621,12 @@ val load(val target)
 
   uw_simple_catch_begin;
 
-  dyn_env = make_env(nil, nil, dyn_env);
+  dyn_env = load_dyn_env;
   env_vbind(dyn_env, load_path_s, if3(opt_compat && opt_compat <= 215,
                                       path,
                                       stream_get_prop(stream, name_k)));
   env_vbind(dyn_env, load_recursive_s, t);
+  env_vbind(dyn_env, load_hooks_s, nil);
   env_vbind(dyn_env, package_s, cur_package);
 
   if (txr_lisp_p == t) {
@@ -4653,6 +4672,7 @@ val load(val target)
 
   uw_unwind {
     close_stream(stream, nil);
+    run_load_hooks(load_dyn_env);
     if (!rec)
       uw_dump_deferred_warnings(std_null);
   }
@@ -6667,6 +6687,7 @@ void eval_init(void)
   switch_s = intern(lit("switch"), system_package);
   struct_s = intern(lit("struct"), user_package);
   load_path_s = intern(lit("*load-path*"), user_package);
+  load_hooks_s = intern(lit("*load-hooks*"), user_package);
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
   load_time_s = intern(lit("load-time"), user_package);
   load_time_lit_s  = intern(lit("load-time-lit"), system_package);
@@ -6983,6 +7004,7 @@ void eval_init(void)
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
   reg_var(load_recursive_s, nil);
+  reg_var(load_hooks_s, nil);
   reg_fun(intern(lit("expand"), user_package), func_n2o(no_warn_expand, 1));
   reg_fun(intern(lit("expand*"), user_package), func_n2o(expand, 1));
   reg_fun(intern(lit("expand-with-free-refs"), user_package),
@@ -7373,6 +7395,7 @@ void eval_init(void)
   uw_register_subtype(eval_error_s, error_s);
   uw_register_subtype(case_error_s, error_s);
 
+  atexit(run_load_hooks_atexit);
   lisplib_init();
 }
 

@@ -9051,6 +9051,11 @@ variable is also given a new dynamic binding, whose value is the
 same as the existing binding. These bindings are removed when the
 load operation completes, restoring the prior values of these
 variables.
+The
+.code *load-hooks*
+variable is given a new dynamic binding, with a
+.code nil
+value.
 
 If the file opened for processing is \*(TL source, or
 a compiled \*(TL file, then it is processed in the manner
@@ -74487,6 +74492,82 @@ parsing and processing of a loaded \*(TX source file.
 
 Also, during the processing of the profile file (see Interactive Profile File),
 the variable is bound to the name of that file.
+
+.coNP Special variable @ *load-hooks*
+.desc
+The
+.code *load-hooks*
+variable is at the centre of a mechanism which associates the deferred
+execution of actions, associated with a loaded module or program termination.
+
+The application may push values onto this list which are expected to be
+functions, or objects that may be called as functions. These objects must
+be capable of being called with no arguments.
+
+In the situations specified below, the list of functions is processed as follows.
+First
+.code *load-hooks*
+is examined, the list which it holds is remembered. Then the variable
+is reset to
+.codn nil ,
+following which the remembered list is traversed in order. Each of the
+functions in the list is invoked, with no arguments.
+
+The
+.code *load-hooks*
+list is processed, as described above, whenever the
+.code load
+function terminates, whether normally or by throwing an exception. In this
+situation, the
+.code *load-hooks*
+variable which is accessed is that binding which was established by that
+invocation of
+.codn load .
+However, the functions are invoked in a dynamic environment in which that
+binding of the variable has already been removed. When the processing of
+.code *load-hooks*
+takes place due to the termination of
+.codn load ,
+all of the dynamic bindings established by that invocation of
+.code load
+have already been removed. Therefore, the
+.code *load-hooks*
+binding which is visible to these functions is whichever binding had been
+shadowed by the
+.code load
+function.
+
+The
+.code *load-hooks*
+list is also processed after processing a \*(TX or \*(TL file that
+is specified on the command line. If the interactive listener is
+also being entered, this processing of
+.code *load-hooks*
+occurs prior to entering the listener. In this situation, the top-level
+binding of
+.code *load-hooks*
+is used, and therefore that same binding is visible to the invoked
+functions.
+
+Lastly,
+.code *load-hooks*
+is also processed if the \*(TX process terminates normally, regardless
+of its exit status. In this situation, the current dynamic value of the
+.code *load-hooks*
+variable is used, from the dynamic environment as it exists at the
+time of exit, and that same environment is in effect over the execution
+of the functions. It is unspecified whether, at exit time, the
+.code *load-hooks*
+functions are executed first, or whether the functions registered by
+.code at-exit-call
+are executed first. However, their executions do not interleave.
+
+Note that
+.code *load-hooks*
+is not processed after the listener reads the
+.code .txr_profile
+file. Hooks installed by the profile file will activate when the process
+exits.
 
 .coNP Macro @ load-for
 .synb

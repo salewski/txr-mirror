@@ -23,6 +23,7 @@
       ("*listener-multi-line-p*" "N-02C5CACF")
       ("*listener-pprint-p*" "N-01E7ACFE")
       ("*listener-sel-inclusive-p*" "N-02E4924F")
+      ("*load-hooks*" "N-02D09712")
       ("*load-path*" "N-01D1DB58")
       ("*match-macro*" "N-012A473F")
       ("*n" "N-02E7AE5A")
