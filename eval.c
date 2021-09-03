@@ -4600,7 +4600,8 @@ static val me_pop_after_load(val form, val menv)
 
 void run_load_hooks(val load_dyn_env)
 {
-  val hooks_binding = lookup_var(load_dyn_env, load_hooks_s);
+  val saved_de = set_dyn_env(load_dyn_env);
+  val hooks_binding = lookup_var(nil, load_hooks_s);
   val hooks = cdr(hooks_binding);
 
   if (hooks) {
@@ -4608,6 +4609,8 @@ void run_load_hooks(val load_dyn_env)
       funcall(car(hooks));
     rplacd(hooks_binding, nil);
   }
+
+  set_dyn_env(saved_de);
 }
 
 static void run_load_hooks_atexit(void)

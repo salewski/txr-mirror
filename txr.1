@@ -74594,19 +74594,14 @@ situation, the
 variable which is accessed is that binding which was established by that
 invocation of
 .codn load .
-However, the functions are invoked in a dynamic environment in which that
-binding of the variable has already been removed. When the processing of
+The execution of the functions from the
 .code *load-hooks*
-takes place due to the termination of
-.codn load ,
-all of the dynamic bindings established by that invocation of
+list takes place in the dynamic environment of the
+.codn load :
+all of the dynamic variable bindings established by that
 .code load
-have already been removed. Therefore, the
-.code *load-hooks*
-binding which is visible to these functions is whichever binding had been
-shadowed by the
-.code load
-function.
+are still visible, including that of
+.codn *load-hooks* .
 
 The
 .code *load-hooks*
@@ -74614,20 +74609,18 @@ list is also processed after processing a \*(TX or \*(TL file that
 is specified on the command line. If the interactive listener is
 also being entered, this processing of
 .code *load-hooks*
-occurs prior to entering the listener. In this situation, the top-level
-binding of
+occurs prior to entering the listener. This situation occurs in the
+context of the top-level dynamic environment, and so the global value of
 .code *load-hooks*
-is used, and therefore that same binding is visible to the invoked
-functions.
+is referenced.
 
 Lastly,
 .code *load-hooks*
 is also processed if the \*(TX process terminates normally, regardless
-of its exit status. In this situation, the current dynamic value of the
+of its exit status. This processing executes in whatever dynamic
+environment is current at the point of exit, using its value of the
 .code *load-hooks*
-variable is used, from the dynamic environment as it exists at the
-time of exit, and that same environment is in effect over the execution
-of the functions. It is unspecified whether, at exit time, the
+variable is used. It is unspecified whether, at exit time, the
 .code *load-hooks*
 functions are executed first, or whether the functions registered by
 .code at-exit-call
