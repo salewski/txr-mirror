@@ -827,7 +827,7 @@ val txr_parse(val source_in, val error_stream,
   val saved_dyn = dyn_env;
   val parser_obj = ensure_parser(input_stream, name);
   parser_t *pi = parser_get_impl(self, parser_obj);
-  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+  val loading = cdr(lookup_var(nil, load_recursive_s));
 
   uw_simple_catch_begin;
 
@@ -1173,7 +1173,7 @@ static val read_eval_ret_last(val env, val counter,
   val error_val = gensym(nil);
   val name = format(nil, lit("paste-~a"), counter, nao);
   val value = nil;
-  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+  val loading = cdr(lookup_var(nil, load_recursive_s));
   val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
   env_vbind(dyn_env, load_recursive_s, t);
 

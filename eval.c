@@ -311,7 +311,7 @@ static void eval_exception(val sym, val ctx, val fmt, int ex_time, va_list vl)
   msg = get_string_from_stream(stream);
 
   if (ex_time) {
-    val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+    val loading = cdr(lookup_var(nil, load_recursive_s));
     val error_caught = uw_find_frame(error_s, catch_frame_s);
 
     if (loading && !error_caught) {
@@ -1557,7 +1557,7 @@ static val expand_eval(val form, val env, val menv)
   val lfe_save = last_form_evaled;
   val form_ex = (last_form_evaled = nil,
                  expand(form, menv));
-  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+  val loading = cdr(lookup_var(nil, load_recursive_s));
   val ret = ((void) (loading || uw_release_deferred_warnings()),
              eval(form_ex, default_null_arg(env), form));
   last_form_evaled = lfe_save;
@@ -4629,7 +4629,7 @@ val load(val target)
   val txr_lisp_p = t;
   val saved_dyn_env = dyn_env;
   val load_dyn_env = make_env(nil, nil, dyn_env);
-  val rec = cdr(lookup_var(saved_dyn_env, load_recursive_s));
+  val rec = cdr(lookup_var(nil, load_recursive_s));
 
   open_txr_file(path, &txr_lisp_p, &name, &stream, self);
 

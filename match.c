@@ -4377,7 +4377,7 @@ static val v_load(match_files_ctx *c)
     val ret = nil;
     val saved_dyn_env = dyn_env;
     val load_dyn_env = make_env(nil, nil, dyn_env);
-    val rec = cdr(lookup_var(saved_dyn_env, load_recursive_s));
+    val rec = cdr(lookup_var(nil, load_recursive_s));
 
     open_txr_file(path, &txr_lisp_p, &name, &stream, self);
 
