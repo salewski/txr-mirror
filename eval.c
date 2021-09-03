@@ -4579,6 +4579,25 @@ static val me_load_for(val form, val menv)
   return cons(rt_load_for_s, out);
 }
 
+static val me_push_after_load(val form, val menv)
+{
+  (void) menv;
+  return list(set_s,
+              load_hooks_s,
+              list(cons_s,
+                   cons(lambda_s, cons(nil, cdr(form))),
+                   load_hooks_s,
+                   nao), nao);
+}
+
+static val me_pop_after_load(val form, val menv)
+{
+  (void) menv;
+  if (cdr(form))
+    expand_error(form, lit("~s: no arguments required"), car(form), nao);
+  return list(set_s, load_hooks_s, list(cdr_s, load_hooks_s, nao), nao);
+}
+
 void run_load_hooks(val load_dyn_env)
 {
   val hooks_binding = lookup_var(load_dyn_env, load_hooks_s);
@@ -6808,6 +6827,10 @@ void eval_init(void)
   reg_mac(intern(lit("mlet"), user_package), func_n2(me_mlet));
   reg_mac(load_time_s, func_n2(me_load_time));
   reg_mac(intern(lit("load-for"), user_package), func_n2(me_load_for));
+  reg_mac(intern(lit("push-after-load"), user_package),
+          func_n2(me_push_after_load));
+  reg_mac(intern(lit("pop-after-load"), user_package),
+          func_n2(me_pop_after_load));
   reg_mac(intern(lit("assert"), user_package), func_n2(me_assert));
 
   reg_fun(cons_s, func_n2(cons));

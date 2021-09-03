@@ -74640,6 +74640,44 @@ is not processed after the listener reads the
 file. Hooks installed by the profile file will activate when the process
 exits.
 
+.coNP Macros @ push-after-load and @ pop-after-load
+.synb
+.mets (push-after-load << form *)
+.mets (pop-after-load)
+.syne
+.desc
+The
+.code push-after-load
+and
+.code pop-after-load
+macros work with the
+.code *load-hooks*
+list.
+
+The
+.code push-after-load
+macro's arguments are zero or more
+.metn form s.
+These forms are converted into the body of an anonymous function,
+which is pushed onto the
+.code *load-hooks*
+list. The return value is the new value of
+.codn *load-hooks* .
+
+The
+.code pop-after-macro
+removes the first item from
+.codn *load-hooks* .
+The return value is the new value of
+.codn *load-hooks* .
+
+The following equivalences hold:
+
+.verb
+  (push-after-load ...)  <-->  (push (lambda () ...) *load-hooks*)
+  (pop-after-load)  <-->  (set *load-hooks* (cdr *load-hooks*))
+.brev
+
 .coNP Macro @ load-for
 .synb
 .mets (load-for >> {( kind < sym << target )}*)

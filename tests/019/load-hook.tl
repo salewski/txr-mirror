@@ -16,3 +16,13 @@
 (set counter nil)
 (load "../load-hook.tlo")
 (test counter 1)
+
+(mtest
+  (macroexpand-1 '(push-after-load))
+  (set *load-hooks* (cons (lambda ()) *load-hooks*))
+
+  (macroexpand-1 '(push-after-load x))
+  (set *load-hooks* (cons (lambda () x) *load-hooks*))
+
+  (macroexpand-1 '(pop-after-load))
+  (set *load-hooks* (cdr *load-hooks*)))
