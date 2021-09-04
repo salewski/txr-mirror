@@ -41478,7 +41478,9 @@ Structural pattern matching is available via several different macro
 operators, which are:
 .codn when-match ,
 .codn if-match ,
+.codn match ,
 .codn match-case ,
+.codn match-ecase ,
 .code lambda-match
 and
 .codn defun-match .
@@ -41500,11 +41502,23 @@ bindings established by the pattern, otherwise an alternative
 form evaluated in a scope in which those bindings are absent.
 
 The
+.code match
+macro tests and object against a pattern, expecting a match. If the match
+fails, an exception is thrown. Otherwise, it evaluates zero or more forms
+in the scope of the bindings established by the pattern.
+
+The
 .code match-case
 macro evaluates the same object against multiple clauses, each consisting of a
 pattern and zero or more forms. The first case whose pattern matches the object
 is selected. The forms associated with a matching clause are evaluated in
 the scope the variables bound by that clause's pattern.
+
+The
+.code match-ecase
+macro is similar to
+.code match-case
+except that if no matching case is identified, an exception is thrown.
 
 The
 .code lambda-match
