@@ -76,7 +76,7 @@ typedef long i64_t;
 #define HAVE_I64 1
 typedef ulonglong_t u64_t;
 typedef longlong_t i64_t;
-#elif HAVE_DBL_INTPTR_T && (SIZEOF_DOUBLE_INTPTR * CHAR_BIT) == 64
+#elif HAVE_DOUBLE_INTPTR_T && (SIZEOF_DOUBLE_INTPTR * CHAR_BIT) == 64
 #define HAVE_I64 1
 typedef double_uintptr_t u64_t;
 typedef double_intptr_t i64_t;
