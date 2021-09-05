@@ -661,7 +661,7 @@ static val dgram_get_sock_peer(val stream)
 
 static val dgram_set_sock_peer(val stream, val peer)
 {
-  val self = lit("set-sock-peer");
+  val self = lit("sock-set-peer");
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
   sockaddr_pack(peer, d->family, &d->peer_addr, &d->pa_len, self);
   return set(mkloc(d->peer, stream), peer);
@@ -712,14 +712,14 @@ static val sock_bind(val sock, val sockaddr)
     sockaddr_pack(sockaddr, family, &sa, &salen, self);
 
     if (bind(fd, coerce(struct sockaddr *, &sa), salen) != 0)
-      uw_throwf(socket_error_s, lit("sock-bind failed: ~d/~s"),
-                num(errno), errno_to_str(errno), nao);
+      uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
+                self, num(errno), errno_to_str(errno), nao);
 
     stream_set_prop(sock, addr_k, sockaddr);
     return t;
   }
 
-  uw_throwf(socket_error_s, lit("sock-bind: cannot bind ~s"), sock, nao);
+  uw_throwf(socket_error_s, lit("~a: cannot bind ~s"), self, sock, nao);
 }
 
 #if HAVE_POLL
@@ -807,8 +807,8 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
     case -1:
       return -1;
     case 0:
-      uw_throwf(timeout_error_s, lit("sock-connect ~s: timeout on ~s"),
-                sock, sockaddr, nao);
+      uw_throwf(timeout_error_s, lit("~a: ~s: timeout on ~s"),
+                self, sock, sockaddr, nao);
     default:
       return 0;
     }
@@ -925,7 +925,7 @@ static val sock_listen(val sock, val backlog)
 
   return t;
 failed:
-    uw_throwf(socket_error_s, lit("~a: failed: ~d/~s"),
+    uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
               self, num(errno), errno_to_str(errno), nao);
 }
 
@@ -994,8 +994,8 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
 
     if (nilp(peer = sockaddr_unpack(c_num(family, self), &sa))) {
       free(dgram);
-      uw_throwf(socket_error_s, lit("sock-accept: ~s isn't a supported socket family"),
-                family, nao);
+      uw_throwf(socket_error_s, lit("~a: ~s isn't a supported socket family"),
+                self, family, nao);
     }
 
     {
@@ -1027,8 +1027,8 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
       goto failed;
 
     if (nilp(peer = sockaddr_unpack(c_num(family, self), &sa)))
-      uw_throwf(socket_error_s, lit("accept: ~s isn't a supported socket family"),
-                family, nao);
+      uw_throwf(socket_error_s, lit("~a: ~s isn't a supported socket family"),
+                self, family, nao);
 
     {
       val stream = open_sockfd(num(afd), family, num_fast(SOCK_STREAM),
@@ -1038,11 +1038,11 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     }
   }
 failed:
-  uw_throwf(socket_error_s, lit("accept failed: ~d/~s"),
-            num(errno), errno_to_str(errno), nao);
+  uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
+            self, num(errno), errno_to_str(errno), nao);
 badfd:
-  uw_throwf(socket_error_s, lit("sock-accept: cannot accept on ~s"),
-            sock, nao);
+  uw_throwf(socket_error_s, lit("~a: cannot accept on ~s"),
+            self, sock, nao);
 }
 
 static val sock_shutdown(val sock, val how)
@@ -1107,8 +1107,8 @@ static val socketpair_wrap(val family, val type, val mode_str)
   uw_simple_catch_begin;
 
   if (res < 0)
-    uw_throwf(socket_error_s, lit("sock-pair failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
   {
     val s0 = open_sockfd(num(sv[0]), family, type, mode_str, self);
