@@ -44,6 +44,9 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_SOCKETS
+#include <sys/socket.h>
+#endif
 #if HAVE_MMAP
 #include <sys/mman.h>
 #include <unistd.h>
@@ -4669,6 +4672,12 @@ static void ffi_init_extra_types(void)
   ffi_typedef(intern(lit("uid-t"), user_package),
               type_by_size[convert(uid_t, -1) > 0][sizeof (uid_t)]);
 #endif
+
+#if HAVE_SOCKETS
+  ffi_typedef(intern(lit("socklen-t"), user_package),
+              type_by_size[convert(socklen_t, -1) > 0][sizeof (socklen_t)]);
+#endif
+
   ffi_typedef(intern(lit("longlong"), user_package),
               type_by_size[0][sizeof (long long)]);
   ffi_typedef(intern(lit("ulonglong"), user_package),
