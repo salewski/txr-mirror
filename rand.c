@@ -43,7 +43,6 @@
 #include "time.h"
 #include "buf.h"
 #include "txr.h"
-#include "buf.h"
 #include "itypes.h"
 #include "rand.h"
 
