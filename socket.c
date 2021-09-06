@@ -1090,15 +1090,20 @@ static val sock_recv_timeout(val sock, val usec)
 }
 #endif
 
+#ifndef SOCK_NONBLOCK
+#define SOCK_NONBLOCK 0
+#endif
+
+#ifndef SOCK_CLOEXEC
+#define SOCK_CLOEXEC 0
+#endif
+
 static val open_socket(val family, val type, val mode_str)
 {
   val self = lit("open-socket");
   int fd = socket(c_num(family, self), c_num(type, self), 0);
-#ifdef SOCK_NONBLOCK
-  type = logand(type, lognot(num_fast(SOCK_NONBLOCK), nil));
-#endif
-#ifdef SOCK_CLOEXEC
-  type = logand(type, lognot(num_fast(SOCK_CLOEXEC), nil));
+#if SOCK_NONBLOCK || SOCK_CLOEXEC
+  type = num_fast(c_num(type, self) & ~(SOCK_NONBLOCK | SOCK_CLOEXEC));
 #endif
   return open_sockfd(num(fd), family, type, mode_str, self);
 }
@@ -1116,11 +1121,8 @@ static val socketpair_wrap(val family, val type, val mode_str)
     uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
               self, num(errno), errno_to_str(errno), nao);
 
-#ifdef SOCK_NONBLOCK
-  type = logand(type, lognot(num_fast(SOCK_NONBLOCK), nil));
-#endif
-#ifdef SOCK_CLOEXEC
-  type = logand(type, lognot(num_fast(SOCK_CLOEXEC), nil));
+#if SOCK_NONBLOCK || SOCK_CLOEXEC
+  type = num_fast(c_num(type, self) & ~(SOCK_NONBLOCK | SOCK_CLOEXEC));
 #endif
 
   {
