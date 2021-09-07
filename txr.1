@@ -79171,7 +79171,7 @@ FFI type expression to the corresponding type object. The
 following equivalence holds:
 
 .verb
-  (ffi expr)  <-->  (ffi-type-compile 'expr)
+  (ffi expr)  <-->  (load-time (ffi-type-compile 'expr))
 .brev
 
 .SS* Zero-filled Object Support

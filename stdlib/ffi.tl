@@ -160,7 +160,7 @@
   (ffi-elemsize (ffi-type-compile type)))
 
 (defmacro ffi (type)
-  ^(ffi-type-compile ',type))
+  ^(load-time (ffi-type-compile ',type)))
 
 (define-accessor carray-ref carray-refset)
 
