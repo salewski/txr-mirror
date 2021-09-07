@@ -2061,7 +2061,7 @@ val str_seq(val seq)
 
   while (seq_get(&iter, &elem)) {
     if (chrp(elem) || stringp(elem))
-      string_extend(str, elem);
+      string_extend(str, elem, nil);
     else
       unsup_obj(self, elem);
   }
@@ -3002,7 +3002,7 @@ static val rem_impl(val (*eqfun)(val, val), val name,
         val key = keyfun ? funcall1(keyfun, elem) : elem;
 
         if (!eqfun(key, obj))
-          string_extend(out, elem);
+          string_extend(out, elem, tnil(i == len - 1));
       }
 
       return out;
@@ -3071,7 +3071,7 @@ val remove_if(val pred, val seq_in, val keyfun_in)
         val key = keyfun ? funcall1(keyfun, elem) : elem;
 
         if (!funcall1(pred, key))
-          string_extend(out, elem);
+          string_extend(out, elem, tnil(i == len - 1));
       }
 
       return out;
@@ -3190,7 +3190,7 @@ val separate(val pred, val seq_in, val keyfun_in)
         val elem = chr_str(str, num_fast(i));
         val key = keyfun ? funcall1(keyfun, elem) : elem;
 
-        string_extend(funcall1(pred, key) ? yea : nay, elem);
+        string_extend(funcall1(pred, key) ? yea : nay, elem, tnil(i == len - 1));
       }
 
       return cons(yea, cons(nay, nil));
@@ -4791,12 +4791,13 @@ val downcase_str(val str)
   return out;
 }
 
-val string_extend(val str, val tail)
+val string_extend(val str, val tail, val finish_in)
 {
   val self = lit("string-extend");
 
   type_check(self, str, STR);
   {
+    val finish = default_null_arg(finish_in);
     cnum len = c_fixnum(length_str(str), self);
     cnum oalloc = c_fixnum(str->st.alloc, self), alloc = oalloc;
     cnum delta, needed;
@@ -4815,17 +4816,16 @@ val string_extend(val str, val tail)
 
     needed = len + delta + 1;
 
-    if (needed > alloc) {
-      if (alloc >= (NUM_MAX - NUM_MAX / 5))
+    if (needed > alloc || finish) {
+      if (finish)
+        alloc = needed;
+      else if (alloc >= (NUM_MAX - NUM_MAX / 5))
         alloc = NUM_MAX;
       else
         alloc = max(alloc + alloc / 4, needed);
 
       if (alloc != oalloc) {
-        str->st.str = coerce(wchar_t *,
-                             chk_grow_vec(coerce(mem_t *, str->st.str),
-                                          oalloc, alloc,
-                                          sizeof *str->st.str));
+        str->st.str = chk_wrealloc(str->st.str, alloc);
         set(mkloc(str->st.alloc, str), num_fast(alloc));
       }
     }
@@ -5286,7 +5286,7 @@ val replace_str(val str_in, val items, val from, val to)
       cnum t = c_num(to, self);
       cnum l = c_num(len, self);
 
-      string_extend(str_in, len_diff);
+      string_extend(str_in, len_diff, one);
       wmemmove(str_in->st.str + t + c_num(len_diff, self),
                str_in->st.str + t, (l - t) + 1);
       to = plus(from, len_it);
@@ -9328,8 +9328,8 @@ val lazy_str_force(val lstr)
     val next = pop(&lstr->ls.list);
     if (!next)
       break;
-    string_extend(pfx, next);
-    string_extend(pfx, term);
+    string_extend(pfx, next, nil);
+    string_extend(pfx, term, nil);
     if (lim)
       lim = minus(lim, one);
   }
@@ -9402,8 +9402,8 @@ val lazy_str_force_upto(val lstr, val index)
     val next = pop(&lstr->ls.list);
     if (!next)
       break;
-    string_extend(pfx, next);
-    string_extend(pfx, term);
+    string_extend(pfx, next, nil);
+    string_extend(pfx, term, nil);
     if (lim)
       lim = minus(lim, one);
     len = plus(len, length_str(next));

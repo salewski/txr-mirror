@@ -24296,7 +24296,7 @@ lowercase counterparts.
 
 .coNP Function @ string-extend
 .synb
-.mets (string-extend < string << tail )
+.mets (string-extend < string < tail <> [ final ])
 .syne
 .desc
 The
@@ -24319,6 +24319,25 @@ is an integer, the newly added characters have indeterminate contents.
 The string appears to be the original one because of an internal terminating
 null character remains in place, but the characters beyond the terminating zero
 are indeterminate.
+
+The optional Boolean argument
+.metn final ,
+defaulting to
+.codn nil ,
+is a hint which indicates whether this
+.code string-extend
+call is expected to be the last time that the function
+is invoked on the given
+.metn string .
+If
+.meta final
+is true, then the
+.meta string
+object's underlying memory allocation is trimmed to fit the actual
+string data. If the argument is false, the object may be given a larger
+allocation intended to improves the performance of subsequent
+.code string-extend
+calls.
 
 .coNP Function @ stringp
 .synb

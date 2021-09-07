@@ -6656,7 +6656,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 1436 "parser.y"
     { val ch = mkstring(one, chr((yyvsp[(1) - (2)].chr)));
-                                  (yyval.val) = string_extend(ch, (yyvsp[(2) - (2)].val)); }
+                                  (yyval.val) = string_extend(ch, (yyvsp[(2) - (2)].val), t); }
     break;
 
   case 430:
@@ -6670,7 +6670,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 1439 "parser.y"
-    { (yyval.val) = string_extend(string_own((yyvsp[(1) - (2)].lexeme)), (yyvsp[(2) - (2)].val)); }
+    { (yyval.val) = string_extend(string_own((yyvsp[(1) - (2)].lexeme)), (yyvsp[(2) - (2)].val), t); }
     break;
 
   case 432:
@@ -6684,7 +6684,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 1443 "parser.y"
-    { (yyval.val) = string_extend((yyvsp[(1) - (2)].val), chr((yyvsp[(2) - (2)].chr))); }
+    { (yyval.val) = string_extend((yyvsp[(1) - (2)].val), chr((yyvsp[(2) - (2)].chr)), nil); }
     break;
 
   case 434:
@@ -6698,7 +6698,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 1445 "parser.y"
-    { (yyval.val) = string_extend((yyvsp[(1) - (2)].val), string_own((yyvsp[(2) - (2)].lexeme))); }
+    { (yyval.val) = string_extend((yyvsp[(1) - (2)].val), string_own((yyvsp[(2) - (2)].lexeme)), nil); }
     break;
 
   case 436:

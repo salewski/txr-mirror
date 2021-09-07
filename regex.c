@@ -3179,7 +3179,7 @@ static val scan_until_common(val self, val regex, val stream_in,
         if (!out)
           out = mkstring(one, ch);
         else
-          string_extend(out, ch);
+          string_extend(out, ch, nil);
       } else {
         count++;
       }

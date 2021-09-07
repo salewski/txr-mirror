@@ -292,10 +292,10 @@ static val trie_filter_string(val filter, val str)
     }
 
     if (match) {
-      string_extend(out, subst);
+      string_extend(out, subst, nil);
       i = plus(match, one);
     } else {
-      string_extend(out, chr_str(str, i));
+      string_extend(out, chr_str(str, i), nil);
       i = plus(i, one);
     }
   }

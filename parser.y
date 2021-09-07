@@ -1434,15 +1434,15 @@ quasi_item : litchars           { $$ = $1; }
 
 litchars : LITCHAR              { $$ = mkstring(one, chr($1)); }
          | LITCHAR restlitchar  { val ch = mkstring(one, chr($1));
-                                  $$ = string_extend(ch, $2); }
+                                  $$ = string_extend(ch, $2, t); }
          | TEXT                 { $$ = string_own($1); }
-         | TEXT restlitchar     { $$ = string_extend(string_own($1), $2); }
+         | TEXT restlitchar     { $$ = string_extend(string_own($1), $2, t); }
          ;
 
 restlitchar : LITCHAR                   { $$ = mkstring(one, chr($1)); }
-            | restlitchar LITCHAR       { $$ = string_extend($1, chr($2)); }
+            | restlitchar LITCHAR       { $$ = string_extend($1, chr($2), nil); }
             | TEXT                      { $$ = string_own($1); }
-            | restlitchar TEXT          { $$ = string_extend($1, string_own($2)); }
+            | restlitchar TEXT          { $$ = string_extend($1, string_own($2), nil); }
             ;
 
 wordslit : '"'                  { $$ = nil; }
