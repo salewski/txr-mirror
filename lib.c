@@ -4826,11 +4826,11 @@ val string_extend(val str, val tail, val finish_in)
 
       if (alloc != oalloc) {
         str->st.str = chk_wrealloc(str->st.str, alloc);
-        set(mkloc(str->st.alloc, str), num_fast(alloc));
+        set(mkloc(str->st.alloc, str), num(alloc));
       }
     }
 
-    set(mkloc(str->st.len, str), num_fast(len + delta));
+    set(mkloc(str->st.len, str), num(len + delta));
 
     if (stringp(tail)) {
       wmemcpy(str->st.str + len, c_str(tail, self), delta + 1);
@@ -4855,7 +4855,7 @@ val string_finish(val str)
     if (alloc > len + 1) {
       alloc = len + 1;
       str->st.str = chk_wrealloc(str->st.str, alloc);
-      set(mkloc(str->st.alloc, str), num_fast(alloc));
+      set(mkloc(str->st.alloc, str), num(alloc));
     }
   }
 
