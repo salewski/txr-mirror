@@ -1819,6 +1819,7 @@
       ("string-decode" "N-033502F8")
       ("string-encode" "N-033502F8")
       ("string-extend" "N-03D5358A")
+      ("string-finish" "N-0295275B")
       ("string-lt" "N-03ABBED1")
       ("stringp" "N-00BB392B")
       ("strsignal" "N-00234BED")

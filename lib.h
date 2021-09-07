@@ -885,6 +885,7 @@ val copy_str(val str);
 val upcase_str(val str);
 val downcase_str(val str);
 val string_extend(val str, val tail, val finish);
+val string_finish(val str);
 val stringp(val str);
 val lazy_stringp(val str);
 val length_str(val str);

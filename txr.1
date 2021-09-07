@@ -24339,6 +24339,26 @@ allocation intended to improves the performance of subsequent
 .code string-extend
 calls.
 
+.coNP Function @ string-finish
+.synb
+.mets (string-finish << string )
+.syne
+.desc
+The
+.code string-finish
+function removes excess allocation from
+.meta string
+that may have been produced by previous calls to
+.codn string-extend .
+
+Note: if the most recent call to string
+.code string-extend
+specified a true value for the
+.meta final
+parameter, then calling
+.code string-finish
+is unnecessary and does nothing.
+
 .coNP Function @ stringp
 .synb
 .mets (stringp << obj )

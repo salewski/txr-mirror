@@ -4843,6 +4843,25 @@ val string_extend(val str, val tail, val finish_in)
   return str;
 }
 
+val string_finish(val str)
+{
+  val self = lit("string-finish");
+  type_check(self, str, STR);
+
+  {
+    cnum len = c_fixnum(length_str(str), self);
+    cnum alloc = c_fixnum(str->st.alloc, self);
+
+    if (alloc > len + 1) {
+      alloc = len + 1;
+      str->st.str = chk_wrealloc(str->st.str, alloc);
+      set(mkloc(str->st.alloc, str), num_fast(alloc));
+    }
+  }
+
+  return str;
+}
+
 val stringp(val str)
 {
   switch (type(str)) {
