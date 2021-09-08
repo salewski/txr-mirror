@@ -1494,7 +1494,6 @@ static val poll_wrap(val poll_list, val timeout_in)
       if (typep(obj, stream_s)) {
         val fdval = stream_fd(obj);
         if (!fdval) {
-          free(pfd);
           uw_throwf(file_error_s,
                     lit("poll: stream ~s doesn't have a file descriptor"),
                     obj, nao);
@@ -1504,7 +1503,6 @@ static val poll_wrap(val poll_list, val timeout_in)
       }
       /* fallthrough */
     default:
-      free(pfd);
       uw_throwf(file_error_s,
                 lit("poll: ~s isn't a stream or file descriptor"),
                 obj, nao);
