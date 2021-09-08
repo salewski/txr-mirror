@@ -803,19 +803,6 @@ val uw_throwf(val sym, val fmt, ...)
   abort();
 }
 
-val uw_errorf(val fmt, ...)
-{
-  va_list vl;
-  val stream = make_string_output_stream();
-
-  va_start (vl, fmt);
-  (void) vformat(stream, fmt, vl);
-  va_end (vl);
-
-  uw_throw(error_s, get_string_from_stream(stream));
-  abort();
-}
-
 val uw_errorfv(val fmt, struct args *args)
 {
   val stream = make_string_output_stream();

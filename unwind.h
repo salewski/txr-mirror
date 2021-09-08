@@ -348,7 +348,6 @@ val uw_rthrowv(val sym, struct args *);
 val uw_rthrowfv(val sym, val fmt, struct args *);
 NORETURN val uw_throw(val sym, val exception);
 NORETURN val uw_throwf(val sym, val fmt, ...);
-NORETURN val uw_errorf(val fmt, ...);
 NORETURN val uw_errorfv(val fmt, struct args *args);
 val uw_warningf(val fmt, ...);
 val uw_defer_warning(val args);
