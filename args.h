@@ -30,13 +30,19 @@ struct args {
   cnum argc;
   cnum fill;
   val list;
-  val arg[1];
+  val arg[FLEX_ARRAY];
 };
 
 typedef int arg_index;
 
 #define ARGS_MAX 32
 #define ARGS_MIN 4
+
+#if FLEX_ARRAY + 0 == 1
+#define ARGS_ABS_MIN 1
+#else
+#define ARGS_ABS_MIN 0
+#endif
 
 struct args_bool_key {
   val key;

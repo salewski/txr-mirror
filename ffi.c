@@ -2300,7 +2300,7 @@ static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
     return strct;
 
   if (strct == nil) {
-    args_decl(args, 0);
+    args_decl(args, ARGS_ABS_MIN);
     strct = make_struct(tft->lt, nil, args);
   }
 
@@ -2367,7 +2367,7 @@ static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   cnum i, nmemb = tft->nelem;
   struct smemb *memb = tft->memb;
-  args_decl(args, 0);
+  args_decl(args, ARGS_ABS_MIN);
   val strct = make_struct(tft->lt, nil, args);
   int flexp = tft->flexible;
 
@@ -6485,7 +6485,7 @@ val make_zstruct(val type, struct args *args)
   val self = lit("make-zstruct");
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   val pairs = args_get_list(args);
-  args_decl(ms_args, 0);
+  args_decl(ms_args, ARGS_ABS_MIN);
   val strct = make_struct(tft->lt, nil, ms_args);
   mem_t *zbuf;
   char *inited = coerce(char *, zalloca(tft->nelem));

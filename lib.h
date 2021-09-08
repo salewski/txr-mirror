@@ -46,6 +46,12 @@ typedef double_uintptr_t dbl_ucnum;
 #define coerce(TYPE, EXPR) ((TYPE) (EXPR))
 #endif
 
+#if __STDC_VERSION__ >= 199901L
+#define FLEX_ARRAY
+#else
+#define FLEX_ARRAY 1
+#endif
+
 #define TAG_SHIFT 2
 #define TAG_MASK ((convert(cnum, 1) << TAG_SHIFT) - 1)
 #define TAG_PTR 0
