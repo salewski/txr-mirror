@@ -25026,6 +25026,83 @@ function produces a copy of
 from which leading and
 trailing tabs, spaces and newlines are removed.
 
+.coNP Functions @ string-set-code and @ string-get-code
+.synb
+.mets (string-set-code < string << value )
+.mets (string-get-code << string )
+.syne
+.desc
+The
+.code string-set-code
+and
+.code string-get-code
+functions provide a mechanism for associating an integer code
+with a string.
+
+Note: this mechanism is the basis for associating system error messages passed
+in exceptions with the
+.code errno
+values of the failed system library calls which precipitated these error
+exceptions.
+
+Not all string types can have an integer code: lazy strings and literal
+strings do not have this capability. The
+.meta string
+argument must be of type
+.codn str .
+
+The
+.meta value
+argument must be an integer or character. It is recommended that its
+value be confined to the non-negative range of the platform's
+.code int
+C type. Otherwise it is unspecified whether the same value shall be
+observed by
+.code string-get-code
+as what was stored with
+.codn string-set-code .
+
+The
+.code string-set-code
+function associates the integer
+.meta value
+with the given
+.codn string ,
+and returns
+.codn string .
+Any previously associated value is overwritten.
+
+The
+.code string-get-code
+function retrieves the value most recently associated with
+.metn string .
+If
+.meta string
+has no associated value, then
+.code nil
+is returned.
+
+If the
+.code string-extend
+is invoked on a
+.meta string
+then it is unspecified whether or not
+.meta string
+has an associated value and, if so, what value that is, except in the
+following case: if
+.code string-extend
+is invoked with a
+.meta final
+argument which is true, then
+.meta string
+is caused not to have an associated value.
+
+If the
+.code string-finish
+function is invoked on a
+.metn string ,
+that string is caused not to have an associated value.
+
 .coNP Function @ chrp
 .synb
 .mets (chrp << obj )
@@ -47906,6 +47983,38 @@ hierarchy rooted at the
 symbol, either by inheriting directly from
 .code restart
 or from an exception subtype of that symbol.
+
+.coNP Treatment of @ errno In Built-in Exceptions
+Some \*(TL library functions generate exceptions in response to
+conditions arising in the operating system, and those conditions
+are associated with a numeric code in the POSIX/ISO C variable
+.codn errno .
+This code isn't represented as an exception argument. Rather,
+in many of these situations, the
+.code errno
+value is attached to the error message string which is passed
+as the first and only exception argument. The value can be
+retrieved by using the function
+.code string-get-code
+on the error message string. If this function returns
+.codn nil ,
+then no such code is available in connection with the given
+error.
+
+.TP* Example:
+
+.verb
+;; the errno value 2 is retrieved from the ser
+;
+  (catch
+    (open-file "AsDf")
+    (error (msg)
+      ;; the value 2 is retrieved from msg
+      ;; 2 is the common common value of ENOENT
+      (list (string-get-code msg) msg)))
+
+  -> (2 "error opening \e"AsDf\e": 2/\e"No such file or directory\e"")
+.brev
 
 .coNP Functions @, throw @ throwf and @ error
 .synb

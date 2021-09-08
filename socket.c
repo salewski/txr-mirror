@@ -382,8 +382,8 @@ static void dgram_overflow(val stream)
    * increasing the datagram size.
    */
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
-  d->err = ENOBUFS;
-  uw_throwf(socket_error_s, lit("dgram write overflow on ~s"), stream, nao);
+  errno = d->err = ENOBUFS;
+  uw_ethrowf(socket_error_s, lit("dgram write overflow on ~s"), stream, nao);
 }
 
 static int dgram_put_byte_callback(int b, mem_t *ctx)
@@ -444,9 +444,9 @@ static int dgram_get_byte_callback(mem_t *ctx)
 
     if (nbytes == -1) {
       d->err = errno;
-      uw_throwf(socket_error_s,
-                lit("get-byte: recv on ~s failed: ~d/~s"),
-                  d->stream, num(errno), errno_to_str(errno), nao);
+      uw_ethrowf(socket_error_s,
+                 lit("get-byte: recv on ~s failed: ~d/~s"),
+                 d->stream, num(errno), errno_to_str(errno), nao);
     }
 
     uw_unwind {
@@ -531,21 +531,21 @@ static val dgram_flush(val stream)
 
       if (nwrit != d->tx_pos) {
         d->err = (nwrit < 0) ? errno : ENOBUFS;
-        uw_throwf(socket_error_s,
-                  lit("flush-stream: sendto on ~s ~a: ~d/~s"),
-                  stream,
-                  (nwrit < 0) ? lit("failed") : lit("truncated"),
-                  num(errno), errno_to_str(errno), nao);
+        uw_ethrowf(socket_error_s,
+                   lit("flush-stream: sendto on ~s ~a: ~d/~s"),
+                   stream,
+                   (nwrit < 0) ? lit("failed") : lit("truncated"),
+                   num(errno), errno_to_str(errno), nao);
       }
 
       free(d->tx_buf);
       d->tx_buf = 0;
       d->tx_pos = 0;
     } else {
-      d->err = ENOTCONN;
-      uw_throwf(socket_error_s,
-                lit("flush-stream: cannot transmit on ~s: peer not set"),
-                stream, nao);
+      errno = d->err = ENOTCONN;
+      uw_ethrowf(socket_error_s,
+                 lit("flush-stream: cannot transmit on ~s: peer not set"),
+                 stream, nao);
     }
   }
   return t;
@@ -712,8 +712,8 @@ static val sock_bind(val sock, val sockaddr)
     sockaddr_pack(sockaddr, family, &sa, &salen, self);
 
     if (bind(fd, coerce(struct sockaddr *, &sa), salen) != 0)
-      uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
-                self, num(errno), errno_to_str(errno), nao);
+      uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
+                 self, num(errno), errno_to_str(errno), nao);
 
     stream_set_prop(sock, addr_k, sockaddr);
     return t;
@@ -807,8 +807,8 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
     case -1:
       return -1;
     case 0:
-      uw_throwf(timeout_error_s, lit("~a: ~s: timeout on ~s"),
-                self, sock, sockaddr, nao);
+      uw_ethrowf(timeout_error_s, lit("~a: ~s: timeout on ~s"),
+                 self, sock, sockaddr, nao);
     default:
       return 0;
     }
@@ -842,8 +842,8 @@ static val open_sockfd(val fd, val family, val type, val mode_str, val self)
     if (!f) {
       int eno = errno;
       close(c_num(fd, self));
-      uw_throwf(errno_to_file_error(eno), lit("error creating stream for socket ~a: ~d/~s"),
-                fd, num(eno), errno_to_str(eno), nao);
+      uw_ethrowf(errno_to_file_error(eno), lit("error creating stream for socket ~a: ~d/~s"),
+                 fd, num(eno), errno_to_str(eno), nao);
     }
 
     return set_mode_props(m, make_sock_stream(f, family, type));
@@ -864,8 +864,8 @@ static val sock_connect(val sock, val sockaddr, val timeout)
 
     if (to_connect(c_num(sfd, self), coerce(struct sockaddr *, &sa), salen,
                    sock, sockaddr, default_null_arg(timeout), self) != 0)
-      uw_throwf(socket_error_s, lit("~a: ~s to addr ~s: ~d/~s"),
-                self, sock, sockaddr, num(errno), errno_to_str(errno), nao);
+      uw_ethrowf(socket_error_s, lit("~a: ~s to addr ~s: ~d/~s"),
+                 self, sock, sockaddr, num(errno), errno_to_str(errno), nao);
 
     sock_set_peer(sock, sockaddr);
 
@@ -925,8 +925,8 @@ static val sock_listen(val sock, val backlog)
 
   return t;
 failed:
-    uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 }
 
 static val sock_accept(val sock, val mode_str, val timeout_in)
@@ -952,7 +952,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     case -1:
       goto badfd;
     case 0:
-      uw_throwf(timeout_error_s, lit("~a: ~s: timeout"), self, sock, nao);
+      uw_ethrowf(timeout_error_s, lit("~a: ~s: timeout"), self, sock, nao);
     default:
       break;
     }
@@ -1038,11 +1038,11 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     }
   }
 failed:
-  uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
+  uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
             self, num(errno), errno_to_str(errno), nao);
 badfd:
-  uw_throwf(socket_error_s, lit("~a: cannot accept on ~s"),
-            self, sock, nao);
+  uw_ethrowf(socket_error_s, lit("~a: cannot accept on ~s"),
+             self, sock, nao);
 }
 
 static val sock_shutdown(val sock, val how)
@@ -1053,8 +1053,8 @@ static val sock_shutdown(val sock, val how)
   flush_stream(sock);
 
   if (shutdown(c_num(sfd, self), c_num(default_arg(how, num_fast(SHUT_WR)), self)))
-    uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
@@ -1070,9 +1070,9 @@ static val sock_timeout(val sock, val usec, val name, int which, val self)
   tv.tv_usec = u % 1000000;
 
   if (setsockopt(fd, SOL_SOCKET, which, &tv, sizeof tv) != 0)
-    uw_throwf(socket_error_s, lit("~a failed on ~s: ~d/~s"),
-              name, sock, num(errno),
-              errno_to_str(errno), nao);
+    uw_ethrowf(socket_error_s, lit("~a failed on ~s: ~d/~s"),
+               name, sock, num(errno),
+               errno_to_str(errno), nao);
 
   return sock;
 }
@@ -1118,8 +1118,8 @@ static val socketpair_wrap(val family, val type, val mode_str)
   uw_simple_catch_begin;
 
   if (res < 0)
-    uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
 #if SOCK_NONBLOCK || SOCK_CLOEXEC
   type = num_fast(c_num(type, self) & ~(SOCK_NONBLOCK | SOCK_CLOEXEC));

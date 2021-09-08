@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <signal.h>
+#include <errno.h>
 #include "config.h"
 #if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
@@ -800,6 +801,20 @@ val uw_throwf(val sym, val fmt, ...)
   va_end (vl);
 
   uw_throw(sym, get_string_from_stream(stream));
+  abort();
+}
+
+val uw_ethrowf(val sym, val fmt, ...)
+{
+  va_list vl;
+  val eno = num(errno);
+  val stream = make_string_output_stream();
+
+  va_start (vl, fmt);
+  (void) vformat(stream, fmt, vl);
+  va_end (vl);
+
+  uw_throw(sym, string_set_code(get_string_from_stream(stream), eno));
   abort();
 }
 

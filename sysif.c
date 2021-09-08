@@ -389,8 +389,8 @@ static val mkdir_wrap(val path, val mode)
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("mkdir ~a: ~d/~s"),
-              path, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("mkdir ~a: ~d/~s"),
+               path, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -403,8 +403,8 @@ static val mkdir_wrap(val path, val mode)
   (void) mode;
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("mkdir ~a: ~d/~s"),
-              path, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("mkdir ~a: ~d/~s"),
+               path, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -522,9 +522,9 @@ static val ensure_dir(val path, val mode)
 
   if (integerp(ret)) {
     int eno = c_num(ret, self);
-    uw_throwf(errno_to_file_error(eno),
-              lit("ensure-dir: ~a: ~d/~s"), path, ret,
-              errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno),
+               lit("ensure-dir: ~a: ~d/~s"), path, ret,
+               errno_to_str(eno), nao);
   }
 
   return ret;
@@ -541,8 +541,8 @@ static val chdir_wrap(val path)
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("chdir ~a: ~d/~s"),
-              path, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("chdir ~a: ~d/~s"),
+               path, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -559,13 +559,13 @@ val getcwd_wrap(void)
       int eno = errno;
       free(u8buf);
       if (eno != ERANGE) {
-        uw_throwf(errno_to_file_error(eno), lit("getcwd: ~d/~s"),
-                  num(errno), errno_to_str(errno), nao);
+        uw_ethrowf(errno_to_file_error(eno), lit("getcwd: ~d/~s"),
+                   num(errno), errno_to_str(errno), nao);
       }
       if (2 * guess > guess)
         guess *= 2;
       else
-        uw_throwf(file_error_s, lit("getcwd: weird problem"), nao);
+        uw_ethrowf(file_error_s, lit("getcwd: weird problem"), nao);
     } else {
       val out = string_utf8(u8buf);
       free(u8buf);
@@ -583,8 +583,8 @@ static val rmdir_wrap(val path)
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("rmdir ~a: ~d/~s"),
-              path, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("rmdir ~a: ~d/~s"),
+               path, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -627,13 +627,13 @@ static val mknod_wrap(val path, val mode, val dev)
   if (err < 0) {
     int eno = errno;
 #if HAVE_MAKEDEV
-    uw_throwf(errno_to_file_error(eno), lit("mknod ~a ~a ~a (~d:~d): ~d/~s"),
-              path, mode, dev, major_wrap(dev), minor_wrap(dev), num(eno),
-              errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("mknod ~a ~a ~a (~d:~d): ~d/~s"),
+               path, mode, dev, major_wrap(dev), minor_wrap(dev), num(eno),
+               errno_to_str(eno), nao);
 #else
-    uw_throwf(errno_to_file_error(eno), lit("mknod ~a ~a ~a: ~d/~s"),
-              path, mode, dev, num(eno),
-              errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("mknod ~a ~a ~a: ~d/~s"),
+               path, mode, dev, num(eno),
+               errno_to_str(eno), nao);
 #endif
   }
 
@@ -654,9 +654,9 @@ static val mkfifo_wrap(val path, val mode)
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("mknod ~a ~a: ~d/~s"),
-              path, mode, num(eno),
-              errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("mknod ~a ~a: ~d/~s"),
+               path, mode, num(eno),
+               errno_to_str(eno), nao);
   }
 
   return t;
@@ -833,11 +833,11 @@ inval:
     val errstr = errno_to_str(eno);
 
     if (stringp(mode))
-      uw_throwf(error, lit("~a ~a ~a: ~d/~s"),
-                self, target, mode, num(eno), errstr, nao);
+      uw_ethrowf(error, lit("~a ~a ~a: ~d/~s"),
+                 self, target, mode, num(eno), errstr, nao);
     else
-      uw_throwf(error, lit("~a ~a #o~o: ~d/~s"),
-                self, target, mode, num(eno), errstr, nao);
+      uw_ethrowf(error, lit("~a ~a #o~o: ~d/~s"),
+                 self, target, mode, num(eno), errstr, nao);
   }
 
   return t;
@@ -864,9 +864,9 @@ static val do_chown(val target, val uid, val gid, val link_p, val self)
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("~a ~a ~a ~a: ~d/~s"),
-              self, target, uid, gid, num(eno),
-              errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("~a ~a ~a ~a: ~d/~s"),
+               self, target, uid, gid, num(eno),
+               errno_to_str(eno), nao);
   }
 
   return t;
@@ -899,8 +899,8 @@ static val symlink_wrap(val target, val to)
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("symlink ~a ~a: ~d/~s"),
-              target, to, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("symlink ~a ~a: ~d/~s"),
+               target, to, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -919,8 +919,8 @@ static val link_wrap(val target, val to)
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("link ~a ~a: ~d/~s"),
-              target, to, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("link ~a ~a: ~d/~s"),
+               target, to, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -941,12 +941,12 @@ static val readlink_wrap(val path)
       if (2 * guess > guess)
         guess *= 2;
       else
-        uw_throwf(file_error_s, lit("readlink: weird problem"), nao);
+        uw_ethrowf(file_error_s, lit("readlink: weird problem"), nao);
     } else if (bytes <= 0) {
       int eno = errno;
       free(u8buf);
-      uw_throwf(errno_to_file_error(eno), lit("readlink ~a: ~d/~s"),
-                path, num(eno), errno_to_str(eno), nao);
+      uw_ethrowf(errno_to_file_error(eno), lit("readlink ~a: ~d/~s"),
+                 path, num(eno), errno_to_str(eno), nao);
     } else {
       val out;
       u8buf[bytes] = 0;
@@ -1120,8 +1120,8 @@ static val close_wrap(val fd, val throw_on_error)
   if (res < 0) {
     if (default_null_arg(throw_on_error)) {
       int eno = errno;
-      uw_throwf(errno_to_file_error(eno), lit("close ~a: ~d/~s"),
-                fd, num(eno), errno_to_str(eno), nao);
+      uw_ethrowf(errno_to_file_error(eno), lit("close ~a: ~d/~s"),
+                 fd, num(eno), errno_to_str(eno), nao);
     }
     return nil;
   }
@@ -1148,8 +1148,8 @@ val exec_wrap(val file, val args_opt)
   argv[i] = 0;
 
   if (execvp(argv[0], argv) < 0)
-    uw_throwf(process_error_s, lit("~s ~a: ~d/~s"),
-              self, file, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(process_error_s, lit("~s ~a: ~d/~s"),
+               self, file, num(errno), errno_to_str(errno), nao);
   uw_throwf(process_error_s, lit("~s ~a returned"), self, file, nao);
 }
 
@@ -1253,8 +1253,8 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *, val),
 
   if (res == -1) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("unable to ~a ~a: ~d/~s"),
-              name, obj, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("unable to ~a ~a: ~d/~s"),
+               name, obj, num(eno), errno_to_str(eno), nao);
   }
 
   return if3(opt_compat && opt_compat <= 113,
@@ -1351,8 +1351,8 @@ static val do_utimes(val target, val atime, val atimens,
 
   if (res == -1) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("~s: failed: ~d/~s"),
-              self, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("~s: failed: ~d/~s"),
+               self, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -1398,8 +1398,8 @@ static val pipe_wrap(void)
   int fd[2];
   if (pipe(fd) < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("pipe failed: ~d/~s"),
-              num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("pipe failed: ~d/~s"),
+               num(eno), errno_to_str(eno), nao);
   }
   return cons(num(fd[0]), num(fd[1]));
 }
@@ -1519,8 +1519,8 @@ static val poll_wrap(val poll_list, val timeout_in)
   sig_restore_enable;
 
   if (res < 0)
-    uw_throwf(file_error_s, lit("poll failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(file_error_s, lit("poll failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
 
   if (res == 0)
     return nil;
@@ -1588,8 +1588,8 @@ static val getgroups_wrap(void)
     free(arr);
   }
 
-  uw_throwf(system_error_s, lit("~s failed: ~d/~s"),
-            self, num(errno), errno_to_str(errno), nao);
+  uw_ethrowf(system_error_s, lit("~s failed: ~d/~s"),
+             self, num(errno), errno_to_str(errno), nao);
   abort();
 }
 
@@ -1597,8 +1597,8 @@ static val setuid_wrap(val nval)
 {
   val self = lit("setuid");
   if (setuid(c_num(nval, self)) == -1)
-    uw_throwf(system_error_s, lit("setuid failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("setuid failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
   return t;
 }
 
@@ -1606,8 +1606,8 @@ static val seteuid_wrap(val nval)
 {
   val self = lit("seteuid");
   if (seteuid(c_num(nval, self)) == -1)
-    uw_throwf(system_error_s, lit("seteuid failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("seteuid failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
   return t;
 }
 
@@ -1615,8 +1615,8 @@ static val setgid_wrap(val nval)
 {
   val self = lit("setgid");
   if (setgid(c_num(nval, self)) == -1)
-    uw_throwf(system_error_s, lit("setgid failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("setgid failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
   return t;
 }
 
@@ -1624,7 +1624,7 @@ static val setegid_wrap(val nval)
 {
   val self = lit("setegid");
   if (setegid(c_num(nval, self)) == -1)
-    uw_throwf(system_error_s, lit("setegid failed: ~d/~s"),
+    uw_ethrowf(system_error_s, lit("setegid failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
   return t;
 }
@@ -1776,7 +1776,7 @@ static val setgroups_wrap(val list)
     free(arr);
 
     if (res != 0)
-      uw_throwf(system_error_s, lit("setgroups failed: ~d/~s"),
+      uw_ethrowf(system_error_s, lit("setgroups failed: ~d/~s"),
                 num(errno), errno_to_str(errno), nao);
 
     return t;
@@ -1791,8 +1791,8 @@ static val getresuid_wrap(void)
 {
   uid_t r, e, s;
   if (getresuid(&r, &e, &s) != 0)
-    uw_throwf(system_error_s, lit("getresuid failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("getresuid failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
   return list(num(r), num(e), num(s), nao);
 }
 
@@ -1809,8 +1809,8 @@ static val setresuid_wrap(val r, val e, val s)
 {
   val self = lit("setresuid");
   if (setresuid(c_num(r, self), c_num(e, self), c_num(s, self)) != 0)
-    uw_throwf(system_error_s, lit("setresuid failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("setresuid failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
   return t;
 }
 
@@ -1818,8 +1818,8 @@ static val setresgid_wrap(val r, val e, val s)
 {
   val self = lit("setresgid");
   if (setresuid(c_num(r, self), c_num(e, self), c_num(s, self)) != 0)
-    uw_throwf(system_error_s, lit("setresuid failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("setresuid failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
   return t;
 }
 
@@ -2088,8 +2088,8 @@ static val crypt_wrap(val wkey, val wsalt)
       return string_utf8(hash);
   }
 
-  uw_throwf(error_s, lit("crypt failed: ~d/~s"), num(errno),
-            errno_to_str(errno), nao);
+  uw_ethrowf(error_s, lit("crypt failed: ~d/~s"), num(errno),
+             errno_to_str(errno), nao);
 }
 
 #endif
@@ -2183,8 +2183,8 @@ static val uname_wrap(void)
 #endif
     return out;
   }
-  uw_throwf(error_s, lit("uname failed: ~d/~s"), num(errno),
-            errno_to_str(errno), nao);
+  uw_ethrowf(error_s, lit("uname failed: ~d/~s"), num(errno),
+             errno_to_str(errno), nao);
 }
 #endif
 
@@ -2367,8 +2367,8 @@ static val opendir_wrap(val path, val prefix_p)
   DIR *dir = w_opendir(c_str(path, self));
 
   if (dir == 0) {
-    uw_throwf(system_error_s, lit("opendir failed for ~a: ~d/~s"),
-              path, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("opendir failed for ~a: ~d/~s"),
+               path, num(errno), errno_to_str(errno), nao);
   } else {
     struct dir *d = coerce(struct dir *, chk_malloc(sizeof *d));
     val obj = cobj(coerce(mem_t *, d), dir_cls, &opendir_ops);
@@ -2462,8 +2462,8 @@ val getrlimit_wrap(val resource, val rlim_opt)
   int res = getrlimit(c_int(resource, self), &rl);
 
   if (res != 0)
-    uw_throwf(system_error_s, lit("~a failed for ~a: ~d/~s"),
-              self, resource, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a failed for ~a: ~d/~s"),
+               self, resource, num(errno), errno_to_str(errno), nao);
 
   if (missingp(rlim)) {
     args_decl(args, ARGS_MIN);
@@ -2484,8 +2484,8 @@ val setrlimit_wrap(val resource, val rlim)
   int res = setrlimit(c_int(resource, self), &rl);
 
   if (res != 0)
-    uw_throwf(system_error_s, lit("~a failed for ~a: ~d/~s"),
-              self, resource, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a failed for ~a: ~d/~s"),
+               self, resource, num(errno), errno_to_str(errno), nao);
 
   return t;
 }

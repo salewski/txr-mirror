@@ -7145,6 +7145,8 @@ void eval_init(void)
   reg_fun(intern(lit("downcase-str"), user_package), func_n1(downcase_str));
   reg_fun(intern(lit("string-extend"), user_package), func_n3o(string_extend, 2));
   reg_fun(intern(lit("string-finish"), user_package), func_n1(string_finish));
+  reg_fun(intern(lit("string-set-code"), user_package), func_n2(string_set_code));
+  reg_fun(intern(lit("string-get-code"), user_package), func_n1(string_get_code));
   reg_fun(intern(lit("stringp"), user_package), func_n1(stringp));
   reg_fun(intern(lit("lazy-stringp"), user_package), func_n1(lazy_stringp));
   reg_fun(intern(lit("length-str"), user_package), func_n1(length_str));

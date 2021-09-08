@@ -4862,6 +4862,45 @@ val string_finish(val str)
   return str;
 }
 
+val string_set_code(val str, val code)
+{
+  val self = lit("string-set-code");
+  type_check(self, str, STR);
+
+  {
+    cnum len = c_fixnum(length_str(str), self);
+    cnum alloc = c_fixnum(str->st.alloc, self);
+
+    if (alloc < len + 2) {
+      string_extend(str, one, t);
+      alloc = c_fixnum(str->st.alloc, self);
+      set(mkloc(str->st.len, str), num(len));
+    }
+
+    {
+      str->st.str[len + 1] = c_int(code, self);
+    }
+  }
+
+  return str;
+}
+
+val string_get_code(val str)
+{
+  val self = lit("string-get-code");
+  type_check(self, str, STR);
+
+  {
+    cnum len = c_fixnum(length_str(str), self);
+    cnum alloc = c_fixnum(str->st.alloc, self);
+
+    if (alloc >= len + 2)
+      return num(str->st.str[len + 1]);
+  }
+
+  return nil;
+}
+
 val stringp(val str)
 {
   switch (type(str)) {

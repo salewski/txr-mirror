@@ -258,8 +258,8 @@ static val tcgetattr_wrap(val stream)
   res = tcgetattr(c_num(fd, self), &tio);
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a: failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
   return termios_unpack(&tio);
 }
@@ -276,16 +276,16 @@ static val tcsetattr_wrap(val termios, val actions, val stream)
   res = tcgetattr(c_num(fd, self), &tio);
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("~a: failed to retrieve settings: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a: failed to retrieve settings: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
   termios_pack(&tio, termios, self);
 
   res = tcsetattr(c_num(fd, self), c_num(actions, self), &tio);
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a: failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
 
   return termios;
 }
@@ -298,8 +298,8 @@ static val tcsendbreak_wrap(val duration, val stream)
                                        500, c_num(duration, self)));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a: failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
@@ -311,8 +311,8 @@ static val tcdrain_wrap(val stream)
   int res = tcdrain(c_num(fd, self));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a: failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
@@ -324,8 +324,8 @@ static val tcflush_wrap(val queue, val stream)
   int res = tcflush(c_num(fd, self), c_num(queue, self));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a: failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
@@ -337,8 +337,8 @@ static val tcflow_wrap(val action, val stream)
   int res = tcflow(c_num(fd, self), c_num(action, self));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("~a: failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }

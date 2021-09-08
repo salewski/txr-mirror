@@ -459,8 +459,8 @@ static val dev_null_get_fd(val stream)
   struct dev_null *n = coerce(struct dev_null *, stream->co.handle);
   if (n->fd == -1 && (n->fd = open("/dev/null", O_RDWR)) == -1) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("error opening /dev/null: ~d/~s"),
-              num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("error opening /dev/null: ~d/~s"),
+               num(eno), errno_to_str(eno), nao);
   }
   return num(n->fd);
 }
@@ -596,10 +596,10 @@ static val stdio_maybe_read_error(val stream)
     h->err = err;
 #ifdef EAGAIN
     if (errno == EAGAIN)
-      uw_throwf(timeout_error_s, lit("timed out reading ~s"), stream, nao);
+      uw_ethrowf(timeout_error_s, lit("timed out reading ~s"), stream, nao);
 #endif
-    uw_throwf(file_error_s, lit("error reading ~s: ~d/~s"),
-              stream, err, errno_to_string(err), nao);
+    uw_ethrowf(file_error_s, lit("error reading ~s: ~d/~s"),
+               stream, err, errno_to_string(err), nao);
   }
   if (feof(h->f))
     h->err = t;
@@ -611,14 +611,14 @@ static val stdio_maybe_error(val stream, val action)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   val err = num(errno);
   if (h->f == 0)
-    uw_throwf(file_error_s, lit("error ~a ~s: file closed"), action, stream, nao);
+    uw_ethrowf(file_error_s, lit("error ~a ~s: file closed"), action, stream, nao);
   h->err = err;
 #ifdef EAGAIN
   if (errno == EAGAIN)
-    uw_throwf(timeout_error_s, lit("timed out on ~s"), stream, nao);
+    uw_ethrowf(timeout_error_s, lit("timed out on ~s"), stream, nao);
 #endif
-  uw_throwf(file_error_s, lit("error ~a ~s: ~d/~s"),
-            action, stream, err, errno_to_string(err), nao);
+  uw_ethrowf(file_error_s, lit("error ~a ~s: ~d/~s"),
+             action, stream, err, errno_to_string(err), nao);
 }
 
 static int se_putc(int ch, FILE *f)
@@ -982,8 +982,8 @@ static val stdio_close(val stream, val throw_on_error)
     h->f = 0;
     if (result == EOF && default_null_arg(throw_on_error)) {
       h->err = num(errno);
-      uw_throwf(file_error_s, lit("error closing ~s: ~d/~s"),
-                stream, num(errno), errno_to_str(errno), nao);
+      uw_ethrowf(file_error_s, lit("error closing ~s: ~d/~s"),
+                 stream, num(errno), errno_to_str(errno), nao);
     }
     return result != EOF ? t : nil;
   }
@@ -1377,9 +1377,9 @@ static val pipe_close(val stream, val throw_on_error)
 
     if (status < 0) {
       if (throw_on_error)
-        uw_throwf(process_error_s,
-                  lit("unable to obtain status of command ~s: ~d/~s"),
-                  stream, num(errno), errno_to_str(errno), nao);
+        uw_ethrowf(process_error_s,
+                   lit("unable to obtain status of command ~s: ~d/~s"),
+                   stream, num(errno), errno_to_str(errno), nao);
     } else {
 #if HAVE_SYS_WAIT
       if (default_null_arg(throw_on_error)) {
@@ -4202,9 +4202,9 @@ val open_directory(val path)
 
   if (!d) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno),
-              lit("error opening directory ~s: ~d/~s"),
-              path, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno),
+               lit("error opening directory ~s: ~d/~s"),
+               path, num(eno), errno_to_str(eno), nao);
   }
 
   return make_dir_stream(d);
@@ -4219,8 +4219,8 @@ val open_file(val path, val mode_str)
 
   if (!f) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("error opening ~s: ~d/~s"),
-              path, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("error opening ~s: ~d/~s"),
+               path, num(eno), errno_to_str(eno), nao);
   }
 
   return set_mode_props(m, make_stdio_stream(f, path));
@@ -4237,8 +4237,8 @@ val open_fileno(val fd, val mode_str)
   if (!f) {
     int eno = errno;
     close(c_num(fd, self));
-    uw_throwf(errno_to_file_error(eno), lit("error opening descriptor ~a: ~d/~s"),
-              fd, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("error opening descriptor ~a: ~d/~s"),
+               fd, num(eno), errno_to_str(eno), nao);
   }
 
   return set_mode_props(m, make_stdio_stream(f, format(nil,
@@ -4258,8 +4258,8 @@ val open_tail(val path, val mode_str, val seek_end_p)
 
   if (f && default_null_arg(seek_end_p))
     if (fseek(f, 0, SEEK_END) < 0)
-      uw_throwf(file_error_s, lit("error seeking to end of ~s: ~d/~s"),
-                path, num(errno), errno_to_str(errno), nao);
+      uw_ethrowf(file_error_s, lit("error seeking to end of ~s: ~d/~s"),
+                 path, num(errno), errno_to_str(errno), nao);
 
   stream = make_tail_stream(f, path);
   h = coerce(struct stdio_handle *, stream->co.handle);
@@ -4314,8 +4314,8 @@ static int fds_subst(int fd_sub, int fd_std, val self)
       return fd_dup;
     }
 
-    uw_throwf(file_error_s, lit("~a: failed to duplicate file descriptor: ~d/~s"),
-              self, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(file_error_s, lit("~a: failed to duplicate file descriptor: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
   }
 }
 #endif
@@ -4419,9 +4419,9 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   if (pipe(fd) == -1) {
     int eno = errno;
     free(argv);
-    uw_throwf(errno_to_file_error(eno),
-              lit("opening pipe ~s, pipe syscall failed: ~d/~s"),
-              name, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno),
+               lit("opening pipe ~s, pipe syscall failed: ~d/~s"),
+               name, num(eno), errno_to_str(eno), nao);
   }
 
   if (argv) {
@@ -4440,8 +4440,8 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
         free(argv[i]);
       free(argv);
     }
-    uw_throwf(process_error_s, lit("opening pipe ~s, fork syscall failed: ~d/~s"),
-              name, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(process_error_s, lit("opening pipe ~s, fork syscall failed: ~d/~s"),
+               name, num(errno), errno_to_str(errno), nao);
   }
 
   if (pid == 0) {
@@ -4523,8 +4523,8 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
       while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
         ;
       free(utf8mode);
-      uw_throwf(file_error_s, lit("opening pipe ~s, fdopen failed: ~d/~s"),
-                name, num(errno), errno_to_str(errno), nao);
+      uw_ethrowf(file_error_s, lit("opening pipe ~s, fdopen failed: ~d/~s"),
+                 name, num(errno), errno_to_str(errno), nao);
     }
 
     free(utf8mode);
@@ -4581,8 +4581,8 @@ val open_command(val path, val mode_str)
 
   if (!f) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("~a: error opening pipe ~s: ~d/~s"),
-              self, path, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno), lit("~a: error opening pipe ~s: ~d/~s"),
+               self, path, num(eno), errno_to_str(eno), nao);
   }
 
   uw_unwind {
@@ -4802,8 +4802,8 @@ static val run(val name, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    uw_throwf(process_error_s, lit("opening process ~s, fork syscall failed: ~d/~s"),
-              name, num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(process_error_s, lit("opening process ~s, fork syscall failed: ~d/~s"),
+               name, num(errno), errno_to_str(errno), nao);
   }
 
   if (pid == 0) {
@@ -4849,8 +4849,8 @@ val remove_path(val path, val throw_on_error)
   if (w_remove(c_str(path, self)) < 0) {
     if (default_null_arg(throw_on_error) || errno != ENOENT) {
       int eno = errno;
-      uw_throwf(errno_to_file_error(eno), lit("trying to remove ~s: ~d/~s"),
-                path, num(eno), errno_to_str(eno), nao);
+      uw_ethrowf(errno_to_file_error(eno), lit("trying to remove ~s: ~d/~s"),
+                 path, num(eno), errno_to_str(eno), nao);
     }
     return nil;
   }
@@ -4864,9 +4864,9 @@ val rename_path(val from, val to)
 
   if (w_rename(c_str(from, self), c_str(to, self)) < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno),
-              lit("trying to rename ~s to ~s: ~d/~s"),
-              from, to, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(errno_to_file_error(eno),
+               lit("trying to rename ~s to ~s: ~d/~s"),
+               from, to, num(eno), errno_to_str(eno), nao);
   }
 
   return t;
@@ -5312,8 +5312,8 @@ val tmpfile_wrap(void)
   FILE *tf = tmpfile();
   if (tf != 0)
     return set_mode_props(m, make_stdio_stream(tf, self));
-  uw_throwf(file_error_s, lit("~a failed: ~d/~s"),
-            self, num(errno), errno_to_str(errno), nao);
+  uw_ethrowf(file_error_s, lit("~a failed: ~d/~s"),
+             self, num(errno), errno_to_str(errno), nao);
 }
 
 #if HAVE_MKDTEMP
@@ -5330,8 +5330,8 @@ val mkdtemp_wrap(val prefix)
   }
 
   free(tmpl);
-  uw_throwf(file_error_s, lit("mkdtemp failed: ~d/~s"),
-            num(errno), errno_to_str(errno), nao);
+  uw_ethrowf(file_error_s, lit("mkdtemp failed: ~d/~s"),
+             num(errno), errno_to_str(errno), nao);
 }
 
 #endif
@@ -5364,8 +5364,8 @@ val mkstemp_wrap(val prefix, val suffix)
     stream_set_prop(stream, name_k, name);
     return stream;
   }
-  uw_throwf(file_error_s, lit("~a failed: ~d/~s"),
-            self, num(errno), errno_to_str(errno), nao);
+  uw_ethrowf(file_error_s, lit("~a failed: ~d/~s"),
+             self, num(errno), errno_to_str(errno), nao);
 }
 
 #endif
