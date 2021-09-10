@@ -62271,7 +62271,7 @@ is interned in the package identified by
 which may have the effect of creating that symbol.
 This symbol is expected to be a local symbol of that package. If
 that is so, the symbol is brought into the present package via
-.codn use-symbol .
+.codn use-sym .
 Otherwise if the symbol is foreign to package identified by
 .metn package-name ,
 then an error exception is thrown.
@@ -70942,7 +70942,7 @@ Address family values are used in the
 argument of the
 .code getaddrinfo
 function, and in the
-.code socket-open
+.code open-socket
 function.
 Note that unlike the C language socket addressing structures,
 the \*(TX socket addresses do not contain an address family slot.
@@ -71023,7 +71023,7 @@ The
 .meta family
 parameter specifies the address family of the socket. One of the
 values
-.codn af-inet ,
+.codn af-unix ,
 .code af-inet
 or
 .code af-inet6
@@ -71277,9 +71277,9 @@ The
 .code mode-string
 parameter is applied to the new socket just like the
 similar argument in
-.codn socket-open .
+.codn open-socket .
 It defaults to
-.strn r+ .
+.strn r+b .
 
 If the
 .meta timeout-usec
@@ -79729,7 +79729,7 @@ All other stream error situations throw exceptions.
 .syne
 .desc
 The
-.code get-obj
+.code fill-obj
 function reads from
 .meta stream
 the bytes corresponding to a foreign representation according to the FFI type
@@ -80143,7 +80143,7 @@ is overlaid onto the storage of
 as follows:
 
 First,
-.meta offs
+.meta offset
 is subtracted from the bytewise length of
 .metn buf ,
 as reported by
@@ -80394,9 +80394,9 @@ a Lisp object, a region of data starting at calculated byte offset in the array
 storage. The resulting object is returned.
 
 Assigning an a value to a
-.code caddr-ref
+.code carray-ref
 form is equivalent to using
-.code caddr-refset
+.code carray-refset
 to store the value.
 
 .coNP Function @ carray-refset
@@ -80956,7 +80956,7 @@ the padding bytes are filled with the value
 .coNP Functions @ uint-carray and @ int-carray
 .synb
 .mets (uint-carray << carray )
-.mets (int-carray < number <> [ type ])
+.mets (int-carray << carray )
 .syne
 .desc
 The
