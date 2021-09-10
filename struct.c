@@ -1101,7 +1101,14 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
   slot_cache_set_t *slot_cache = sym->s.slot_cache;
   cnum id = si->id;
 
-  if (slot_cache != 0) {
+  if (slot_cache == 0) {
+    slot_cache = coerce(slot_cache_set_t *,
+                        chk_calloc(SLOT_CACHE_SIZE,
+                                   sizeof (slot_cache_set_t)));
+    sym->s.slot_cache = slot_cache;
+  }
+
+  {
     slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
     cnum slot = cache_set_lookup(*set, id);
 
@@ -1129,29 +1136,6 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
         check_init_lazy_struct(inst, si);
         return mkloc(si->slot[slnum], inst);
       }
-    }
-  } else {
-    slot_cache = coerce(slot_cache_set_t *,
-                        chk_calloc(SLOT_CACHE_SIZE,
-                                   sizeof (slot_cache_set_t)));
-    slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
-    val key = cons(sym, num_fast(id));
-    val sl = gethash(slot_hash, key);
-    cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
-
-    sym->s.slot_cache = slot_cache;
-
-    rcyc_cons(key);
-
-    if (sl) {
-      cache_set_insert(*set, id, slnum);
-      if (slnum >= STATIC_SLOT_BASE) {
-        struct struct_type *st = si->type;
-        struct stslot *stsl = &st->stslot[slnum - STATIC_SLOT_BASE];
-        return stslot_loc(stsl);
-      }
-      check_init_lazy_struct(inst, si);
-      return mkloc(si->slot[slnum], inst);
     }
   }
 
