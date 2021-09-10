@@ -1102,6 +1102,11 @@ static val open_socket(val family, val type, val mode_str)
 {
   val self = lit("open-socket");
   int fd = socket(c_num(family, self), c_num(type, self), 0);
+
+  if (fd < 0)
+    uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
+               self, num(errno), errno_to_str(errno), nao);
+
 #if SOCK_NONBLOCK || SOCK_CLOEXEC
   type = num_fast(c_num(type, self) & ~(SOCK_NONBLOCK | SOCK_CLOEXEC));
 #endif
