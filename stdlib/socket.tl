@@ -269,6 +269,6 @@
 
 (defplace (sock-peer sock) body
   (getter setter
-    ^(macrolet ((,getter () ^(sock-peer ',',sock))
+    ^(macrolet ((,getter () ^(sock-peer ,',sock))
                 (,setter (val) ^(sock-set-peer ,',sock ,val)))
        ,body)))
