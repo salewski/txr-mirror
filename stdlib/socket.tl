@@ -272,3 +272,10 @@
     ^(macrolet ((,getter () ^(sock-peer ,',sock))
                 (,setter (val) ^(sock-set-peer ,',sock ,val)))
        ,body)))
+
+(defplace (sock-opt sock level option : type) body
+  (getter setter
+    ^(macrolet ((,getter () ^(sock-opt ,',sock ,',level ,',option ,',type))
+                (,setter (val)
+                  ^(sock-set-opt ,',sock ,',level ,',option ,val ,',type)))
+       ,body)))

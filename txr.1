@@ -13847,6 +13847,7 @@ defined by \*(TX programs.
 .mets (qref < struct-obj << slot-name ) ;; by macro-expansion to (slot ...)
 .mets >< struct-obj . slot-name ;; equivalent to qref
 .mets (sock-peer << socket )
+.mets (sock-opt < socket < level < option <> [ ffi-type ])
 .mets (carray-sub < carray >> [ from <> [ to ]])
 .mets (sub-buf < buf >> [ from <> [ to ]])
 .mets (left << node )
@@ -71219,7 +71220,10 @@ is thrown.
 .desc
 The
 .code sock-bind
-function binds a socket stream to a local address.
+function binds a socket stream to a local address
+after enabling the socket stream's
+.code so-reuseaddr
+option.
 
 The
 .meta address
@@ -71231,10 +71235,6 @@ If the operation fails, an exception of type
 .code socket-error
 is thrown. Otherwise, the function returns
 .codn t .
-
-Returns
-.code t
-if successful.
 
 .coNP Function @ sock-listen
 .synb
@@ -71368,6 +71368,185 @@ exception of type
 is thrown when an output operation waits for at least
 .code usec
 microseconds for the availability of buffer space in the socket.
+
+.coNP Variables @, sol-socket @, ipproto-ip @, ipproto-ipv6 @ ipproto-tcp and @ ipproto-udp
+.desc
+These variables represent the protocol levels of socket options and are
+suitable for use as the
+.meta level
+argument of the
+.code sock-opt
+and
+.code sock-set-opt
+functions.
+The variables correspond to the POSIX C constants
+.codn SOL_SOCKET ,
+.codn IPPROTO_IP ,
+.codn IPPROTO_IPV6 ,
+.code IPPROTO_TCP
+and
+.codn IPPROTO_UDP .
+
+.coNP Variables @, so-acceptconn @, so-broadcast @, so-debug @, so-dontroute @, so-error @, so-keepalive @, so-linger @, so-oobinline @, so-rcvbuf @, so-rcvlowat @, so-rcvtimeo @, so-reuseaddr @, so-sndbuf @, so-sndlowat @ so-sndtimeo and @ so-type
+.desc
+These variables represent socket options at the
+.code sol-socket
+protocol level and are suitable for use as the
+.meta option
+argument of the
+.code sock-opt
+and
+.code sock-set-opt
+functions.
+The variables correspond to the POSIX C constants
+.codn SO_ACCEPTCONN ,
+.codn SO_BROADCAST ,
+.codn SO_DEBUG ,
+etc.
+
+Note that the
+.code sock-recv-timeout
+and
+.code sock-send-timeout
+are a more convenient interface for setting the value of the
+.code so-rcvtimeo
+and
+.code so-sndtimeo
+socket options.
+
+.coNP Variables @, ipv6-join-group @, ipv6-leave-group @, ipv6-multicast-hops @, ipv6-multicast-if @, ipv6-multicast-loop @ ipv6-unicast-hops and @ ipv6-v6only
+.desc
+These variables represent socket options at the
+.code ipproto-ipv6
+protocol level and are suitable for use as the
+.meta option
+argument of the
+.code sock-opt
+and
+.code sock-set-opt
+functions.
+The variables correspond to the POSIX C constants
+.codn IPV6_JOIN_GROUP ,
+.codn IPV6_LEAVE_GROUP ,
+.codn IPV6_MULTICAST_HOPS ,
+etc.
+
+.coNP Variable @ tcp-nodelay
+.desc
+This variable represents a socket option at the
+.code ipproto-tcp
+protocol level and is suitable for use as the
+.meta option
+argument of the
+.code sock-opt
+and
+.code sock-set-opt
+functions.
+The variable corresponds to the POSIX C constant
+.codn TCP_NODELAY .
+
+.coNP Accessor @ sock-opt
+.synb
+.mets (sock-opt < socket < level < option <> [ ffi-type ])
+.mets (set (sock-opt < socket < level < option <> [ ffi-type ]) << value )
+.syne
+.desc
+The
+.code sock-opt
+function retrieves the value of the specified socket option,
+at the specified protocol level,
+associated with
+.codn socket ,
+which must be a socket stream.
+
+The
+.code level
+argument should be one of the protocol levels
+.codn sol-socket ,
+.codn ipproto-ip ,
+.codn ipproto-ipv6 ,
+.code ipproto-tcp
+and
+.codn ipproto-udp .
+
+The
+.code option
+argument should be one of the socket options
+.codn so-acceptconn ,
+.codn so-broadcast ,
+.codn so-debug ,
+\...,
+.codn ipv6-join-group ,
+\...,
+.code ipv6-v6only
+and
+.codn tcp-nodelay .
+
+The
+.meta ffi-type
+argument, which must be a compiled FFI type,
+specifies the type of the socket option's value.
+The type is most commonly
+.code int
+or
+.codn uint ,
+but it can be any other fixed-size type, including
+.codn struct s.
+(Variable-size types, such as C
+.code char
+arrays, are unsupported.)
+The
+.meta ffi-type
+argument defaults to
+.codn "(ffi int)" .
+
+Assigning a value to a
+.code sock-opt
+place is equivalent to calling
+.code sock-set-opt
+with that value.
+
+Note: the
+.code sock-opt
+and
+.code sock-set-opt
+functions call the POSIX C
+.code getsockopt
+and
+.code setsockopt
+functions, respectively.
+Consult the POSIX specification for more information about these
+functions and in particular the various socket options
+(and the types they require).
+
+.coNP Function @ sock-set-opt
+.synb
+.mets (sock-set-opt < socket < level < option < value <> [ ffi-type ])
+.syne
+.desc
+The
+.code sock-set-opt
+function sets the value of the specified socket option,
+at the specified protocol level,
+associated with
+.codn socket ,
+which must be a socket stream.
+
+See the documentation of the
+.code sock-opt
+function for a description of the
+.metn level ,
+.meta option
+and
+.meta ffi-type
+arguments.
+Like the
+.code sock-opt
+function,
+.codn sock-set-opt 's
+.meta ffi-type
+argument defaults to
+.codn "(ffi int)" .
 
 .coNP Functions @ str-inaddr and @ str-in6addr
 .synb
