@@ -14035,6 +14035,20 @@ operational pipeline to the value of
 and stores the result back into
 .metn place .
 
+.meIP (set-mask < place << integer *)
+Sets to 1 the bits in
+.meta place
+corresponding to bits that are equal to 1 in the mask made up of the
+.meta integer
+arguments (by combining them together with the inclusive or operation).
+
+.meIP (clear-mask < place << integer *)
+Clears (sets to 0) the bits in
+.meta place
+corresponding to bits that are equal to 1 in the mask made up of the
+.meta integer
+arguments (by combining them together with the inclusive or operation).
+
 .PP
 
 .SS* Namespaces and Environments
@@ -47093,6 +47107,32 @@ is negative, it returns the count of zero bits instead. If
 is zero, the value returned is zero.
 
 The argument may be a character.
+
+.coNP Macros @ set-mask and @ clear-mask
+.synb
+.mets (set-mask < place << integer *)
+.mets (clear-mask < place << integer *)
+.syne
+.desc
+The
+.code set-mask
+and
+.code clear-mask
+macros set to 1 and 0, respectively, the bits in
+.meta place
+corresponding to bits that are equal to 1 in the mask resulting from
+applying the inclusive or operation to the
+.meta integer
+arguments.
+The following equivalences hold:
+
+.verb
+  (set-mask place integer ...)
+  <-->  (set place (logior place integer ...)
+
+  (clear-mask place integer ...)
+  <-->  (set place (logand place (lognot (logior integer ...))))
+.brev
 
 .SS* User-Defined Arithmetic Types
 

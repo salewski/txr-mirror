@@ -128,3 +128,11 @@
 
 (defset key (node) nkey
   ^(progn (set-key ,node ,nkey) ,nkey))
+
+(defmacro set-mask (:env env place . integers)
+  (with-update-expander (getter setter) place env
+    ^(,setter (logior (,getter) ,*integers))))
+
+(defmacro clear-mask (:env env place . integers)
+  (with-update-expander (getter setter) place env
+    ^(,setter (logand (,getter) (lognot (logior ,*integers))))))

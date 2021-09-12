@@ -24,6 +24,7 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
+
 (compile-only
   (defstruct live-info nil
     (defined 0)
@@ -252,8 +253,8 @@
                      ((fi . re)
                       (let* ((live (upd-used bl re live))
                              (lif [bb.li-hash fi]))
-                        (set live (logand live (lognot lif.defined)))
-                        (set lif.used (logior live lif.used))
+                        (clear-mask live lif.defined)
+                        (set-mask lif.used live)
                         live))
                      (else live)))
                  (visit (bl)
@@ -265,12 +266,12 @@
                            (old-live (or bl.live 0)))
                        (each ((nx bl.links))
                          (visit nx)
-                         (set used (logior used nx.used)))
+                         (set-mask used nx.used))
                        (when (neql (set bl.live (logior used old-live))
                                    old-live)
                          (let ((live-in (logand (upd-used bl bl.insns bl.live)
                                                 (lognot bl.defined))))
-                           (set bl.used (logior live-in bl.used)))
+                           (set-mask bl.used live-in))
                          (set changed t))))))
           (set changed nil)
           (visit bb.root))))))

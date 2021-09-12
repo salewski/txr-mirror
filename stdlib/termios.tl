@@ -25,28 +25,28 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 (defmeth termios set-iflags (tio . values)
-  (set tio.iflag (logior tio.iflag . values)))
+  (set-mask tio.iflag . values))
 
 (defmeth termios set-oflags (tio . values)
-  (set tio.oflag (logior tio.oflag . values)))
+  (set-mask tio.oflag . values))
 
 (defmeth termios set-cflags (tio . values)
-  (set tio.cflag (logior tio.cflag . values)))
+  (set-mask tio.cflag . values))
 
 (defmeth termios set-lflags (tio . values)
-  (set tio.lflag (logior tio.lflag . values)))
+  (set-mask tio.lflag . values))
 
 (defmeth termios clear-iflags (tio . values)
-  (set tio.iflag (logand tio.iflag (lognot (logior . values)))))
+  (clear-mask tio.iflag . values))
 
 (defmeth termios clear-oflags (tio . values)
-  (set tio.oflag (logand tio.oflag (lognot (logior . values)))))
+  (clear-mask tio.oflag . values))
 
 (defmeth termios clear-cflags (tio . values)
-  (set tio.cflag (logand tio.cflag (lognot (logior . values)))))
+  (clear-mask tio.cflag . values))
 
 (defmeth termios clear-lflags (tio . values)
-  (set tio.lflag (logand tio.lflag (lognot (logior . values)))))
+  (clear-mask tio.lflag . values))
 
 (defmeth termios go-raw (tio)
   tio.(clear-iflags ignbrk brkint parmrk istrip inlcr igncr icrnl ixon)
