@@ -866,14 +866,14 @@ static void seq_iter_mark_op(struct seq_iter *it)
   gc_mark(it->ui.iter);
 }
 
-struct seq_iter_ops si_null_ops = seq_iter_ops_init(seq_iter_get_nil,
-                                                    seq_iter_peek_nil);
+struct seq_iter_ops si_null_ops = seq_iter_ops_init_nomark(seq_iter_get_nil,
+                                                           seq_iter_peek_nil);
 
 struct seq_iter_ops si_list_ops = seq_iter_ops_init(seq_iter_get_list,
                                                     seq_iter_peek_list);
 
-struct seq_iter_ops si_vec_ops = seq_iter_ops_init(seq_iter_get_vec,
-                                                   seq_iter_peek_vec);
+struct seq_iter_ops si_vec_ops = seq_iter_ops_init_nomark(seq_iter_get_vec,
+                                                          seq_iter_peek_vec);
 
 struct seq_iter_ops si_hash_ops = seq_iter_ops_init(seq_iter_get_hash,
                                                     seq_iter_peek_hash);
