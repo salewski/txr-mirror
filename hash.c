@@ -916,8 +916,8 @@ val copy_hash(val existing)
   struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_cls));
   struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
   val mod = num_fast(ex->modulus);
-  val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
   val table = vector(mod, nil);
+  val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
   ucnum i;
 
   h->modulus = ex->modulus;
