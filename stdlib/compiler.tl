@@ -1303,7 +1303,7 @@
            (set form ^(,bin ,a ,b)))
           ((- @a)
            (set form ^(neg ,a)))
-          ((@(or identity + * min max) @a)
+          ((@(or identity + * min max logior logand) @a)
            (return-from comp-fun-form me.(compile oreg env a)))))
 
       (when (plusp olev)
