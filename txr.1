@@ -14022,7 +14022,7 @@ goes to the rightmost place, and that value is returned.
 Deletes a place which supports deletion, and returns
 the value which existed in that place prior to deletion.
 
-.meIP (lset <> { place }+ << list-expr )
+.meIP (lset <> { place }+ << sequence )
 Sets multiple places to values obtained from successive
 elements of
 .metn sequence .
@@ -16205,7 +16205,7 @@ must not be the atom
 .codn t ,
 there is no restriction against it being
 an atom which evaluates to
-.code t.
+.codn t .
 In this situation, the value
 .code t
 has no special meaning.
@@ -20160,7 +20160,7 @@ with the arguments reversed. That is to say, the following
 equivalences hold:
 
 .verb
-  (greater a <--> (less a) <--> t
+  (greater a) <--> (less a) <--> t
   (greater a b) <--> (less b a)
   (greater a b c ...) <--> (less ... c b a)
 .brev
@@ -26222,7 +26222,7 @@ argument must be a vector.
 
 .coNP Function @ fill-vec
 .synb
-.mets (fill-vec-vec < vec < elem >> [ from <> [ to ]])
+.mets (fill-vec < vec < elem >> [ from <> [ to ]])
 .syne
 .desc
 The
@@ -62465,7 +62465,7 @@ If seed is not specified, then
 produces a seed based
 on some information in the process environment, such as current
 time of day. It is not guaranteed that two calls to
-.code (make-random-state)
+.code make-random-state
 that are separated by less than some minimum increment of real time produce
 different seeds.  The minimum time increment depends on the platform.
 
@@ -62593,7 +62593,7 @@ parameter, which defaults to the value of
 
 .coNP Function @ random-buf
 .synb
-.mets (random-buf << size <> [ random-state ])
+.mets (random-buf < size <> [ random-state ])
 .syne
 .desc
 The
@@ -66863,7 +66863,7 @@ fields take on values of zero.
 .synb
 .mets (stat >> { path | < stream | << fd } <> [ struct ])
 .mets (lstat << path )
-.mets (fstat >> { path | stream | << fd } <> [ struct ])
+.mets (fstat >> { path | < stream | << fd } <> [ struct ])
 .syne
 .desc
 The
