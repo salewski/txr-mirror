@@ -5897,7 +5897,7 @@ val trim_str(val str)
 
 val cmp_str(val astr, val bstr)
 {
-  val self = lit("bstr");
+  val self = lit("cmp-str");
 
   switch (TYPE_PAIR(type(astr), type(bstr))) {
   case TYPE_PAIR(LIT, LIT):
@@ -5934,8 +5934,8 @@ val cmp_str(val astr, val bstr)
       return zero;
     }
   default:
-    uw_throwf(error_s, lit("cmp-str: invalid operands ~s ~s"),
-              astr, bstr, nao);
+    uw_throwf(error_s, lit("~a: invalid operands ~s ~s"),
+              self, astr, bstr, nao);
   }
 }
 
