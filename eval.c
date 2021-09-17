@@ -5768,7 +5768,7 @@ static loc collect_nothing(loc ptail, val obj)
 
 static val maprodo(val fun, struct args *lists)
 {
-  return prod_common(lit("maprodo"), fun, lists, collect_nothing, mappendv);
+  return prod_common(lit("maprodo"), fun, lists, collect_nothing, mapdov);
 }
 
 static val symbol_value(val sym)
