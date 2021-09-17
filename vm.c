@@ -175,7 +175,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
 
 static val vm_desc_nlevels(val desc)
 {
-  val self = lit("vm_desc_nlevels");
+  val self = lit("vm-desc-nlevels");
   struct vm_desc *vd = vm_desc_struct(self, desc);
   return num(vd->nlvl);
 }
