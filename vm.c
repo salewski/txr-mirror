@@ -95,7 +95,7 @@ struct vm_closure {
   int nreg;
   int nlvl;
   unsigned ip;
-  struct vm_env dspl[1];
+  struct vm_env dspl[FLEX_ARRAY];
 };
 
 val vm_desc_s, vm_closure_s;

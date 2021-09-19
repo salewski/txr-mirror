@@ -100,7 +100,7 @@ struct struct_inst {
   cnum id : sizeof (cnum) * CHAR_BIT - TAG_SHIFT;
   unsigned lazy : 1;
   unsigned dirty : 1;
-  val slot[1];
+  val slot[FLEX_ARRAY];
 };
 
 val struct_type_s, meth_s, print_s, make_struct_lit_s;
