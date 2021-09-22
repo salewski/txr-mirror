@@ -1,4 +1,4 @@
-/* Copyright 2012-2021
+/* Copyright 2021
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
@@ -26,44 +26,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val mod_s, bit_s, minus_s;
-val make_bignum(void);
-val bignum(cnum cn);
-val bignum_from_long(long l);
-val bignum_from_uintptr(uint_ptr_t u);
-val num_from_buffer(mem_t *buf, int bytes);
-int num_to_buffer(val num, mem_t *buf, int bytes);
-int highest_bit(int_ptr_t n);
-val normalize(val bignum);
-#if HAVE_DOUBLE_INTPTR_T
-val bignum_dbl_ipt(double_intptr_t di);
-val bignum_dbl_uipt(double_uintptr_t dui);
-#endif
-val in_int_ptr_range(val bignum);
-#if HAVE_DOUBLE_INTPTR_T
-double_intptr_t c_dbl_num(val num);
-double_uintptr_t c_dbl_unum(val num);
-#endif
-val bignum_len(val num);
-val cum_norm_dist(val x);
-val inv_cum_norm(val p);
-val n_choose_k(val n, val k);
-val n_perm_k(val n, val k);
-val divides(val d, val n);
-val tofloat(val obj);
-val toint(val obj, val base);
-val tofloatz(val obj);
-val tointz(val obj, val base);
-val width(val num);
-val bits(val obj);
-val digpow(val n, val base);
-val digits(val n, val base);
-val poly(val x, val seq);
-val rpoly(val x, val seq);
+enum psq_type {
+  psq_regular,
+  psq_grouped
+};
 
-val quantile(val pv, val chsize_in, val rate_in);
+struct psquare {
+  enum psq_type type;
+  double p;
+  double q[5];
+  double wn[5];
+  double dn[5];
+  cnum n[5];
+  ucnum count;
+  /* psq_grouped fields */
+  ucnum grsize;
+  double prev;
+  double rate;
+  double blend;
+  int blending;
+};
 
-NORETURN void do_mp_error(val self, mp_err code);
-void arith_init(void);
-void arith_compat_fixup(int compat_ver);
-void arith_free_all(void);
+void psq_init(struct psquare *, double p);
+void psq_init_grouped(struct psquare *, double p,
+                      ucnum grsize, double rate);
+void psq_add_sample(struct psquare *, double s, val self);
+double psq_get_estimate(struct psquare *);

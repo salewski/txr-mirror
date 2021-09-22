@@ -46577,6 +46577,149 @@ benefits from ordering the operations on multiple integer operands
 according to the magnitudes of those operands. The function provides an
 estimate of magnitude which trades accuracy for efficiency.
 
+.coNP Function @ quantile
+.synb
+.mets (quantile < p >> [ group-size <> [ rate ]])
+.syne
+.desc
+The
+.code quantile
+function returns a function which estimates a specific quantile
+of a set of real-valued samples. The desired quantile is indicated
+by the
+.meta p
+parameter, which is a number in the range 0 to 1.0. If
+.meta p
+is specified as 0.5, then the median is estimated.
+The
+.meta p
+value of 0.9 leads to the estimation of the 90th percentile:
+a value such that approximately 90% of the samples are below that value.
+
+If the
+.meta group-size
+parameter is specified, it must be a positive integer.
+The returned function then operates in grouped mode. The
+.meta rate
+parameter is relevant only to grouped mode. Grouped mode is
+described below.
+
+The function returned by
+.code quantile
+maintains internal state in relation to calculating the quantile.
+The function may be called with any number of arguments, including
+none. It expects every argument to be either a number, or a sequence
+of numbers. These numbers are accumulated into the quantile calculation,
+and a revised estimate of the quantile is then returned.
+
+Note: the algorithm used is the P-Squared algorithm invented in 1985 by Raj
+Jain and Imrich Chlamtac, which avoids accumulating and sorting the entire data
+set, while still obtaining good quality estimates of the quantile.
+The algorithm requires an initial seed of five samples. Then additional
+samples input into the algorithm produce quantile estimates.  To eliminate this
+special case from the abstract interface, the \*(TX implementation is capable of
+producing an estimate when five or fewer samples have been presented, including
+none. In this low situation, the
+.meta p
+value is ignored in reporting the estimate.  When no samples have been given,
+the estimate is zero.  When one sample has been given, the estimate is that
+sample itself. When between two and five samples have been given, the estimate
+is their median. Using the median as the estimate ensures a smooth transition
+from these early estimates into the estimates produced by the P-Squared
+algorithm. This is because the P-Squared algorithm always reports the value of
+the middle height accumulator as the estimate, and that accumulator's initial
+value is the median of the first five samples.
+
+The function returned by
+.codn quantile ,
+though not accumulating all of the samples passed to it, nevertheless has
+a limited sample capacity, because the registers it uses for tracking the
+sample group positions are fixed-width integers. The sample capacity is
+approximately 4 times the value of
+.codn fixnum-max .
+
+.TP* Example:
+
+.verb
+   (defparm q (quantile 0.9))   ;; create 90-th percentile accumulator
+
+   [q] -> 0.0                   ;; no samples given: estimate is 0.
+   [q 3.14] -> 3.14             ;; one sample: estimate is that sample
+   [q 13.3 7.9 5.2 6.3] -> 7.9  ;; five samples: estimate is median.
+   [q 6.8 7.3 9.1 4.0]          ;; more than five samples; estimate now
+   -> 8.44651234567901          ;; from P-Square algorithm
+   [q #(13.1 5 2.5)]            ;; vector argument
+   -> 9.68660493827161
+   [q] -> 9.68660493827161      ;; no arguments: repeat current estimate
+.brev
+
+If the
+.meta group-size
+argument is specified, then the quantile accumulator operates in grouped mode.
+Grouped mode allows infinite sample operation without overflow: an unlimited
+number of samples can be accepted. However, old samples lose their influence
+over the estimated value: newer samples are considered more significant than
+old samples.
+
+In grouped mode, the quantile accumulator is reset to its initial state whenever
+.meta group-size
+samples have been accumulated, and begins freshly calculating the quantile.
+Prior to the reset, an estimate is obtained and retained in an internal
+register. Going forward, this remembered previous estimate is blended in with
+the newly calculated estimate values, as described below.  The cycle repeats
+itself whenever
+.meta group-size
+samples accumulate: the state is reset, and the current estimate is loaded into
+the previous estimate register, which is then blended with newly computed
+values.
+
+The
+.meta rate
+parameter, whose default value is 0.999, controls the estimate blending.
+It should be a value between 0 and 1.
+
+Upon each reset, a blend value register is initialized to 1.0. Each time
+a new sample is accumulated, the blend register is multiplied by the rate
+parameter, and the product is stored back into the blend register.
+Thus if the rate is between 0 and 1, exclusive, then the blend register
+exponentially decreases as the number of samples grows. The blend register
+indicates the fraction of the estimate which comes from the remembered previous
+estimate.
+
+For instance, if the current blend value is 0.8, then the returned estimate
+value is 0.8 times the remembered previous estimate, plus 0.2 times the newly
+computed estimate for the current sample in the new group: the previous and
+current estimate are blended 80:20.
+
+The default
+.meta rate
+value of 0.999 is chosen for a slow transition to the new estimates, which
+helps to conceal inaccuracies in the algorithm associated with having
+accumulated a small number of samples. At this rate, it requires about 290
+samples before the blend value drops to 75% of the old estimate.
+
+If
+.code rate
+is specified as 0, then no blending of the previous estimate value
+takes place, since the blend factor will drop to zero upon the first
+sample being received after the group reset, causing the newly calculated
+estimates to be returned without blending. The previous sample groups
+therefore have no influence over newer estimates. If
+.code rate
+is specified as 1, then the blend factor will stay at 1, and so the
+estimate will forever remain at the previous value, ignoring the
+calculations driven by the new samples.
+
+Note: it is recommended that if
+.meta group-size
+is specified, the value should be at least several hundred. Too small
+a group size will prevent the estimation algorithm from settling on
+good results. The
+.meta rate
+parameter should not much smaller than 1. A rate too low will cause
+the previous estimate's contribution to the quantile value to diminish,
+too quickly, before the new estimation settles.
+
 .coNP Variables @, flo-near @, flo-down @ flo-up and @ flo-zero
 .desc
 These variables hold integer values suitable as arguments to the

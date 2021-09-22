@@ -1503,6 +1503,7 @@
       ("pwd" "N-0047F5F6")
       ("qquote" "N-01665185")
       ("qref" "D-006E")
+      ("quantile" "N-0318C018")
       ("quip" "N-03C6D422")
       ("quote" "N-0163F998")
       ("r$" "N-03BBB0C5")

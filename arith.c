@@ -50,6 +50,7 @@
 #include "itypes.h"
 #include "struct.h"
 #include "txr.h"
+#include "psquare.h"
 #include "arith.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -4507,6 +4508,55 @@ val lcmv(struct args *nlist)
   return nary_op(lit("lcm"), lcm, abso_self, nlist, zero);
 }
 
+static struct cobj_ops psq_ops = cobj_ops_init(cobj_equal_handle_op,
+                                               cptr_print_op,
+                                               cobj_destroy_free_op,
+                                               cobj_mark_op,
+                                               cobj_handle_hash_op);
+
+static val quant_fun(val psqo, struct args *args)
+{
+  val self = lit("quantile");
+  cnum idx = 0;
+  struct psquare *psq = coerce(struct psquare *, psqo->cp.handle);
+
+  while (args_more(args, idx)) {
+    val arg = args_get(args, &idx);
+    if (numberp(arg)) {
+      double s = c_flo(to_float(self, arg), self);
+      psq_add_sample(psq, s, self);
+    } else {
+      seq_iter_t item_iter;
+      val sample;
+      seq_iter_init(self, &item_iter, arg);
+
+      while (seq_get(&item_iter, &sample)) {
+        double s = c_flo(to_float(self, sample), self);
+        psq_add_sample(psq, s, self);
+      }
+    }
+  }
+
+  return flo(psq_get_estimate(psq));
+}
+
+val quantile(val pv, val grsize_in, val rate_in)
+{
+  val self = lit("quantile");
+  double p = c_flo(to_float(self, pv), self);
+  struct psquare *psq = coerce(struct psquare *, chk_malloc(sizeof *psq));
+  val psqo = cptr_typed(coerce(mem_t *, psq), nil, &psq_ops);
+  if (missingp(grsize_in)) {
+    psq_init(psq, p);
+  } else {
+    ucnum grsize = c_unum(grsize_in, self);
+    double rate = if3(missingp(rate_in),
+                      0.999,
+                      c_flo(to_float(self, rate_in), self));
+    psq_init_grouped(psq, p, grsize, rate);
+  }
+  return func_f0v(psqo, quant_fun);
+}
 
 void arith_init(void)
 {
@@ -4707,6 +4757,7 @@ void arith_init(void)
   reg_fun(intern(lit("b/"), system_package), func_n2(divi));
   reg_fun(neg_s, func_n1(neg));
 
+  reg_fun(intern(lit("quantile"), user_package), func_n3o(quantile, 1));
 #if HAVE_ROUNDING_CTL_H
   reg_varl(intern(lit("flo-near"), user_package), num(FE_TONEAREST));
   reg_varl(intern(lit("flo-down"), user_package), num(FE_DOWNWARD));
