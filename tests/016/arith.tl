@@ -253,3 +253,61 @@
                 3.0 3.0 3.0 3.0 3.0)])
   (0.0 0.0 0.0 0.0 0.0
    1.5 2.25 2.625 2.8125 2.90625))
+
+(mtest
+  (sum-each ((x '(1 2 3))
+             (y '(4 5 6)))
+    (* x y))
+  32
+  (mul-each ((x '(1 2 3))
+             (y '(4 5 6)))
+    (+ x y))
+  315
+  (sum-each* ((x '(1 2 3))
+              (y (cdr x)))
+    (* x y))
+  8
+  (mul-each* ((x '(1 2 3))
+              (y (cdr x)))
+    (+ x y))
+  15
+  (sum-each ((x '(1 2 3))
+              (y (cdr x)))
+    (* x y))
+  :error
+  (mul-each ((x '(1 2 3))
+              (y (cdr x)))
+    (+ x y))
+  :error)
+
+(mtest
+  (sum-each-prod ((x '(1 2 3))
+                  (y '(4 3 2)))
+    (* x y))
+  54
+  (sum-each-prod* ((x '(1 2 3 4))
+                   (y (cdr x)))
+    (* x y))
+  90
+  (sum-each-prod ((x '(1 2 3 4))
+                  (y (cdr x)))
+    (* x y))
+  :error)
+
+(mvtest
+  (mul-each-prod ((x '(1 2 3))
+                  (y '(4 3 2)))
+    (+ x y))
+  (* (+ 1 4) (+ 1 3) (+ 1 2)
+     (+ 2 4) (+ 2 3) (+ 2 2)
+     (+ 3 4) (+ 3 3) (+ 3 2))
+  (mul-each-prod* ((x '(1 2 3))
+                   (y (cdr x)))
+    (+ x y))
+  (* (+ 1 2) (+ 1 3)
+     (+ 2 2) (+ 2 3)
+     (+ 3 2) (+ 3 3))
+  (sum-each-prod ((x '(1 2 3))
+                  (y (cdr x)))
+    (* x y))
+  :error)

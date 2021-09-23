@@ -50,11 +50,28 @@
   (let* ((each-prod-op (caseq (car form)
                          (each-prod* 'each-prod)
                          (collect-each-prod* 'collect-each-prod)
-                         (append-each-prod* 'append-each-prod)))
+                         (append-each-prod* 'append-each-prod)
+                         (sum-each-prod* 'sum-each-prod)
+                         (mul-each-prod* 'mul-each-prod)))
          (syms [mapcar car vars])
          (inits [mapcar cadr vars]))
     ^(let* ,vars
        (,each-prod-op ,(zip syms syms) ,*body))))
+
+(defun sys:expand-arith-each-prod (form vars body)
+  (sys:vars-check form vars)
+  (let ((syms [mapcar car vars])
+        (inits [mapcar cadr vars]))
+    (sys:bindable-check form syms)
+    (let ((op-iv (caseq (car form)
+                   (sum-each-prod '(+ . 0))
+                   (mul-each-prod '(* . 1)))))
+      (with-gensyms (acc)
+        ^(let ((,acc ,(cdr op-iv)))
+           (maprodo (lambda (,*syms)
+                      (set ,acc (,(car op-iv) ,acc (progn ,*body))))
+                    ,*inits)
+           ,acc)))))
 
 (defmacro each-prod (:form f vars . body)
   (sys:expand-each-prod f vars body))
@@ -65,6 +82,12 @@
 (defmacro append-each-prod (:form f vars . body)
   (sys:expand-each-prod f vars body))
 
+(defmacro sum-each-prod (:form f vars . body)
+  (sys:expand-arith-each-prod f vars body))
+
+(defmacro mul-each-prod (:form f vars . body)
+  (sys:expand-arith-each-prod f vars body))
+
 (defmacro each-prod* (:form f vars . body)
   (sys:expand-each-prod* f vars body))
 
@@ -72,4 +95,10 @@
   (sys:expand-each-prod* f vars body))
 
 (defmacro append-each-prod* (:form f vars . body)
+  (sys:expand-each-prod* f vars body))
+
+(defmacro sum-each-prod* (:form f vars . body)
+  (sys:expand-each-prod* f vars body))
+
+(defmacro mul-each-prod* (:form f vars . body)
   (sys:expand-each-prod* f vars body))

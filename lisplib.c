@@ -835,6 +835,23 @@ static val copy_file_set_entries(val dlt, val fun)
   return nil;
 }
 
+static val arith_each_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(scat2(stdlib_path, lit("arith-each")));
+  return nil;
+}
+
+static val arith_each_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("sum-each"), lit("mul-each"), lit("sum-each*"), lit("mul-each*"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
 static val each_prod_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
@@ -846,7 +863,9 @@ static val each_prod_set_entries(val dlt, val fun)
 {
   val name[] = {
     lit("each-prod"), lit("collect-each-prod"), lit("append-each-prod"),
+    lit("sum-each-prod"), lit("mul-each-prod"),
     lit("each-prod*"), lit("collect-each-prod*"), lit("append-each-prod*"),
+    lit("sum-each-prod*"), lit("mul-each-prod*"),
     nil
   };
   set_dlt_entries(dlt, name, fun);
@@ -1009,6 +1028,7 @@ void lisplib_init(void)
   dlt_register(dl_table, save_exe_instantiate, save_exe_set_entries);
   dlt_register(dl_table, defset_instantiate, defset_set_entries);
   dlt_register(dl_table, copy_file_instantiate, copy_file_set_entries);
+  dlt_register(dl_table, arith_each_instantiate, arith_each_set_entries);
   dlt_register(dl_table, each_prod_instantiate, each_prod_set_entries);
   dlt_register(dl_table, quips_instantiate, quips_set_entries);
   dlt_register(dl_table, match_instantiate, match_set_entries);

@@ -17639,6 +17639,84 @@ into the
 .meta step-form
 position.
 
+.coNP Macros @, sum-each @, sum-each* @ mul-each and @ mul-each*
+.synb
+.mets (sum-each >> ({( sym << init-form )}*) << body-form *)
+.mets (sum-each* >> ({( sym << init-form )}*) << body-form *)
+.mets (mul-each >> ({( sym << init-form )}*) << body-form *)
+.mets (mul-each* >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The macros
+.codn sum-each ,
+and
+.code mul-each
+behave very similarly to the
+.code each
+operator. Whereas the
+.code each
+operator form returns
+.code nil
+as its result, the
+.code sum-each
+and
+.code mul-each
+forms, if they execute to completion and return normally, return
+an accumulated value.
+
+The
+.code sum-each
+macro initializes newly instantiated, hidden accumulator variable
+to the value
+.codn 0 .
+For each iteration of the loop, the
+.metn body-form s
+are evaluated, and are expected to produce a value. This value
+is added to the current value of the hidden accumulator using the
+.code +
+function, and the result is stored into the accumulator. If
+.code sum-each
+returns normally, then the value of this accumulator becomes its
+resulting value.
+
+The
+.code mul-each
+macro similarly initializes a hidden accumulator to the value
+.codn 1 .
+The value from each iteration of the body is multiplied with
+the accumulator using the
+.code *
+function, and the result is stored into the accumulator. If
+.code mul-each
+returns normally, then the value of this accumulator becomes
+its resulting value.
+
+The
+.code sum-each*
+and
+.code mul-each*
+variants of the macros implement the sequential scoping rule for
+the variable bindings, exactly the way
+.code each*
+alters the semantics of
+.codn each .
+
+Note: the following equivalences apply, except that the accumulator
+variable is a named by a unique, generated symbol.
+
+.verb
+  (sum-each (vars ...)  <-->  (let ((acc 0))
+    body ...)                   (each vars
+                                  (inc acc (progn body)))
+                                 acc)
+
+  (mul-each (vars ...)  <-->  (let ((acc 1))
+    body)                       (each vars
+                                  (set acc (* acc
+                                              (progn body))))
+                                acc)
+.brev
+
 .coNP Macros @, each-prod @ collect-each-prod and @ append-each-prod
 .synb
 .mets (each-prod >> ({( sym << init-form )}*) << body-form *)
@@ -17760,6 +17838,48 @@ stepped by assignment.
 
   --> ("aA" "aB" "aC" "bA" "bB" "bC" "cA" "cB" "cC")
 .onom
+
+.coNP Macros @, sum-each-prod @, sum-each-prod* @ mul-each-prod and @ mul-each-prod*
+.synb
+.mets (sum-each-prod >> ({( sym << init-form )}*) << body-form *)
+.mets (sum-each-prod* >> ({( sym << init-form )}*) << body-form *)
+.mets (mul-each-prod >> ({( sym << init-form )}*) << body-form *)
+.mets (mul-each-prod* >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The macros
+.code sum-each-prod
+and
+.code mul-each-prod
+have a similar syntax to
+.code sum-each
+and
+.codn mul-each .
+However, instead of iterating over sequences in parallel, they iterate over
+the Cartesian product of the elements from the sequences.
+
+The macros
+.code sum-each-prod*
+and
+.code mul-each-prod*
+variants perform sequential variable binding when establishing the initial
+values of the variables, similarly to the
+.code each*
+operator.
+
+.TP* Examples:
+
+.verb
+  ;; Inefficiently calculate (+ (* 1 2 3) (* 4 3 2)).
+  ;; Every value from (1 2 3) is paired with every value
+  ;; from (4 3 2) to form a partial products, and
+  ;; sum-each-prod adds these together implicitly:
+
+  (sum-each-prod ((x '(1 2 3))
+                  (y '(4 3 2)))
+    (* x y))
+  -> 54
+.brev
 
 .coNP Operators @ block and @ block*
 .synb
