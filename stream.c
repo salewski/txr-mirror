@@ -103,6 +103,7 @@ val socket_error_s;
 struct cobj_class *stream_cls, *stdio_stream_cls;
 
 const wchli_t *path_sep_chars = wli("/");
+wchar_t path_var_sep_char = ':';
 
 val top_stderr;
 
@@ -4383,6 +4384,31 @@ static void fds_clobber(struct save_fds *fds, int flags)
     fds_subst_nosave(fds->suberr, STDERR_FILENO);
 }
 
+val path_search(val name, val path_in)
+{
+  val self = lit("path-search");
+  val ps = static_str(path_sep_chars);
+
+  if (empty(name) || equal(name, lit(".")) || equal(name, lit(".."))) {
+    return nil;
+  } else if (break_str(name, ps)) {
+    return name;
+  } else {
+    val path = default_arg_strict(path_in, getenv_wrap(lit("PATH")));
+    val spath = if3(listp(path), path, split_str(path, chr(path_var_sep_char)));
+    for (; spath; spath = cdr(spath)) {
+      val dir = car(spath);
+      val full = path_cat(dir, name);
+      char *full8 = utf8_dup_to(c_str(full, self));
+      int res = access(full8, F_OK);
+      free(full8);
+      if (res == 0)
+        return full;
+    }
+    return nil;
+  }
+}
+
 #if HAVE_FORK_STUFF
 static val open_subprocess(val name, val mode_str, val args, val fun)
 {
@@ -4998,9 +5024,10 @@ static void detect_path_separators(void)
   struct utsname un;
 
   if (uname(&un) >= 0) {
-    if (strncmp(un.sysname, "CYGNAL", 6) == 0)
+    if (strncmp(un.sysname, "CYGNAL", 6) == 0) {
       path_sep_chars = wli("\\/");
-    return;
+      path_var_sep_char = ';';
+    }
   }
 #endif
 }
@@ -5528,6 +5555,7 @@ void stream_init(void)
   reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
   reg_fun(intern(lit("open-fileno"), user_package), func_n2o(open_fileno, 1));
   reg_fun(intern(lit("open-tail"), user_package), func_n3o(open_tail, 1));
+  reg_fun(intern(lit("path-search"), user_package), func_n2o(path_search, 1));
   reg_fun(intern(lit("open-command"), user_package), func_n2o(open_command, 1));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));

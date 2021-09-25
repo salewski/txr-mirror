@@ -68630,76 +68630,79 @@ device.
 
 .coNP Function @ path-search
 .synb
-.mets (path-search < program-name <> [ search-path ])
+.mets (path-search < name <> [ search-path ])
 .syne
 .desc
 The
 .code path-search
-function searches for an executable program whose name is given by the
-.meta program-name
-string argument. If the program is found, then the full path to that
-program is returned, otherwise
-.code nil
-is returned.
+function searches for the existence of a filesystem object named by
+.meta name
+in the directories specified
+.metn search-path .
 
-If the
+If
+.meta name
+is the empty string or one of the two strings
+.str .
+(dot)
+or
+.str ..
+(dotdot),
+then
+.code nil
+is returned. If
+.meta name
+contains any path separator characters (any of the set of characters
+found in the
+.code path-sep-chars
+string) then the function returns
+.meta name
+without performing any search. In all these trivial cases, the
 .meta search-path
-argument is omitted, then
-.code path-search
-uses the search path given in the
+argument is ignored.
+
+The
+.meta search-path
+argument, if present, may be a string or a list of strings.
+If omitted, then it takes on the value of the
 .code PATH
-environment variable. This path is decomposed into components according
-to the separator character, which may be
+environment variable if that variable exists, or else takes on
+the value
+.code nil
+indicating an empty search path.
+
+If
+.meta search-path
+is a string, it is converted to a list of directories by splitting on the
+separator character, which may be
 .code :
 (colon)
 or
 .code ;
-(semicolon) depending on the system. Then, for each component of the path,
+(semicolon) depending on the system. Then, for each directory in the list,
 .code path-search
 affixes the
-.meta program-name
+.meta name
 to that component, as if using the
 .code path-cat
-function, and tests whether the resulting path is an existing file object
-according to
-.code path-file-p
-and which is executable according to
-.codn path-executable-to-me-p .
+function, and tests whether the resulting path refers to an existing filesystem
+object.
+If so, then the search terminates and that resulting path is returned.
+If the entire list is traversed without finding a filesystem object, then
+.code nil
+is returned.
+If any error whatsoever occurs while determining whether the resulting path
+exists, the situation is treated as nonexistence, and the search continues.
 
-The
-.code search-path
-argument may be specified as a string, which is taken instead of the value
-of the
-.code PATH
-environment variable, and decomposed into components in the same way.
-The argument may also be specified as a list of strings, which are taken
-to be components of a search path, and used as-is.
-
-If
-.meta program-name
-is the empty string or the search path is empty, the function returns
-.codn nil .
-
-Components of the search path which are empty strings are ignored.
-
-If
-.meta program-name
-is a string which includes path-separator characters, or if
-.meta program-name
-is one of the special names
-.str .
-or
-.strn .. ,
-the behavior may produce a different result from the host platform's native
-path-search strategy.
-
-The behavior of
+Note: subtle discrepancies may exist between
 .code path-search
-may also deviate from the host platform's native path-search strategy
-due to issues of permissions. If an executable file is found in the path,
-but is not executable to the caller due to permissions, it is treated
-as nonexistent, which means that the search can find a same-named file
-later in the search path.
+and the host platform's mechanisms for searching for an executable program.
+For instance, since
+.code path-search
+is interested in existence only, it may return a path which exists, but is
+not executable. Whereas a path searching implementation which tests for
+executability will in that case continue searching, and not return that
+path.
 
 .SS* Unix Credentials
 

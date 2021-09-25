@@ -152,6 +152,7 @@ extern val socket_error_s;
 #endif
 
 extern const wchli_t *path_sep_chars;
+extern wchar_t path_var_sep_char;
 
 extern val top_stderr;
 
@@ -245,6 +246,7 @@ val open_file(val path, val mode_str);
 val open_fileno(val fd, val mode_str);
 val open_tail(val path, val mode_str, val seek_end_p);
 val open_command(val path, val mode_str);
+val path_search(val name, val path_in);
 val open_process(val path, val mode_str, val args);
 val make_catenated_stream(val stream_list);
 val make_catenated_stream_v(struct args *streams);

@@ -185,16 +185,3 @@
           (casequal ent
             (("." ".."))
             (t (return nil))))))))
-
-(defun path-search (name : (path (getenv "PATH")))
-  (if (empty name)
-    nil
-    (let ((pcomp (if (listp path)
-                   path
-                   (spl (if (starts-with "CYGNAL" (uname).sysname) #\; #\:)
-                        path))))
-      (each ((pc pcomp))
-        (if (nequal pc "")
-          (let ((st (ignerr (stat (path-cat pc name)))))
-            (if (and st (path-executable-to-me-p st) (path-file-p st))
-              (return st.path))))))))

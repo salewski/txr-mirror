@@ -15,4 +15,8 @@
   (path-search "sh" "AlMoStCeRtAiNlLyNoNeXisTenT:/bin") "/bin/sh"
   (path-search "sh" "/bin") "/bin/sh"
   (path-search "sh" "/bin/") "/bin/sh"
-  (path-search "sh" ":/bin/") "/bin/sh")
+  (path-search "sh" ":/bin/") "/bin/sh"
+  (path-search "" "/bin") nil
+  (path-search "." "/bin") nil
+  (path-search ".." "/bin") nil
+  (path-search "foo/bar" "/bin") "foo/bar")

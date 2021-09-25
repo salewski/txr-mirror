@@ -190,7 +190,7 @@ static val path_test_set_entries(val dlt, val fun)
     lit("path-newer"), lit("path-older"),
     lit("path-same-object"), lit("path-private-to-me-p"),
     lit("path-strictly-private-to-me-p"),
-    lit("path-dir-empty"), lit("path-search"),
+    lit("path-dir-empty"),
     nil
   };
 
