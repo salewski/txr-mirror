@@ -68313,11 +68313,16 @@ they are based strictly on portable information available via
 .codn stat ,
 together with the basic, portable POSIX APIs for inquiring about
 security credentials, such as
-.codn geteuid .
+.codn getuid .
 They ignoring any special permissions which may exist such as operating system
 and file system specific extended attributes (for example, file immutability
 connected to a "secure level" and such) and special process capabilities
 not reflected in the basic credentials.
+
+The accessibility tests use the real credentials of the caller, rather than the
+effective credentials. Thus, in a setuid process, where the real and effective
+privileges are different, the access tests inquire about whether the real user
+has the given access, not the effective user.
 
 .coNP Function @ path-exists-p
 .synb
@@ -68443,14 +68448,14 @@ exists and has the "sticky" permission bit set.
 tests whether
 .meta path
 exists, and is effectively owned by the calling process; that is,
-it has a user ID equal to the effective user ID of the process.
+it has a user ID equal to the real user ID of the process.
 
 .code path-my-group-p
 tests whether
 .meta path
 exists, and is effectively owned by a group to which the calling process
 belongs. This means that the group owner is either the same as the
-effective group ID of the calling process, or else is among the
+real group ID of the calling process, or else is among the
 supplementary group IDs of the calling process.
 
 .coNP Function @ path-readable-to-me-p
@@ -68462,8 +68467,8 @@ supplementary group IDs of the calling process.
 tests whether the calling process can read the
 object named by
 .metn path .
-If necessary, this test examines the effective user ID of the
-calling process, the effective group ID, and the list of supplementary groups.
+If necessary, this test examines the real user ID of the
+calling process, the real group ID, and the list of supplementary groups.
 
 .coNP Function @ path-writable-to-me-p
 .synb
@@ -68474,8 +68479,8 @@ calling process, the effective group ID, and the list of supplementary groups.
 tests whether the calling process can write the
 object named by
 .metn path .
-If necessary, this test examines the effective user ID of the
-calling process, the effective group ID, and the list of supplementary groups.
+If necessary, this test examines the real user ID of the
+calling process, the real group ID, and the list of supplementary groups.
 
 .coNP Function @ path-read-writable-to-me-p
 .synb
@@ -68486,8 +68491,8 @@ calling process, the effective group ID, and the list of supplementary groups.
 tests whether the calling process can both read and write the
 object named by
 .metn path .
-If necessary, this test examines the effective user ID of the
-calling process, the effective group ID, and the list of supplementary groups.
+If necessary, this test examines the real user ID of the
+calling process, the real group ID, and the list of supplementary groups.
 
 .coNP Function @ path-executable-to-me-p
 .synb
@@ -68500,8 +68505,8 @@ object named by
 .metn path ,
 or perform a search (name lookup, not implying sequential readability) on it,
 if it is a directory.
-If necessary, this test examines the effective user ID of the
-calling process, the effective group ID, and the list of supplementary groups.
+If necessary, this test examines the real user ID of the
+calling process, the real group ID, and the list of supplementary groups.
 
 .coNP Functions @ path-private-to-me-p and @ path-strictly-private-to-me-p
 .synb
@@ -68517,21 +68522,21 @@ functions report whether the calling process can rely on the
 object indicated by
 .code path
 to be, respectively, private or strictly private to the security context
-implied by its effective user ID.
+implied by its real user ID.
 
-"Private" means that beside the effective user ID of the calling process and
+"Private" means that beside the real user ID of the calling process and
 the superuser, no other user ID has write access to the object, and thus its
 contents may be trusted to be be free from tampering by any other user.
 
 "Strictly private" means that not only is the object private, as above,
-but users other than the effective user ID of the calling process
+but users other than the real user ID of the calling process
 and superuser also not not have read access.
 
 The rules which the function applies are as follows:
 
 A file to be examined is initially assumed to be strictly private.
 
-If the file is not owned by the effective user ID of the caller, or
+If the file is not owned by the real user ID of the caller, or
 else by the superuser, then it is not private.
 
 If the file grants write permission to "others", then it is not private.
