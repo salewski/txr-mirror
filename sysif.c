@@ -336,6 +336,40 @@ val env(void)
   }
 }
 
+val replace_env(val env_list)
+{
+#if HAVE_ENVIRON && HAVE_SETENV
+  val self = lit("replace-env");
+  extern char **environ;
+  val iter;
+  static char *empty_env[1];
+
+  environ = empty_env;
+
+  for (iter = env_list; iter; iter = cdr(iter)) {
+    const wchar_t *pair = c_str(car(iter), self);
+    char *pair8 = utf8_dup_to(pair);
+    char *eq = strchr(pair8, '=');
+    int res;
+    if (eq != 0) {
+      char *name = chk_substrdup_utf8(pair8, 0, eq - pair8);
+      res = setenv(name, eq + 1, 1);
+      free(name);
+    } else {
+      res = setenv(pair8, "", 1);
+    }
+    free(pair8);
+    if (res < 0)
+      uw_ethrowf(system_error_s, lit("~a: setenv failed: ~d/~s"),
+                 self, num(errno), errno_to_str(errno), nao);
+  }
+
+  return env_list;
+#else
+  uw_throwf(error_s, lit("environ mechanism not available"), nao);
+#endif
+}
+
 static val get_env_hash(void)
 {
   if (env_hash) {
@@ -2703,6 +2737,7 @@ void sysif_init(void)
 #endif
 
   reg_fun(intern(lit("env"), user_package), func_n0(env));
+  reg_fun(intern(lit("replace-env"), user_package), func_n1(replace_env));
   reg_fun(intern(lit("env-hash"), user_package), func_n0(get_env_hash));
 
 #if HAVE_DAEMON

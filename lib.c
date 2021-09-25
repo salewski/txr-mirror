@@ -4293,6 +4293,21 @@ char *chk_strdup_utf8(const char *str)
   return copy;
 }
 
+char *chk_substrdup_utf8(const char *str, size_t off, size_t len)
+{
+  size_t size = strlen(str) + 1, nchar;
+  char *copy;
+  if (off >= size - 1)
+    return chk_strdup_utf8("");
+  if (off + len < off)
+    uw_throw(error_s, lit("string size overflow"));
+  nchar = min(size - off, len + 1);
+  copy = coerce(char *, chk_malloc(nchar));
+  memcpy(copy, str, nchar - 1);
+  copy[nchar - 1] = 0;
+  return copy;
+}
+
 unsigned char *chk_strdup_8bit(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1, i;

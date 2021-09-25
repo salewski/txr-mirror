@@ -38,6 +38,7 @@ extern val path_s;
 
 val errno_to_file_error(int err);
 val env(void);
+val replace_env(val env_list);
 val getenv_wrap(val name);
 val errno_to_str(int err);
 val at_exit_call(val func);

@@ -1584,6 +1584,7 @@
       ("repeat" "D-006A")
       ("replace" "N-035991E1")
       ("replace-buf" "N-01C59E4E")
+      ("replace-env" "N-03C59E3B")
       ("replace-list" "N-03E43DA2")
       ("replace-str" "N-02059F0A")
       ("replace-struct" "N-01A8343B")

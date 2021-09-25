@@ -66049,6 +66049,51 @@ The
 function accesses the underlying environment and updates the hash
 table with the name-value pair which is retrieved.
 
+.coNP Function @ replace-env
+.synb
+.mets (replace-env << env-list )
+.syne
+.desc
+The
+.code replace-env
+function replaces the environment with the environment variables specified in
+.metn env-list .
+The argument is a list of character strings, in the same format
+as the list returned by the
+.code env
+function: each element of the list describes an environment variable
+as a single character string in which the name is separated by the
+value by the
+.code =
+character. As a special concession, if this character is missing, the
+.code replace-env
+function treats that entry as being a name with an empty value.
+
+The
+.code replace-env
+first empties the existing environment, rendering it devoid of environment
+variables. Then it installs the entries specified in
+.metn env-list .
+
+The return value is
+.metn env-list .
+
+Note:
+.code replace-env
+may be used to specify an exact environment to child programs executed
+by functions like
+.codn open-process ,
+.code sh
+or
+.codn run .
+
+Note: the previous environment may be saved by calling
+.code env
+and retaining the returned list. Then after modifying the environment,
+the original environment can be restored by passing that retained
+list to
+.codn replace-env .
+
 .SS* Command-Line-Option Processing
 
 \*(TL provides a support for recognizing, extracting and validating
