@@ -128,6 +128,8 @@ val atime_s, mtime_s, ctime_s;
 val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
 val path_s, dir_s, dirent_s;
 
+val child_env_s;
+
 #if HAVE_PWUID || HAVE_GRGID
 val passwd_s;
 #endif
@@ -1173,7 +1175,9 @@ val exec_wrap(val file, val args_opt)
                                self, nao), convert(char **, 0)),
                     coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self)));
   val iter;
-  int i;
+  val ch_env = child_env;
+  val save_env = nil;
+  int res, i;
 
   for (i = 0, iter = cons(file, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
@@ -1181,7 +1185,17 @@ val exec_wrap(val file, val args_opt)
   }
   argv[i] = 0;
 
-  if (execvp(argv[0], argv) < 0)
+  if (ch_env != t) {
+    save_env = env();
+    replace_env(ch_env);
+  }
+
+  res = execvp(argv[0], argv);
+
+  if (ch_env != t)
+    replace_env(save_env);
+
+  if (res < 0)
     uw_ethrowf(process_error_s, lit("~s ~a: ~d/~s"),
                self, file, num(errno), errno_to_str(errno), nao);
   uw_throwf(process_error_s, lit("~s ~a returned"), self, file, nao);
@@ -2588,6 +2602,7 @@ void sysif_init(void)
   len_s = intern(lit("len"), user_package);
   pid_s = intern(lit("pid"), user_package);
 #endif
+  child_env_s = intern(lit("*child-env*"), user_package);
 
   dir_cls = cobj_register(dir_s);
 
@@ -2989,6 +3004,7 @@ void sysif_init(void)
   reg_fun(intern(lit("setenv"), user_package), func_n3o(setenv_wrap, 2));
   reg_fun(intern(lit("unsetenv"), user_package), func_n1(unsetenv_wrap));
 #endif
+  reg_var(child_env_s, t);
 
 #if HAVE_GETEUID
   reg_fun(intern(lit("getuid"), user_package), func_n0(getuid_wrap));

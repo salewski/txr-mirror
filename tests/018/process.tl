@@ -25,3 +25,17 @@
     (mtest
       (fcmd (let ((*stdout* *stdnull*)) (sh "echo foo"))) ""
       (fcmd (let ((*stderr* *stdout*)) (sh "echo foo 1>&2"))) "foo\n")))
+
+(mtest
+  (let ((*child-env* '("a=b")))
+    (get-lines (open-process "/usr/bin/env" "r")))
+  ("a=b")
+  (let ((*child-env* nil))
+    (get-lines (open-process "/usr/bin/env" "r")))
+  nil)
+
+(test
+  (fcmd
+    (let ((*child-env* '("a=b")))
+      (run "/usr/bin/env")))
+  "a=b\n")

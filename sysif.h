@@ -36,6 +36,9 @@ extern val atime_s, mtime_s, ctime_s;
 extern val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
 extern val path_s;
 
+extern val child_env_s;
+#define child_env (deref(lookup_var_l(nil, child_env_s)))
+
 val errno_to_file_error(int err);
 val env(void);
 val replace_env(val env_list);

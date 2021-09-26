@@ -4516,8 +4516,12 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
     if (fun)
       funcall(fun);
 
-    if (argv)
+    if (argv) {
+      val ch_env = child_env;
+      if (ch_env != t)
+        replace_env(ch_env);
       execvp(argv[0], argv);
+    }
     _exit(errno);
   } else {
     int whichfd;
@@ -4747,6 +4751,7 @@ static val run(val command, val args)
   val iter;
   int i, nargs, status = 0;
   struct save_fds sfds;
+  volatile val save_env, ch_env = child_env;
 
   args = default_null_arg(args);
   nargs = c_num(length(args), self) + 1;
@@ -4762,23 +4767,32 @@ static val run(val command, val args)
   if (nargs < 0 || nargs == INT_MAX)
     uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
 
+  if (ch_env != t) {
+    save_env = env();
+    replace_env(ch_env, nil);
+  }
+
   wargv = coerce(const wchar_t **, chk_xalloc(nargs + 1, sizeof *wargv, self));
 
   for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
     wargv[i] = c_str(car(iter), self);
   wargv[i] = 0;
 
+  if (status == 0) {
 #if HAVE_WSPAWN
-  status = _wspawnvp(_P_WAIT, c_str(command, self), wargv);
+    status = _wspawnvp(_P_WAIT, c_str(command, self), wargv);
 #else
-  status = w_spawnvp(_P_WAIT, c_str(command, self), nargs, wargv);
+    status = w_spawnvp(_P_WAIT, c_str(command, self), nargs, wargv);
 #endif
+  }
 
   free(strip_qual(wchar_t **, wargv));
 
   gc_hint(args);
 
   uw_unwind {
+    if (ch_env != t)
+      replace_env(save_env, nil);
     fds_restore(&sfds);
   }
 
@@ -4833,7 +4847,10 @@ static val run(val name, val args)
   }
 
   if (pid == 0) {
+    val ch_env = child_env;
     fds_clobber(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
+    if (ch_env != t)
+      replace_env(ch_env);
     execvp(argv[0], argv);
     _exit(errno);
   } else {

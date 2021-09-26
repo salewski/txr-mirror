@@ -66094,6 +66094,45 @@ the original environment can be restored by passing that retained
 list to
 .codn replace-env .
 
+.coNP Special variable @ *child-env*
+.desc
+The
+.code *child-env*
+variable specifies the list of command line variables established for programs
+executed via the functions
+.codn exec ,
+.codn run ,
+.codn sh ,
+.code open-command
+and
+.codn open-process .
+
+The initial top-level value of this variable is the symbol
+.code t
+which indicates that
+.code *child-env*
+is to be ignored, such that the executed program
+inherits the current set of environment variables.
+
+If
+.code *child-env*
+has any other value, it must be a possibly empty list of environment
+variables, in the same format as what is returned by
+.code env
+function and accepted by
+.codn replace-env .
+That value completely specifies the environment that executed programs
+shall receive.
+
+.TP* Example:
+
+.verb
+  (let ((*child-env* '("a=b")))
+    ;; /usr/bin/env sees only "a" environment variable
+    (get-lines (open-process "/usr/bin/env" "r")))
+  -> ("a=b")
+.brev
+
 .SS* Command-Line-Option Processing
 
 \*(TL provides a support for recognizing, extracting and validating
