@@ -56,6 +56,9 @@
 (defmacro stest (expr expected)
   ^(vtest ,^(tostring ,expr) ,expected))
 
+(defmacro sstest (expr expected)
+  ^(vtest ,^(tostring ,expr) ,(tostring expected)))
+
 (defmacro mtest (. pairs)
   ^(progn ,*(mapcar (op cons 'test) (tuples 2 pairs))))
 
