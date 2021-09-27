@@ -86,6 +86,7 @@
     "TXR's suggested retail price is $0. (More in Canada.)"
     "All of our cores are currently busy servicing other applications."
     "For faster service, do not time out & retry. Syscalls are answered in sequence."
+    "Pour le service en la langue Shell, appuyez sur Ctrl-D."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
