@@ -378,7 +378,7 @@
         (pushnew bl bb.rescan)
         (set bb.recalc t
              bb.reelim t)
-        ^((jmp ,jlabel) ,*(cdr insns)))
+        ^((jmp ,jlabel)))
       (@(require ((@(or gcall gapply) (t @n) @idx . @nil) . @nil)
                  (dead-treg (car insns) n)
                  [%effect-free% [bb.symvec idx]])
@@ -414,7 +414,7 @@
         . @rest)
        ^(,(cadr insns) ,(car insns) ,*rest))
       (((@(or frame dframe) . @nil)
-        (if (t @reg) @jlabel))
+        (if (t @reg) @jlabel) . @nil)
        (let ((jinsns [bb.hash jlabel].insns))
          (match-case jinsns
            ((@jlabel
@@ -437,13 +437,13 @@
       (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
                  (not (memqual reg bb.lt-dregs)))
         ^((jmp ,jlabel)))
-      (((jmp @jlabel) . @rest)
+      (((jmp @jlabel) . @nil)
        (let* ((jinsns (cdr [bb.hash jlabel].insns))
               (oinsns (match-case jinsns
                         (((jend @nil) . @nil)
-                         ^(,(car jinsns) ,*rest))
+                         ^(,(car jinsns)))
                         ((@nil (jend @nil) . @nil)
-                         ^(,(car jinsns) ,(cadr jinsns) ,*rest))
+                         ^(,(car jinsns) ,(cadr jinsns)))
                         (@else insns))))
          (when (neq insns oinsns)
            (pushnew bl bb.rescan)
