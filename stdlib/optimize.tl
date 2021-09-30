@@ -105,11 +105,11 @@
     (:method join-block (bb bl nxbl)
       (when (eql (car nxbl.insns) nxbl.label)
         (pop nxbl.insns))
-      (set bl.insns (append bl.insns nxbl.insns))
-      (set nxbl.insns nil)
-      (set bl.next nxbl.next)
-      (set bl.links nxbl.links)
-      (set bb.list (remq nxbl bb.list))
+      (set bl.insns (append bl.insns nxbl.insns)
+           nxbl.insns nil
+           bl.next nxbl.next
+           bl.links nxbl.links
+           bb.list (remq nxbl bb.list))
       (del [bb.hash nxbl.label])
       (each ((nx bl.links))
         (upd nx.rlinks (remq nxbl))
@@ -502,8 +502,8 @@
 
 (defmeth basic-blocks elim-dead-code (bb)
   (each ((bl bb.list))
-    (set bl.links nil)
-    (set bl.rlinks nil))
+    (set bl.links nil
+         bl.rlinks nil))
   bb.(link-graph)
   (let* ((visited (hash :eq-based)))
     (labels ((visit (bl)
