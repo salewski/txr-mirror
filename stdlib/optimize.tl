@@ -59,6 +59,7 @@
     rescan
     recalc
     reelim
+    tryjoin
     (:static start (gensym "start-"))
     (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr
                         uwprot catch block jend))
@@ -105,6 +106,7 @@
       (when (eql (car nxbl.insns) nxbl.label)
         (pop nxbl.insns))
       (set bl.insns (append bl.insns nxbl.insns))
+      (set nxbl.insns nil)
       (set bl.next nxbl.next)
       (set bl.links nxbl.links)
       (set bb.list (remq nxbl bb.list))
@@ -433,6 +435,8 @@
            (@jelse insns))))
       (@(require ((if @(as reg (d @dn)) @jlabel) . @nil)
                  (not (memqual reg bb.lt-dregs)))
+        (push bl bb.tryjoin)
+        (push bl bb.rescan)
         nil)
       (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
                  (not (memqual reg bb.lt-dregs)))
@@ -456,11 +460,18 @@
 (defmeth basic-blocks peephole (bb)
   (each ((bl bb.list))
     (set bl.insns bb.(peephole-block bl bl.insns)))
-  (whilet ((rescan bb.rescan))
-    (set bb.rescan nil)
-    (when bb.recalc
-      bb.(calc-liveness rescan)
-      (set bb.recalc nil))
+  (whilet ((rescan (zap bb.rescan)))
+    (whilet ((bl (pop bb.tryjoin)))
+      (let ((nxbl bl.next))
+        (when (null (cdr nxbl.rlinks))
+          bb.(join-block bl nxbl)
+          (set bb.recalc t)
+          (when (memq nxbl bb.tryjoin)
+            (upd bb.tryjoin (remq nxbl))
+            (push bl bb.tryjoin))
+          (upd bb.rescan (remq nxbl)))))
+    (when (zap bb.recalc)
+      bb.(calc-liveness rescan))
     (each ((bl rescan))
       (set bl.insns bb.(peephole-block bl bl.insns))))
  (when bb.reelim
