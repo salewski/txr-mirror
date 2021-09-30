@@ -414,16 +414,19 @@
          (match-case jinsns
            ((@jlabel
               (end (t @reg)) . @jrest)
-            (let* ((xbl (if jrest
-                           bb.(cut-block jbl jrest jinsns)
-                           jbl.next))
-                   (ybl bl.next)
+            (let* ((ybl bl.next)
+                   (xbl (if ybl
+                          (if jrest
+                            bb.(cut-block jbl jrest jinsns)
+                            jbl.next)))
                    (yinsns ybl.insns))
               (cond
-                ((and xbl ybl)
-                 (set ybl.insns ^(,ybl.label ,(car insns) ,*(cdr yinsns)))
-                 (pushnew ybl bb.rescan)
-                 ^((if (t ,reg) ,xbl.label)))
+                (xbl
+                  (set ybl.insns ^(,ybl.label ,(car insns) ,*(cdr yinsns)))
+                  (pushnew ybl bb.rescan)
+                  (set bb.recalc t)
+                  (set bb.links (list ybl xbl))
+                  ^((if (t ,reg) ,xbl.label)))
                 (t insns))))
            (@jelse insns))))
       (@(require ((if @(as reg (d @dn)) @jlabel) . @nil)
