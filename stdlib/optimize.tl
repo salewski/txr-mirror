@@ -97,11 +97,6 @@
         (pushnew nbl bb.rescan)
         nbl))
 
-    (:method next-block (bb bl)
-      (let ((ltail (memq bl bb.list)))
-        (iflet ((next (cdr ltail)))
-          (car next))))
-
     (:method join-block (bb bl nxbl)
       (when (eql (car nxbl.insns) nxbl.label)
         (pop nxbl.insns))
@@ -129,21 +124,21 @@
            (tail (last code))
            (linsn (car tail))
            (link-next t))
-      (set bl.next nxbl)
       (match-case linsn
         ((jmp @jlabel)
          (set bl.links (list [bb.hash jlabel])
-              bl.next nil))
+              link-next nil))
         ((if @nil @jlabel)
          (set bl.links (list [bb.hash jlabel])))
         ((@(or ifq ifql) @nil @nil @jlabel)
          (set bl.links (list [bb.hash jlabel])))
         ((close @nil @nil @nil @jlabel . @nil)
          (set bl.links (list [bb.hash jlabel])
+              bl.next nxbl
               link-next nil))
         ((swtch @nil . @jlabels)
          (set bl.links [mapcar bb.hash (uniq jlabels)]
-              bl.next nil))
+              link-next nil))
         ((catch @nil @nil @nil @nil @hlabel)
          (set bl.links (list [bb.hash hlabel])))
         ((block @nil @nil @slabel)
@@ -151,11 +146,12 @@
         ((uwprot @clabel)
          (set bl.links (list [bb.hash clabel])))
         ((@(or abscsr ret jend) . @nil)
-         (set bl.next nil)))
-      (if (and bl.next link-next)
-        (pushnew bl.next bl.links))
-      (each ((nxbl bl.links))
-        (pushnew bl nxbl.rlinks)))))
+         (set link-next nil)))
+      (when (and nxbl link-next)
+        (set bl.next nxbl)
+        (pushnew nxbl bl.links))
+      (each ((nx bl.links))
+        (pushnew bl nx.rlinks)))))
 
 (defmeth basic-blocks local-liveness (bb bl)
   (set bl.live nil)
@@ -310,7 +306,7 @@
                          ^(if ,reg ,jjlabel))
                         ((@jlabel
                            (ifq @reg (t 0) @jjlabel) . @nil)
-                         (let ((xbl bb.(next-block [bb.hash jlabel])))
+                         (let ((xbl [bb.hash jlabel].next))
                            (if xbl
                              ^(if ,reg ,xbl.label)
                              insn)))
@@ -325,7 +321,7 @@
                         ((@(require @jlabel (equal creg '(t 0)))
                            (if @reg
                                 @(and @jjlabel @(not @jlabel))) . @nil)
-                         (let ((xbl bb.(next-block [bb.hash jlabel])))
+                         (let ((xbl [bb.hash jlabel].next))
                            (if xbl
                              ^(ifq ,reg ,creg ,xbl.label)
                              insn)))
@@ -419,8 +415,8 @@
               (end (t @reg)) . @jrest)
             (let* ((xbl (if jrest
                            bb.(cut-block [bb.hash jlabel] jrest jinsns)
-                           bb.(next-block [bb.hash jlabel])))
-                   (ybl bb.(next-block bl))
+                           [bb.hash jlabel].next))
+                   (ybl bl.next)
                    (yinsns ybl.insns))
               (cond
                 ((and xbl ybl)
@@ -477,13 +473,12 @@
   (each ((bl bb.list))
     (set bl.insns bb.(thread-jumps-block bl.insns))))
 
-(defmeth basic-blocks elim-next-jump (bb bl)
+(defmeth basic-blocks elim-next-jump (bb bl nx)
   (let* ((tail (last bl.insns))
          (linsn (car tail)))
     (when-match (jmp @jlabel) linsn
-      (let ((nxbl bb.(next-block bl)))
-        (when (eql nxbl.?label jlabel)
-          (set bl.insns (butlast bl.insns)))))))
+      (when (eql nx.label jlabel)
+        (set bl.insns (butlast bl.insns))))))
 
 (defmeth basic-blocks join-blocks (bb)
   (labels ((joinbl (list)
@@ -515,8 +510,9 @@
         (visit bl))
       (visit bb.root))
     (set bb.list [keep-if visited bb.list])
-    (each ((bl bb.list))
-      bb.(elim-next-jump bl)))
+    (each ((bl bb.list)
+           (nx (cdr bb.list)))
+      bb.(elim-next-jump bl nx)))
   bb.(join-blocks))
 
 (defmeth basic-blocks merge-jump-thunks (bb)
