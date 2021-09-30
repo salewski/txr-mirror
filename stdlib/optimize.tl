@@ -309,10 +309,8 @@
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(if ,reg ,jjlabel))
                         ((@jlabel
-                           (ifq @reg (t 0) @jjlabel) . @jrest)
-                         (let ((xbl (if jrest
-                                      bb.(cut-block [bb.hash jlabel] jrest jinsns)
-                                      bb.(next-block [bb.hash jlabel]))))
+                           (ifq @reg (t 0) @jjlabel) . @nil)
+                         (let ((xbl bb.(next-block [bb.hash jlabel])))
                            (if xbl
                              ^(if ,reg ,xbl.label)
                              insn)))
@@ -326,10 +324,8 @@
                          ^(ifq ,reg ,creg ,jjlabel))
                         ((@(require @jlabel (equal creg '(t 0)))
                            (if @reg
-                                @(and @jjlabel @(not @jlabel))) . @jrest)
-                         (let ((xbl (if jrest
-                                      bb.(cut-block [bb.hash jlabel] jrest jinsns)
-                                      bb.(next-block [bb.hash jlabel]))))
+                                @(and @jjlabel @(not @jlabel))) . @nil)
+                         (let ((xbl bb.(next-block [bb.hash jlabel])))
                            (if xbl
                              ^(ifq ,reg ,creg ,xbl.label)
                              insn)))
