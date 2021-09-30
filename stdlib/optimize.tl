@@ -123,12 +123,12 @@
 
 (defmeth basic-blocks link-graph (bb)
   (set bb.root (car bb.list))
-  (each ((bl bb.list))
+  (each* ((bl bb.list)
+          (nxbl (append (cdr bl) '(nil))))
     (let* ((code bl.insns)
            (tail (last code))
            (linsn (car tail))
-           (link-next t)
-           (nxbl (cadr (memq bl bb.list))))
+           (link-next t))
       (set bl.next nxbl)
       (match-case linsn
         ((jmp @jlabel)
