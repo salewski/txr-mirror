@@ -388,6 +388,7 @@
                  (not (find dst rest : [chain bb.li-hash .def]))
                  (not (find src rest : [chain bb.li-hash .def])))
         (pushnew bl bb.rescan)
+        (set bb.recalc t)
         (labels ((rename (insns n dst src)
                    (tree-case insns
                      ((fi . re)
@@ -399,6 +400,8 @@
       (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
        (cdr insns))
       (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
+       (pushnew bl bb.rescan)
+       (set bb.recalc t)
        ^(,(car insns) ,*rest))
       ;; frame reduction
       (((@(or frame dframe) @lev @size)
@@ -433,9 +436,15 @@
                  (not (memqual reg bb.lt-dregs)))
         (push bl bb.tryjoin)
         (push bl bb.rescan)
+        (pushnew bl.next bb.rescan)
+        (set bb.recalc t)
         nil)
       (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
                  (not (memqual reg bb.lt-dregs)))
+        (pushnew bl.next bb.rescan)
+        (set bb.recalc t
+             bl.next nil
+             bl.links (list [bb.hash jlabel]))
         ^((jmp ,jlabel)))
       (((jmp @jlabel) . @nil)
        (let* ((jinsns (cdr [bb.hash jlabel].insns))
