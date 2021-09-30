@@ -295,8 +295,8 @@
                          ^(jmp ,jjlabel))
                         (@jelse insn))))
                    ((if @reg @jlabel)
-                    (let ((jinsns [bb.hash jlabel].insns))
-                      (match-case jinsns
+                    (let* ((jbl [bb.hash jlabel]))
+                      (match-case jbl.insns
                         ((@jlabel
                            (if @reg
                              @(and @jjlabel @(not @jlabel))) . @nil)
@@ -306,14 +306,14 @@
                          ^(if ,reg ,jjlabel))
                         ((@jlabel
                            (ifq @reg (t 0) @jjlabel) . @nil)
-                         (let ((xbl [bb.hash jlabel].next))
+                         (let ((xbl jbl.next))
                            (if xbl
                              ^(if ,reg ,xbl.label)
                              insn)))
                         (@jelse insn))))
                    ((ifq @reg @creg @jlabel)
-                    (let ((jinsns [bb.hash jlabel].insns))
-                      (match-case jinsns
+                    (let ((jbl [bb.hash jlabel]))
+                      (match-case jbl.insns
                         ((@jlabel
                            (ifq @reg @creg
                                 @(and @jjlabel @(not @jlabel))) . @nil)
@@ -321,7 +321,7 @@
                         ((@(require @jlabel (equal creg '(t 0)))
                            (if @reg
                                 @(and @jjlabel @(not @jlabel))) . @nil)
-                         (let ((xbl [bb.hash jlabel].next))
+                         (let ((xbl jbl.next))
                            (if xbl
                              ^(ifq ,reg ,creg ,xbl.label)
                              insn)))
@@ -330,8 +330,8 @@
                          ^(ifq ,reg ,creg ,jjlabel))
                         (@jelse insn))))
                    ((close @reg @frsize @ntregs @jlabel . @cargs)
-                    (let ((jinsns [bb.hash jlabel].insns))
-                      (match-case jinsns
+                    (let ((jbl [bb.hash jlabel]))
+                      (match-case jbl.insns
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(close ,reg ,frsize ,ntregs ,jjlabel ,*cargs))
@@ -409,13 +409,14 @@
        ^(,(cadr insns) ,(car insns) ,*rest))
       (((@(or frame dframe) . @nil)
         (if (t @reg) @jlabel) . @nil)
-       (let ((jinsns [bb.hash jlabel].insns))
+       (let* ((jbl [bb.hash jlabel])
+              (jinsns jbl.insns))
          (match-case jinsns
            ((@jlabel
               (end (t @reg)) . @jrest)
             (let* ((xbl (if jrest
-                           bb.(cut-block [bb.hash jlabel] jrest jinsns)
-                           [bb.hash jlabel].next))
+                           bb.(cut-block jbl jrest jinsns)
+                           jbl.next))
                    (ybl bl.next)
                    (yinsns ybl.insns))
               (cond
