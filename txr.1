@@ -64061,6 +64061,40 @@ clause performs a nonlocal transfer,
 .code :end-file
 processing is not triggered, because the processing of the input
 source is deemed not to have taken place.
+
+.meIP (:fields << sym *)
+The
+.code :fields
+clause may be used to give symbolic names to fields. Every
+.meta sym
+argument must be either a bindable symbol. The symbol
+.code -
+has a special meaning. Symbols other than
+.code -
+may not be repeated, and the
+.code :fields
+clause may appear at most once in a given instance of the
+.code awk
+macro.
+Each entry in the
+.meta sym
+list is understood to correspond to a field expression for a successive field,
+starting with the leftmost
+.meta sym
+corresponding with the first field,
+.codn "[f 0]" .
+Each
+.meta sym
+other than
+.code -
+becomes the name of a symbol macro which denotes its corresponding
+field expression, expanded over the scope of the
+.code awk
+macro. The
+.code -
+symbol is a place holder which doesn't bind a symbol macro to the
+corresponding field.
+
 .meIP >> ( condition << action *)
 Clauses which do not have one of the specially recognized keywords
 in the first position are ordinary condition-action clauses. After
