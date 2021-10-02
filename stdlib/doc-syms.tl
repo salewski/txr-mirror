@@ -419,6 +419,7 @@
       ("countqual" "N-01DF131F")
       ("cptr" "D-0013")
       ("cptr-buf" "N-037139E3")
+      ("cptr-carray" "N-02257F04")
       ("cptr-cast" "N-01A212ED")
       ("cptr-free" "N-02B1FBEF")
       ("cptr-get" "N-00513A70")

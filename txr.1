@@ -80880,6 +80880,42 @@ length of the array.
 
 Note: this conversion is inherently unsafe.
 
+.coNP Function @ cptr-carray
+.synb
+.mets (cptr-carray < carray <> [ type-symbol ])
+.syne
+.desc
+The
+.code cptr-carray
+function returns a
+.code cptr
+object which holds a pointer to a
+.code carray
+object's storage area. The
+.meta carray
+argument must be of type
+.codn carray .
+
+The
+.meta type-symbol
+argument should be a symbol. If omitted, it defaults to
+.codn nil .
+This symbol becomes the
+.code cptr
+object's type tag.
+
+The lifetime of the returned
+.code cptr
+object is independent from that of
+.metn carray .
+If the lifetime of
+.meta carray
+reaches its end before that of the
+.codn cptr ,
+the pointer stored inside the
+.code cptr
+becomes invalid.
+
 .coNP Function @ length-carray
 .synb
 .mets (length-carray << carray )

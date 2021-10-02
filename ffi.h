@@ -111,6 +111,7 @@ val carray_buf(val buf, val type, val offs);
 val carray_buf_sync(val carray);
 val buf_carray(val carray);
 val carray_cptr(val cptr, val type, val len);
+val cptr_carray(val carray, val type_sym_in);
 val vec_carray(val carray, val null_term_p);
 val list_carray(val carray, val null_term_p);
 val carray_ref(val carray, val idx);

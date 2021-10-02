@@ -5549,6 +5549,14 @@ val carray_cptr(val cptr, val type, val len)
   return make_carray(type, data, nelem, nil, 0);
 }
 
+val cptr_carray(val carray, val type_sym_in)
+{
+  val self = lit("cptr-carray");
+  struct carray *scry = carray_struct_checked(self, carray);
+  val type_sym = default_null_arg(type_sym_in);
+  return cptr_typed(scry->data, type_sym, 0);
+}
+
 val vec_carray(val carray, val null_term_p)
 {
   val self = lit("vec-carray");
@@ -6779,6 +6787,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-buf-sync"), user_package), func_n1(carray_buf_sync));
   reg_fun(intern(lit("buf-carray"), user_package), func_n1(buf_carray));
   reg_fun(intern(lit("carray-cptr"), user_package), func_n3o(carray_cptr, 2));
+  reg_fun(intern(lit("cptr-carray"), user_package), func_n2o(cptr_carray, 1));
   reg_fun(intern(lit("vec-carray"), user_package), func_n2o(vec_carray, 1));
   reg_fun(intern(lit("list-carray"), user_package), func_n2o(list_carray, 1));
   reg_fun(intern(lit("carray-ref"), user_package), func_n2(carray_ref));
