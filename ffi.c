@@ -6239,8 +6239,8 @@ val mmap_wrap(val type, val len, val prot, val flags,
 
   if (ad_out == MAP_FAILED) {
     int eno = errno;
-    uw_throwf(system_error_s, lit("~a: mmap failed: ~d/~s"),
-              self, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(system_error_s, lit("~a: mmap failed: ~d/~s"),
+               self, num(eno), errno_to_str(eno), nao);
   } else {
     val ca = make_carray(type, ad_out, nelem, nil, 0);
     struct carray *scry = carray_struct(ca);
@@ -6306,8 +6306,8 @@ static val mmap_op(val carray, val offset_in, val size_in,
 
   if (op_fn(scry->data + off, sz, c_int(arg, self)) < 0) {
     int eno = errno;
-    uw_throwf(system_error_s, lit("~a: ~s: ~a failed: ~d/~s"),
-              self, carray, self, num(eno), errno_to_str(eno), nao);
+    uw_ethrowf(system_error_s, lit("~a: ~s: ~a failed: ~d/~s"),
+               self, carray, self, num(eno), errno_to_str(eno), nao);
   }
 
   return t;

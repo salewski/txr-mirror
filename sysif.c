@@ -1846,8 +1846,8 @@ static val getresgid_wrap(void)
 {
   gid_t r, e, s;
   if (getresgid(&r, &e, &s) != 0)
-    uw_throwf(system_error_s, lit("getresgid failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_ethrowf(system_error_s, lit("getresgid failed: ~d/~s"),
+               num(errno), errno_to_str(errno), nao);
   return list(num(r), num(e), num(s), nao);
 }
 
