@@ -16196,7 +16196,7 @@ The
 .meta else-clause
 works the same way under these macros as under
 .code caseq
-.IR "et al" .
+et al.
 
 Note that although in a
 .metn normal-clause ,
@@ -21322,7 +21322,7 @@ function, except that it operates on its
 .meta list
 argument using list operations, and assumes that
 .meta list
-it is terminated by
+is terminated by
 .codn nil .
 
 If a
@@ -21368,7 +21368,7 @@ function, except that it operates on its
 .meta list
 argument using list operations. It assumes that
 .meta list
-it is terminated by
+is terminated by
 .codn nil ,
 and that it is made of cells which can be mutated using
 .codn rplaca .
@@ -22430,7 +22430,7 @@ The
 argument may be a proper or improper list, possibly empty. It may also be an
 atom other than
 .codn nil ,
-which is regarded as being, effectively, am empty improper list terminated by
+which is regarded as being, effectively, an empty improper list terminated by
 that atom.
 
 The operation of
@@ -26564,9 +26564,9 @@ If
 .meta init-val
 is present, it specifies the value with which the first
 .meta len
-byte of the buffer are initialized. If omitted, it
+bytes of the buffer are initialized. If omitted, it
 defaults to zero.
-bytes. The value of
+The value of
 .meta init-val
 must lie in the range 0 to 255.
 
@@ -40892,7 +40892,7 @@ the place to be updated, and its value, respectively.
 
 The
 .meta parameter-list
-specifies the additional parameters for update function, which will also
+specifies the additional parameters for the update function, which will also
 become additional parameters of the macro. Because it is a
 function parameter list, it cannot use the special destructuring features of
 macro parameter lists, or the
@@ -41106,9 +41106,9 @@ and
 .metn params .
 The
 .code defset
-form expresses the request that call to the function or operator named
+form expresses the request that a call to the function or operator named
 .meta name
-is to be treated as a syntactic place, which has arguments described by
+be treated as a syntactic place, which has arguments described by
 the parameter list
 .metn params .
 
@@ -45313,7 +45313,7 @@ else 0.0.
 The
 .codn trunc ,
 .codn floor ,
-.code ceiling
+.code ceil
 and
 .code round
 functions perform division of the
@@ -45339,7 +45339,7 @@ floating-point, the others are converted to floating-point
 and the result is floating-point.
 
 The
-.code dividend
+.meta dividend
 input may be a range. In this situation, the operation is
 recursively distributed over the
 .code from
@@ -47224,8 +47224,8 @@ is
 The
 .code mask
 function takes zero or more integer arguments, and produces an integer
-value which corresponds a bitmask made up of the bit positions specified by the
-integer values.
+value which corresponds to a bitmask made up of the bit positions specified by
+the integer arguments.
 
 If
 .code mask
@@ -51833,7 +51833,7 @@ functions on the right side produced by op
 can accept additional arguments after the input string,
 whereas the functions on the left produced by
 .code f^$
-.I "et al."
+et al.
 accept only one parameter: the input string.
 
 .verb
@@ -57109,7 +57109,7 @@ but writes are appended to the end regardless of the position.
 The meanings of the option characters are:
 .RS
 .coIP b
-The file is opened in binary mode: no line ending translation takes place.
+The file is opened in binary mode: no line-ending translation takes place.
 In the absence of this option, files are opened in text mode, in which newline
 characters in the stream are an abstract indication of the end of a line,
 translate to a system-specific way of terminating lines in text files.
@@ -60499,7 +60499,7 @@ reproduces
 .desc
 The
 .code cptr-buf
-returns a
+function returns a
 .code cptr
 object which holds a pointer to a buffer object's storage
 area. The
@@ -62535,7 +62535,7 @@ The
 .code :fallback
 clause specifies the packages to comprise the fallback list of
 the present package. If this clause is omitted, or if it is present
-with not
+with no
 .meta package-name
 arguments, then the present package has an empty fallback list.
 Each
@@ -62690,7 +62690,7 @@ large warm-up periods into the hundreds or thousands of iterations.
 If a small warm-up period is used, it is recommended to use larger seeds
 which initialize more of the 4096-bit state space.
 
-\*(TX's PRNG implementation addresses "problem 1" first problem by padding the
+\*(TX's PRNG implementation addresses "problem 1" by padding the
 unseeded portions of the state space with random values (from a static table
 that doesn't change). For instance, if the integer 1 is used to seed the space,
 then one 32-bit word of the space is set to the value 1. The remaining 15 are
@@ -69119,7 +69119,7 @@ value. The return value of the \*(TL function is a copy of that buffer.
 On platforms where certain advanced features of POSIX signal handling are
 available at the C API level, \*(TX exposes signal-handling functionality.
 
-A \*(TX program can install a \*(TL function (such as an anonymous.
+A \*(TX program can install a \*(TL function (such as an anonymous
 .codn lambda ,
 or the function object associated with a named function) as the handler for
 a signal.
@@ -70369,7 +70369,7 @@ argument of the
 .code ftw
 function.
 
-These variables corresponds to the C constants
+These variables correspond to the C constants
 .codn FTW_PHYS ,
 .codn FTW_MOUNT ,
 etc.
@@ -71028,8 +71028,7 @@ not actually connected to a specific peer. The receive operation could
 receive a datagram from any peer, without any indication which peer that is.
 Datagram servers should issue a new
 .code sock-accept
-call should be issued for each client datagram, treating it as a new
-stream.
+call for each client datagram, treating it as a new stream.
 
 Datagram sockets ignore almost all aspects of the
 .meta mode-string
@@ -71060,8 +71059,8 @@ newly created datagram socket which is returned.
 .coNP Structure @ sockaddr
 .synb
 .mets (defstruct sockaddr nil
-.mets \ \  canonname
-.mets \ \  (:static family nil))
+.mets \  canonname
+.mets \  (:static family nil))
 .syne
 .desc
 The
@@ -71082,7 +71081,7 @@ both initialized to
 
 Note: the
 .code canonname
-slot is optionally by the
+slot is optionally set by the
 .code getaddrinfo
 function on address structures that it returns, if requested via the
 .code ai-canonname
@@ -71092,8 +71091,8 @@ semantic role in addressing.
 .coNP Structure @ sockaddr-in
 .synb
 .mets (defstruct sockaddr-in sockaddr
-.mets \ \  (addr 0) (port 0) (prefix 32)
-.mets \ \  (:static family af-inet))
+.mets \  (addr 0) (port 0) (prefix 32)
+.mets \  (:static family af-inet))
 .syne
 .desc
 The
@@ -71139,9 +71138,9 @@ static slot holds the value
 .coNP Structure @ sockaddr-in6
 .synb
 .mets (defstruct sockaddr-in6 sockaddr
-.mets \ \  (addr 0) (port 0) (flow-info 0) (scope-id 0)
-.mets \ \  (prefix 128)
-.mets \ \  (:static family af-inet6))
+.mets \  (addr 0) (port 0) (flow-info 0) (scope-id 0)
+.mets \  (prefix 128)
+.mets \  (:static family af-inet6))
 .syne
 .desc
 The
@@ -71188,8 +71187,8 @@ static slot holds the value
 .coNP Structure @ sockaddr-un
 .synb
 .mets (defstruct sockaddr-un sockaddr
-.mets \ \  path
-.mets \ \  (:static family af-unix))
+.mets \  path
+.mets \  (:static family af-unix))
 .syne
 .desc
 The
@@ -71266,7 +71265,7 @@ slot holds a bitwise or combination (see the
 .code logior
 function) of
 .code getaddrinfo
-flags: values given by the variables.
+flags: values given by the variables
 .codn ai-passive ,
 .codn ai-numerichost ,
 .codn ai-v4mapped ,
@@ -71482,21 +71481,21 @@ data flow, the default mode string is
 rather than the usual
 .strn r .
 
-Rationale for including the
+The rationale for including the
 .str b
 flag in the default mode string is that network protocols are usually defined
 in a way that is independent of machine and operating system, down to the byte
 level, even when they are textual. It doesn't make sense for the same \*(TX
 program to see a network stream differently based on what platform it is
-running on. Line ending conversion has to do with how a platform locally stores
+running on. Line-ending conversion has to do with how a platform locally stores
 text files, whereas network streams are almost always external formats.
 
-Like other stream types, stream sockets are buffered and marked as no
+Like other stream types, stream sockets are buffered and marked as
 non-real-time streams. Specifying the
 .str i
 mode in
 .meta mode-string
-marks a socket as a real-time-stream, and, if it is opened for writing
+marks a socket as a real-time stream, and, if it is opened for writing
 or reading and writing, changes it to use line buffering.
 
 .coNP Function @ open-socket-pair
@@ -73051,7 +73050,7 @@ such a situation, or else to catch such signals and recover.
 The
 .code mmap
 function provides access to the same-named POSIX platform function
-for creating memory mappings. The POSIX function cab be used for creating
+for creating memory mappings. The POSIX function can be used for creating
 virtual memory views of files and special devices. Views can be read-only,
 and they can be mutable. They can be in such a way that changes appear
 only in the mapping itself, or in such a way that the changes are actually
@@ -73065,7 +73064,7 @@ process does not get a copy of a shared mapping, but a reference to it.
 The function can also be used simply for allocating memory: on some
 platforms, the POSIX
 .code mmap
-is used as the basis for the
+function is used as the basis for the
 .code malloc
 function. It behaves as a pure allocator when asked to create a mapping which
 is private, and anonymous (not backed by an object).
@@ -73096,9 +73095,9 @@ is invalid.
 
 The
 .meta length
-argument specifies the length in bytes. Note that
+argument specifies the requested length of the mapping in bytes. Note that
 .code mmap
-works allocates or configures virtual memory pages, not bytes. Internally
+allocates or configures virtual memory pages, not bytes. Internally
 to the system, the
 .meta length
 argument is converted to a number of pages. If it specifies a fractional
@@ -73108,7 +73107,7 @@ bytes, and
 is specified as 5000, it will be internally rounded up to 8192.
 The returned \*(TL
 .code carray
-object, is oblivious to this padding: it works with the given 5000 byte size.
+object is oblivious to this padding: it works with the given 5000-byte size.
 Note: the
 .code page-size
 variable holds the system's page size. However, by the use of
@@ -73131,7 +73130,7 @@ is a multiple of the page size.
 
 The required
 .meta prot
-argument must some bitwise combination of the portable values
+argument must be some bitwise combination of the portable values
 .codn prot-read ,
 .code prot-write
 and
@@ -73160,11 +73159,11 @@ If a mapping is requested which is neither shared nor private,
 the underlying POSIX function will likely fail.
 If a
 .meta source
-is being specified, indicating a filesystem object to be mapped, the
+is specified, indicating a filesystem object to be mapped, the
 .code map-anon
 flag must be omitted. Vice versa, if
 .meta source
-is not being specified, this means that the mapping will be anonymous.
+is not specified, this means that the mapping will be anonymous.
 In this situation, the
 .code map-anon
 flag must be present.
@@ -73184,7 +73183,7 @@ The
 argument is used with a non-anonymous mapping. It specifies that the mapping
 doesn't begin at the start of the file or file-like object, but rather at
 the specified offset. The offset may not be an arbitrary integer; it must be
-multiples of the page size. Unless certain nonportable
+a multiple of the page size. Unless certain nonportable
 .meta flags
 are used to specify an alternative page size, the value of the
 .code page-size
@@ -73207,16 +73206,16 @@ argument is used for specifying the address in conjunction with the
 .code map-fixed
 flag. Possibly, certain nonportable values in the
 .meta flags
-field may similarly require
+argument may similarly require
 .metn addr .
-If no bit is present to
+If no bit is present in
 .meta flags
 which requires
 .metn addr ,
 then
 .meta addr
 should either not be specified, or specified as zero.
-A non-zero value of
+A nonzero value of
 .meta addr
 must be a multiple of the page size.
 
@@ -73262,12 +73261,12 @@ the entire mapping associated with a
 .meta carray
 is removed.
 
-when the memory mapping is released,
+When the memory mapping is released,
 .code munmap
 returns
 .codn t .
 Thereafter, the
-.meta carray
+.metn carray 's
 contents may no longer be accessed, subject to
 .code error
 exceptions being thrown.
@@ -73329,7 +73328,7 @@ function adjusts the protection bits of the mapping accordingly.
 
 The
 .meta advice
-command of
+argument of
 .code madvise
 should specify one of the following portable values, or else some
 system-specific nonportable
@@ -73343,12 +73342,12 @@ or
 .codn madv-dontneed .
 
 The
-.code flags
+.meta flags
 argument of
 .code msync
 should specify exactly one of the values
 .code ms-async
-or
+and
 .codn ms-sync .
 Additional
 .code ms-
@@ -73360,17 +73359,17 @@ If
 .meta offset
 and
 .meta size
-are omitted, they default to zero, and the size of the entire mapping, respectively,
+are omitted, they default to zero and the size of the entire mapping, respectively,
 so the operation applies to the entire mapping.
 
-If only a
+If only
 .meta size
 is specified, it must not exceed the mapping size, or an error exception is
 thrown. The
 .meta offset
 argument defaults to zero.
 
-If only the
+If only
 .meta offset
 is specified, it must not exceed the length of the mapping, or else
 an error exception is thrown.  The size is calculated as the difference between
@@ -73381,7 +73380,7 @@ If both
 and
 .meta size
 are specified, they must not specify a region any portion of which lies outside
-of the mapping. If
+the mapping. If
 .meta size
 is zero,
 .meta offset
@@ -73414,13 +73413,13 @@ Additional nonportable, system-dependent
 .code map-
 variables may be available. Their names are derived by taking the
 .codn MAP_ -prefixed
-symbol from the platform header file, converting it to lower case and
+symbol from the platform header file, converting it to lowercase and
 replacing underscores by hyphen characters.
 Any such variable which exists, but has a value of zero, is
-present only for compatibility with another system. For instance
+present only for compatibility with other systems. For instance
 .code map-huge-shift
 may be present in non-Linux ports of \*(TX, but with a zero value; it has
-a nonzero value on Linux systems to which it specific.  Applications critically
+a nonzero value on Linux systems to which it is specific.  Applications critically
 relying on certain flags should test the corresponding variables for nonzero to
 make sure they are actually available.
 
@@ -73439,10 +73438,10 @@ Additional nonportable, system-dependent
 .code prot-
 variables may be available. Their names are derived by taking the
 .codn PROT_ -prefixed
-symbol from the platform header file, converting it to lower case and
+symbol from the platform header file, converting it to lowercase and
 replacing underscores by hyphen characters.
 Any such variable which exists, but has a value of zero, is
-present only for compatibility with another system.
+present only for compatibility with other systems.
 
 .coNP Variables @, madv-normal @, madv-random @, madv-sequential @ madv-willneed and @ madv-dontneed
 .desc
@@ -73474,8 +73473,8 @@ argument of the
 function.
 
 As described under
-.codn  msync ,
-at least one of
+.codn msync ,
+exactly one of
 .code ms-async
 and
 .code ms-sync
@@ -76413,7 +76412,7 @@ callback return value to the foreign caller is also the put operation.
 
 After a foreign function call returns from a foreign library back to the \*(TL
 arena, the arguments have to be examined one more time, because two-way
-communication is possible, and because some of the material has temporary
+communication is possible, and because some of the material has temporary,
 dynamically allocated buffers associated with it which must be released. For
 instance a structure passed by pointer may be updated by the foreign function.
 FFI needs to propagate the changes which the foreign function performed to the
@@ -76537,7 +76536,7 @@ and
 types correspond to
 .codn "unsigned char" .
 Both Lisp integers and character values
-convert to these representation, if they are in their numeric range.
+convert to these representations if they are in their numeric range.
 Out-of-range values produce an exception.
 A foreign
 .codn char ,
@@ -78164,8 +78163,7 @@ a freshly allocated
 .code carray
 object which holds that pointer, and is marked as having an unknown
 size. No copy is made of the underlying array.  When the application
-determines the size of the array, it can inform that object by means
-of calling the
+determines the size of the array, it can inform that object by calling the
 .code carray-set-length
 function.
 
@@ -78181,8 +78179,8 @@ The
 type lacks in or out semantics, since FFI doesn't manage any foreign
 memory for the passage of a
 .code carray
-and any two-directional communication of data through the array
-handled by performing direct operations on the
+and any bidirectional communication of data through the array
+is handled by performing direct operations on the
 .code carray
 Lisp object in application code.
 
@@ -83459,7 +83457,7 @@ corresponds to one of the variables
 .codn *0 ,
 .codn *1 ,
 .codn *2 ,
-.codn ... ,
+\&...,
 .codn *99 .
 Thus, up to the previous hundred results can be referenced:
 
@@ -84858,7 +84856,7 @@ The
 function returns a randomly selected string containing a humorous quip,
 quote or witticism. The following code may be added to
 .code .txr_profile
-to produce the random quip on startup:
+to produce a random quip on startup:
 
 .verb
   (put-line (quip))
