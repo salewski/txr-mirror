@@ -81634,14 +81634,14 @@ the value -1 is returned.
 
 .coNP Functions @ fill-carray and @ put-carray
 .synb
-.mets (fill-array < carray >> [ pos <> [ stream ]])
-.mets (put-array < carray >> [ pos <> [ stream ]])
+.mets (fill-carray < carray >> [ pos <> [ stream ]])
+.mets (put-carray < carray >> [ pos <> [ stream ]])
 .syne
 .desc
 The
-.code fill-array
+.code fill-carray
 and
-.code put-array
+.code put-carray
 functions perform stream output using the
 .code carray
 object as a buffer.
@@ -81651,11 +81651,11 @@ A temporary buffer is created which aliases the storage of
 .meta carray
 and this buffer is used as an argument in an invocation of, respectively,
 the buffer I/O function
-.meta fill-buf
+.code fill-buf
 or
-.metn put-buf .
+.codn put-buf .
 
-The value returned by buffer I/O function is returned.
+The value returned by the buffer I/O function is returned.
 
 The
 .meta pos
@@ -81668,7 +81668,7 @@ and
 and have the same meaning. In particular,
 .meta pos
 indicates a byte offset into the
-.meta carray
+.code carray
 object's storage, not an array index.
 
 .SH* LISP COMPILATION
