@@ -59,7 +59,7 @@
   begin-file-actions end-file-actions
   begin-actions end-actions
   cond-actions
-  field-names
+  field-name-conv
   (nranges 0)
   (rng-rec-temp (gensym))
   (rng-vec-temp (gensym))
@@ -324,14 +324,24 @@
                                (:set-file (push ^((set ,*actions)) awc.begin-actions))
                                (:end-file (push actions awc.end-file-actions))
                                (:fields
-                                 (when awc.field-names
+                                 (when awc.field-name-conv
                                    (awk-error "duplicate :fields clauses"))
-                                 (whenlet ((fn (member-if [notf bindable] actions)))
-                                   (awk-error "~s isn't a valid field name" (car fn)))
-                                 (let ((syms (remq '- actions)))
-                                   (unless (equal syms (uniq syms))
-                                     (awk-error "duplicate field names")))
-                                 (set awc.field-names actions))
+                                 (let ((fnames
+                                         (collect-each ((fn actions))
+                                           (match-case fn
+                                             (@(bindable @sym) (list sym))
+                                             ((@(bindable @sym) @(bindable @fun))
+                                              (if (eq sym '-)
+                                                (awk-error "type given for unnamed field"))
+                                              fn)
+                                             ((@(bindable) @type)
+                                              (awk-error "bad fconv function: ~s" type))
+                                             (@else (awk-error "bad :fields item: ~s"
+                                                               else))))))
+                                   (let ((nodash [remq '- fnames car]))
+                                     (unless (equal nodash [unique nodash car])
+                                       (awk-error "duplicate field names")))
+                                   (set awc.field-name-conv fnames)))
                                (t (push (if actions
                                           cl
                                           ^(,pattern (prn)))
@@ -475,11 +485,33 @@
      ,*body))
 
 (defmacro sys:awk-symac-let (awc . body)
-  ^(symacrolet ,(append-each ((fn awc.field-names)
+  ^(symacrolet ,(append-each ((fn awc.field-name-conv)
                               (ix 0))
-                  (if (neq fn '-)
-                    (list ^(,fn [f ,ix]))))
+                  (if (neq (car fn) '-)
+                    (list ^(,(car fn) [f ,ix]))))
      ,*body))
+
+(defun sys:awk-field-name-code (awc aws-sym)
+  (with-gensyms (fiter)
+    (let* ((nf 0)
+           (code (append-each ((fnc awc.field-name-conv)
+                               (i 0))
+                   (set nf (succ i))
+                   (if (cadr fnc)
+                     ^((rplaca ,fiter
+                               (sys:conv-expand-sym ,(cadr fnc)
+                                                    (car ,fiter)))
+                       (set ,fiter (cdr ,fiter)))
+                     ^((set ,fiter (cdr ,fiter)))))))
+      (while-match @(end ((set . @nil))) code
+        (upd code butlast))
+      ^(let ((,fiter (qref ,aws-sym fields)))
+         (if (< (len ,fiter) ,nf)
+           (set ,fiter (take ,nf (append ,fiter (repeat '(""))))
+                (qref ,aws-sym fields) ,fiter
+                (qref ,aws-sym nf) ,nf))
+         ,*code
+         (qref ,aws-sym (f-to-rec))))))
 
 (defun sys:awk-fun-shadowing-env (up-env)
   (make-env nil '((prn . sys:special)) up-env))
@@ -494,6 +526,20 @@
                                 ^(sys:awk-mac-let ,awc ,aws-sym
                                    ,*p-actions-xform-unex)
                                 (sys:awk-fun-shadowing-env outer-env))))
+        (if awc.rng-exprs
+          (set p-actions-xform
+               ^(let* ((,awc.rng-rec-temp rec)
+                       (,awc.rng-vec-temp (qref ,aws-sym rng-vec))
+                       ,*(nreverse
+                           (zip awc.rng-expr-temps
+                                awc.rng-exprs)))
+                  ,p-actions-xform)))
+        (if (and awc.field-name-conv
+                 [some awc.field-name-conv cdr])
+          (set p-actions-xform
+               ^(progn
+                  ,(sys:awk-field-name-code awc aws-sym)
+                  ,p-actions-xform)))
         ^(block ,(or awc.name 'awk)
            (let* (,*awc.lets ,awk-retval
                   (,aws-sym (new sys:awk-state
@@ -514,14 +560,7 @@
                           ,*(if (or awc.cond-actions awc.begin-file-actions
                                     awc.end-file-actions awc.end-actions)
                               ^((,awk-fun (lambda (,aws-sym)
-                                            ,(if awc.rng-exprs
-                                               ^(let* ((,awc.rng-rec-temp rec)
-                                                       (,awc.rng-vec-temp (qref ,aws-sym rng-vec))
-                                                       ,*(nreverse
-                                                           (zip awc.rng-expr-temps
-                                                                awc.rng-exprs)))
-                                                  ,p-actions-xform)
-                                               p-actions-xform))))))
+                                            ,p-actions-xform)))))
                      ,*awc.begin-actions
                        (unwind-protect
                          ,(if (or awc.cond-actions awc.begin-file-actions

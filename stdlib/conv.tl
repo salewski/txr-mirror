@@ -24,31 +24,29 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
+
+
+(defmacro sys:conv-expand-sym (sym arg-expr)
+  (caseq sym
+    (usr:i ^(toint ,arg-expr))
+    (usr:o ^(toint ,arg-expr 8))
+    (usr:x ^(toint ,arg-expr 16))
+    (usr:b ^(toint ,arg-expr 2))
+    (usr:c ^(toint ,arg-expr #\c))
+    (usr:r ^(tofloat ,arg-expr))
+    (usr:iz ^(tointz ,arg-expr))
+    (usr:oz ^(tointz ,arg-expr 8))
+    (usr:xz ^(tointz ,arg-expr 16))
+    (usr:bz ^(tointz ,arg-expr 2))
+    (usr:cz ^(tointz ,arg-expr #\c))
+    (usr:rz ^(tofloatz ,arg-expr))
+    (t ^(,sym ,arg-expr))))
+
 (defun sys:conv-let (. body)
-  ^(flet ((usr:i (arg : radix)
-            (toint arg radix))
-          (usr:o (arg)
-            (toint arg 8))
-          (usr:x (arg)
-            (toint arg 16))
-          (usr:b (arg)
-            (toint arg 2))
-          (usr:c (arg)
-            (toint arg #\c))
-          (usr:r (arg)
-            (tofloat arg))
-          (usr:iz (arg : radix)
-            (tointz arg radix))
-          (usr:oz (arg)
-            (tointz arg 8))
-          (usr:xz (arg)
-            (tointz arg 16))
-          (usr:bz (arg)
-            (tointz arg 2))
-          (usr:cz (arg)
-            (tointz arg #\c))
-          (usr:rz (arg)
-            (tofloatz arg)))
+  ^(flet ,(collect-each ((sym '(usr:i usr:o usr:x usr:b usr:c
+                                usr:r usr:iz usr:oz usr:xz
+                                usr:bz usr:cz usr:rz)))
+            ^(,sym (arg) (sys:conv-expand-sym ,sym arg)))
      ,*body))
 
 (defun sys:do-conv (lfl mfl tfl nm list)

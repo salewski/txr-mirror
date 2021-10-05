@@ -64062,23 +64062,29 @@ clause performs a nonlocal transfer,
 processing is not triggered, because the processing of the input
 source is deemed not to have taken place.
 
-.meIP (:fields << sym *)
+.meIP (:fields >> { sym | >> ( sym <> [ fun ]) | -}*)
 The
 .code :fields
-clause may be used to give symbolic names to fields. Every
-.meta sym
-argument must be either a bindable symbol. The symbol
+clause may be specified in order to give symbolic names to fields,
+and optionally specify conversions for them.
+Every argument must be one of three expressions. It may be
+a bindable symbol other than
 .code -
-has a special meaning. Symbols other than
+(minus). It may be a list whose first element is
+a symbol other than
+.code -
+optionally followed the name of a function.
+Or else it may be the
+.code -
+symbol, which has a special meaning.
+Symbols other than
 .code -
 may not be repeated, and the
 .code :fields
 clause may appear at most once in a given instance of the
 .code awk
 macro.
-Each entry in the
-.meta sym
-list is understood to correspond to a field expression for a successive field,
+Each argument is understood to correspond to a field expression for a successive field,
 starting with the leftmost
 .meta sym
 corresponding with the first field,
@@ -64094,6 +64100,36 @@ macro. The
 .code -
 symbol is a place holder which doesn't bind a symbol macro to the
 corresponding field.
+Additionally, every two-element entry which associates the field symbol
+.meta sym
+with a function name
+.meta fun
+specifies a field conversion. After each record is read and divided into
+fields, those fields for which
+.meta fun
+is specified are updated by passing their value to this function
+and replacing them by the returned value.
+The
+.meta fun
+symbol may also be one of the short-hand symbols available in the
+.code fconv
+macro, such as
+.codn i ,
+.code x
+and others.
+If at least one such conversion is specified in a
+.code :fields
+clause, then the value of
+.code rec
+is updated from the converted fields in the usual manner, as if
+the fields had been assigned.
+Furthermore, it is ensured that every field for which a
+.code :fields
+clause specifies a conversion exists. Fields with an empty string
+value are automatically added so that a field exists for the
+rightmost conversion, and the value of
+.code nf
+is updated to include these fields.
 
 .meIP >> ( condition << action *)
 Clauses which do not have one of the specially recognized keywords
@@ -65322,25 +65358,29 @@ effectively providing a shorthand for commonly-needed conversions:
 .coIP i
 Provides conversion to integer. It is identical to the
 .code toint
-function.
+function, with the default radix.
 .coIP o
 Converts a string value holding an octal representation
-to the integer which it denotes. The expression
-.code "(o str)"
-is equivalent to
-.codn "(toint str 8)" .
+to the integer which it denotes. It is equivalent to
+.code toint
+with a
+.meta radix
+argument of 8.
 .coIP x
 Converts a string value holding a hexadecimal representation
-to the integer which it denotes. The expression
-.code "(x str)"
+to the integer which it denotes. It is equivalent to
+.code toint
 is equivalent to
-.codn "(toint str 16)" .
+with a
+.meta radix
+argument of 16.
 .coIP b
 Converts a string value holding a binary (base two) representation
-to the integer which it denotes. The expression
-.code "(b str)"
-is equivalent to
-.codn "(toint str 2)" .
+to the integer which it denotes.  It is equivalent to
+.code toint
+with a
+.meta radix
+argument of 2.
 .coIP c
 Converts a string value holding a C-language-style representation
 to the integer which it denotes, meaning that the
@@ -65351,16 +65391,18 @@ decimal. These prefixes follow the
 or
 .code -
 sign, if present.
-The expression
-.code "(c str)"
-is equivalent to
-.codn "(toint str #\ec)" .
+The
+.code c
+function is equivalent to
+.code toint
+invoked with a
+.meta radix
+argument of
+.codn #\ec .
 .coIP r
 Converts a string holding a floating-point representation to
-the floating-point value which it denotes. The expression
-.code "(r str)"
-is equivalent to
-.codn "(tofloat str)" .
+the floating-point value which it denotes. It is equivalent to
+.codn tofloat .
 .ccIP @, iz @, oz @, xz @, bz @ cz and @ rz
 Conversion similar to
 .codn i ,
@@ -65370,7 +65412,7 @@ Conversion similar to
 .code c
 and
 .codn r ,
-but using
+but equivalent to using the functions
 .code tointz
 and
 .codn tofloatz .
@@ -65407,7 +65449,6 @@ expression can be used as the condition in an
 clause which triggers the action if one or more fields have been
 extracted, and performs conversions on them.
 
-
 Note: although
 .code fconv
 is intended for converting textual fields, and the semantic descriptions below
@@ -65420,6 +65461,20 @@ conversion is applied to it, it will produce 3, because it works by
 means of the
 .code toint
 function.
+
+Note: a somewhat less flexible mechanism for converting fields, related to
+.codn fconv ,
+is present in the
+.code :fields
+clause of the
+.code awk
+macro, which can specify names for the positional fields, along with
+conversion functions. The
+.code :fields
+clause has different syntax, and doesn't support the
+.code :
+(colon) separator, instead assuming a fixed number of fields
+enumerated from the left.
 
 .TP* Examples:
 
