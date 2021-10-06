@@ -1,3 +1,57 @@
+                                    TXR 271
+                                   2021-10-05
+
+
+  Features:
+
+  - load:
+    - new *load-hooks*: defer exeucution to load finish time.
+    - used via push-after-load and pop-after-load
+  - libtags.txr: script for generating extra tags to jump to
+    TXR's C code using Lisp symbols.
+  - lib:
+    - delcons function: destructively remove indicated cons from list.
+    - improvements in string-extend.
+    - set-mask and clear-mask macros: shorter code working with masks.
+    - new module for quantile estimation: see quantile function.
+    - summing and producing variations of each operator:
+      - sum-each-prod, mul-each-prod, sum-each-prod*, mul-each-prod*
+    - path-search: semantics changes.
+    - path access test functions now use read uid/gid rather than
+      effective uid/gid.
+    - new replace-env function.
+    - new *child-env* variable for specifying environment for
+      executed process images.
+  - FFI:
+    - socklen-t type now defined.
+    - ffi macro now generates load-time form to avoid repeated
+      invocation of FFI type compiler.
+    - new cptr-carray function, inverse of carray-cptr.
+  - exceptions:
+    - system exceptions now store errno in exception message.
+    - see string-get-code in doc.
+  - sockets:
+    - socket options now supported via new sock-opt and set-sock-opt.
+    - exception now thrown if socket call fails.
+  - compiler:
+    - one small optimization improvement and internal improvements.
+  - awk:
+    - new :fields feature to give fields names and type conversions.
+
+  Bugs:
+
+  - compiler:
+    - regression in calculation of output path of compiled files.
+    - random perturbation in code generation due to dependency
+      on hash table order in an optimization routine.
+  - poll: array from alloca passed to free.
+  - sockets: bug in sock-peer assignment place.
+  - hash: gc problem in copy-hash function.
+  - sequence iteration: gc problem.
+  - maprodo: problm with single-list argument.
+
+
+
                                     TXR 270
                                    2021-08-30
 
