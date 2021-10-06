@@ -13,8 +13,8 @@
     (vtest (sock-peer s) orig)))
 
 (with-stream (s (open-socket af-inet sock-stream))
-  (test (set-and-get (sock-opt s sol-socket so-reuseaddr) 1) 1)
+  (test (nzerop (set-and-get (sock-opt s sol-socket so-reuseaddr) 1)) t)
   (test (set-and-get (sock-opt s sol-socket so-reuseaddr (ffi int)) 0) 0)
   (whenlet ((addr (bindfree s 1025 65535)))
     ;; sock-bind enables so-reuseaddr.
-    (test (sock-opt s sol-socket so-reuseaddr) 1)))
+    (test (nzerop (sock-opt s sol-socket so-reuseaddr)) t)))
