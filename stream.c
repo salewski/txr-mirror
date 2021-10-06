@@ -4769,7 +4769,7 @@ static val run(val command, val args)
 
   if (ch_env != t) {
     save_env = env();
-    replace_env(ch_env, nil);
+    replace_env(ch_env);
   }
 
   wargv = coerce(const wchar_t **, chk_xalloc(nargs + 1, sizeof *wargv, self));
@@ -4792,7 +4792,7 @@ static val run(val command, val args)
 
   uw_unwind {
     if (ch_env != t)
-      replace_env(save_env, nil);
+      replace_env(save_env);
     fds_restore(&sfds);
   }
 
