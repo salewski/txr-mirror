@@ -6633,7 +6633,7 @@ static val sock_opt(val sock, val level, val option, val type_opt)
     uw_throwf(socket_error_s, lit("~a: cannot get option on ~s"),
               self, sock, nao);
   } else {
-    socklen_t size = coerce(socklen_t, tft->size);
+    socklen_t size = convert(socklen_t, tft->size);
     mem_t *data = coerce(mem_t *, zalloca(size));
     if (getsockopt(c_num(sfd, self), lvl, opt, data, &size) != 0)
       uw_ethrowf(socket_error_s, lit("~a failed on ~s: ~d/~s"),
@@ -6644,7 +6644,7 @@ static val sock_opt(val sock, val level, val option, val type_opt)
      * (Or perhaps add an optional argument following type_opt
      * specifying the requested length of the value, presumably of type
      * carray.) */
-    if (size != coerce(socklen_t, tft->size))
+    if (size != convert(socklen_t, tft->size))
       uw_throwf(socket_error_s, lit("~a: variable-size option on ~s"),
                 self, sock, nao);
     return tft->get(tft, data, self);
@@ -6665,7 +6665,7 @@ static val sock_set_opt(val sock, val level, val option, val value,
     uw_throwf(socket_error_s, lit("~a: cannot set option on ~s"),
               self, sock, nao);
   } else {
-    socklen_t size = coerce(socklen_t, tft->size);
+    socklen_t size = convert(socklen_t, tft->size);
     mem_t *data = coerce(mem_t *, zalloca(size));
     tft->put(tft, value, data, self);
     if (setsockopt(c_num(sfd, self), lvl, opt, data, size) != 0)
