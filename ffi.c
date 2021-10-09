@@ -3599,7 +3599,7 @@ static val make_ffi_type_enum(val syntax, val enums,
   val sym_num = make_hash(hash_weak_none, t);
   val num_sym = make_hash(hash_weak_none, nil);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_enum_ops);
-  cnum cur = -1;
+  val cur;
   val iter;
   val enum_env = make_env(nil, nil, nil);
   val shadow_menv = make_env(nil, nil, nil);
@@ -3625,28 +3625,27 @@ static val make_ffi_type_enum(val syntax, val enums,
   tft->num_sym = num_sym;
   tft->sym_num = sym_num;
 
-  for (iter = enums; !endp(iter); iter = cdr(iter)) {
+  for (cur = negone, iter = enums; !endp(iter); iter = cdr(iter)) {
+    int_ptr_t conv_buf[2];
     val en = car(iter);
-    val nn;
+    val sym;
+
     if (symbolp(en)) {
-      val sym = en;
+      sym = en;
       if (!bindable(sym))
         uw_throwf(error_s, lit("~a: ~s member ~s isn't a bindable symbol"),
                   self, syntax, sym, nao);
-      if (cur == INT_MAX)
-        uw_throwf(error_s, lit("~a: ~s overflow at member ~s"),
-                  self, syntax, sym, nao);
+
       if (gethash(num_sym, sym))
         uw_throwf(error_s, lit("~a: ~s duplicate member ~s"),
                   self, syntax, sym, nao);
-      sethash(num_sym, sym, nn = num(++cur));
-      sethash(sym_num, nn, sym);
-      env_vbind(enum_env, sym, nn);
-      env_vbind(shadow_menv, sym, special_s);
+
+      cur = plus(cur, one);
     } else {
       val expr = cadr(en);
-      val sym = car(en);
-      val n;
+
+      sym = car(en);
+
       if (!bindable(sym))
         uw_throwf(error_s, lit("~a: ~s member ~s isn't a bindable symbol"),
                   self, syntax, sym, nao);
@@ -3654,22 +3653,20 @@ static val make_ffi_type_enum(val syntax, val enums,
         uw_throwf(error_s, lit("~a: ~s duplicate member ~s"),
                   self, syntax, sym, nao);
 
-      n = ffi_eval_expr(expr, shadow_menv, enum_env);
+      cur = ffi_eval_expr(expr, shadow_menv, enum_env);
 
-      if (!integerp(n)) {
+      if (!integerp(cur)) {
         uw_throwf(error_s, lit("~a: ~s member ~s value ~s not integer"),
-                  self, syntax, sym, n, nao);
+                  self, syntax, sym, cur, nao);
       }
-
-      cur = c_num(n, self);
-      if (cur > INT_MAX)
-        uw_throwf(error_s, lit("~a: ~s member ~s value ~s too large"),
-                  self, syntax, sym, n, nao);
-      sethash(num_sym, sym, nn = num(cur));
-      sethash(sym_num, nn, sym);
-      env_vbind(enum_env, sym, nn);
-      env_vbind(shadow_menv, sym, special_s);
     }
+
+    btft->put(btft, cur, coerce(mem_t *, conv_buf), self);
+
+    sethash(num_sym, sym, cur);
+    sethash(sym_num, cur, sym);
+    env_vbind(enum_env, sym, cur);
+    env_vbind(shadow_menv, sym, special_s);
   }
 
   return obj;
