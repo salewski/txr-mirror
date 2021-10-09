@@ -3663,13 +3663,13 @@ static val make_ffi_type_enum(val syntax, val enums,
 
       if (!integerp(n)) {
         uw_throwf(error_s, lit("~a: ~s member ~s value ~s not integer"),
-                  self, syntax, n, nao);
+                  self, syntax, sym, n, nao);
       }
 
       cur = c_num(n, self);
       if (cur > INT_MAX)
         uw_throwf(error_s, lit("~a: ~s member ~s value ~s too large"),
-                  self, syntax, n, nao);
+                  self, syntax, sym, n, nao);
       sethash(num_sym, sym, nn = num(cur));
       sethash(sym_num, nn, sym);
       env_vbind(enum_env, sym, nn);
