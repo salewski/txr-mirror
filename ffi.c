@@ -3599,10 +3599,7 @@ static val make_ffi_type_enum(val syntax, val enums,
   val sym_num = make_hash(hash_weak_none, t);
   val num_sym = make_hash(hash_weak_none, nil);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_enum_ops);
-  cnum lowest = INT_PTR_MAX;
-  cnum highest = INT_PTR_MIN;
   cnum cur = -1;
-  ucnum count = 0;
   val iter;
   val enum_env = make_env(nil, nil, nil);
   val shadow_menv = make_env(nil, nil, nil);
@@ -3628,7 +3625,7 @@ static val make_ffi_type_enum(val syntax, val enums,
   tft->num_sym = num_sym;
   tft->sym_num = sym_num;
 
-  for (iter = enums; !endp(iter); iter = cdr(iter), count++) {
+  for (iter = enums; !endp(iter); iter = cdr(iter)) {
     val en = car(iter);
     val nn;
     if (symbolp(en)) {
@@ -3646,8 +3643,6 @@ static val make_ffi_type_enum(val syntax, val enums,
       sethash(sym_num, nn, sym);
       env_vbind(enum_env, sym, nn);
       env_vbind(shadow_menv, sym, special_s);
-      if (cur > highest)
-        highest = cur;
     } else {
       val expr = cadr(en);
       val sym = car(en);
@@ -3674,8 +3669,6 @@ static val make_ffi_type_enum(val syntax, val enums,
       sethash(sym_num, nn, sym);
       env_vbind(enum_env, sym, nn);
       env_vbind(shadow_menv, sym, special_s);
-      if (cur < lowest)
-        lowest = cur;
     }
   }
 
