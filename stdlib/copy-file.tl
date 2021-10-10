@@ -213,39 +213,36 @@
         (utimes s 0 nil rst.mtime rst.mtime-nsec))
       (utimes s 0 nil 0 t))))
 
+(defun path-simplify (comp)
+  (let (out)
+    (each ((c comp))
+      (casequal c
+        (".." (if (and out (nequal (car out) ".."))
+                (pop out)
+                (push c out)))
+        (("." ""))
+        (t (push c out))))
+    (nreverse out)))
+
 (defun rel-path (from to)
   (unless (eq (abs-path-p from) (abs-path-p to))
     (error "~s: mixture of absolute and relative paths ~s ~s given"
            'rel-path from to))
-
-  (macrolet ((if-windows (then : else)
-               (if (find #\\ path-sep-chars) then else)))
-    (if-windows
-      (when-match `@{fdrv #/[A-Za-z0-9]+:/}@nil` from
-        (when-match `@{tdrv #/[A-Za-z0-9]+:/}@nil` to
-          (unless (equal fdrv tdrv)
-            (error "~s: paths on different drives ~s ~s given"
-                   'rel-path from to)))))
-
-    (flet ((canon (comp)
-             (let (out)
-               (each ((c comp))
-                 (casequal c
-                   (".." (if (and out (nequal (car out) ".."))
-                           (pop out)
-                           (push c out)))
-                   (("." ""))
-                   (t (push c out))))
-               (nreverse out))))
-      (let* ((fcomp (canon (spl path-sep-chars from)))
-             (tcomp (canon (spl path-sep-chars to)))
-             (ncommon (mismatch fcomp tcomp)))
-        (cond
-          ((null ncommon) ".")
-          ((find ".." (nthcdr ncommon fcomp))
-           (error "~s: from path uses ... to escapes common prefix: ~s ~s"
-                  'rel-path from to))
-          (t (let ((nup (- (len fcomp) ncommon))
-                   (down [tcomp ncommon..:]))
-               (cat-str (append (repeat '("..") nup) down)
-                        [path-sep-chars 0]))))))))
+  (if (macro-time (find #\\ path-sep-chars))
+    (if-match `@{fdrv #/[A-Za-z0-9]+:/}@nil` from
+      (if-match `@{tdrv #/[A-Za-z0-9]+:/}@nil` to
+        (unless (equal fdrv tdrv)
+          (error "~s: paths on different drives ~s ~s given"
+                 'rel-path from to)))))
+  (let* ((fcomp (path-simplify (spl path-sep-chars from)))
+         (tcomp (path-simplify (spl path-sep-chars to)))
+         (ncommon (mismatch fcomp tcomp)))
+    (cond
+      ((null ncommon) ".")
+      ((find ".." (nthcdr ncommon fcomp))
+       (error "~s: from path uses .. to escape common prefix: ~s ~s"
+              'rel-path from to))
+      (t (let ((nup (- (len fcomp) ncommon))
+               (down [tcomp ncommon..:]))
+           (cat-str (append (repeat '("..") nup) down)
+                    [path-sep-chars 0]))))))
