@@ -246,3 +246,17 @@
                (down [tcomp ncommon..:]))
            (cat-str (append (repeat '("..") nup) down)
                     [path-sep-chars 0]))))))
+
+(defun path-equal (left right)
+  (cond
+    ((and (stringp left) (equal left right)))
+    ((neq (abs-path-p left) (abs-path-p right)) nil)
+    ((and (macro-time (find #\\ path-sep-chars))
+          (if-match `@{fdrv #/[A-Za-z0-9]+:/}@nil` left
+            (if-match `@{tdrv #/[A-Za-z0-9]+:/}@nil` right
+              (nequal fdrv tdrv))))
+     nil)
+    (t (let* ((fcomp (path-simplify (spl path-sep-chars left)))
+              (tcomp (path-simplify (spl path-sep-chars right)))
+              (ncommon (mismatch fcomp tcomp)))
+         (null ncommon)))))

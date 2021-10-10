@@ -58302,6 +58302,74 @@ there are no files, then read from standard input:
    @(end)
 .brev
 
+.coNP Function @ path-equal
+.synb
+.mets (path-equal < left-path << right-path )
+.syne
+.desc
+The
+.code path-equal
+function determines whether the two paths
+.meta left-path
+and
+.meta right-path
+are equal under a certain definition of equivalence, whose requirements are given below.
+The function returns
+.code t
+if the paths are equal, otherwise
+.codn nil .
+
+If
+.meta left-path
+and
+.meta right-path
+are strings which are identical under the
+.code equal
+function, then they are considered equal paths.
+
+Otherwise, the two paths are equal if the relative path from
+.meta left-path
+to
+.meta right-path
+is
+.str .
+(dot), as would be determined by the
+.code path-rel
+function, if it were applied to
+.meta left-path
+and
+.meta right-path
+as its arguments. If
+.code path-rel
+would return the dot path, then the two paths are equal. If
+.code path-rel
+would return any other value, or throw an exception, then the paths are unequal.
+
+.TP* Examples:
+
+.verb
+  ;; simple case
+  (path-equal "a" "a") -> t
+  (path-equal "a" "b") -> nil
+
+  ;; trailing slashes don't matter
+  (path-equal "a" "a/") -> t
+  (path-equal "a/" "a/") -> t
+
+  ;; .. components resolved:
+  (path-equal "a/b/../c" "a/c") -> t
+
+  ;; . components resolved:
+  (path-equal "a" "a/././.") -> t
+  (path-equal "a/." "a/././.") -> t
+
+  ;; (On Microsoft Windows)
+  ;; different drive:
+  (path-equal "c:/a" "d:/b/../a") -> nil
+  ;; same drive:
+  (path-equal "c:/a" "c:/b/../a") -> t
+.brev
+
 .coNP Functions @ abs-path-p and @ portable-abs-path-p
 .synb
 .mets (abs-path-p << path )
