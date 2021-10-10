@@ -582,10 +582,30 @@ static int s_mp_in_big_range(mp_int *mp, double_uintptr_t lim, int unsig)
   if (nd > ptrnd)
     return 0;
 
+  if (neg) {
+    mp_digit *dp = DIGITS(mp);
+    const mp_digit Ox8__0 = MP_DIGIT_MAX ^ (MP_DIGIT_MAX >> 1);
+
+    switch (ptrnd) {
+    case 1:
+      if (dp[0] == Ox8__0)
+        return 1;
+      break;
+    case 2:
+      if (dp[0] == 0 && dp[1] == Ox8__0)
+        return 1;
+      break;
+    case 4:
+      if (dp[0] == 0 && dp[1] == 0 && dp[2] == 0 && dp[3] == Ox8__0)
+        return 1;
+      break;
+    }
+  }
+
   {
     mp_digit top = DIGITS(mp)[ptrnd - 1];
     lim >>= ((ptrnd - 1) * MP_DIGIT_BIT);
-    return (top - neg) <= lim;
+    return top <= lim;
   }
 }
 

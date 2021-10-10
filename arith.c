@@ -247,18 +247,24 @@ dbl_ucnum c_dbl_unum(val n)
 {
   switch (type(n)) {
   case CHR: case NUM:
-    return coerce(cnum, n) >> TAG_SHIFT;
+    {
+      dbl_cnum cn = coerce(cnum, n) >> TAG_SHIFT;
+      if (cn >= 0)
+        return cn;
+      break;
+    }
   case BGNUM:
     if (mp_in_double_uintptr_range(mp(n))) {
       double_uintptr_t out;
       mp_get_double_uintptr(mp(n), &out);
       return out;
     }
-    uw_throwf(error_s, lit("~s is out of unsigned ~a bit range"),
-              n, num_fast(SIZEOF_DOUBLE_INTPTR * CHAR_BIT), nao);
+    break;
   default:
     type_mismatch(lit("~s is not an integer"), n, nao);
   }
+  uw_throwf(error_s, lit("~s is out of unsigned ~a bit range"),
+            n, num_fast(SIZEOF_DOUBLE_INTPTR * CHAR_BIT), nao);
 }
 
 #endif
