@@ -224,28 +224,62 @@
         (t (push c out))))
     (nreverse out)))
 
+(defun path-split (str)
+  (let ((spl0 (sspl path-sep-chars str)))
+    (if (macro-time (find #\\ path-sep-chars))
+      (iflet ((head (car spl0))
+              (p (pos #\: head)))
+        (list* [head 0..(succ p)]
+               [head (succ p)..:]
+               (cdr spl0))
+        spl0)
+      spl0)))
+
+(defun path-volume (comp)
+  (let ((head (car comp))
+        (next (cadr comp)))
+    (if (macro-time (find #\\ path-sep-chars))
+      (cond
+        ((and (equal head "") (equal next ""))
+         (let ((vol (caddr comp)))
+           (if (nequal "" vol) vol :abs)))
+        ((equal head "") :abs)
+        ((and (m^ #/[A-Za-z0-9]+:/ head) head)
+         (if (equal "" next)
+           ^(:abs . ,head)
+           ^(:rel . ,head))))
+      (if (equal head "") :abs))))
+
 (defun rel-path (from to)
-  (unless (eq (abs-path-p from) (abs-path-p to))
-    (error "~s: mixture of absolute and relative paths ~s ~s given"
-           'rel-path from to))
-  (if (macro-time (find #\\ path-sep-chars))
-    (if-match `@{fdrv #/[A-Za-z0-9]+:/}@nil` from
-      (if-match `@{tdrv #/[A-Za-z0-9]+:/}@nil` to
-        (unless (equal fdrv tdrv)
-          (error "~s: paths on different drives ~s ~s given"
-                 'rel-path from to)))))
-  (let* ((fcomp (path-simplify (spl path-sep-chars from)))
-         (tcomp (path-simplify (spl path-sep-chars to)))
-         (ncommon (mismatch fcomp tcomp)))
-    (cond
-      ((null ncommon) ".")
-      ((find ".." (nthcdr ncommon fcomp))
-       (error "~s: from path uses .. to escape common prefix: ~s ~s"
-              'rel-path from to))
-      (t (let ((nup (- (len fcomp) ncommon))
-               (down [tcomp ncommon..:]))
-           (cat-str (append (repeat '("..") nup) down)
-                    [path-sep-chars 0]))))))
+  (let* ((fspl (path-split from))
+         (tspl (path-split to))
+         (fvol (path-volume fspl))
+         (tvol (path-volume tspl)))
+    (when (nequal fvol tvol)
+      (if (and (meq :abs fvol tvol) (meq nil fvol tvol))
+        (error "~s: mixture of absolute and relative paths ~s ~s given"
+               'rel-path from to))
+      (if (meq :abs fvol tvol)
+        (error "~s: mixture of absolute and volume paths ~s ~s given"
+               'rel-path from to))
+      (when (and (consp fvol) (consp tvol))
+        (if (neq (car fvol) (car tvol))
+          (error "~s: mixture of volume absolute and relative paths ~s ~s given"
+                 'rel-path from to)
+          (error "~s: paths on different volumes ~s ~s given"
+                 'rel-path from to))))
+    (let* ((fcomp (path-simplify fspl))
+           (tcomp (path-simplify tspl))
+           (ncommon (mismatch fcomp tcomp)))
+      (cond
+        ((null ncommon) ".")
+        ((find ".." (nthcdr ncommon fcomp))
+         (error "~s: from path uses .. to escape common prefix: ~s ~s"
+                'rel-path from to))
+        (t (let ((nup (- (len fcomp) ncommon))
+                 (down [tcomp ncommon..:]))
+             (cat-str (append (repeat '("..") nup) down)
+                      [path-sep-chars 0])))))))
 
 (defun path-equal (left right)
   (cond
