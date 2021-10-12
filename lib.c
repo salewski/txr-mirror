@@ -7015,6 +7015,7 @@ val symbol_needs_prefix(val self, val package, val sym)
 
   {
     val fallback = get_hash_userdata(package->pk.symhash);
+    val rescanfb = fallback;
 
     for (; fallback; fallback = cdr(fallback)) {
       val fb_pkg = car(fallback);
@@ -7024,10 +7025,16 @@ val symbol_needs_prefix(val self, val package, val sym)
           val cell = gethash_e(self, fb_pkg->pk.symhash, name);
           if (cell) {
             int found_in_fallback = (eq(cdr(cell), sym) != nil);
-            if (found_in_fallback)
-              return nil;
-            break;
+            if (!found_in_fallback)
+              break;
           }
+        }
+        if (gethash_e(self, package->pk.symhash, name))
+          return sym_pkg->pk.name;
+        for (; rescanfb != fallback && rescanfb; rescanfb = cdr(rescanfb)) {
+          val fb_pkg = car(rescanfb);
+          if (gethash_e(self, fb_pkg->pk.symhash, name))
+            return sym_pkg->pk.name;
         }
         return nil;
       } else {
