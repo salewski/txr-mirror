@@ -81,12 +81,17 @@
     "Lispが好き、とても好き、私はLispの...全てにいつも...夢中なの。"
     "こんな広い分野の中、私が愛する...言語なら、やはり...Lispだけ。"
     "This area is under 24 hour TTY surveillance."
+    "This TTY may be recorded for privacy-violating and evidence-gathering purposes."
     "Imitation is the benignest form of forgery."
     "This could be the year of the TXR desktop; I can feel it!"
     "TXR's suggested retail price is $0. (More in Canada.)"
     "All of our cores are currently busy servicing other applications."
     "For faster service, do not time out & retry. Syscalls are answered in sequence."
     "Pour le service en la langue Shell, appuyez sur Ctrl-D."
+    "Everything you type here can and will be used against you in comp.lang.lisp."
+    "Allow me to expand a bit more on why there is no substitute for macros."
+    "defmicro: error: expansion is larger than original form: switch to defmacro."
+    "Read-eval-disagree-downvote-insult treadmill initialized! Enter an expression:"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
