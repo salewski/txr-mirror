@@ -56547,11 +56547,22 @@ left side in respect to its right side.
 The numeric patterns, by means of their visual pattern and several optional
 prefix codes, specify the parameters for the conversion of a numeric
 argument, which is rendered right-aligned in a fixed-width field.  Numeric
-patterns conform to one of the two following syntactic rule:
+patterns that do not contain any commas conform this simple rule:
 
 .mono
 .mets <> [ sign ] [0] {#}+ >> [ point {#}+ | !]
 .onom
+
+or else if they contain commas, the placement of these commas is governed
+by the more complicated rule:
+
+.mono
+.mets <> [ sign ] [0 [,]] {#}+ {,{#}+}* >> [ point {#}+ {,{#}+}* | !]
+.onom
+
+Commas may be placed anywhere within the pattern of hash characters, except at
+the beginning or end, or adjacent to the decimal point.  If the leading zero is
+present, a comma may appear immediately after it, before the first hash.
 
 The pattern consists of an optional
 .meta sign
@@ -56633,7 +56644,7 @@ is specified as
 as the last character. In both cases, the numeric argument is rounded to
 integer, and rendered without any decimal point or fractional part.
 
-Finally, there is a difference between
+There is a difference between
 .meta point
 being specified using the ordinary decimal point character
 .code .
@@ -56648,6 +56659,24 @@ the field, then instead of showing any digits, the field is filled with
 .code .
 character permits overflow.
 
+If commas appear in the numeric pattern according to the more complex syntactic
+rule, they count toward the field width and specify the insertion of
+digit-separating commas at the indicated locations.  Digit separators may be
+specified on either side of the decimal point, but not adjacent to it. In the
+output, a digit separating comma shall not appear if it would be immediately
+preceded by a
+.code +
+or
+.code -
+sign or space. In this situations, the sign character or space appears
+in place of the digit separator. A digit separator that appears in a position
+occupied by a space is also suppressed in favor of the space. Digit separators
+are included among leading zeros.  It is not logically possible for a digit
+separator to appear as the first character of a pattern's output, because it
+may not be the first character of a pattern. However, if a numeric pattern is
+preceded or followed by a comma, those commas are ordinary characters which are
+copied to the output.
+
 Escape patterns consist of a two-character sequence introduced by the
 .code ~
 (tilde)
@@ -56655,7 +56684,7 @@ character, which is followed by one of the characters that are special in
 pic pattern syntax:
 
 .verb
-  < > | + - 0 # . ! ~
+  < > | + - 0 # . ! ~ ,
 .brev
 
 An escape pattern produces the second character as its output. For instance

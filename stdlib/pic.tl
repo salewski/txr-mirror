@@ -48,6 +48,51 @@
                ,str)))
         code))))
 
+(defun comma-positions (fmt)
+  (let* ((fmtx (regsub #/,./ #\, fmt))
+         (len (len fmtx))
+         (ppos (or (pos #\. fmtx) len))
+         (out (vec)))
+    (each ((i len..0))
+      (if (meql [fmtx i] #\,)
+        (vec-push out (- ppos i))))
+    out))
+
+(defun insert-commas (num positions)
+  (let* ((len (len num))
+         (pn (len positions))
+         (ppos (or (pos #\. num) len))
+         (out (mkstring 0))
+         (j 0)
+         (comma #\,))
+    (each ((i len..0)
+           (p (- ppos len -1)))
+      (cond
+        ((meq comma #\- #\+ #\space)
+         (string-extend out comma)
+         (set comma #\space))
+        (t
+          (string-extend out [num i])))
+      (when (plusp i)
+        (when (< j pn)
+          (if (meq [num (pred i)] #\space #\- #\+)
+            (set comma [num (pred i)]))
+          (let ((pj [positions j]))
+            (cond
+              ((eql pj p)
+               (string-extend out comma)
+               (if (neq comma #\,)
+                 (set comma #\space))
+               (inc j))
+              ((< pj p)
+               (inc j)))))))
+    (nreverse out)))
+
+(defun expand-pic-num-commas (fmt val)
+  (let* ((fmt-nc (remq #\, fmt))
+         (exp-nc (expand-pic-num fmt-nc val)))
+    ^(insert-commas ,exp-nc ,(comma-positions fmt))))
+
 (defun expand-pic-align (chr fmt val)
   ^(fmt ,`~@(if chr chr)@(len fmt)a` ,val))
 
@@ -73,17 +118,20 @@
   (unless (stringp fmt)
     (compile-error f "~s is required to be a format string" fmt))
   (cond
-    ([m^$ #/\~[~#<>\|\-+0.!]/ fmt] [fmt 1..2])
+    ([m^$ #/\~[~#<>\|\-+0.!,]/ fmt] [fmt 1..2])
     ([m^$ #/\~./ fmt] (compile-error f "unrecognized escape sequence ~a" fmt))
     ([m^$ #/\~/ fmt] (compile-error f "incomplete ~~ escape"))
-    ([m^$ #/[+\-]?0?#+([.!]#+|!)?/ fmt] (expand-pic-num fmt val))
+    ([m^$ #/[+\-]?(0,?)?#+(,#+)*([.!]#+(,#+)*|!)?/ fmt]
+     (if (contains "," fmt)
+       (expand-pic-num-commas fmt val)
+       (expand-pic-num fmt val)))
     ([m^$ #/<+/ fmt] (expand-pic-align "<" fmt val))
     ([m^$ #/>+/ fmt] (expand-pic-align nil fmt val))
     ([m^$ #/\|+/ fmt] (expand-pic-align "^" fmt val))
     (t (compile-error f "unrecognized format string ~s" fmt))))
 
 (defmacro pic (:form f :env e bigfmt . args)
-  (let* ((regex #/[+\-]?0?#+([.!]#+|!)?| \
+  (let* ((regex #/[+\-]?(0,?)?#+(,#+)*([.!]#+(,#+)*|!)?| \
                   <+| \
                   >+| \
                   \|+| \
