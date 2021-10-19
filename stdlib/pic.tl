@@ -91,10 +91,23 @@
                (inc j)))))))
     (nreverse out)))
 
+(defun add-neg-parens (width str)
+  (let ((sig (pos #\- str))
+        (w (len str)))
+    (cond
+      (sig
+        (set [str sig] #\space)
+        `(@[str 1..:])`)
+      ((> w width) str)
+      (t `@str `))))
+
 (defun expand-pic-num-commas (fmt val)
   (let* ((fmt-nc (remq #\, fmt))
          (exp-nc (expand-pic-num fmt-nc val)))
     ^(insert-commas ,exp-nc ,(comma-positions fmt))))
+
+(defun expand-neg-parens (width exp-n)
+  ^(add-neg-parens ,width ,exp-n))
 
 (defun expand-pic-align (chr fmt val)
   ^(fmt ,`~@(if chr chr)@(len fmt)a` ,val))
@@ -121,13 +134,20 @@
   (unless (stringp fmt)
     (compile-error f "~s is required to be a format string" fmt))
   (cond
-    ([m^$ #/\~[~#<>\|\-+0.!,]/ fmt] [fmt 1..2])
+    ([m^$ #/\~[~#<>\|\-+0.!,()]/ fmt] [fmt 1..2])
     ([m^$ #/\~./ fmt] (compile-error f "unrecognized escape sequence ~a" fmt))
     ([m^$ #/\~/ fmt] (compile-error f "incomplete ~~ escape"))
     ([m^$ #/[+\-]?(0,?)?#+(,#+)*([.!]#+(,#+)*|!)?/ fmt]
      (if (contains "," fmt)
        (expand-pic-num-commas fmt val)
        (expand-pic-num fmt val)))
+    ([m^$ #/\((0,?)?#+(,#+)*([.!]#+(,#+)*|!)?\)/ fmt]
+     (let ((fmt `-@[fmt 1..-1]`))
+       (expand-neg-parens
+         (len fmt)
+         (if (contains "," fmt)
+           (expand-pic-num-commas fmt val)
+           (expand-pic-num fmt val)))))
     ([m^$ #/<+/ fmt] (expand-pic-align "<" fmt val))
     ([m^$ #/>+/ fmt] (expand-pic-align nil fmt val))
     ([m^$ #/\|+/ fmt] (expand-pic-align "^" fmt val))
@@ -135,6 +155,7 @@
 
 (defmacro pic (:form f :env e bigfmt . args)
   (let* ((regex #/[+\-]?(0,?)?#+(,#+)*([.!]#+(,#+)*|!)?| \
+                  \((0,?)?#+(,#+)*([.!]#+(,#+)*|!)?\)| \
                   <+| \
                   >+| \
                   \|+| \
