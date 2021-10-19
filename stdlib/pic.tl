@@ -54,7 +54,7 @@
 (defun comma-positions (fmt)
   (let* ((fmtx (regsub #/,./ #\, fmt))
          (len (len fmtx))
-         (ppos (or (pos #\. fmtx) len))
+         (ppos (or (pos #\. fmtx) (pos #\! fmtx) len))
          (out (vec)))
     (each ((i len..0))
       (if (meql [fmtx i] #\,)
