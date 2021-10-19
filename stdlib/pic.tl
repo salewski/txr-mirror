@@ -44,7 +44,10 @@
         (with-gensyms (str)
           ^(let ((,str ,code))
              (if (> (len ,str) ,(len fmt))
-               ,(mkstring (len fmt) #\#)
+               ,(let ((fill (mkstring (len fmt) #\#)))
+                  (if (plusp (len fra))
+                    (set [fill dot] #\.))
+                  fill)
                ,str)))
         code))))
 

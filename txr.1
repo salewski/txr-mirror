@@ -56653,11 +56653,24 @@ versus the
 character. The
 .code !
 character specifies that if the conversion of the numeric argument overflows
-the field, then instead of showing any digits, the field is filled with
+the field, then instead of showing any digits, the field is filled with a
+pattern consisting of
 .code #
-(hash) characters. The
+(hash) characters, and possibly an embedded decimal point.  In contrast, the
 .code .
-character permits overflow.
+character permits the field's width to increase to accommodate overflowing
+output. If overflow takes place and the
+.code !
+character appears other than as the rightmost character of the pattern,
+then the decimal point character
+.code .
+character appears at the position indicated by that
+.code !
+character. If the
+.code !
+character is the rightmost character of the pattern, then, just as
+in the case of normal, non-overflowing output, it doesn't contribute to the
+width of the hash fill, and only hash characters appear.
 
 If commas appear in the numeric pattern according to the more complex syntactic
 rule, they count toward the field width and specify the insertion of
@@ -56676,6 +56689,11 @@ separator to appear as the first character of a pattern's output, because it
 may not be the first character of a pattern. However, if a numeric pattern is
 preceded or followed by a comma, those commas are ordinary characters which are
 copied to the output.
+
+When, due to the presence of
+.codn ! ,
+an overflowing field is handled by the generation of a the hash character fill,
+the hash characters are treated as digits for the purpose of digit separation.
 
 Escape patterns consist of a two-character sequence introduced by the
 .code ~
