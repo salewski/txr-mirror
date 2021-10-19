@@ -1411,6 +1411,7 @@
       ("path-chrdev-p" "N-00198FC7")
       ("path-dir-empty" "N-01EFC15D")
       ("path-dir-p" "N-00198FC7")
+      ("path-equal" "N-02365F9E")
       ("path-executable-to-me-p" "N-014A4B85")
       ("path-exists-p" "N-03C41AE2")
       ("path-file-p" "N-00198FC7")
