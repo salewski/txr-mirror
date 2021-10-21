@@ -13,6 +13,5 @@
   (path-equal "a" "a/././.") t
   (path-equal "a/." "a/././.") t
 
-  ;;(path-equal "/.." "/") t
-  ;;(path-equal "/../a" "/a/") t
-  )
+  (path-equal "/.." "/") t
+  (path-equal "/../a" "/a/") t)

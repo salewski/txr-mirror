@@ -214,10 +214,11 @@
       (utimes s 0 nil 0 t))))
 
 (defun path-simplify (comp)
-  (let (out)
+  (let ((abs (equal (car comp) ""))
+        out)
     (each ((c comp))
       (casequal c
-        (".." (if (and out (nequal (car out) ".."))
+        (".." (if (and (or out abs) (nequal (car out) ".."))
                 (pop out)
                 (push c out)))
         (("." ""))
