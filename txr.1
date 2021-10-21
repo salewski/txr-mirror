@@ -56511,7 +56511,27 @@ function is called.
 There are two kinds of pic patterns: alignment patterns, numeric patterns and
 escape patterns.
 
-Alignment patterns are described first.
+Escape patterns consist of a two-character sequence introduced by the
+.code ~
+(tilde)
+character, which is followed by one of the characters that are special in
+pic pattern syntax:
+
+.verb
+  < > | + - 0 # . ! ~ , ( )
+.brev
+
+An escape pattern produces the second character as its output. For instance
+.code ~~
+encoded a single
+.code ~
+character, and
+.code ~#
+encodes a literal
+.code #
+character that is not part of any pattern.
+
+Alignment patterns are described next.
 .RS
 .coIP <<...<<
 A sequence of one or more
@@ -56564,13 +56584,31 @@ Commas may be placed anywhere within the pattern of hash characters, except at
 the beginning or end, or adjacent to the decimal point.  If the leading zero is
 present, a comma may appear immediately after it, before the first hash.
 
+A second form of both of the above patterns is supported, for specifying
+that negative numbers be shown in parentheses. Instead of the sign, an
+opening parenthesis may appear, which must be matched by a closing parenthesis
+which follows a valid pattern interior:
+
+.mono
+.mets ( [0] {#}+ >> [ point {#}+ | !] )
+.onom
+
+With embedded commas:
+
+.mono
+.mets ( [0 [,]] {#}+ {,{#}+}* >> [ point {#}+ {,{#}+}* | !] )
+.onom
+
 The pattern consists of an optional
 .meta sign
 which is one of the characters
 .code +
 (plus) or
 .code -
-(minus). This is followed by an optional leading zero.
+(minus), or else it may optionally begin with an opening parenthesis,
+indicating one of the two alternative forms.
+
+This is followed by an optional leading zero.
 After this comes a sequence of one or more
 .code #
 (hash) characters, which may contain exactly one
@@ -56695,25 +56733,15 @@ When, due to the presence of
 an overflowing field is handled by the generation of a the hash character fill,
 the hash characters are treated as digits for the purpose of digit separation.
 
-Escape patterns consist of a two-character sequence introduced by the
-.code ~
-(tilde)
-character, which is followed by one of the characters that are special in
-pic pattern syntax:
-
-.verb
-  < > | + - 0 # . ! ~ ,
-.brev
-
-An escape pattern produces the second character as its output. For instance
-.code ~~
-encoded a single
-.code ~
-character, and
-.code ~#
-encodes a literal
-.code #
-character that is not part of any pattern.
+When the pattern uses parentheses to specify that negative numbers are
+to be shown with parentheses, the parentheses count toward the field width.
+The field portion between the parentheses is called the inner field.
+The parentheses appear in the output when the number is negative, and are
+placed immediately outside of the inner field, so that if leading zeros are not
+requested, there may be one or more spaces between the opening parenthesis and
+the first digit. If the number is nonnegative, then each parenthesis is
+replaced by one space, flanking the inner field in the same manner as
+parentheses.
 
 .TP* Examples:
 
@@ -56728,6 +56756,11 @@ character that is not part of any pattern.
   (pic "-######.##"  1234.1) ->  "   1234.10"
   (pic "+0#####.##"  1234.1) ->  "+001234.10"
   (pic "-0#####.##"  1234.1) ->  " 001234.10"
+  (pic "#######.##" -1234.1) ->  "  -1234.10"
+
+  ;; digit separation
+  (pic "0,###,###.##" 1234.1) ->  "0,000,123.10"
+  (pic "#,###,###.##" 1234.1) ->  "      123.10"
 
   ;; overflow with !
   (pic   "#!#" 1234) ->    "###"
@@ -56735,6 +56768,10 @@ character that is not part of any pattern.
   (pic "-##!#" -123) ->  "#####"
   (pic "+##!#"  123) ->  "#####"
   (pic "###!"  1234) ->    "###"
+
+  ;; negative parentheses
+  (pic "(#,###.##) 1234.56) -> " 1,234.56 "
+  (pic "(#,###.##) -234.56) -> "(  234.56)"
 
   ;; alignment, multiple arguments
   (pic "<<<<<< 0#.# >>>>>>>" "foo" (+ 2 2) "bar")
