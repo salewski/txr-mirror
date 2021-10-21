@@ -517,6 +517,15 @@ static void ffi_simple_release(struct txr_ffi_type *tft, val obj,
   *loc = 0;
 }
 
+#if __i386__ || __x86_64__ || __PPC64__ || __ARM_FEATURE_UNALIGNED
+
+#define align_sw_get(type, src)
+#define align_sw_end
+#define align_sw_put_end
+#define align_sw_put(type, dst, expr) (expr)
+
+#else
+
 #define align_sw_get(type, src)  {                                      \
   const int al = ((alignof (type) - 1) & coerce(uint_ptr_t, src)) == 0; \
   const size_t sz = sizeof (type);                                      \
@@ -542,6 +551,8 @@ static void ffi_simple_release(struct txr_ffi_type *tft, val obj,
     memcpy(prev_dst, dst, sizeof (type));                               \
   }                                                                     \
 }
+
+#endif
 
 #if HAVE_I8
 static void ffi_i8_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
