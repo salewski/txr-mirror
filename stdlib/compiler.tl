@@ -1622,7 +1622,8 @@
           bb.(elim-dead-code))
         (when (>= olev 5)
           bb.(calc-liveness)
-          bb.(peephole))
+          bb.(peephole)
+          bb.(elim-dead-code))
         (cond
           ((>= olev 6)
            bb.(merge-jump-thunks)
