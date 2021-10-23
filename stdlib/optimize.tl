@@ -511,6 +511,7 @@
 (defmeth basic-blocks elim-dead-code (bb)
   (each ((bl bb.list))
     (set bl.links nil
+         bl.next nil
          bl.rlinks nil))
   bb.(link-graph)
   (let* ((visited (hash :eq-based)))
