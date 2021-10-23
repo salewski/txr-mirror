@@ -31,14 +31,11 @@
     (t spec)))
 
 (defmacro with-dyn-lib (lib . body)
-  (let ((keep-var (gensym "lib-")))
-    ^(prog1
-       (defvarl ,keep-var (sys:dlib-expr ,lib))
-       (symacrolet ((sys:ffi-lib ,keep-var))
-         ,*body))))
+  ^(let ((sys:ffi-lib (sys:dlib-expr ,lib)))
+     ,*body))
 
 (defun sys:with-dyn-lib-check (f e ref)
-  (when (eq (macroexpand 'sys:ffi-lib e) 'sys:ffi-lib)
+  (unless (lexical-var-p e 'sys:ffi-lib)
     (compile-warning f "simple ref ~s requires ~s"
                      ref 'with-dyn-lib)))
 
@@ -71,22 +68,18 @@
 
 (defmacro deffi (:form f :env e name fun-expr rettype argtypes)
   (let ((fun-ref (sys:expand-sym-ref f e fun-expr))
-        (ret-type-sym (gensym "ret-type-"))
-        (arg-types-sym (gensym "arg-types-"))
-        (call-desc-sym (gensym "call-desc-"))
-        (fun-sym (gensym "ffi-fun-")))
+        (fun-sym (gensym "fun-"))
+        (desc-sym (gensym "desc-")))
     (tree-bind (nargs nfixed . argtypes) (sys:analyze-argtypes f argtypes)
       (let ((arg-syms (take nargs (gun (gensym)))))
-        ^(progn
-           (defvarl ,ret-type-sym (ffi-type-compile ',rettype))
-           (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
-           (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nfixed
-                                                       ,ret-type-sym
-                                                       ,arg-types-sym
-                                                       ',name))
-           (defvarl ,fun-sym ,fun-ref)
+        ^(let ((,fun-sym ,fun-ref)
+               (,desc-sym (ffi-make-call-desc ,nargs ,nfixed
+                                              (ffi-type-compile ',rettype)
+                                              [mapcar ffi-type-compile
+                                                      ',argtypes]
+                                              ',name)))
            (defun ,name ,arg-syms
-             (ffi-call ,fun-sym ,call-desc-sym ,*arg-syms)))))))
+             (ffi-call ,fun-sym ,desc-sym ,*arg-syms)))))))
 
 (defmacro deffi-type (name type-expr)
   ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))
@@ -95,20 +88,17 @@
   ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))
 
 (defun sys:deffi-cb-expander (f name rettype argtypes safe-p abort-retval)
-  (let ((ret-type-sym (gensym "ret-type-"))
-        (arg-types-sym (gensym "arg-types-"))
-        (call-desc-sym (gensym "call-desc-"))
-        (fun-sym (gensym "fun-")))
+  (let ((fun-sym (gensym "fun-"))
+        (desc-sym (gensym "desc-")))
     (tree-bind (nargs nvariadic . argtypes) (sys:analyze-argtypes f argtypes)
-      ^(progn
-         (defvarl ,ret-type-sym (ffi-type-compile ',rettype))
-         (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
-         (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
-                                                     ,ret-type-sym
-                                                     ,arg-types-sym
-                                                     ',name))
+      ^(let ((,desc-sym (ffi-make-call-desc ,nargs ,nvariadic
+                                            (ffi-type-compile ',rettype)
+                                            [mapcar ffi-type-compile
+                                                    ',argtypes]
+                                            ',name)))
          (defun ,name (,fun-sym)
-           [ffi-make-closure ,fun-sym ,call-desc-sym ,safe-p ,abort-retval])))))
+           [ffi-make-closure ,fun-sym ,desc-sym
+                             ,safe-p ,abort-retval])))))
 
 (defmacro deffi-cb (:form f name rettype argtypes : abort-retval)
   (sys:deffi-cb-expander f name rettype argtypes t abort-retval))
