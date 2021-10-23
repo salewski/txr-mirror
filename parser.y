@@ -1120,7 +1120,9 @@ exprs_opt : exprs               { $$ = $1; }
           ;
 
 n_exprs : listacc               { $$ = $1->c.cdr;
-                                  $1->c.cdr = nil; }
+                                  $1->c.cdr = nil;
+                                  if ($$->c.car == nao)
+                                    $$ = $$->c.cdr; }
         | listacc CONSDOT n_expr
                                 { $$ = $1->c.cdr;
                                   $1->c.cdr = $3; }
@@ -1131,11 +1133,11 @@ listacc : n_expr                { $$ = cons($1, nil);
                                   $$->c.cdr = $$; }
         | HASH_SEMI             { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
-                                  $$ = cons(nil, nil);
+                                  $$ = cons(nao, nil);
                                   $$->c.cdr = $$; }
         | HASH_SEMI '.'         { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
-                                  $$ = cons(nil, nil);
+                                  $$ = cons(nao, nil);
                                   $$->c.cdr = $$; }
         | listacc HASH_SEMI     { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
