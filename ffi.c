@@ -1891,6 +1891,27 @@ static val ffi_cptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return cptr_typed(p, tft->tag, 0);
 }
 
+static val ffi_cptr_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                       val ptr, val self)
+{
+  if (ptr) {
+    if (copy) {
+      mem_t *newp = *coerce(mem_t **, src);
+
+      if (type(ptr) == CPTR) {
+        mem_t **addr = cptr_addr_of(ptr, tft->tag, self);
+        *addr = newp;
+      } else {
+        carray_set_ptr(ptr, tft->eltype, newp, self);
+      }
+    }
+  } else {
+    ptr = ffi_cptr_get(tft, src, self);
+  }
+
+  return ptr;
+}
+
 static mem_t *ffi_cptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
 {
   return coerce(mem_t *, cptr_addr_of(ptr, tft->tag, self));
@@ -2946,6 +2967,21 @@ static val ffi_carray_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return make_carray(tft->eltype, p, -1, nil, 0);
 }
 
+static val ffi_carray_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                         val carray, val self)
+{
+  if (carray) {
+    if (copy) {
+      mem_t *p = *coerce(mem_t **, src);
+      carray_set_ptr(carray, tft->eltype, p, self);
+    }
+  } else {
+    carray = ffi_carray_get(tft, src, self);
+  }
+
+  return carray;
+}
+
 static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
                            val self)
 {
@@ -3945,6 +3981,7 @@ val ffi_type_compile(val syntax)
                                        &ffi_type_pointer,
                                        ffi_cptr_put, ffi_cptr_get, 0, 0);
       struct txr_ffi_type *tft = ffi_type_struct(type);
+      tft->in = ffi_cptr_in;
       tft->alloc = ffi_cptr_alloc;
       tft->free = ffi_noop_free;
       tft->tag = tag;
@@ -3953,12 +3990,17 @@ val ffi_type_compile(val syntax)
         goto excess;
       return type;
     } else if (sym == carray_s) {
-      val eltype = ffi_type_compile(cadr(syntax));
-      if (cddr(syntax))
+      if (cddr(syntax)) {
         goto excess;
-      return make_ffi_type_pointer(syntax, carray_s,
-                                   ffi_carray_put, ffi_carray_get,
-                                   0, 0, 0, eltype);
+      } else {
+        val eltype = ffi_type_compile(cadr(syntax));
+        val type = make_ffi_type_pointer(syntax, carray_s,
+                                         ffi_carray_put, ffi_carray_get,
+                                         0, 0, 0, eltype);
+        struct txr_ffi_type *tft = ffi_type_struct(type);
+        tft->in = ffi_carray_in;
+        return type;
+      }
     } else if (sym == sbit_s || sym == ubit_s) {
       val nbits = ffi_eval_expr(cadr(syntax), nil, nil);
       cnum nb = c_num(nbits, self);
@@ -4485,6 +4527,7 @@ static void ffi_init_types(void)
                                      &ffi_type_pointer,
                                      ffi_cptr_put, ffi_cptr_get, 0, 0);
     struct txr_ffi_type *tft = ffi_type_struct(type);
+    tft->in = ffi_cptr_in;
     tft->alloc = ffi_cptr_alloc;
     tft->free = ffi_noop_free;
     tft->tag = nil;
@@ -5428,6 +5471,26 @@ mem_t *carray_ptr(val carray, val type, val self)
     uw_throwf(error_s, lit("~a: ~s is not of element type ~!~s"),
               self, carray, type, nao);
   return scry->data;
+}
+
+void carray_set_ptr(val carray, val type, mem_t *ptr, val self)
+{
+  struct carray *scry = carray_struct_checked(self, carray);
+  if (scry->eltype != type)
+    uw_throwf(error_s, lit("~a: ~s is not of element type ~!~s"),
+              self, carray, type, nao);
+  if (carray->co.ops == &carray_borrowed_ops) {
+    /* nothing to do */
+  } else if (carray->co.ops == &carray_owned_ops) {
+    free(scry->data);
+    scry->nelem = 0;
+    carray->co.ops = &carray_borrowed_ops;
+  } else {
+    uw_throwf(error_s, lit("~a: cannot change address of mmapped ~!~s"),
+              self, carray, type, nao);
+  }
+
+  scry->data = ptr;
 }
 
 val carray_vec(val vec, val type, val null_term_p)

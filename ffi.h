@@ -104,6 +104,7 @@ val carray_type(val carray);
 val length_carray(val carray);
 val copy_carray(val carray);
 mem_t *carray_ptr(val carray, val type, val self);
+void carray_set_ptr(val carray, val type, mem_t *ptr, val self);
 val carray_vec(val vec, val type, val null_term_p);
 val carray_list(val list, val type, val null_term_p);
 val carray_blank(val nelem, val type);

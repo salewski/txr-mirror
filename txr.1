@@ -60548,6 +60548,20 @@ object under control of the FFI
 .code cptr
 type, the object inherits the type tag from the FFI type.
 
+Although
+.code cptr
+objects are conceptually non-aggregate values, corresponding to pointers,
+they are
+.I "de facto"
+aggregates due to their implementation as references to heap objects.
+When a
+.code cptr
+object is passed to a foreign function by pointer, for
+instance using a parameter of type
+.codn "(ptr cptr)" ,
+its internal pointer is potentially updated to the new value coming from the
+function.
+
 .coNP Function @ cptr-int
 .synb
 .mets (cptr-int < integer <> [ type-symbol ])
@@ -78383,13 +78397,42 @@ whose element type matches that of the FFI type.
 
 The
 .code carray
-type lacks in or out semantics, since FFI doesn't manage any foreign
-memory for the passage of a
+type has in semantics. When a
 .code carray
-and any bidirectional communication of data through the array
-is handled by performing direct operations on the
+is passed to a foreign function as an argument to a
+.code ptr
+or
+.code ptr-out
+parameter to either a
 .code carray
-Lisp object in application code.
+or
+.code cptr
+type, what is passed to the function is a pointer to the
+.codn carray 's
+pointer. The foreign function may update this pointer to a
+new value, and this value is stored back into the
+.code carray
+object. The array's length is reset to zero.
+If it is an owned
+.codn carray ,
+arranged by
+.codn carray-own ,
+then the current array freed before the new pointer is assigned,
+and the object's type is reset to borrowed array. The
+.code carray
+object must not be memory mapped
+.code carray
+coming from the
+.code mmap
+function.
+
+The
+.code carray
+type lacks out semantics, since Lisp code cannot change its address;
+so there is no new pointer to propagate back to a foreign caller
+which passes a
+.code carray
+to a Lisp callback, and no other memory management tasks to perform.
 
 The
 .code carray
