@@ -312,6 +312,42 @@ static val random_float(val state)
   return flo(h.d - 1.0);
 }
 
+static val random_float_incl(val state)
+{
+  val self = lit("random-float-incl");
+  struct rand_state *r = coerce(struct rand_state *,
+                                cobj_handle(self,
+                                            default_arg(state, random_state),
+                                            random_state_cls));
+  union hack {
+    volatile double d;
+    struct {
+#if HAVE_LITTLE_ENDIAN
+      volatile rand32_t lo, hi;
+#else
+      volatile rand32_t hi, lo;
+#endif
+    } r;
+  } h;
+
+  h.r.lo = rand32(r);
+
+  for (;;) {
+    rand32_t hi = rand32(r) & 0x1FFFFF;
+    rand32_t lo = rand32(r);
+
+    if (hi == 0x100000 && lo == 0)
+      return flo(1.0);
+
+    if ((hi & 0x100000) != 0)
+      continue;
+
+    h.r.hi = (hi & 0xFFFFF) | (1023UL << 20);
+
+    return flo(h.d - 1.0);
+  }
+}
+
 val random(val state, val modulus)
 {
   val self = lit("random");
@@ -475,6 +511,7 @@ void rand_init(void)
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
   reg_fun(intern(lit("random-fixnum"), user_package), func_n1o(random_fixnum, 0));
   reg_fun(intern(lit("random-float"), user_package), func_n1o(random_float, 0));
+  reg_fun(intern(lit("random-float-incl"), user_package), func_n1o(random_float_incl, 0));
   reg_fun(intern(lit("random"), user_package), func_n2(random));
   reg_fun(intern(lit("rand"), user_package), func_n2o(rnd, 1));
   reg_fun(intern(lit("random-buf"), user_package), func_n2o(random_buf, 1));

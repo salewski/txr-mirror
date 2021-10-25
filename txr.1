@@ -63003,20 +63003,50 @@ argument must be a positive integer. If
 is 1, then the function returns zero without altering the state of the
 pseudorandom number generator.
 
-.coNP Function @ random-float
+.coNP Functions @ random-float and @ random-float-incl
 .synb
 .mets (random-float <> [ random-state ])
+.mets (random-float-incl <> [ random-state ])l
 .syne
 .desc
 The
 .code random-float
 function produces a pseudorandom floating-point value in the range [0.0, 1.0).
 
+The
+.code random-float-incl
+produces a pseudorandom floating-point value in the range [0.0, 1.0], thus
+differing from
+.code random-float
+by including the 1.0 limit value.
+
 The numbers are obtained from a WELL512a PRNG, whose state is stored in the
 random state object given by the argument to the optional
 .meta random-state
 parameter, which defaults to the value of
 .codn *random-state* .
+
+Because the floating-point type does not provide a representation of every real
+value in the range 0.0 to 1.0, it is not possible to impose the requirement
+that every value shall occur with equal likelihood.
+
+Rather, these functions are intended to produce an a uniform distribution of
+values according to the following pragmatic requirements. A subset
+.I S
+of the real values in the
+specified range, [0.0, 1.0) or [0.0, 1.0] is identified whose elements are representable
+in the floating-point type and which are uniformly spaced along the interval. Then,
+a random element is chosen from
+.I S
+and returned, such that every element is equally likely to be selected.
+
+Note that these requirements do not correspond to the more mathematically ideal
+concept of uniformly choosing actual real numbers in the [0, 1] interval of the
+real number line, and then finding the closest floating-point representation.
+Such a requirement would mean that the boundary values 0.0 and 1.0 appear in
+the output half as frequently as all the interior values, because each of these
+two floating-point values is a representations of a range of numbers, half of
+which lies outside of the [0, 1] interval.
 
 .coNP Function @ random-buf
 .synb
