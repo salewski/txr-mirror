@@ -80,7 +80,7 @@ struct cobj_class *parser_cls;
 static lino_t *lino_ctx;
 static int repl_level = 0;
 
-static val stream_parser_hash, catch_all;
+static val stream_parser_hash, catch_all, catch_error;
 
 static void yy_tok_mark(struct yy_token *tok)
 {
@@ -888,10 +888,9 @@ static void load_rcfile(val name)
   val resolved_name;
   val lisp_p = t;
   val stream = nil;
-  val catch_syms = cons(error_s, nil);
   val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
 
-  uw_catch_begin (catch_syms, sy, va);
+  uw_catch_begin (catch_error, sy, va);
 
   open_txr_file(name, &lisp_p, &resolved_name, &stream, self);
 
@@ -1028,7 +1027,7 @@ static void provide_completions(const wchar_t *data,
 
   (void) ctx;
 
-  uw_catch_begin (catch_all, exsym, exvals);
+  uw_catch_begin (catch_error, exsym, exvals);
 
   if (!ptr)
     goto out;
@@ -1898,9 +1897,11 @@ void parse_init(void)
 
   parser_cls = cobj_register(parser_s);
 
-  protect(&stream_parser_hash, &unique_s, &catch_all, convert(val *, 0));
+  protect(&stream_parser_hash, &unique_s,
+          &catch_all, &catch_error, convert(val *, 0));
   stream_parser_hash = make_hash(hash_weak_and, nil);
   catch_all = cons(t, nil);
+  catch_error = cons(error_s, nil);
 
   parser_l_init();
 
