@@ -54,7 +54,7 @@
                (let* ((btemps (mapcar (ret (gensym)) before-it))
                       (atemps (mapcar (ret (gensym)) after-it)))
                  ^(let (,*(zip btemps before-it))
-                    (placelet ((it ,it-form))
+                    (placelet ((it (read-once ,it-form)))
                       (let (,*(zip atemps after-it))
                         (if (,sym ,*(if (eq 'dwim sym) ^(,(second test)))
                                   ,*btemps it ,*atemps)

@@ -16915,7 +16915,13 @@ alias is used multiple times in the
 .meta then
 or
 .meta else
-expressions.  Otherwise, if the form is not a syntactic place
+expressions. Furthermore, the place form is implicitly surrounded with
+.code read-once
+so that the place's value is accessed only once, and multiple references to
+.code it
+refer to a copy of the value cached in a hidden variable, rather than
+generating multiple accesses to the place.
+Otherwise, if the form is not a syntactic place
 .code it
 is bound as an ordinary lexical variable to
 the form's value.
