@@ -78,8 +78,8 @@
           (string-extend out [num i])))
       (when (plusp i)
         (when (< j pn)
-          (if (meq [num (pred i)] #\space #\- #\+)
-            (set comma [num (pred i)]))
+          (ifa (meq [num (pred i)] #\space #\- #\+)
+            (set comma it))
           (let ((pj [positions j]))
             (cond
               ((eql pj p)
