@@ -1544,6 +1544,7 @@
       ("rcomb" "N-02D9003C")
       ("rcons" "N-02E9003D")
       ("read" "N-03FE5500")
+      ("read-once" "N-010F1250")
       ("read-until-match" "N-001D3F81")
       ("readdir" "N-0289D074")
       ("readlink" "N-0338B219")

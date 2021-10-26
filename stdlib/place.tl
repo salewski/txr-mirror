@@ -862,6 +862,17 @@
     ^(macrolet ((,ssetter (val) ^(slotset ,',struct ,',sym ,val)))
       ,body)))
 
+(defun read-once (value) value)
+
+(defplace (read-once place) body
+  (getter setter
+    (with-gensyms (cache-var pgetter psetter)
+      (with-update-expander (pgetter psetter) place sys:*pl-env*
+        ^(slet ((,cache-var (,pgetter)))
+           (macrolet ((,getter () ',cache-var)
+                      (,setter (val) ^(,',psetter (set ,',cache-var ,val))))
+             ,body))))))
+
 (defmacro define-modify-macro (name lambda-list function)
   (let ((cleaned-lambda-list (mapcar [iffi consp car]
                                      (remql : lambda-list))))

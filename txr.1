@@ -13853,6 +13853,7 @@ defined by \*(TX programs.
 .mets (left << node )
 .mets (right << node )
 .mets (key << node )
+.mets (read-once << node )
 .onom
 
 .NP* Built-In Place-Mutating Operators
@@ -38611,6 +38612,26 @@ Rather it may be substituted by one kind of form when it
 is treated as a pure value, and another kind of form
 when it is treated as a place.
 
+Note: multiple accesses to an alias created by
+.code placelet
+denote multiple accesses to the aliased storage location.
+That can mean multiple function calls or array indexing operations and such.
+If the target of the alias is
+.mono
+.meti (read-once << place )
+.onom
+instead of
+.metn place ,
+then a single access occurs to fetch the prior value of
+.meta place
+and stored into a hidden variable.  All of the multiple occurrences of the
+alias then simply retrieve this cached prior value from the hidden
+variable, rather than accessing the place. The
+.code read-once
+macro is independent of
+.code placelet
+and separately documented.
+
 .TP* "Example:"
 
 Implementation of
@@ -41669,6 +41690,155 @@ Note:
 .code define-accessor
 is similar to the short form of
 .codn defset .
+
+.coNP Accessor @ read-once
+.synb
+.mets (read-once << expression )
+.mets (set (read-once << place ) << new-value )
+.syne
+.desc
+When the
+.code read-once
+accessor is invoked as a function, it behaves like
+.codn identity ,
+simply returning the value of
+.metn expression ,
+which is not required to be a syntactic place.
+
+If a
+.code read-once
+form is used as a syntactic place then its argument must also be a
+.metn place .
+The
+.code read-once
+syntactic place denotes the same place as the enclosed
+.code place
+form, but with somewhat altered semantics, which is most useful in conjunction
+with
+.codn placelet ,
+and in writing place-mutating macros which make multiple accesses to a place.
+
+Firstly, if the
+.code read-once
+place is evaluated, it accesses the existing value of
+.meta place
+exactly once, even if it occurs in a place-mutating form which
+normally doesn't use the prior value, such as the
+.code set
+macro.
+
+When
+.code read-once
+accesses
+.metn place ,
+it stores the value in a hidden variable.
+Then, within the same place-mutating form, multiple references to the same
+.code read-once
+form all access the value of this hidden variable.
+Whenever the
+.code read-once
+form is assigned, both the the hidden variable and the underlying
+.meta place
+receive the new value.
+
+Multiple references to the same
+.code read-once
+form can be produced using the
+.code placelet
+or
+.code placelet*
+macros, or by making multiple calls to the getter function obtained using
+.code with-update-expander
+in the implementation of a user-defined place-mutating operator,
+or user-defined place.
+
+.TP* Example:
+
+In both of the following two examples, there is no question that the
+.code array
+and
+.code i
+expressions are themselves evaluated only once; the issue is the access to the
+array itself; under the plain placelet, the array referencing takes place more
+times.
+
+.verb
+  ;; without read-once, array element [array i] is
+  ;; accessed twice to fetch its current value: once
+  ;; in the plusp expression, and then once again in
+  ;; the dec expression.
+
+  (placelet ((cell [array i]))
+    (if (plusp cell)
+      (dec cell)))
+
+  ;; with read-once, it is accessed once. plusp refers
+  ;; to a hidden lexical variable to obtain the prior
+  ;; value, and so does dec. dec stores the new value
+  ;; through to [array i] and the hidden variable.
+
+  (placelet ((cell (read-once [array i])))
+    (if (plusp cell)
+      (dec cell)))
+.brev
+
+The following is
+.B not
+an example of multiple references to the same
+.code read-once
+form:
+
+.verb
+  (defmacro inc-positive (place)
+    ^(if (plusp (read-once ,place))
+       (inc (read-once ,place))))
+.brev
+
+Here, even though the
+.code read-once
+forms may be structurally identical, they are separate instances.
+The first instance  isn't even a syntactic place, but a call to the
+.code read-once
+function. Multiple references to the same place can only be
+generated using
+.code placelet
+or else by multiple explicit calls to the same getter function or macro
+generated for a place by an update expander.
+
+The following is a corrected version of
+.codn inc-positive :
+
+.verb
+  (defmacro inc-positive (place :env env)
+    (with-update-expander (getter setter) ^(read-once ,place) env
+      ^(if (plusp (,getter))
+         (,setter (succ (,getter))))))
+.brev
+
+To write the macro without
+.code read-once
+requires that it handles the job of providing a temporary variable
+for the value:
+
+.verb
+  (defmacro inc-positive (place :env e)
+    (with-update-expander (getter setter) place env
+      (with-gensym (value)
+        ^(slet ((,value (,getter)))
+          ^(if (plusp ,value)
+             (,setter (succ ,value)))))))
+.brev
+
+The
+.code read-once
+accessor wrapped around
+.meta place
+allows
+.code inc-positive
+to simply make multiple references to
+.code "(,getter)"
+which will cache the value; the macro deosn't have to to introduce its own
+hidden caching variable.
 
 .coNP Special variables @, *place-update-expander* @ *place-clobber-expander* and @ *place-delete-expander*
 .desc
