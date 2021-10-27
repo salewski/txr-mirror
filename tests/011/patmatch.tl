@@ -526,3 +526,8 @@
   (eval-only
     (compile-file (base-name *load-path*) "temp.tlo")
     (remove-path "temp.tlo")))
+
+(mtest
+  (match @`foo-@a` "foo-abc" a) "abc"
+  (match ^(,`foo-@a`) '("foo-abc") a) "abc"
+  (match  ^#J[~`foo-@a`] #("foo-abc") a) "abc")

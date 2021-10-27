@@ -42369,6 +42369,7 @@ that being a syntactic sugar for
 .NP* Quasiliteral match
 .synb
 .mets <> "`...@" var "...`"
+.mets <> @"`...@" var "...`"
 .syne
 .desc
 The quasiliteral syntax is supported as a pattern-matching operator.
@@ -42379,6 +42380,18 @@ object isn't a string according to
 .code stringp
 then the match fails. The quasiliteral pattern must match the entire
 input string.
+
+In order that the quasiliteral's syntactic structure is not misinterpreted
+as a predicate pattern, and in order to make certain situations work
+in quasiquoted pattern matching, a quasiliteral pattern may be specified
+as either
+.code "`...`"
+or
+.codn "@`...`" .
+The latter form, which is structurally
+.code "(sys:expr (sys:quasi ...))"
+is specially recognized and treated as equivalent to the unadorned
+quasiliteral pattern.
 
 A quasiliteral pattern matches in a linear fashion, from left to right.
 Variables bound earlier in the pattern can be referenced later in the pattern
@@ -42571,10 +42584,23 @@ otherwise it is translated to the
 .meti (sys:expr << expr )
 .onom
 syntax.
+.coIP ",`...quasilit...`"
+An unquoted quasiliteral is treated uniformly as
+.mono
+.meti >> , expr
+.onom
+and is therefore translated into
+.codn "@`...quasilit...`" .
+Since that is equivalent to
+.codn "`...quasilit...`" ,
+quasiteral matching is supported within quasiquote notation
+in a straightforward way.
 .meIP >> ~ expr
 In JSON syntax, unquotes are given the same above treatment as
 .code ,
 (comma) unquotes in ordinary syntax.
+.coIP ~`...quasilit...`
+Similarly, quasiliterals are supported in JSON syntax.
 .meIP #H(() >> ( k0 << v0 ) >> ( k1 << v1 ) ...)
 Hash quasiliteral syntax is translated according to the
 .mono
