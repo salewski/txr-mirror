@@ -603,6 +603,7 @@
                    (hash (compile-hash-match exp obj-var var-list))
                    (usr:scan (compile-scan-match exp obj-var var-list))
                    (exprs (compile-exprs-match exp obj-var var-list))
+                   (sys:quasi (compile-match exp obj-var var-list))
                    (t (iflet ((xfun [*match-macro* op]))
                         (let* ((var-env (make-env (mapcar (lop cons
                                                                'sys:special)
