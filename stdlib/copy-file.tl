@@ -225,9 +225,20 @@
         (t (push c out))))
     (nreverse out)))
 
+(eval-only
+  (defmacro if-windows (then : else)
+    (if (eql 2 (sizeof wchar))
+      then
+      else))
+
+  (defmacro if-native-windows (then else)
+    (if-windows
+      ^(if (find #\\ path-sep-chars) ,then ,else)
+      else)))
+
 (defun path-split (str)
   (let ((spl0 (sspl path-sep-chars str)))
-    (if (macro-time (find #\\ path-sep-chars))
+    (if-native-windows
       (iflet ((head (car spl0))
               (p (pos #\: head)))
         (list* [head 0..(succ p)]
@@ -237,18 +248,25 @@
       spl0)))
 
 (defun path-volume (comp)
-  (let ((head (car comp))
-        (next (cadr comp)))
-    (if (macro-time (find #\\ path-sep-chars))
-      (cond
-        ((and (equal head "") (equal next ""))
-         (let ((vol (caddr comp)))
-           (if (nequal "" vol) vol :abs)))
-        ((equal head "") :abs)
-        ((and (m^ #/[A-Za-z0-9]+:/ head) head)
-         (if (equal "" next)
-           ^(:abs . ,head)
-           ^(:rel . ,head))))
+  (let ((head (car comp)))
+    (if-native-windows
+      (let ((next (cadr comp))
+            (more (cddr comp)))
+        (cond
+          ((and (equal head "") (equal next "") more)
+           (let ((vol (car more)))
+	     (cond
+	       ((nequal "" vol)
+		(set (car comp) "")
+		(set (cdr comp) (cdr more))
+		vol)
+	       (t :abs))))
+          ((and (m^ #/[A-Za-z0-9]+:/ head) head)
+           (set (car comp) next)
+           (set (cdr comp) more)
+           (if (and (equal "" next) more)
+             ^(:abs . ,head)
+             ^(:rel . ,head)))))
       (if (equal head "") :abs))))
 
 (defun rel-path (from to)
@@ -263,12 +281,18 @@
       (if (meq :abs fvol tvol)
         (error "~s: mixture of absolute and volume paths ~s ~s given"
                'rel-path from to))
-      (when (and (consp fvol) (consp tvol))
-        (if (neq (car fvol) (car tvol))
-          (error "~s: mixture of volume absolute and relative paths ~s ~s given"
-                 'rel-path from to)
-          (error "~s: paths on different volumes ~s ~s given"
-                 'rel-path from to))))
+      (if-windows
+        (progn
+          (when (and (consp fvol) (consp tvol))
+            (if (neq (car fvol) (car tvol))
+              (error "~s: mixture of volume absolute and relative paths \
+                     \ ~s ~s given"
+                     'rel-path from to)))
+        (when (neq (null fvol) (null tvol))
+          (error "~s: mixture of volume and non-volume paths ~s ~s given"
+                 'rel-path from to))
+        (error "~s: paths on different volumes ~s ~s given"
+               'rel-path from to))))
     (let* ((fcomp (path-simplify fspl))
            (tcomp (path-simplify tspl))
            (ncommon (mismatch fcomp tcomp)))
