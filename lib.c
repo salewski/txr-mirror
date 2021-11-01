@@ -6227,17 +6227,16 @@ tail:
   case LSTR:
     return str_lt(left, right);
   case NIL:
-    return str_lt(nil_string, symbol_name(right));
   case SYM:
     {
-      val cmp = cmp_str(left->s.name, symbol_name(right));
+      val cmp = cmp_str(symbol_name(left), symbol_name(right));
       if (cmp == negone) {
         return t;
       } else if (cmp == one) {
         return nil;
       } else {
-        val lpkg = left->s.package;
-        val rpkg = right->s.package;
+        val lpkg = symbol_package(left);
+        val rpkg = symbol_package(right);
 
         if (lpkg == nil && rpkg == nil)
           return tnil(left < right);
