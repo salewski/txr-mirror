@@ -1248,17 +1248,16 @@
 
 (defmeth compiler comp-arith-form (me oreg env form)
   (if (plusp *opt-level*)
-    (let ((rform (reduce-constant env form)))
-      (tree-case rform
-        ((op . args)
-         (let* ((pargs [partition-by constantp args])
-                (fargs (append-each ((pa pargs))
-                         (if (and (constantp (car pa))
-                                  (all pa [chain eval integerp]))
-                           (list (eval ^(,op ,*pa)))
-                           pa))))
-           me.(comp-fun-form oreg env ^(,op ,*fargs))))
-        (else me.(compile oreg env rform))))
+    (tree-case form
+      ((op . args)
+       (let* ((pargs [partition-by constantp args])
+              (fargs (append-each ((pa pargs))
+                       (if (and (constantp (car pa))
+                                (all pa [chain eval integerp]))
+                         (list (eval ^(,op ,*pa)))
+                         pa))))
+         me.(comp-fun-form oreg env ^(,op ,*fargs))))
+      (else me.(compile oreg env form)))
     me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-arith-neg-form (me oreg env form)
