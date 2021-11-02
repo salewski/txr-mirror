@@ -1265,12 +1265,8 @@
     (tree-bind (nop . args) form
       (let ((op (caseq nop (- '+) (/ '*)))
             (a1 (car args)))
-        (if (and (eq nop '-)
-                 (constantp a1))
-          me.(comp-arith-form oreg env
-                              ^(,op (- ,a1) ,*(cdr args)))
-          me.(comp-fun-form oreg env
-                            ^(,nop ,(car args) (,op ,*(cdr args)))))))
+        me.(comp-fun-form oreg env
+                          ^(,nop ,(car args) (,op ,*(cdr args))))))
     me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-fun-form (me oreg env form)
