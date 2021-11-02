@@ -1261,13 +1261,12 @@
     me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-arith-neg-form (me oreg env form)
-  (if (> (len form) 3)
-    (tree-bind (nop . args) form
-      (let ((op (caseq nop (- '+) (/ '*)))
-            (a1 (car args)))
-        me.(comp-fun-form oreg env
-                          ^(,nop ,(car args) (,op ,*(cdr args))))))
-    me.(comp-fun-form oreg env form)))
+  (tree-case form
+    ((nop a1 a2 a3 . args)
+     (let ((op (caseq nop (- '+) (/ '*))))
+       me.(comp-fun-form oreg env
+                         ^(,nop ,a1  (,op ,a2 ,a3 ,*args)))))
+    (else me.(comp-fun-form oreg env form))))
 
 (defmeth compiler comp-fun-form (me oreg env form)
   (let* ((olev *opt-level*)
