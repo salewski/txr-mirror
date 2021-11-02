@@ -2105,6 +2105,7 @@
   (let ((co (new compiler))
         (as (new assembler))
         (*dedup* (or *dedup* (hash)))
+        (*load-time* nil)
         (*opt-level* (or *opt-level* 0)))
     (let* ((oreg co.(alloc-treg))
            (xexp (if expanded-p
