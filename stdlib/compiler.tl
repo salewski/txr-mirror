@@ -308,6 +308,8 @@
 
 (defvar *load-time*)
 
+(defvar *top-level*)
+
 ;; 0 - no optimization
 ;; 1 - constant folding, algebraics.
 ;; 2 - block elimination, frame elimination
@@ -1039,6 +1041,7 @@
                               closure-spies me.closure-spies)
       (compile-with-fresh-tregs me
         (let* ((*load-time* nil)
+               (*top-level* nil)
                (pars (new (fun-param-parser par-syntax form)))
                (need-frame (or (plusp pars.nfix) pars.rest))
                (nenv (if need-frame (new env up env co me) env))
@@ -1144,7 +1147,7 @@
                              pars)))))))))))
 
 (defmeth compiler comp-lambda (me oreg env form)
-  (if (or *load-time* (< *opt-level* 3))
+  (if (or *load-time* *top-level* (< *opt-level* 3))
     me.(comp-lambda-impl oreg env form)
     (let* ((snap me.(snapshot))
            (lambda-frag me.(comp-lambda-impl oreg env form))
@@ -2106,6 +2109,7 @@
         (as (new assembler))
         (*dedup* (or *dedup* (hash)))
         (*load-time* nil)
+        (*top-level* t)
         (*opt-level* (or *opt-level* 0)))
     (let* ((oreg co.(alloc-treg))
            (xexp (if expanded-p
