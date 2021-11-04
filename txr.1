@@ -62129,7 +62129,6 @@ It creates and returns a new symbol object. If the
 .meta prefix
 argument is omitted, it defaults to
 .strn g .
-Otherwise it must be a string.
 
 The difference between
 .code gensym
@@ -62137,23 +62136,26 @@ and
 .code make-sym
 is that
 .code gensym
-creates the name
-by combining the prefix with a numeric suffix.
+creates the symbol's name
+by combining the
+.meta prefix
+with a numeric suffix.  The suffix is obtained by incrementing the
+.code *gensym-counter*
+and taking the new value.
+The name string then calculated from the prefix and the counter value
+as if by evaluating a form similar to
+.codn "(fmt \(dq~a~,04d\(dq prefix counter)" .
+From this it can be inferred that
+.meta prefix
+can be an object of any kind.
 
-The numeric suffix is a decimal digit string, taken from the value of
-the variable
-.codn *gensym-counter* ,
-after incrementing it.
-
-Note: the variation in name is not the basis of the uniqueness assurance
-offered by
-.code make-sym
-and
-.codn gensym ;
-the basis is that the returned symbol is a freshly instantiated object.
+Note: the generated symbol's name, though varying thanks to the incrementing
+counter, is not the basis of its uniqueness. The basis of the symbol's
+uniqueness is that it is a freshly created object, distinct from any other
+object. The related function
 .code make-sym
 still returns unique symbols even if repeatedly called with the same
-string.
+string argument.
 
 .coNP Special variable @ *gensym-counter*
 .desc
