@@ -510,17 +510,21 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
   put_char(chr('('), out);
 
   if (opt_compat && opt_compat <= 188) {
-    if (h->hops == &hash_eq_ops)
+    if (h->hops == &hash_eq_ops) {
       obj_print_impl(eq_based_k, out, pretty, ctx);
-    else if (h->hops == &hash_equal_ops)
+      need_space = 1;
+    } else if (h->hops == &hash_equal_ops) {
       obj_print_impl(equal_based_k, out, pretty, ctx);
-    need_space = 1;
+      need_space = 1;
+    }
   } else {
-    if (h->hops == &hash_eql_ops)
+    if (h->hops == &hash_eql_ops) {
       obj_print_impl(eql_based_k, out, pretty, ctx);
-    else if (h->hops == &hash_eq_ops)
+      need_space = 1;
+    } else if (h->hops == &hash_eq_ops) {
       obj_print_impl(eq_based_k, out, pretty, ctx);
-    need_space = 1;
+      need_space = 1;
+    }
   }
 
   if (h->wkopt != hash_weak_none) {
