@@ -12330,7 +12330,7 @@ a hash table. Allowed keywords are:
 .codn :eql-based ,
 .codn :eq-based ,
 .codn :weak-keys ,
-.codn :weak-values ,
+.codn :weak-vals ,
 and
 .codn :userdata .
 If the
@@ -52263,7 +52263,7 @@ argument is then ignored.
 If both
 .meta weak-keys
 and
-.meta weak-values
+.meta weak-vals
 are true, and
 .meta weak-keys
 is not one of the keywords
@@ -52344,13 +52344,13 @@ or
 may be specified. If either of these is specified, then the
 .code :weak-keys
 and
-.code :weak-values
+.code :weak-vals
 keywords are redundant and unnecessary.
 
 If
 .code :weak-keys
 and
-.code :weak-values
+.code :weak-vals
 are both specified, and
 .code :weak-and
 isn't specified, the situation is equivalent to
