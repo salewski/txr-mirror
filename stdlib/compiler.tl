@@ -614,11 +614,11 @@
     (((not (@(and @(or eq eql equal) @op) . @eargs)) . @args)
      (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
        me.(comp-if oreg env ^(if (,nop ,*eargs) ,*args))))
-    ((@(constantp @test) @then @else)
+    ((@(safe-constantp @test) @then @else)
      me.(compile oreg env (if (safe-const-eval test) then else)))
-    ((@(constantp @test) @then)
+    ((@(safe-constantp @test) @then)
      me.(compile oreg env (if (safe-const-eval test) then)))
-    ((@(constantp @test))
+    ((@(safe-constantp @test))
      me.(compile oreg env nil))
     (((@(member @op %test-funs%) @a @b) . @rest)
      me.(compile oreg env ^(ift ,op ,a ,b ,*rest)))
@@ -672,7 +672,7 @@
     (when (member fun %test-funs-neg%)
       (set fun [%test-inv% fun])
       (swap then else))
-    (if (and (constantp left) (constantp right))
+    (if (and (safe-constantp left) (safe-constantp right))
       me.(compile oreg env (if (call fun
                                      (safe-const-eval left)
                                      (safe-const-eval right))
@@ -2006,7 +2006,7 @@
 (defun lambda-apply-transform (lm-expr fix-arg-exprs apply-list-expr recursed)
   (if (and (not recursed)
            apply-list-expr
-           (constantp apply-list-expr))
+           (safe-constantp apply-list-expr))
     (let* ((apply-list-val (safe-const-eval apply-list-expr))
            (apply-atom (nthlast 0 apply-list-val))
            (apply-fixed (butlastn 0 apply-list-val)))
@@ -2037,7 +2037,7 @@
                         (add ^(,var-sym ,(car fix-vals)))
                         (if have-sym
                           (add ^(,have-sym t)))
-                        (unless (and (constantp (car fix-arg-iter))
+                        (unless (and (safe-constantp (car fix-arg-iter))
                                      (neq (safe-const-eval (car fix-arg-iter))
                                           :))
                           (push (list* var-sym have-sym init-form) check-opts)))
@@ -2137,6 +2137,12 @@
          (ece [%eval-cache% form]))
     (unless ece.?throws
       (eval form))))
+
+(defun safe-constantp (form)
+  (if (constantp form)
+    (or (atom form)
+        (progn (safe-const-reduce form)
+               (not [%eval-cache% form].?throws)))))
 
 (defun eval-cache-emit-warnings ()
   (dohash (form ece %eval-cache%)
