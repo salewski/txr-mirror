@@ -191,6 +191,10 @@
     (:method restore (me snap)
       (replace-struct me snap))))
 
+(defstruct eval-cache-entry ()
+  orig-form
+  reduced-form
+  throws)
 
 (eval-only
   (defmacro compile-in-toplevel (me . body)
@@ -305,6 +309,8 @@
 (defvar *unchecked-calls*)
 
 (defvarl %param-info% (hash :eq-based :weak-keys))
+
+(defvarl %eval-cache% (hash :eql-based :weak-keys :weak-vals))
 
 (defvar *load-time*)
 
@@ -609,9 +615,9 @@
      (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
        me.(comp-if oreg env ^(if (,nop ,*eargs) ,*args))))
     ((@(constantp @test) @then @else)
-     me.(compile oreg env (if (eval test) then else)))
+     me.(compile oreg env (if (safe-const-eval test) then else)))
     ((@(constantp @test) @then)
-     me.(compile oreg env (if (eval test) then)))
+     me.(compile oreg env (if (safe-const-eval test) then)))
     ((@(constantp @test))
      me.(compile oreg env nil))
     (((@(member @op %test-funs%) @a @b) . @rest)
@@ -667,7 +673,10 @@
       (set fun [%test-inv% fun])
       (swap then else))
     (if (and (constantp left) (constantp right))
-      me.(compile oreg env (if (call fun (eval left) (eval right)) then else))
+      me.(compile oreg env (if (call fun
+                                     (safe-const-eval left)
+                                     (safe-const-eval right))
+                             then else))
       (let* ((opcode [%test-opcode% fun])
              (le-oreg me.(alloc-treg))
              (ri-oreg me.(alloc-treg))
@@ -1253,19 +1262,21 @@
        (let* ((pargs [partition-by constantp args])
               (fargs (append-each ((pa pargs))
                        (if (and (constantp (car pa))
-                                (all pa [chain eval integerp]))
-                         (list (eval ^(,op ,*pa)))
+                                (all pa [chain safe-const-eval integerp]))
+                         (list (safe-const-reduce
+                                 (rlcp ^(,op ,*pa) form)))
                          pa))))
-         me.(comp-fun-form oreg env ^(,op ,*fargs))))
+         me.(comp-fun-form oreg env (rlcp ^(,op ,*fargs) form))))
       (else me.(compile oreg env form)))
     me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-arith-neg-form (me oreg env form)
   (tree-case form
     ((nop a1 a2 a3 . args)
-     (let ((op (caseq nop (- '+) (/ '*))))
+     (let* ((op (caseq nop (- '+) (/ '*)))
+            (sform (rlcp ^(,op ,a2 ,a3 ,*args) form)))
        me.(comp-fun-form oreg env
-                         ^(,nop ,a1  (,op ,a2 ,a3 ,*args)))))
+                         (rlcp ^(,nop ,a1 ,sform) form))))
     (else me.(comp-fun-form oreg env form))))
 
 (defmeth compiler comp-fun-form (me oreg env form)
@@ -1286,19 +1297,19 @@
            (cond
              ((or (eq-comparable a)
                   (eq-comparable b))
-              (set form ^(eq ,a ,b)))
+              (set form (rlcp ^(eq ,a ,b) form)))
              ((or (eql-comparable a)
                   (eql-comparable b))
-              (set form ^(eql ,a ,b)))))
+              (set form (rlcp ^(eql ,a ,b) form)))))
           ((not (@(and @(or eq eql equal) @op) @a @b))
            (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
              (return-from comp-fun-form me.(compile oreg env ^(,nop ,a ,b)))))
           ((@(or append cons list list*) . @args)
            (set form (reduce-lisp form)))
           ((@(@bin [%bin-op% @sym]) @a @b)
-           (set form ^(,bin ,a ,b)))
+           (set form (rlcp ^(,bin ,a ,b) form)))
           ((- @a)
-           (set form ^(neg ,a)))
+           (set form (rlcp ^(neg ,a) form)))
           ((@(or identity + * min max logior logand) @a)
            (return-from comp-fun-form me.(compile oreg env a)))))
 
@@ -1350,10 +1361,10 @@
             ((and (plusp olev)
                   (eq sym 'call)
                   [all args constantp]
-                  (let ((op (eval (car args))))
+                  (let ((op (safe-const-eval (car args))))
                     (or [%const-foldable% op]
                         (not (bindable op)))))
-             me.(compile oreg env ^(quote ,(eval form))))
+             me.(compile oreg env (safe-const-reduce form)))
             (t (tree-case (car args)
                  ((op arg . more)
                   (caseq op
@@ -1707,7 +1718,7 @@
                (not env.(lookup-fun op)))
         (let ((cargs [mapcar (op reduce-constant env) args]))
           (if [all cargs constantp]
-            ^(quote ,(eval (rlcp ^(,op ,*cargs) form)))
+            (safe-const-reduce (rlcp ^(,op ,*cargs) form))
             (rlcp ^(,op ,*cargs) form)))
         form))
     form))
@@ -1996,7 +2007,7 @@
   (if (and (not recursed)
            apply-list-expr
            (constantp apply-list-expr))
-    (let* ((apply-list-val (eval apply-list-expr))
+    (let* ((apply-list-val (safe-const-eval apply-list-expr))
            (apply-atom (nthlast 0 apply-list-val))
            (apply-fixed (butlastn 0 apply-list-val)))
       (lambda-apply-transform lm-expr (append fix-arg-exprs
@@ -2027,7 +2038,8 @@
                         (if have-sym
                           (add ^(,have-sym t)))
                         (unless (and (constantp (car fix-arg-iter))
-                                     (neq (eval (car fix-arg-iter)) :))
+                                     (neq (safe-const-eval (car fix-arg-iter))
+                                          :))
                           (push (list* var-sym have-sym init-form) check-opts)))
                       (pop fix-vals)
                       (pop fix-arg-iter))
@@ -2093,6 +2105,50 @@
                        (nreverse check-opts))
              ,*lm-body))))))
 
+(defun orig-form (form)
+  (whilet ((anc (macro-ancestor form)))
+    (set form anc))
+  form)
+
+(defun safe-const-reduce (form)
+  (condlet
+    ((((atom form))) form)
+    (((ece [%eval-cache% form]))
+     ece.reduced-form)
+    (t
+      (let* ((throws nil)
+             (reduced-form (usr:catch (let ((result (eval form)))
+                                        (if (or (consp result)
+                                                (bindable result))
+                                          ^(quote ,result)
+                                          result))
+                             (t (exc)
+                                (set throws t)
+                                form)))
+             (ece (new eval-cache-entry
+                       orig-form (orig-form form)
+                       reduced-form reduced-form
+                       throws throws)))
+        (set [%eval-cache% form] ece)
+        reduced-form))))
+
+(defun safe-const-eval (form)
+  (let* ((reduced-form (safe-const-reduce form))
+         (ece [%eval-cache% form]))
+    (unless ece.?throws
+      (eval form))))
+
+(defun eval-cache-emit-warnings ()
+  (dohash (form ece %eval-cache%)
+    (when ece.throws
+      (del [%eval-cache% form])
+      (let ((of ece.orig-form))
+        (when (or (source-loc of)
+                  (and (consp of)
+                       (neq system-package (symbol-package (car of)))))
+          (compile-warning ece.orig-form
+                           "constant expression ~s throws" ece.orig-form))))))
+
 (defun system-symbol-p (sym)
   (member (symbol-package sym)
           (load-time (list user-package system-package))))
@@ -2112,6 +2168,8 @@
                      (unless *load-recursive*
                        (release-deferred-warnings)))))
            (frag co.(compile oreg (new env co co) xexp)))
+      (unless *load-recursive*
+        (eval-cache-emit-warnings))
       co.(free-treg oreg)
       co.(check-treg-leak)
       as.(asm co.(optimize ^(,*(mappend .code (nreverse co.lt-frags))
@@ -2212,6 +2270,7 @@
        (unwind-protect
          (progn ,*body)
          (unless ,rec
+           (eval-cache-emit-warnings)
            (release-deferred-warnings)
            (compiler-emit-warnings))))))
 
