@@ -612,6 +612,19 @@
          (ifq (t ,tn) (t 0) ,lab4)
          ,lab5
          ,*rest)))
+    (((mov (t @tx) (t @ty))
+      (if (t @ty) @lab2)
+      @(symbolp @lab1)
+      (gcall (t @tx) . @args)
+      @(symbolp @lab2)
+      (jend (t @tx))
+      . @rest)
+     ^((if (t ,ty) ,lab2)
+       ,lab1
+       (gcall (t ,ty) ,*args)
+       ,lab2
+       (end (t ,ty))
+       ,*rest))
     (@else else)))
 
 (defun rewrite (fun list)
