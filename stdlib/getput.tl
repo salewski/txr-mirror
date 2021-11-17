@@ -97,7 +97,7 @@
     (put-lines lines s)))
 
 (defun file-get-buf (name : bytes (seek 0))
-  (with-stream (s (open-file name "rb"))
+  (with-stream (s (open-file name (if bytes "rbu" "rb")))
     (sys:get-buf-common s bytes seek)))
 
 (defun file-put-buf (name buf : (seek 0))
@@ -164,7 +164,7 @@
     (put-lines lines s)))
 
 (defun command-get-buf (cmd : bytes (skip 0))
-  (with-stream (s (open-command cmd "rb"))
+  (with-stream (s (open-command cmd (if bytes "rbu" "rb")))
     (sys:get-buf-common s bytes skip)))
 
 (defun command-put-buf (cmd buf)

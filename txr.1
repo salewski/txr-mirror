@@ -27515,6 +27515,12 @@ If possible, the semantics of this parameter is achieved by performing a
 operation, falling back on reading and discarding bytes if the
 stream doesn't support seeking.
 
+If
+.meta max-bytes
+is specified, then the stream is opened in unbuffered mode, so that bytes
+beyond the specified range shall not be requested from the underlying file,
+device or process.
+
 .coNP Functions @, file-put-buf @ file-append-buf and @ command-put-buf
 .synb
 .mets (file-put-buf < name < buf << skip-bytes )
