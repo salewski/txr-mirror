@@ -98,6 +98,107 @@ static struct hash_iter *reachable_iters;
 
 static int hash_traversal_limit = 32;
 
+#if SIZEOF_PTR == 8
+
+static u64_t randbox[] = {
+  0x41f00c9949848f1bU, 0x16f1d887e6255dbaU,
+  0x6921f21236da5bdcU, 0x1878975147bf94e9U,
+  0x97b6024b8cbcce22U, 0x9a803523559fc06aU,
+  0x45d41914d268f536U, 0x40b0bc43e10af79aU,
+  0x90e011a9c1af4d69U, 0x6ac090fe1d2917b5U,
+  0x142a6ebeec4c304dU, 0x08fb26fc9ee5016cU,
+  0x3f04e1d969232f74U, 0x6177e1befead7bb3U,
+  0x778108b4e9089ab6U, 0x6a6e2ab4f012f6aeU
+};
+
+static u64_t hash_c_str(const wchar_t *str, u64_t seed, int *pcount)
+{
+  int count = *pcount << 2;
+  u64_t acc = seed;
+  u64_t ch;
+
+  while (count-- && (ch = *str++) != 0) {
+    acc ^= ch;
+    acc ^= randbox[acc & 0xf];
+    acc = acc >> 1 | acc << (64 - 1);
+  }
+
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (64 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (64 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (64 - 1);
+  acc ^= randbox[acc & 0xf];
+
+  *pcount = count >> 2;
+
+  return acc;
+}
+
+static u64_t hash_buf(const mem_t *ptr, ucnum size, u64_t seed, int *pcount)
+{
+  const u64_t *buf = coerce(const u64_t *, ptr);
+  int count = *pcount << 2;
+  u64_t acc = seed;
+
+  for (; size >= sizeof *buf && count--; size -= sizeof *buf, buf++) {
+    u64_t in = *buf;
+    acc ^= in;
+    acc ^= randbox[acc & 0xf];
+    acc = acc >> 1 | acc << (64 - 1);
+  }
+
+  if (size != 0) {
+    const mem_t *tail = coerce(const mem_t *, ptr);
+    u64_t in = 0;
+
+    switch (size) {
+    case 7:
+      in |= convert(u64_t, tail[6]) << 48;
+      break;
+      /* fallthrough */
+    case 6:
+      in |= convert(u64_t, tail[5]) << 40;
+      break;
+      /* fallthrough */
+    case 5:
+      in |= convert(u64_t, tail[4]) << 32;
+      break;
+    case 4:
+      in |= convert(u64_t, tail[3]) << 24;
+      break;
+    case 3:
+      in |= convert(u64_t, tail[2]) << 16;
+      /* fallthrough */
+    case 2:
+      in |= convert(u64_t, tail[1]) << 8;
+      /* fallthrough */
+    case 1:
+      in |= convert(u64_t, tail[0]);
+      break;
+    }
+
+    acc ^= in;
+    acc ^= randbox[acc & 0xf];
+    acc = acc >> 1 | acc << (64 - 1);
+  }
+
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (64 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (64 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (64 - 1);
+  acc ^= randbox[acc & 0xf];
+
+  *pcount = count >> 2;
+
+  return acc;
+}
+
+#elif SIZEOF_PTR == 4
+
 static u32_t randbox[] = {
   0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
   0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
@@ -176,6 +277,10 @@ static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed, int *pcount)
 
   return acc;
 }
+
+#else
+#error portme
+#endif
 
 static ucnum hash_double(double n)
 {
@@ -1968,15 +2073,19 @@ static val set_hash_traversal_limit(val lim)
 static val gen_hash_seed(void)
 {
   val self = lit("gen-hash-seed");
-  val time = time_sec_usec();
+  val time = time_sec_nsec();
   ucnum sec = convert(ucnum, c_time(car(time), self));
-  ucnum usec = c_unum(cdr(time), self);
+  ucnum nsec = c_unum(cdr(time), self);
 #if HAVE_UNISTD_H
   ucnum pid = convert(ucnum, getpid());
 #else
   ucnum pid = 0;
 #endif
-  return unum(sec ^ (usec << 12) ^ pid);
+#if SIZEOF_PTR == 8
+  return unum((sec << 32) ^ (pid << 16) ^ nsec);
+#else
+  return unum(sec ^ (nsec << 12) ^ pid);
+#endif
 }
 
 void hash_early_init(void)

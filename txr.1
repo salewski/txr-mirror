@@ -53190,10 +53190,12 @@ The optional
 value perturbs the hashing function used by
 .code hash-equal
 for strings and buffer objects.  This seed value must be a nonnegative integer
-no wider than 32 bits: that is, in the range 0 to 4294967295.
-If the value isn't specified, it defaults to zero.
-Effectively, each possible value of the seed specifies a different hashing
-function. If two objects
+no wider than 64 bits: that is, in the range 0 to 18446744073709551615.
+If the value isn't specified, it defaults to zero.  On systems with 32 bit
+addresses, only the low 32 bits of this value may be significant.
+
+Effectively, each possible value of the significant part of the seed specifies
+a different hashing function. If two objects
 .code A
 and
 .code B
@@ -53625,7 +53627,9 @@ degrade.
 
 The value of
 .code *hash-seed*
-must be a nonnegative integer, no wider than 32 bits.
+must be a nonnegative integer, no wider than 64 bits.
+On systems with 32 bit addresses, only the least significant 32 bits of
+this value may be significant.
 
 .coNP Function @ gen-hash-seed
 .synb
