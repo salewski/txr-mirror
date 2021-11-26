@@ -92,6 +92,8 @@
     "Allow me to expand a bit more on why there is no substitute for macros."
     "defmicro: error: expansion is larger than original form: switch to defmacro."
     "Read-eval-disagree-downvote-insult treadmill initialized! Enter an expression:"
+    "If you get your macros hot enough, you get syntactic caramel!"
+    "Syntactic toffee recipe: melt butter over low heat, stir in Lisp macros."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
