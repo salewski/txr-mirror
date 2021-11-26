@@ -625,6 +625,18 @@
        ,lab2
        (end (t ,ty))
        ,*rest))
+    ((@(symbolp @lab1)
+      @(consp @insn)
+      (jmp @lab3)
+      @(symbolp @lab2)
+      @insn
+      @(symbolp @lab3)
+      . @rest)
+     ^(,lab1
+       ,lab2
+       ,insn
+       ,lab3
+       ,*rest))
     (@else else)))
 
 (defun rewrite (fun list)
