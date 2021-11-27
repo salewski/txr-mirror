@@ -564,6 +564,14 @@
                               bb.list))
          (hash (group-by [chain .insns cdr] candidates)))
     (dohash (insns bls hash)
+      (let ((link (car (car bls).links)))
+        (each ((bb bb.list))
+          (if (and (not (member bb bls))
+                   (null (cdr bb.links))
+                   (eq bb.next link)
+                   (starts-with (cdr bb.insns) insns)
+                   (eql (len bb.insns) (len insns)))
+            (push bb bls))))
       (when (cdr bls)
         (whenlet ((keep (or (keep-if (op some @1.rlinks (op eq @@1) .next) bls)
                             (list (car bls))))
@@ -624,18 +632,6 @@
        (gcall (t ,ty) ,*args)
        ,lab2
        (end (t ,ty))
-       ,*rest))
-    ((@(symbolp @lab1)
-      @(consp @insn)
-      (jmp @lab3)
-      @(symbolp @lab2)
-      @insn
-      @(symbolp @lab3)
-      . @rest)
-     ^(,lab1
-       ,lab2
-       ,insn
-       ,lab3
        ,*rest))
     (@else else)))
 
