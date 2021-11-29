@@ -601,25 +601,14 @@
            ,*rest))))
     (((mov (t @tn) (d @dn))
       (jmp @lab3)
-      @lab1
-      (mov (t @tn) (t 0))
-      (jmp @lab3)
       @lab2
       (mov (t @tn) (t 0))
       @(symbolp @lab3)
       (ifq (t @tn) (t 0) @lab4)
       . @rest)
-     (let ((lab5 (gensym "nl")))
-       ^((mov (t ,tn) (d ,dn))
-         (jmp ,lab4)
-         ,lab1
-         ,lab2
-         (mov (t ,tn) (t 0))
-         (jmp ,lab5)
-         ,lab3
-         (ifq (t ,tn) (t 0) ,lab4)
-         ,lab5
-         ,*rest)))
+     ^(,(car insns)
+       (jmp ,lab4)
+       ,*(cddr insns)))
     (((mov (t @tx) (t @ty))
       (if (t @ty) @lab2)
       @(symbolp @lab1)
