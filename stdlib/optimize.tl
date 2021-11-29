@@ -609,6 +609,17 @@
      ^(,(car insns)
        (jmp ,lab4)
        ,*(cddr insns)))
+    ((@(symbolp @lab1)
+      (mov (t @tn) (t 0))
+      @lab2
+      (ifq (t @tn) (t 0) @lab4)
+      @(symbolp @lab3)
+      (gcall (t @tn) . @grest)
+      . @rest)
+     ^(,lab2
+       (ifq (t ,tn) (t 0) ,lab4)
+       ,lab1
+       ,*(cddddr insns)))
     (((mov (t @tx) (t @ty))
       (if (t @ty) @lab2)
       @(symbolp @lab1)
