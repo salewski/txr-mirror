@@ -1937,6 +1937,11 @@ val make_like(val list, val thatobj)
         return buf_list(list);
       break;
     case COBJ:
+      if (thatobj->co.cls == seq_iter_cls)
+      {
+        struct seq_iter *si = coerce(struct seq_iter *, thatobj->co.handle);
+        return make_like(list, si->inf.obj);
+      }
       if (obj_struct_p(thatobj)) {
         val from_list_meth = get_special_slot(thatobj, from_list_m);
         if (from_list_meth)
@@ -3553,22 +3558,23 @@ val lazy_flatcar(val tree)
 static val tuples_func(val n, val lcons)
 {
   list_collect_decl (out, ptail);
-  us_cons_bind (seq_in, fill, lcons);
-  val seq = seq_in;
+  us_cons_bind (iter_in, fill, lcons);
+  val iter = iter_in;
   val count;
 
-  for (count = n; count != zero && seq; count = minus(count, one))
-    ptail = list_collect(ptail, pop(&seq));
+  for (count = n; count != zero && iter_more(iter);
+       count = minus(count, one), iter = iter_step(iter))
+    ptail = list_collect(ptail, iter_item(iter));
 
   if (!missingp(fill))
     for (; gt(count, zero); count = minus(count, one))
       ptail = list_collect(ptail, fill);
 
-  if (seq)
-    us_rplacd(lcons, make_lazy_cons_car_cdr(us_lcons_fun(lcons), seq, fill));
+  if (iter_more(iter))
+    us_rplacd(lcons, make_lazy_cons_car_cdr(us_lcons_fun(lcons), iter, fill));
   else
     us_rplacd(lcons, nil);
-  us_rplaca(lcons, make_like(out, seq_in));
+  us_rplaca(lcons, make_like(out, iter_in));
 
   return nil;
 }
@@ -3576,15 +3582,15 @@ static val tuples_func(val n, val lcons)
 val tuples(val n, val seq, val fill)
 {
   val self = lit("tuples");
-  seq = nullify(seq);
+  val iter = iter_begin(seq);
 
   if (!plusp(n) || !integerp(n))
     uw_throwf(error_s, lit("~a: positive integer required, not ~s"), self, n, nao);
 
-  if (!seq)
+  if (!iter_more(iter))
     return nil;
 
-  return make_lazy_cons_car_cdr(func_f1(n, tuples_func), seq, fill);
+  return make_lazy_cons_car_cdr(func_f1(n, tuples_func), iter, fill);
 }
 
 static val partition_by_func(val func, val lcons)
