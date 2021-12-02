@@ -214,4 +214,51 @@
   [separate integerp "a1b2c3d4"] ("" "a1b2c3d4"))
 
 (mtest
-  (tuples 0 '(1 2 3)) :error)
+  (tuples 0 nil) :error
+  (tuples 3.5 '(1 2 3)) :error
+  (tuples -1 "abc") :error)
+
+(mtest
+  (tuples 1 nil) nil
+  (tuples 1 "") nil
+  (tuples 1 #()) nil)
+
+(mtest
+  (tuples 1 '(a)) ((a))
+  (tuples 1 "a") ("a")
+  (tuples 1 #(1)) (#(1)))
+
+(mtest
+  (tuples 1 '(a b c)) ((a) (b) (c))
+  (tuples 1 "abc") ("a" "b" "c")
+  (tuples 1 #(1 2 3)) (#(1) #(2) #(3)))
+
+(mtest
+  (tuples 1 '(a b c) 'd) ((a) (b) (c))
+  (tuples 1 "abc" #\d) ("a" "b" "c")
+  (tuples 1 #(1 2 3) 4) (#(1) #(2) #(3)))
+
+(mtest
+  (tuples 2 '(a b c)) ((a b) (c))
+  (tuples 2 "abc") ("ab" "c")
+  (tuples 2 #(1 2 3)) (#(1 2) #(3)))
+
+(mtest
+  (tuples 3 '(a b c)) ((a b c))
+  (tuples 3 "abc") ("abc")
+  (tuples 3 #(1 2 3)) (#(1 2 3)))
+
+(mtest
+  (tuples 2 '(a b c) 'd) ((a b) (c d))
+  (tuples 2 "abc" #\d) ("ab" "cd")
+  (tuples 2 #(1 2 3) 4) (#(1 2) #(3 4)))
+
+(defun lforce (list)
+  [mapdo identity list]
+  list)
+
+(test
+  (lforce (tuples 2 "abc" 3)) :error)
+
+(test
+  (take 3 (tuples 3 (range 0))) ((0 1 2) (3 4 5) (6 7 8)))
