@@ -3575,7 +3575,11 @@ static val tuples_func(val n, val lcons)
 
 val tuples(val n, val seq, val fill)
 {
+  val self = lit("tuples");
   seq = nullify(seq);
+
+  if (!plusp(n) || !integerp(n))
+    uw_throwf(error_s, lit("~a: positive integer required, not ~s"), self, n, nao);
 
   if (!seq)
     return nil;

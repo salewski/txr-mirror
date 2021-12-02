@@ -212,3 +212,6 @@
   [separate chr-isalpha "a1b2c3d4"] ("abcd" "1234")
   [separate chrp "a1b2c3d4"] ("a1b2c3d4" "")
   [separate integerp "a1b2c3d4"] ("" "a1b2c3d4"))
+
+(mtest
+  (tuples 0 '(1 2 3)) :error)
