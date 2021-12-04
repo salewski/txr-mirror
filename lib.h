@@ -677,6 +677,7 @@ val lazy_flatten(val list);
 val flatcar(val list);
 val lazy_flatcar(val tree);
 val tuples(val n, val seq, val fill);
+val tuples_star(val n, val seq, val fill);
 val partition_by(val func, val seq);
 val partition(val seq, val indices);
 val split(val seq, val indices);

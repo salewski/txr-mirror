@@ -3593,6 +3593,60 @@ val tuples(val n, val seq, val fill)
   return make_lazy_cons_car_cdr(func_f1(n, tuples_func), iter, fill);
 }
 
+static val tuples_star_func(val tail, val lcons)
+{
+  us_cons_bind (tuple, iter, lcons);
+  val item = make_like(tuple, iter);
+
+  if (iter_more(iter)) {
+    val itemcopy = if3(tuple == item, copy_list(tuple), item);
+    us_rplaca(lcons, itemcopy);
+    us_rplacd(tail, cons(iter_item(iter), nil));
+
+    {
+      val nxtuple = us_cdr(tuple);
+      val fun = us_lcons_fun(lcons);
+      tail = us_cdr(tail);
+      iter = iter_step(iter);
+      rcyc_cons(tuple);
+      us_func_set_env(fun, tail);
+      us_rplacd(lcons, make_lazy_cons_car_cdr(fun, nxtuple, iter));
+    }
+  } else {
+    val item = make_like(tuple, iter);
+    us_rplaca(lcons, item);
+    us_rplacd(lcons, nil);
+  }
+
+  return nil;
+}
+
+val tuples_star(val n, val seq, val fill)
+{
+  val self = lit("tuples*");
+  val iter = iter_begin(seq);
+  cnum i, cn = c_num(n, self);
+  list_collect_decl (tuple, ptail);
+
+  if (!plusp(n) || !integerp(n))
+    uw_throwf(error_s, lit("~a: positive integer required, not ~s"), self, n, nao);
+
+  for (i = 0; i < cn; i++, iter = iter_step(iter))
+  {
+    if (!iter_more(iter)) {
+      if (missingp(fill))
+        return nil;
+      for (; i < cn; i++)
+        ptail = list_collect(ptail, fill);
+      break;
+    }
+
+    ptail = list_collect(ptail, iter_item(iter));
+  }
+
+  return make_lazy_cons_car_cdr(func_f1(lastcons(tuple), tuples_star_func), tuple, iter);
+}
+
 static val partition_by_func(val func, val lcons)
 {
   list_collect_decl (out, ptail);

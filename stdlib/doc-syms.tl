@@ -2030,6 +2030,7 @@
       ("truncate-stream" "N-009F5B3F")
       ("try" "N-0328371B")
       ("tuples" "N-00C801EF")
+      ("tuples*" "N-036D928C")
       ("txr-case" "N-03813122")
       ("txr-exe-path" "N-014C116E")
       ("txr-if" "N-00355D4E")

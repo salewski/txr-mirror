@@ -35883,6 +35883,72 @@ are lists, and not lazy lists.
   (tuples 3 (list 1 2) #\ez) -> ((1 2 #\ez))
 .brev
 
+.coNP Function @ tuples*
+.synb
+.mets (tuples < length < sequence <> [ fill-value ])
+.syne
+.desc
+The
+.code tuples*
+function produces a lazy list of overlapping tuples taken from
+.metn sequence .
+The length of the tuples is given by the
+.meta length
+argument.
+
+The
+.meta length
+argument must be a positive integer.
+
+Tuples are subsequences of consecutive items from the input
+.metn sequence ,
+beginning with consecutive elements.  The first tuple in the returned list
+begins with the fist item of
+.metn sequence ;
+the second tuple begins with the second item, and so forth.
+
+The output of the function is a list, but the tuples themselves are sequences
+of the same kind as
+.metn sequence .
+If
+.meta sequence
+is any kind of list, they
+are lists, and not lazy lists.
+
+If
+.meta sequence
+is shorter than
+.meta length
+then it contains no tuples of that length. In this case, if no
+.meta fill-value
+argument is specified, then the empty list is returned.
+In this same situation, if
+.meta fill-value
+is specified, then a one-element list is returned, consisting of
+a tuple of the required length, consisting of the elements from
+.meta sequence
+followed by repetitions of
+.metn fill-value ,
+which must be of a type suitable as an element of the sequence.
+The
+.meta fill-value
+is otherwise ignored.
+
+.TP* Examples:
+
+.verb
+.brev
+  (tuples* 1 "abc") -> ("a" "b" "c")
+  (tuples* 2 "abc") -> ("ab" "bc")
+  (tuples* 3 "abc") -> ("abc")
+  (tuples* 4 "abc") -> nil
+  (tuples* 4 "abc" #\z) -> ("abcz")
+  (tuples* 6 "abc" #\z) -> ("abczzz")
+  (tuples* 6 "abc" 4) -> error
+  (tuples* 2 '(a b c)) -> ((a b) (b c))
+  (take 3 (tuples* 3 0)) -> ((0 1 2) (1 2 3) (2 3 4))
+.brev
+
 .coNP Function @ partition-by
 .synb
 .mets (partition-by < function << sequence )
