@@ -94,6 +94,7 @@
     "Read-eval-disagree-downvote-insult treadmill initialized! Enter an expression:"
     "If you get your macros hot enough, you get syntactic caramel!"
     "Syntactic toffee recipe: melt butter over low heat, stir in Lisp macros."
+    "TXR needs money, so even abnormal exits now go through the gift shop."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
