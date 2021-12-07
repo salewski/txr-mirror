@@ -309,3 +309,81 @@
 (mtest
   (take 3 (tuples* 3 (range 0))) ((0 1 2) (1 2 3) (2 3 4))
   (take 3 (tuples* 3 0)) ((0 1 2) (1 2 3) (2 3 4)))
+
+(mtest
+  (nrot nil) nil
+  (nrot #()) #()
+  (nrot "") ""
+  (nrot nil 2) nil
+  (nrot #() 2) #()
+  (nrot "" 2) ""
+  (nrot nil -1) nil
+  (nrot #() -1) #()
+  (nrot "" -1) "")
+
+(mtest
+  (let ((s '(a))) (nrot s)) (a)
+  (let ((s #(1))) (nrot s) s) #(1)
+  (let ((s "x")) (nrot s) s) "x"
+  (let ((s '(a))) (nrot s -1)) (a)
+  (let ((s #(1))) (nrot s -1) s) #(1)
+  (let ((s "x")) (nrot s -1) s) "x")
+
+(mtest
+  (let ((s '(a b))) (nrot s)) (b a)
+  (let ((s #(1 2))) (nrot s) s) #(2 1)
+  (let ((s "xy")) (nrot s) s) "yx"
+  (let ((s '(a b))) (nrot s -1)) (b a)
+  (let ((s #(1 2))) (nrot s -1) s) #(2 1)
+  (let ((s "xy")) (nrot s -1) s) "yx")
+
+(mtest
+  (let ((s '(a b c))) (nrot s)) (b c a)
+  (let ((s #(1 2 3))) (nrot s) s) #(2 3 1)
+  (let ((s "xyz")) (nrot s) s) "yzx"
+  (let ((s '(a b c))) (nrot s -1)) (c a b)
+  (let ((s #(1 2 3))) (nrot s -1) s) #(3 1 2)
+  (let ((s "xyz")) (nrot s -1) s) "zxy")
+
+(mtest
+  (let ((s '(a b c))) (nrot s 33)) (a b c)
+  (let ((s '(a b c))) (nrot s 34)) (b c a))
+
+(mtest
+  (rot nil) nil
+  (rot #()) #()
+  (rot "") ""
+  (rot nil 2) nil
+  (rot #() 2) #()
+  (rot "" 2) ""
+  (rot nil -1) nil
+  (rot #() -1) #()
+  (rot "" -1) "")
+
+(mtest
+  (let ((s '(a))) (list (rot s) s)) ((a) (a))
+  (let ((s #(1))) (list (rot s) s)) (#(1) #(1))
+  (let ((s "x")) (list (rot s) s)) ("x" "x")
+  (let ((s '(a))) (list (rot s -1) s)) ((a) (a))
+  (let ((s #(1))) (list (rot s -1) s)) (#(1) #(1))
+  (let ((s "x")) (list (rot s -1) s)) ("x" "x"))
+
+(mtest
+  (let ((s '(a b))) (list (rot s) s)) ((b a) (a b))
+  (let ((s #(1 2))) (list (rot s) s)) (#(2 1) #(1 2))
+  (let ((s "xy")) (list (rot s) s)) ("yx" "xy")
+  (let ((s '(a b))) (list (rot s -1) s)) ((b a) (a b))
+  (let ((s #(1 2))) (list (rot s -1) s)) (#(2 1) #(1 2))
+  (let ((s "xy")) (list (rot s -1) s)) ("yx" "xy"))
+
+(mtest
+  (let ((s '(a b c))) (list (rot s) s)) ((b c a) (a b c))
+  (let ((s #(1 2 3))) (list (rot s) s)) (#(2 3 1) #(1 2 3))
+  (let ((s "xyz")) (list (rot s) s)) ("yzx" "xyz")
+  (let ((s '(a b c))) (list (rot s -1) s)) ((c a b) (a b c))
+  (let ((s #(1 2 3))) (list (rot s -1) s)) (#(3 1 2) #(1 2 3))
+  (let ((s "xyz")) (list (rot s -1) s)) ("zxy" "xyz"))
+
+(mtest
+  (let ((s '(a b c))) (list (rot s 33) s)) ((a b c) (a b c))
+  (let ((s '(a b c))) (list (rot s 34) s)) ((b c a) (a b c)))

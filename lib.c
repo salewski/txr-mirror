@@ -10750,6 +10750,48 @@ val grade(val seq, val lessfun, val keyfun_in)
   return nil;
 }
 
+val nrot(val seq, val n_in)
+{
+  val len = length(seq);
+
+  if (len != zero && len != one) {
+    val n = mod(default_arg(n_in, one), len);
+
+    if (n == one) {
+      val head = ref(seq, zero);
+      seq = replace(seq, cons(head, nil), len, len);
+      seq = replace(seq, nil, zero, one);
+    } else if (n != zero) {
+      val head = sub(seq, zero, n);
+      seq = replace(seq, head, len, len);
+      seq = replace(seq, nil, zero, n);
+    }
+  }
+
+  return seq;
+}
+
+val rot(val seq, val n_in)
+{
+  val seq_orig = seq;
+  val len = length(seq);
+
+  if (len != zero && len != one) {
+    val n = mod(default_arg(n_in, one), len);
+
+    if (n != zero) {
+      val head = sub(seq, zero, n);
+      seq = sub(seq, n, t);
+      seq = replace(seq, head, t, t);
+    }
+  }
+
+  if (seq == seq_orig)
+    seq = copy(seq);
+
+  return seq;
+}
+
 val find(val item, val seq, val testfun, val keyfun)
 {
   val self = lit("find");

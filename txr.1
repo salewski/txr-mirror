@@ -35727,6 +35727,119 @@ was introduced in \*(TX 238. Prior to that version,
 behaved like
 .codn nshuffle .
 
+.coNP Functions @ rot and @ nrot
+.synb
+.mets (rot < sequence <> [ displacement ])
+.mets (nrot < sequence <> [ displacement ])
+.syne
+.desc
+The
+.code nrot
+and
+.code rot
+functions rotate the elements of
+.metn sequence ,
+returning a rotated sequence.
+
+The
+.code nrot
+function does this destructively; it modifies
+.meta sequence
+in-place, whereas
+.code rot
+returns a new sequence without modifying the original.
+
+The
+.code rot
+function always returns a new sequence. In cases when no rotation
+is performed, it copies
+.meta sequence
+as if using the
+.code copy
+function.
+In cases when no rotation is performed, the
+.code nrot
+function returns the original sequence, which is unmodified.
+
+The
+.meta displacement
+parameter, an integer, has a default value of 1.
+
+To rotate elements means to displace their position within the
+.meta sequence
+by some amount, that being given by the
+.meta displacement
+parameter, while partially preserving their circular order.
+Circular order means that for the purposes of rotation, the sequence
+is regarded to be cyclic: the first element of the sequence is
+considered to be the successor of the last element and vice versa.
+Thus, when an element is displaced past the first or last position, it wraps to
+the end or beginning of the sequence.
+
+If the sequence is empty, or contains only one element, then
+.code rot
+and
+.code nrot
+terminate, performing no rotation. The following remarks apply to situations when
+.meta sequence
+has two or more elements.
+
+The
+.meta displacement
+parameter, which may be negative, is first reduced to the smallest positive
+residue modulo the length of the sequence, resulting in a value ranging from
+zero to one less than the sequence length.  If the resulting value is zero,
+then no rotation is performed.
+
+The
+.meta displacement
+has a negative orientation: each element's position is decreased by this
+amount. Those elements whose position would become negative move to the end of
+the sequence.
+
+The default displacement of 1 causes the first element to become last,
+the second element to become first, and so forth.  The opposite rotation can be
+obtained using -1 as the displacement.
+
+Note: even though
+.code nrot
+operates destructively, the returned object may not be the same object as
+.metn sequence .
+Only the returned object is required to be the rotated sequence. If this
+is different from the original
+.meta sequence
+input, the contents of that original object are unspecified.
+
+Note: the symbol
+.code rotate
+is the name of a place-mutating macro, which is much older than these functions.
+If
+.code S
+is a three-element sequence, then:
+
+.verb
+  (set S (nrot S)) ;; alternatively: (upd S nrot)
+.brev
+
+has the same effect as:
+
+.verb
+  (rotate [S 0] [S 1] [S 2])
+.brev
+
+.TP* Examples:
+
+.verb
+  (rot "abc") -> "bca"
+  (rot #(1 2 3) -1) -> (3 1 2)
+
+  ;; lower-case rot-13
+  (mapcar (relate (range #\ea #\ez)
+                  (rot (range #\ea #\ez) 13))
+          "hello, world!")
+  -> "uryyb, jbeyq!"
+.brev
+
 .coNP Function @ sort-group
 .synb
 .mets (sort-group < sequence >> [ keyfun <> [ lessfun ]])

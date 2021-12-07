@@ -1183,6 +1183,8 @@ val sort_group(val seq, val keyfun, val lessfun);
 val unique(val seq, val keyfun, struct args *hashv_args);
 val uniq(val seq);
 val grade(val seq, val lessfun, val keyfun_in);
+val nrot(val seq, val n_in);
+val rot(val seq, val n_in);
 val find(val list, val key, val testfun, val keyfun);
 val rfind(val list, val key, val testfun, val keyfun);
 val find_if(val pred, val list, val key);
