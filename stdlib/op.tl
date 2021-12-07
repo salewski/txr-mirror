@@ -209,11 +209,11 @@
 (defmacro ido (. args)
   ^(ipf (do ,*args)))
 
-(defmacro ret (. args)
-  ^(op identity (progn @rest ,*args)))
+(defmacro ret (arg)
+  ^(op identity* ,arg))
 
-(defmacro aret (. args)
-  ^(ap identity (progn @rest ,*args)))
+(defmacro aret (arg)
+  ^(ap identity* ,arg))
 
 (defun sys:opip-expand (e clauses)
   (collect-each ((c clauses))
