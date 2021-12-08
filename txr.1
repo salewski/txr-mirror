@@ -44707,6 +44707,14 @@ The remaining arguments are
 .metn body-form s
 to evaluated for successful matches.
 
+The
+.metn body-form s
+are surrounded by an implicit anonymous block. If any of the forms
+.code return
+invoke a return out of this block, then the iteration terminates, and
+the result value of the block becomes the result value of
+the loop.
+
 The processing takes place as follows:
 .RS
 .IP 1.
@@ -44806,7 +44814,9 @@ The macro
 .code append-matches
 is subject to all of the requirements specified for
 .code each-match
-in regard to the argument conventions and semantics.
+in regard to the argument conventions and semantics,
+and the presence of the implicit anonymous block around the
+.metn body-form s.
 
 Whereas
 .code each-match
@@ -44873,7 +44883,9 @@ The macro
 .code keep-matches
 is subject to all of the requirements specified for
 .code each-match
-in regard to the argument conventions and semantics.
+in regard to the argument conventions and semantics,
+and the presence of the implicit anonymous block around the
+.metn body-form s.
 
 Whereas
 .code each-match

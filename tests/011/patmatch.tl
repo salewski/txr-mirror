@@ -470,6 +470,9 @@
     (list x y))
   ((1 2) (1 4) (3 2) (3 4) (5 2) (5 4)))
 
+(test
+  (each-match (@a '(1 2 3)) (return 42)) 42)
+
 (mtest
   (when-match ^(,a ,b) '(1 2) (list a b)) (1 2)
   (when-match ^(,(oddp @a) ,(evenp @b)) '(1 2) (list a b)) (1 2)

@@ -1070,8 +1070,11 @@
                    (eql 2 (length pair)))
         (compile-error f "invalid pattern-sequence pair ~s" pair)))
     (let* ((pats [mapcar car pat-seq-pairs])
-           (seqs [mapcar cadr pat-seq-pairs]))
-       ^(,fun (lambda-match ((,*pats) (progn ,*body))) ,*seqs))))
+           (seqs [mapcar cadr pat-seq-pairs])
+           (gens [mapcar (ret (gensym)) pat-seq-pairs]))
+       ^(let ,(zip gens seqs)
+          (block nil
+            (,fun (lambda-match ((,*pats) (progn ,*body))) ,*gens))))))
 
 (defmacro each-match (:form f pat-seq-pairs . body)
   (each-match-expander f pat-seq-pairs body 'mapdo))
