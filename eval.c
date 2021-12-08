@@ -4166,7 +4166,7 @@ static val me_case(val form, val menv)
         hash_keys = keys = expand_eval(cons(list_s, keys), nil, menv);
     }
 
-    if (consp(keys) && !cdr(keys))
+    if (consp(keys) && atom(car(keys)) && !cdr(keys))
       keys = car(keys);
 
     if (atom(keys)) {
