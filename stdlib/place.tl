@@ -931,7 +931,7 @@
            (lambda (getter setter place body)
              (let* ((args (cdr place))
                     (temps (mapcar (ret (gensym)) args)))
-               ^(let (,(zip temps args))
+               ^(let ,(zip temps args)
                   (macrolet ((,getter () ^(,',get-fun ,*',temps))
                              (,setter (val)
                                ^(,',set-fun ,*',temps ,val)))
