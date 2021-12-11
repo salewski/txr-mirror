@@ -47,7 +47,7 @@
                             insns ,bl.insns
                             links ,(mapcar .label bl.links)
                             rlinks ,(mapcar .label bl.rlinks)
-                            next ,bl.next) stream)))
+                            next ,bl.next.?label) stream)))
 
   (defstruct (basic-blocks insns lt-dregs symvec) nil
     insns
