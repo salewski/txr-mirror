@@ -634,7 +634,7 @@
        ,lab1
        (gcall (t ,ty) ,*args)
        ,lab2
-       (end (t ,ty))
+       (jend (t ,ty))
        ,*rest))
     (@else else)))
 
