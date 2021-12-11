@@ -38,6 +38,7 @@
     links
     rlinks
     insns
+    closer
 
     (:method print (bl stream pretty-p)
        (put-string "#S" stream)
@@ -56,6 +57,8 @@
     (hash (hash))
     (li-hash (hash :eq-based))
     list
+    closures
+    (cl-hash (hash))
     rescan
     recalc
     reelim
@@ -634,6 +637,65 @@
        (end (t ,ty))
        ,*rest))
     (@else else)))
+
+(defmeth basic-blocks identify-closures (bb)
+  (zap bb.closures)
+  (each ((bl bb.list))
+    (when-match @(end ((close . @nil))) bl.insns
+      (let ((nx bl.next))
+        (set nx.closer bl)
+        (push nx bb.closures))))
+  (upd bb.closures nreverse)
+  (let ((visited (hash :eq-based)))
+    (labels ((visit (bl clhead)
+               (when (test-set [visited bl])
+                 (push bl [bb.cl-hash clhead])
+                 [mapcar (lop visit clhead) bl.links])))
+      (each ((cb bb.closures))
+        (visit cb cb))))
+  [hash-update bb.cl-hash nreverse])
+
+(defmeth basic-block fill-treg-compacting-map (bl map)
+  (labels ((add-treg (reg)
+            (unless [map reg]
+              (if-match (t @nil) reg
+                (set [map reg] ^(t ,(len map))))))
+           (add-tregs (args)
+              [mapcar add-treg args]))
+    (iflet ((cl bl.closer))
+      (let ((cloinsn (car (last cl.insns))))
+        (add-tregs (cddr cloinsn))))
+    (each ((insn bl.insns))
+      (match-case insn
+        ((close @reg . @nil)
+         (add-treg reg))
+        ((@op . @args)
+         (add-tregs args))))))
+
+(defmeth basic-block apply-treg-compacting-map (bl map)
+  (labels ((fix (arg) [map arg arg])
+           (fix-tregs (args) [mapcar fix args]))
+    (iflet ((cl bl.closer))
+      (match ((close @reg @frsize @ntregs . @rest)) (last cl.insns)
+        (set (last cl.insns)
+             ^((close ,reg ,frsize ,(len map) ,*(fix-tregs rest))))))
+    (set bl.insns (collect-each ((insn bl.insns))
+                    (match-case insn
+                      ((close @reg . @rest)
+                       ^(close ,(fix reg) ,*rest))
+                      ((@op . @args)
+                       ^(,op ,*(fix-tregs args)))
+                      (@else else))))))
+
+(defmeth basic-blocks compact-tregs (bb)
+  bb.(identify-closures)
+  (each ((bl bb.closures))
+    (let ((clist [bb.cl-hash bl]))
+      (let ((map (hash-from-pairs '(((t 0) (t 0)) ((t 1) (t 1))))))
+        (each ((cl clist))
+          cl.(fill-treg-compacting-map map))
+        (each ((cl clist))
+          cl.(apply-treg-compacting-map map))))))
 
 (defun rewrite (fun list)
   (build

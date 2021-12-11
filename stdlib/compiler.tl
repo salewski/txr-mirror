@@ -1634,6 +1634,7 @@
         (cond
           ((>= olev 6)
            bb.(merge-jump-thunks)
+           bb.(compact-tregs)
            bb.(late-peephole bb.(get-insns)))
           (t bb.(get-insns))))
       insns)))
