@@ -1183,6 +1183,7 @@ val seq_reset(val iter, val obj)
   struct seq_iter *si = coerce(struct seq_iter *,
                                cobj_handle(self, iter, seq_iter_cls));
   seq_iter_init(self, si, obj);
+  mut(iter);
   return iter;
 }
 
@@ -1350,6 +1351,8 @@ val iter_reset(val iter, val obj)
     {
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       seq_iter_init_with_info(self, si, sinf, 0);
+      if (si->ops->mark)
+        mut(iter);
       return iter;
     }
     /* fallthrough */
