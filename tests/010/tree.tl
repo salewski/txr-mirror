@@ -5,8 +5,16 @@
 
 (test tr #T(()))
 
-(test (treep tr) t)
-(test (treep 42) nil)
+(mtest
+  (treep tr) t
+  (treep 42) nil)
+
+(mtest
+  (len #T()) 0
+  (len #T(() 1)) 1
+  (len #T(() 1 2)) 2
+  (len #T(() 1 2 3)) 3
+  (len #T(() 1 1 1)) 3)
 
 (each ((n keys))
   (tree-insert tr n))

@@ -769,6 +769,13 @@ val treep(val obj)
   return tnil(type(obj) == COBJ && obj->co.cls == tree_cls);
 }
 
+val tree_count(val tree)
+{
+  val self = lit("tree-count");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
+  return unum(tr->size);
+}
+
 static void tree_iter_mark(val tree_iter)
 {
   struct tree_diter *tdi = coerce(struct tree_diter *, tree_iter->co.handle);
@@ -991,6 +998,7 @@ void tree_init(void)
   reg_fun(intern(lit("copy-search-tree"), user_package), func_n1(copy_search_tree));
   reg_fun(intern(lit("make-similar-tree"), user_package), func_n1(make_similar_tree));
   reg_fun(intern(lit("treep"), user_package), func_n1(treep));
+  reg_fun(intern(lit("tree-count"), user_package), func_n1(tree_count));
   reg_fun(intern(lit("tree-insert-node"), user_package), func_n2(tree_insert_node));
   reg_fun(intern(lit("tree-insert"), user_package), func_n2(tree_insert));
   reg_fun(intern(lit("tree-lookup-node"), user_package), func_n2(tree_lookup_node));

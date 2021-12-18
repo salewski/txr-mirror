@@ -44,6 +44,7 @@ val tree(val keys, val key_fn, val less_fn, val equal_fn);
 val copy_search_tree(val tree);
 val make_similar_tree(val tree);
 val treep(val obj);
+val tree_count(val tree);
 val tree_insert_node(val tree, val node);
 val tree_insert(val tree, val key);
 val tree_lookup_node(val tree, val key);

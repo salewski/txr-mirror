@@ -12253,6 +12253,8 @@ val length(val seq)
       return hash_count(seq);
     if (seq->co.cls == carray_cls)
       return length_carray(seq);
+    if (seq->co.cls == tree_cls)
+      return tree_count(seq);
     if (obj_struct_p(seq)) {
       val length_meth = get_special_slot(seq, length_m);
 
