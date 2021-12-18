@@ -379,6 +379,8 @@ static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
     } else {
       int dep = ti->depth + 1;
       set(mkloc(subtree->tn.left, subtree), node);
+      if (++tr->size > tr->max_size)
+        tr->max_size = tr->size;
       if (subtree->tn.right == nil && (((ucnum) 1) << dep) > tr->size) {
         set(mkloc(ti->path[ti->depth++], ti->self), subtree);
         tr_find_rebuild_scapegoat(tree, tr, ti, node, 1);
@@ -408,6 +410,8 @@ static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
     } else {
       int dep = ti->depth + 1;
       set(mkloc(subtree->tn.right, subtree), node);
+      if (++tr->size > tr->max_size)
+        tr->max_size = tr->size;
       if (subtree->tn.left == nil && (((ucnum) 1) << dep) > tr->size) {
         set(mkloc(ti->path[ti->depth++], ti->self), subtree);
         tr_find_rebuild_scapegoat(tree, tr, ti, node, 1);
@@ -608,8 +612,6 @@ val tree_insert_node(val tree, val node, val dup_in)
     set(mkloc(tr->root, tree), node);
   } else {
     struct tree_iter ti = tree_iter_init(0);
-    if (++tr->size > tr->max_size)
-      tr->max_size = tr->size;
     tr_insert(tree, tr, &ti, tr->root, node, dup);
   }
 

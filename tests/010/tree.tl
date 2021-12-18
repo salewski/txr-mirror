@@ -216,3 +216,13 @@
 (let* ((items (make-items))
        (tr (tree items : : : t)))
   (vtest (vec-list [mapcar .label tr]) [mapcar .label items]))
+
+(let ((tr (tree)))
+  (mtest
+    (tree-insert tr 1) #N(1 nil nil)
+    (tree-insert tr 1) #N(1 nil nil)
+    (tree-insert tr 1) #N(1 nil nil))
+  (tree-insert tr 2)
+  (test (tree-count tr) 2)
+  (tree-insert tr 1 t)
+  (test (tree-count tr) 3))
