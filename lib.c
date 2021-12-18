@@ -1157,10 +1157,12 @@ static struct cobj_ops seq_iter_ops = cobj_ops_init(eq,
 val seq_begin(val obj)
 {
   val self = lit("seq-begin");
-  val si_obj;
+  val si_obj, iter;
   struct seq_iter *si = coerce(struct seq_iter *, chk_calloc(1, sizeof *si));
-  si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
   seq_iter_init(self, si, obj);
+  iter = si->ui.iter;
+  si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+  gc_hint(iter);
   return si_obj;
 }
 
@@ -1208,11 +1210,13 @@ val iter_begin(val obj)
       return sinf.obj;
     default:
       {
-        val si_obj;
+        val si_obj, iter;
         struct seq_iter *si = coerce(struct seq_iter *,
                                      chk_calloc(1, sizeof *si));
-        si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
         seq_iter_init_with_info(self, si, sinf, 0);
+        iter = si->ui.iter;
+        si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+        gc_hint(iter);
         return si_obj;
       }
     }
