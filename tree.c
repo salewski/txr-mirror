@@ -360,7 +360,7 @@ static void tr_find_rebuild_scapegoat(val tree, struct tree *tr,
 }
 
 static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
-                      val subtree, val node)
+                      val subtree, val node, val dup)
 {
   val tn_key = if3(tr->key_fn,
                    funcall1(tr->key_fn, node->tn.key),
@@ -375,7 +375,7 @@ static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
   {
     if (subtree->tn.left) {
       set(mkloc(ti->path[ti->depth++], ti->self), subtree);
-      tr_insert(tree, tr, ti, subtree->tn.left, node);
+      tr_insert(tree, tr, ti, subtree->tn.left, node, dup);
     } else {
       int dep = ti->depth + 1;
       set(mkloc(subtree->tn.left, subtree), node);
@@ -386,7 +386,9 @@ static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
     }
   } else if (if3(tr->equal_fn == nil,
                  equal(tn_key, tr_key),
-                 funcall2(tr->equal_fn, tn_key, tr_key))) {
+                 funcall2(tr->equal_fn, tn_key, tr_key)) &&
+             !dup)
+  {
     set(mkloc(node->tn.left, node), subtree->tn.left);
     set(mkloc(node->tn.right, node), subtree->tn.right);
     if (ti->depth > 0) {
@@ -402,7 +404,7 @@ static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
   } else {
     if (subtree->tn.right) {
       set(mkloc(ti->path[ti->depth++], ti->self), subtree);
-      tr_insert(tree, tr, ti, subtree->tn.right, node);
+      tr_insert(tree, tr, ti, subtree->tn.right, node, dup);
     } else {
       int dep = ti->depth + 1;
       set(mkloc(subtree->tn.right, subtree), node);
@@ -483,6 +485,79 @@ static val tr_do_delete(val tree, struct tree *tr, val subtree,
   }
 }
 
+static val tr_do_delete_specific(val tree, struct tree *tr, val subtree,
+                                 val parent, val key, val thisnode)
+{
+  if (subtree == nil) {
+    return nil;
+  } else if (subtree == thisnode) {
+    val le = subtree->tn.left;
+    val ri = subtree->tn.right;
+
+    if (le && ri) {
+      struct tree_iter trit = tree_iter_init(0);
+      val succ = tn_find_next(ri, &trit);
+      val succ_par = if3(trit.depth, trit.path[trit.depth - 1], subtree);
+
+      if (succ_par == subtree)
+        set(mkloc(succ_par->tn.right, succ_par), succ->tn.right);
+      else
+        set(mkloc(succ_par->tn.left, succ_par), succ->tn.right);
+
+      set(mkloc(succ->tn.left, succ), subtree->tn.left);
+      set(mkloc(succ->tn.right, succ), subtree->tn.right);
+
+      if (parent) {
+        if (parent->tn.left == subtree)
+          set(mkloc(parent->tn.left, parent), succ);
+        else
+          set(mkloc(parent->tn.right, parent), succ);
+      } else {
+        tr->root = succ;
+      }
+    } else {
+      uses_or2;
+      val chld = or2(le, ri);
+
+      if (parent) {
+        if (parent->tn.left == subtree)
+          set(mkloc(parent->tn.left, parent), chld);
+        else
+          set(mkloc(parent->tn.right, parent), chld);
+      } else {
+        set(mkloc(tr->root, tree), chld);
+      }
+    }
+
+    subtree->tn.left = subtree->tn.right = nil;
+    return subtree;
+  }
+
+  val tr_key = if3(tr->key_fn,
+                   funcall1(tr->key_fn, subtree->tn.key),
+                   subtree->tn.key);
+
+  if (if3(tr->less_fn,
+          funcall2(tr->less_fn, key, tr_key),
+          less(key, tr_key)))
+  {
+    val le = subtree->tn.left;
+    return tr_do_delete_specific(tree, tr, le, subtree, key, thisnode);
+  } else if (if3(tr->equal_fn == nil,
+                 equal(key, tr_key),
+                 funcall2(tr->equal_fn, key, tr_key)))
+  {
+    uses_or2;
+    val le = subtree->tn.left;
+    val ri = subtree->tn.right;
+    return or2(tr_do_delete_specific(tree, tr, le, subtree, key, thisnode),
+               tr_do_delete_specific(tree, tr, ri, subtree, key, thisnode));
+  } else {
+    val ri = subtree->tn.right;
+    return tr_do_delete_specific(tree, tr, ri, subtree, key, thisnode);
+  }
+}
+
 static val tr_delete(val tree, struct tree *tr, val key)
 {
   if (tr->root) {
@@ -499,10 +574,28 @@ static val tr_delete(val tree, struct tree *tr, val key)
   return nil;
 }
 
-val tree_insert_node(val tree, val node)
+static val tr_delete_specific(val tree, struct tree *tr, val thisnode)
+{
+  if (tr->root) {
+    val node = tr_do_delete_specific(tree, tr, tr->root,
+                                     nil, key(thisnode), thisnode);
+    if (node) {
+      if (2 * --tr->size < tr->max_size) {
+        tr_rebuild(tree, tr, tr->root, nil, tr->size);
+        tr->max_size = tr->size;
+      }
+    }
+    return node;
+  }
+
+  return nil;
+}
+
+val tree_insert_node(val tree, val node, val dup_in)
 {
   val self = lit("tree-insert-node");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
+  val dup = default_null_arg(dup_in);
 
   type_check(self, node, TNOD);
 
@@ -517,15 +610,15 @@ val tree_insert_node(val tree, val node)
     struct tree_iter ti = tree_iter_init(0);
     if (++tr->size > tr->max_size)
       tr->max_size = tr->size;
-    tr_insert(tree, tr, &ti, tr->root, node);
+    tr_insert(tree, tr, &ti, tr->root, node, dup);
   }
 
   return node;
 }
 
-val tree_insert(val tree, val key)
+val tree_insert(val tree, val key, val dup_in)
 {
-  return tree_insert_node(tree, tnode(key, nil, nil));
+  return tree_insert_node(tree, tnode(key, nil, nil), default_null_arg(dup_in));
 }
 
 val tree_lookup_node(val tree, val key)
@@ -553,6 +646,14 @@ val tree_delete(val tree, val key)
   val node = tree_delete_node(tree, key);
   return if2(node, node->tn.key);
 }
+
+val tree_delete_specific_node(val tree, val node)
+{
+  val self = lit("tree-delete-node");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
+  return tr_delete_specific(tree, tr, node);
+}
+
 
 static val tree_root(val tree)
 {
@@ -680,11 +781,12 @@ static struct cobj_ops tree_ops = cobj_ops_init(tree_equal_op,
                                                 tree_mark,
                                                 tree_hash_op);
 
-val tree(val keys_in, val key_fn, val less_fn, val equal_fn)
+val tree(val keys_in, val key_fn, val less_fn, val equal_fn, val dup_in)
 {
   struct tree *tr = coerce(struct tree *, chk_calloc(1, sizeof *tr));
   val keys = default_null_arg(keys_in), key;
   val tree = cobj(coerce(mem_t *, tr), tree_cls, &tree_ops);
+  val dup = default_null_arg(dup_in);
   seq_iter_t ki;
   uses_or2;
 
@@ -702,7 +804,7 @@ val tree(val keys_in, val key_fn, val less_fn, val equal_fn)
   seq_iter_init(tree_s, &ki, keys);
 
   while (seq_get(&ki, &key))
-    tree_insert(tree, key);
+    tree_insert(tree, key, dup);
 
   return tree;
 }
@@ -728,7 +830,7 @@ static val tree_construct(val opts, val keys)
   val key_fn = tree_construct_fname(pop(&opts));
   val less_fn = tree_construct_fname(pop(&opts));
   val equal_fn = tree_construct_fname(pop(&opts));
-  return tree(keys, key_fn, less_fn, equal_fn);
+  return tree(keys, key_fn, less_fn, equal_fn, t);
 }
 
 static val deep_copy_tnode(val node)
@@ -993,18 +1095,19 @@ void tree_init(void)
   reg_fun(intern(lit("set-key"), user_package), func_n2(set_key));
   reg_fun(intern(lit("copy-tnode"), user_package), func_n1(copy_tnode));
   reg_fun(intern(lit("tnodep"), user_package), func_n1(tnodep));
-  reg_fun(tree_s, func_n4o(tree, 0));
+  reg_fun(tree_s, func_n5o(tree, 0));
   reg_fun(tree_construct_s, func_n2(tree_construct));
   reg_fun(intern(lit("copy-search-tree"), user_package), func_n1(copy_search_tree));
   reg_fun(intern(lit("make-similar-tree"), user_package), func_n1(make_similar_tree));
   reg_fun(intern(lit("treep"), user_package), func_n1(treep));
   reg_fun(intern(lit("tree-count"), user_package), func_n1(tree_count));
-  reg_fun(intern(lit("tree-insert-node"), user_package), func_n2(tree_insert_node));
-  reg_fun(intern(lit("tree-insert"), user_package), func_n2(tree_insert));
+  reg_fun(intern(lit("tree-insert-node"), user_package), func_n3o(tree_insert_node, 2));
+  reg_fun(intern(lit("tree-insert"), user_package), func_n3o(tree_insert, 2));
   reg_fun(intern(lit("tree-lookup-node"), user_package), func_n2(tree_lookup_node));
   reg_fun(intern(lit("tree-lookup"), user_package), func_n2(tree_lookup));
   reg_fun(intern(lit("tree-delete-node"), user_package), func_n2(tree_delete_node));
   reg_fun(intern(lit("tree-delete"), user_package), func_n2(tree_delete));
+  reg_fun(intern(lit("tree-delete-specific-node"), user_package), func_n2(tree_delete_specific_node));
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
   reg_fun(intern(lit("tree-begin"), user_package), func_n3o(tree_begin, 1));
   reg_fun(intern(lit("copy-tree-iter"), user_package), func_n1(copy_tree_iter));

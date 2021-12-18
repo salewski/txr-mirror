@@ -444,7 +444,7 @@ tail:
 
         while (nodes) {
           val node = rcyc_pop(&nodes);
-          tree_insert_node(obj, node);
+          tree_insert_node(obj, node, t);
         }
       } else {
         while (nodes)

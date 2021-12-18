@@ -956,7 +956,7 @@ tree : HASH_T list             { if (parser->ignore)
                                    val less_fn = fname_helper(parser, less_fn_name);
                                    val equal_fn = fname_helper(parser, equal_fn_name);
                                    val tr = tree(rest($2), key_fn,
-                                                 less_fn, equal_fn);
+                                                 less_fn, equal_fn, t);
                                      $$ = rl(tr, num($1)); } }
      | HASH_T error            { $$ = nil;
                                  yybadtok(yychar, lit("tree node literal")); }

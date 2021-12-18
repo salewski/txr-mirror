@@ -12814,7 +12814,7 @@ val sel(val seq, val where_in)
       while (seq_get(&wh_iter, &wh)) {
         val node = tree_lookup_node(seq, wh);
         if (node)
-          tree_insert(newtree, key(node));
+          tree_insert(newtree, key(node), t);
       }
 
       return newtree;

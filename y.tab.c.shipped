@@ -5047,7 +5047,7 @@ yyreduce:
                                    val less_fn = fname_helper(parser, less_fn_name);
                                    val equal_fn = fname_helper(parser, equal_fn_name);
                                    val tr = tree(rest((yyvsp[(2) - (2)].val)), key_fn,
-                                                 less_fn, equal_fn);
+                                                 less_fn, equal_fn, t);
                                      (yyval.val) = rl(tr, num((yyvsp[(1) - (2)].lineno))); } }
     break;
 

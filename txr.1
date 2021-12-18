@@ -12498,6 +12498,12 @@ syntax, either explicitly or as defaults. Then, every
 object is constructed from its respective literal syntax and inserted into
 the tree.
 
+Duplicate objects are preserved. For instance the tree literal
+.code "#T(() 1 1 1)"
+specifies a tree with three nodes which have the same key.
+Duplicates appear in the tree in the order that they appear in the
+literal.
+
 .NP* JSON Literals
 .meIP >> #J json-syntax
 Introduces a JSON literal.
@@ -53898,6 +53904,26 @@ objects as arguments or return
 .code tnode
 objects.
 
+Trees may store duplicate elements. The
+.code #T
+literal syntax may freely specify duplicate elements.
+The
+.code tree
+constructor function specifies an initial sequence of elements to
+be populated into the newly constructed tree. If this initial
+sequence contains duplicate elements, they are preserved if the optional
+.meta allow-dupes
+argument is true, otherwise only the rightmost member of any duplicate
+group appears in the tree.
+
+The insertion functions
+.code tree-insert
+and
+.code tree-insert-node
+also overwrite duplicates by default, but optionally allow them.
+Duplicates are ordered by insertion: most recently inserted duplicate
+is rightmost. However, tree lookup chooses an unspecified duplicate.
+
 .coNP Function @ tnode
 .synb
 .mets (tnode < key < left << right )
@@ -54024,7 +54050,8 @@ fields are copied from
 
 .coNP Function @ tree
 .synb
-.mets (tree >> [ elems >> [ keyfun >> [ lessfun <> [ equalfun ]]]])
+.mets (tree >> [ elems
+.mets \ \ \ \ \ \  >> [ keyfun >> [ lessfun >> [ equalfun <> [ allow-dupes ]]]])
 .syne
 .desc
 The
@@ -54069,6 +54096,44 @@ properties of an equivalence relation.
 These three functions are collectively referred to as the tree's
 .IR "key abstraction functions" .
 
+The
+.meta allow-dupes
+argument, which defaults to
+.codn nil ,
+is relevant if an
+.meta elems
+sequence is specified containing some elements which which appear to be
+duplicates, according to the tree object's
+.meta equalfun
+function. If
+.meta allow-dupes
+is true then duplicates are preserved: the tree will have as many nodes as
+there are elements in the
+.meta elems
+sequence. Moreover, the duplicates appear in the same relative order in
+the tree as they appear in the original
+.meta elems
+sequence.
+If
+.meta allow-dupes
+is false, then duplicates are suppressed: if any element appears more
+than once in
+.metn elements ,
+then only the last occurrence of that element appears in the tree.
+
+Note: the
+.code tree-insert
+and
+.code tree-insert-node
+functions also has an optional argument indicating whether an duplicate
+insertion replaces an existing element.
+
+Note: although the order of duplicate elements is preserved, when the
+.code tree-lookup
+function is used look up an key which is duplicated, the element
+which is retrieved is unspecified, and can change when the tree is
+reorganized due to insertions and deletions.
+
 .coNP Function @ treep
 .synb
 .mets (treep << value )
@@ -54097,7 +54162,7 @@ which must be a search tree object.
 
 .coNP Function @ tree-insert-node
 .synb
-.mets (tree-insert-node < tree << node )
+.mets (tree-insert-node < tree < node <> [ allow-dupe ])
 .syne
 .desc
 The
@@ -54140,11 +54205,30 @@ fields of
 are overwritten as required by the semantics of the insertion operation.
 Their original values are ignored.
 
-If
-.meta tree
-already contains node with with a matching key, then
+The
+.meta allow-dupe
+argument, defaulting to
+.codn nil ,
+is concerned with what happens if the tree already contains one or more
+nodes having a key equal to the
+.metn node 's
+key.
+.meta allow-dupe
+is false, then
 .meta node
-replaces that node; that node is deleted from the tree.
+replaces an unspecified one of those existing nodes: that replaced node is
+deleted from the tree. Key equivalence is determined using tree's equality
+function (see the
+.meta equalfun
+argument of the
+.code tree
+function).
+If
+.meta allow-dupe
+is true, then the new node is inserted without replacing any node, and
+appears together with the existing duplicate or duplicates. Among
+the duplicates, the newly inserted node is the rightmost node in the
+tree order.
 
 The
 .code tree-insert-node
@@ -54154,7 +54238,7 @@ argument.
 
 .coNP Function @ tree-insert
 .synb
-.mets (tree-insert < tree << elem )
+.mets (tree-insert < tree < elem <> [ allow-dupe ])
 .syne
 .desc
 The
@@ -54188,6 +54272,17 @@ function, and inserts that
 as if by using the
 .code tree-insert-node
 function.
+
+If one or more elements equal to
+.meta elem
+already exist in the tree, then the behavior is determined by the
+.meta allow-dupe
+argument, which defaults to
+.codn nil .
+The semantics of
+.meta allow-dupe
+is as given in the description of
+.codn tree-insert-node .
 
 The
 .code tree-insert
@@ -54239,6 +54334,9 @@ If no such element is found, then
 returns
 .codn nil .
 
+If multiple nodes exist in the tree which have a matching key,
+it is unspecified which one of those nodes is retrieved.
+
 .coNP Function @ tree-lookup
 .synb
 .mets (tree-lookup < tree << key )
@@ -54266,6 +54364,10 @@ A possible implementation is this:
     (iflet ((node (tree-lookup-node tree key)))
       (key node)))
 .brev
+
+If the tree contains multiple elements which match
+.metn key ,
+it is unspecified which element is retrieved.
 
 .coNP Function @ tree-delete-node
 .synb
@@ -54297,6 +54399,12 @@ Otherwise, if a matching element is not found, then
 .code nil
 is returned.
 
+If more than one element exists inside
+.meta tree
+which matches
+.metn key ,
+it is unspecified which node is deleted and returned.
+
 .coNP Function @ tree-delete
 .synb
 .mets (tree-delete < tree << key )
@@ -54312,6 +54420,12 @@ the element which matches
 If successful, it returns that element, otherwise it returns
 .codn nil .
 
+If more than one element exists inside
+.meta tree
+which matches
+.metn key ,
+it is unspecified which one is deleted.
+
 Note: the semantics of the
 .code tree-delete
 function can be understood in terms of
@@ -54323,6 +54437,34 @@ A possible implementation is this:
     (iflet ((node (tree-delete-node tree key)))
       (key node)))
 .brev
+
+.coNP Function @ tree-delete-specific-node
+.synb
+.mets (tree-delete-specific-node < tree << node )
+.syne
+.desc
+The
+.code tree-delete-specific-node
+function searches
+.meta tree
+to find the specific node given by the
+.meta node
+argument. If
+.meta node
+is inserted into the tree, then it is deleted, and returned.
+
+If
+.meta node
+is not found in the tree, then the tree is unchanged, and
+.code nil
+is returned.
+
+Note: the search for
+.meta node
+is informed by
+.metn node 's
+key, for efficiency. However, if the tree contains duplicates of that key, then
+a linear search takes place among the duplicates.
 
 .coNP Function @ tree-root
 .synb

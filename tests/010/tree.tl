@@ -183,3 +183,36 @@
   (uni #T(() "a" "b") #T(() "b" "c")) ("a" "b" "c")
   (diff #T(() "a" "b") #T(() "b" "c")) ("a")
   (isec #T(() "a" "b") #T(() "b" "c")) ("b"))
+
+(defstruct (item label key) ()
+  label
+  key
+  (:method equal (it) it.key))
+
+(defun make-items ()
+  (vec (new (item 'a 1))
+       (new (item 'b 2))
+       (new (item 'c 2))
+       (new (item 'd 2))
+       (new (item 'e 2))
+       (new (item 'f 3))))
+
+(let* ((items (make-items))
+       (tr (tree items : : : t)))
+  (each ((it items))
+    (vtest (tree-delete tr it) it))
+  (test tr #T(())))
+
+(let* ((items (make-items))
+       (tr (tree items : : : t)))
+  (each ((it items))
+    (let* ((tn (tree-lookup-node tr it.key))
+           (iu (key tn)))
+      (vtest (tree-delete-specific-node tr tn) tn)
+      (each ((iv tr))
+        (test (eq iv.label iu.label) nil))))
+  (test tr #T(())))
+
+(let* ((items (make-items))
+       (tr (tree items : : : t)))
+  (vtest (vec-list [mapcar .label tr]) [mapcar .label items]))
