@@ -226,3 +226,33 @@
   (test (tree-count tr) 2)
   (tree-insert tr 1 t)
   (test (tree-count tr) 3))
+
+(mtest
+  (tree-min-node (tree)) nil
+  (tree-min-node (tree '(1))) #N(1 nil nil)
+  (tree-min-node (tree '(1 2 3))) #N(1 nil nil))
+
+(mtest
+  (tree-min (tree)) nil
+  (tree-min (tree '(1))) 1
+  (tree-min (tree '(1 2 3))) 1)
+
+(let ((tr (tree '(1 2 3 4 5 6 7 8 9 10))))
+  (mtest
+    (tree-count tr) 10
+    (tree-del-min tr) 1
+    (tree-del-min tr) 2
+    (tree-del-min tr) 3
+    (tree-count tr) 7
+    (tree-del-min tr) 4
+    (tree-count tr) 6
+    (tree-del-min tr) 5
+    (tree-del-min tr) 6
+    (tree-del-min tr) 7
+    (tree-del-min tr) 8
+    (tree-count tr) 2
+    (tree-del-min tr) 9
+    (tree-count tr) 1
+    (tree-del-min tr) 10
+    (tree-count tr) 0
+    (tree-del-min tr) nil))

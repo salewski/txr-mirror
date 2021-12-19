@@ -54466,6 +54466,62 @@ is informed by
 key, for efficiency. However, if the tree contains duplicates of that key, then
 a linear search takes place among the duplicates.
 
+.coNP Functions @ tree-min-node and @ tree-min
+.synb
+.mets (tree-min-node << tree )
+.mets (tree-min << tree )
+.syne
+.desc
+The
+.code tree-min-node
+function returns the node in
+.meta tree
+which holds the lowest element. If the tree is empty, it returns
+.codn nil .
+
+The
+.code tree-min
+function returns the lowest element, or else
+.code nil
+if the tree is empty.
+
+.coNP Functions @ tree-del-min-node and @ tree-del-min
+.synb
+.mets (tree-del-min-node << tree )
+.mets (tree-del-min << tree )
+.syne
+.desc
+The
+.code tree-del-min-node
+function returns the node in
+.meta tree
+which has the lowest key, and removes that node from the tree.
+If the tree is empty, it returns
+.codn nil .
+
+The
+.code tree-del-min
+function returns the lowest element and removes it from the tree, or else
+.code nil
+if the tree is empty.
+
+The following equivalence holds:
+
+.verb
+  (tree-del-min tr)  <-->  (iflet ((node (tree-del-min-node tr)))
+                             (key node))
+.brev
+
+Note:
+.code tree-insert
+together with
+.code tree-del-min
+provide the basis for using a tree as a priority queue. Elements are
+inserted into the queue using
+.code tree-insert
+and then removed in priority order using
+.codn tree-del-min .
+
 .coNP Function @ tree-root
 .synb
 .mets (tree-root << tree )

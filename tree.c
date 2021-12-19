@@ -636,6 +636,28 @@ val tree_lookup(val tree, val key)
   return if2(node, node->tn.key);
 }
 
+val tree_min_node(val tree)
+{
+  val self = lit("tree-min-node");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
+  val node = tr->root;
+
+  while (node != nil) {
+    val le = node->tn.left;
+    if (le == nil)
+      return node;
+    node = le;
+  }
+
+  return nil;
+}
+
+val tree_min(val tree)
+{
+  val node = tree_min_node(tree);
+  return if2(node, node->tn.key);
+}
+
 val tree_delete_node(val tree, val key)
 {
   val self = lit("tree-delete-node");
@@ -656,6 +678,42 @@ val tree_delete_specific_node(val tree, val node)
   return tr_delete_specific(tree, tr, node);
 }
 
+val tree_del_min_node(val tree)
+{
+  val self = lit("tree-min-node");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
+  val node = tr->root, parent = nil;;
+
+  while (node != nil) {
+    val le = node->tn.left;
+
+    if (le == nil) {
+      val chld = node->tn.right;
+
+      if (parent)
+        set(mkloc(parent->tn.left, parent), chld);
+       else
+        set(mkloc(tr->root, tree), chld);
+
+      if (2 * --tr->size < tr->max_size) {
+        tr_rebuild(tree, tr, tr->root, nil, tr->size);
+        tr->max_size = tr->size;
+      }
+
+      return node;
+    }
+    parent = node;
+    node = le;
+  }
+
+  return nil;
+}
+
+val tree_del_min(val tree)
+{
+  val node = tree_del_min_node(tree);
+  return if2(node, node->tn.key);
+}
 
 static val tree_root(val tree)
 {
@@ -1107,9 +1165,13 @@ void tree_init(void)
   reg_fun(intern(lit("tree-insert"), user_package), func_n3o(tree_insert, 2));
   reg_fun(intern(lit("tree-lookup-node"), user_package), func_n2(tree_lookup_node));
   reg_fun(intern(lit("tree-lookup"), user_package), func_n2(tree_lookup));
+  reg_fun(intern(lit("tree-min-node"), user_package), func_n1(tree_min_node));
+  reg_fun(intern(lit("tree-min"), user_package), func_n1(tree_min));
   reg_fun(intern(lit("tree-delete-node"), user_package), func_n2(tree_delete_node));
   reg_fun(intern(lit("tree-delete"), user_package), func_n2(tree_delete));
   reg_fun(intern(lit("tree-delete-specific-node"), user_package), func_n2(tree_delete_specific_node));
+  reg_fun(intern(lit("tree-del-min-node"), user_package), func_n1(tree_del_min_node));
+  reg_fun(intern(lit("tree-del-min"), user_package), func_n1(tree_del_min));
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
   reg_fun(intern(lit("tree-begin"), user_package), func_n3o(tree_begin, 1));
   reg_fun(intern(lit("copy-tree-iter"), user_package), func_n1(copy_tree_iter));
