@@ -6227,11 +6227,12 @@ static void less_tab_init(void)
   type_prec[STR] = 3;
   type_prec[SYM] = 4;
   type_prec[LCONS] = 5;
+  type_prec[VEC] = 6;
   type_prec[LSTR] = 3;
   type_prec[BGNUM] = 1;
   type_prec[FLNUM] = 1;
   type_prec[RNG] = 2;
-  type_prec[BUF] = 6;
+  type_prec[BUF] = 7;
 
   for (l = 0; l <= MAXTYPE; l++)
     for (r = 0; r <= MAXTYPE; r++) {
