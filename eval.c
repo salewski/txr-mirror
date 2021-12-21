@@ -5725,6 +5725,7 @@ static val prod_common(val self, val fun, struct args *lists,
         goto out;
 
     for (;;) {
+      val ret;
 
       for (i = 0; i < argc; i++)
         args_fun->arg[i] = iter_item(args_work->arg[i]);
@@ -5732,7 +5733,10 @@ static val prod_common(val self, val fun, struct args *lists,
       args_fun->fill = argc;
       args_fun->list = 0;
 
-      ptail = collect_fn(ptail, generic_funcall(fun, args_fun));
+      ret = generic_funcall(fun, args_fun);
+
+      if (collect_fn)
+        ptail = collect_fn(ptail, ret);
 
       for (i = argc - 1; ; i--) {
         val step_i = iter_step(args_work->arg[i]);
@@ -5746,7 +5750,7 @@ static val prod_common(val self, val fun, struct args *lists,
       }
     }
   out:
-    return make_like(out, args_at(lists, 0));
+    return collect_fn ? make_like(out, args_at(lists, 0)) : nil;
   }
 }
 
@@ -5760,15 +5764,9 @@ val maprendv(val fun, struct args *lists)
   return prod_common(lit("maprend"), fun, lists, list_collect_append, mappendv);
 }
 
-static loc collect_nothing(loc ptail, val obj)
-{
-  (void) obj;
-  return ptail;
-}
-
 static val maprodo(val fun, struct args *lists)
 {
-  return prod_common(lit("maprodo"), fun, lists, collect_nothing, mapdov);
+  return prod_common(lit("maprodo"), fun, lists, 0, mapdov);
 }
 
 static val symbol_value(val sym)
