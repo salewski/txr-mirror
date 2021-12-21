@@ -25,30 +25,45 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 
-(defmacro sum-each (vars . body)
-  (with-gensyms (accum)
-    ^(let ((,accum 0))
-       (each ,vars
-         (inc ,accum (progn ,*body)))
-       ,accum)))
+(defun sys:vars-check (form vars)
+  (unless (listp vars)
+    (compile-error form "~s is expected to be variable binding syntax" vars))
+  (whenlet ((bad (find-if [notf consp] vars)))
+    (compile-error form "~s isn't a var-initform pair" bad)))
 
-(defmacro sum-each* (vars . body)
-  (with-gensyms (accum)
-    ^(let ((,accum 0))
-       (each* ,vars
-         (inc ,accum (progn ,*body)))
-       ,accum)))
+(defmacro sys:arith-each (:form f op-iv vars . body)
+  (let* ((gens (mapcar (ret (gensym)) vars))
+         (syms [mapcar car vars])
+         (accum (gensym)))
+    ^(let* (,*(mapcar (ret ^(,@1 (iter-begin ,@2))) gens syms)
+            (,accum ,(cdr op-iv)))
+       (block nil
+         (sys:for-op ()
+           ((and ,*(mapcar (op list 'iter-more) gens)) ,accum)
+           (,*(mapcar (ret ^(sys:setq ,@1 (iter-step ,@1))) gens))
+           ,*(mapcar (ret ^(sys:setq ,@1 (iter-item ,@2))) syms gens)
+           (set ,accum (,(car op-iv) ,accum (progn ,*body))))))))
 
-(defmacro mul-each (vars . body)
-  (with-gensyms (accum)
-    ^(let ((,accum 1))
-       (each ,vars
-         (set ,accum (* ,accum (progn ,*body))))
-       ,accum)))
+(defmacro sum-each (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let ,vars
+     (block nil
+       (sys:arith-each (+ . 0) ,vars ,*body))))
 
-(defmacro mul-each* (vars . body)
-  (with-gensyms (accum)
-    ^(let ((,accum 1))
-       (each* ,vars
-         (set ,accum (* ,accum (progn ,*body))))
-       ,accum)))
+(defmacro sum-each* (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let* ,vars
+     (block nil
+       (sys:arith-each (+ . 0) ,vars ,*body))))
+
+(defmacro mul-each (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let ,vars
+     (block nil
+       (sys:arith-each (* . 1) ,vars ,*body))))
+
+(defmacro mul-each* (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let* ,vars
+     (block nil
+       (sys:arith-each (* . 1) ,vars ,*body))))

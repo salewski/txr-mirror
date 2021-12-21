@@ -17714,21 +17714,11 @@ the variable bindings, exactly the way
 alters the semantics of
 .codn each .
 
-Note: the following equivalences apply, except that the accumulator
-variable is a named by a unique, generated symbol.
-
-.verb
-  (sum-each (vars ...)  <-->  (let ((acc 0))
-    body ...)                   (each vars
-                                  (inc acc (progn body)))
-                                 acc)
-
-  (mul-each (vars ...)  <-->  (let ((acc 1))
-    body)                       (each vars
-                                  (set acc (* acc
-                                              (progn body))))
-                                acc)
-.brev
+The
+.metn body-form s
+are enclosed in an implicit anonymous block. If the forms terminate
+by returning from the anonymous block then these macros terminate
+with the specified value.
 
 .coNP Macros @, each-prod @ collect-each-prod and @ append-each-prod
 .synb
@@ -17758,24 +17748,36 @@ is analogous to that between the functions
 and
 .codn maprod .
 
-These macros can be understood as providing syntactic sugar according to the
-pattern established by the following equivalences:
+Like in the
+.code each
+operator family, the
+.metn body-form s
+are surrounded by an anonymous block. If these forms execute a return from
+this block, then these macros terminate with the specified return value.
+
+With one caveat noted below, these macros can be understood as providing
+syntactic sugar according to the pattern established by the following
+equivalences:
 
 .mono
-  (each-prod               (maprodo (lambda (x y)
-    ((x xinit)                        body)
-     (y yinit))       <-->          xinit
-    body)                           yinit)
+  (each-prod               (block nil
+    ((x xinit)               (let ((#:gx xinit) (#:gy yinit))
+     (y yinit))       <-->     (maprodo (lambda (x y)
+    body)                                 body)
+                                        #:gx #:gy))
 
-  (collect-each-prod       (maprod (lambda (x y)
-    ((x xinit)                       body)
-     (y yinit))       <-->         xinit
-    body)                          yinit)
+  (collect-each-prod       (block nil
+    ((x xinit)               (let ((#:gx xinit) (#:gy yinit))
+     (y yinit))       <-->     (maprod (lambda (x y)
+    body)                                body)
+                                       #:gx #:gy))
 
-  (append-each-prod        (maprend (lambda (x y)
-    ((x xinit)                        body)
-     (y yinit))       <-->          xinit
-    body)                           yinit)
+
+  (append-each-prod        (block nil
+    ((x xinit)               (let ((#:gx xinit) (#:gy yinit))
+     (y yinit))       <-->     (maprend (lambda (x y)
+    body)                                body)
+                                       #:gx #:gy))
 .onom
 
 However, note that each invocation of the
@@ -17879,6 +17881,11 @@ variants perform sequential variable binding when establishing the initial
 values of the variables, similarly to the
 .code each*
 operator.
+
+The
+.metn body-form s
+are surrounded by an implicit anonymous block. If these forms execute a return
+from this block, then these macros terminate with the specified return value.
 
 .TP* Examples:
 
