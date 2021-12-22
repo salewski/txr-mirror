@@ -437,3 +437,11 @@
 (mtest
   [subst "brown" "black" #("how" "now" "BROWN" "cow") : downcase-str] #("how" "now" "black" "cow")
   [subst 5 0 '(1 2 3 4 5 6 7 8 9 10) <] (1 2 3 4 5 0 0 0 0 0))
+
+(mtest
+  (pairlis nil nil) nil
+  (pairlis "abc" #(1 2 3 4)) ((#\a . 1) (#\b . 2) (#\c . 3))
+  (pairlis "abcd" #(1 2 3)) ((#\a . 1) (#\b . 2) (#\c . 3))
+  (pairlis "" #(1 2 3)) nil
+  (pairlis "abcd" #()) nil
+  (pairlis '(1 2 3) '(a b c) '(4 5 6)) ((1 . a) (2 . b) (3 . c) 4 5 6))

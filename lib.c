@@ -10103,6 +10103,25 @@ val copy_alist(val list)
   return out;
 }
 
+val pairlis(val keys, val values, val alist_in)
+{
+  val self = lit("pairlis");
+  val alist = default_null_arg(alist_in);
+  seq_iter_t sik, siv;
+  val key, value;
+  list_collect_decl (out, ptail);
+
+  seq_iter_init(self, &sik, keys);
+  seq_iter_init(self, &siv, values);
+
+  while (seq_get(&sik, &key) && seq_get(&siv, &value))
+    ptail = list_collect(ptail, cons(key, value));
+
+  list_collect_nconc(ptail, alist);
+
+  return out;
+}
+
 val mapcar_listout(val fun, val seq)
 {
   val self = lit("mapcar");

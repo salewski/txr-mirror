@@ -1399,6 +1399,7 @@
       ("package-symbols" "N-03AF0206")
       ("packagep" "N-007A478F")
       ("pad" "N-0247F5FA")
+      ("pairlis" "N-02EA9B54")
       ("parenb" "N-01B1B5DF")
       ("parmrk" "N-02391683")
       ("parodd" "N-01B1B5DF")

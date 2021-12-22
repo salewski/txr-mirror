@@ -7277,6 +7277,7 @@ void eval_init(void)
   reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
   reg_fun(intern(lit("copy-tree"), user_package), func_n1(copy_tree));
   reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
+  reg_fun(intern(lit("pairlis"), user_package), func_n3o(pairlis, 2));
   reg_fun(intern(lit("prop"), user_package), func_n2(getplist));
   reg_fun(intern(lit("memp"), user_package), func_n2(memp));
   reg_fun(intern(lit("plist-to-alist"), user_package), func_n1(plist_to_alist));

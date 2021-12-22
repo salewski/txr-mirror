@@ -1164,6 +1164,7 @@ val alist_nremove1(val list, val key);
 val copy_cons(val cons);
 val copy_tree(val tree);
 val copy_alist(val list);
+val pairlis(val keys, val values, val alist_in);
 val mapcar_listout(val fun, val seq);
 val mapcar(val fun, val seq);
 val mapcon(val fun, val list);

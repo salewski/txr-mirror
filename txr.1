@@ -22710,6 +22710,63 @@ is produced as if by the
 function applied to the corresponding
 element of the input list.
 
+.coNP Function @ pairlis
+.synb
+.mets (pairlis < keys < values <> [ alist ])
+.syne
+.desc
+The
+.code pairlis
+function returns a association list consisting of pairs formed from
+the elements of
+.meta keys
+and
+.meta values
+prepended to the existing
+.metn alist .
+
+If an
+.meta alist
+argument is omitted, it defaults to
+.codn nil .
+
+Pairs of elements are formed by taking successive elements from the
+.meta keys
+and
+.meta values
+sequences in parallel.
+
+If the sequences are not of equal length, the excess elements from
+the longer sequence are ignored.
+
+The pairs appear in the resulting list in the original order in
+which their constituents appeared in
+.meta keys
+and
+.metn values .
+
+.TP* "Dialect Note:"
+The ANSI CL
+.code pairlis
+requires
+.meta key
+and
+.meta data
+to be lists, not sequences. The behavior of the ANSI CL
+.code pairlis
+is undefined of those lists are of different lengths. Finally, the elements are
+permitted to appear in either the original order or reverse order.
+
+.TP* Examples:
+
+.verb
+  (pairlis nil nil) -> nil
+  (pairlis "abc" #(1 2 3 4)) -> ((#\ea . 1) (#\eb . 2) (#\ec . 3))
+
+  (pairlis '(1 2 3) '(a b c) '((x . y) (z . w)))
+  -> ((1 . a) (2 . b) (3 . c) (x . y) (z . w))
+.brev
+
 .SS* Property Lists
 A
 .IR "property list",
