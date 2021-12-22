@@ -6981,6 +6981,10 @@ void eval_init(void)
   reg_fun(intern(lit("rpos"), user_package), func_n4o(rpos, 2));
   reg_fun(intern(lit("pos-if"), user_package), func_n3o(pos_if, 2));
   reg_fun(intern(lit("rpos-if"), user_package), func_n3o(rpos_if, 2));
+  reg_fun(intern(lit("subq"), user_package), func_n3(subq));
+  reg_fun(intern(lit("subql"), user_package), func_n3(subql));
+  reg_fun(intern(lit("subqual"), user_package), func_n3(subqual));
+  reg_fun(intern(lit("subst"), user_package), func_n5o(subst, 3));
   reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 1));
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 1));
   reg_fun(intern(lit("none"), user_package), func_n3o(none_satisfy, 1));

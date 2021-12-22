@@ -345,11 +345,6 @@
       ((nequal ninsn oinsn) (append (ldiff code tail) (list ninsn)))
       (t code))))
 
-(defun subst (x y list)
-  (mapcar (lambda (item)
-            (if (equal item x) y item))
-          list))
-
 (defun subst-preserve (x y bb li list)
   (let ((sub (subst x y list)))
     (cond

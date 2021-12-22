@@ -11487,6 +11487,39 @@ val pos_min(val seq, val testfun, val keyfun)
   return pos_max(seq, default_arg(testfun, less_f), keyfun);
 }
 
+val subq(val oldv, val newv, val seq)
+{
+  return subst(oldv, newv, seq, eq_f, identity_f);
+}
+
+val subql(val oldv, val newv, val seq)
+{
+  return subst(oldv, newv, seq, eql_f, identity_f);
+}
+
+val subqual(val oldv, val newv, val seq)
+{
+  return subst(oldv, newv, seq, equal_f, identity_f);
+}
+
+val subst(val oldv, val newv, val seq, val testfun_in, val keyfun_in)
+{
+  val self = lit("subst");
+  seq_iter_t iter;
+  seq_iter_init(self, &iter, seq);
+  val elem;
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
+  list_collect_decl (out, ptail);
+
+  while (seq_get(&iter, &elem)) {
+    val key = funcall1(keyfun, elem);
+    ptail = list_collect(ptail, if3(funcall2(testfun, oldv, key), newv, elem));
+  }
+
+  return make_like(out, seq);
+}
+
 val mismatch(val left, val right, val testfun_in, val keyfun_in)
 {
   val testfun = default_arg(testfun_in, equal_f);

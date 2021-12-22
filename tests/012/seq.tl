@@ -387,3 +387,53 @@
 (mtest
   (let ((s '(a b c))) (list (rot s 33) s)) ((a b c) (a b c))
   (let ((s '(a b c))) (list (rot s 34) s)) ((b c a) (a b c)))
+
+(mtest
+  (subq #\a #\b "") ""
+  (subq #\a #\b "a") "b"
+  (subq #\a #\b "aaa") "bbb"
+  (subq #\a #\b "abc") "bbc")
+
+(mtest
+  (subql #\a #\b "") ""
+  (subql #\a #\b "a") "b"
+  (subql #\a #\b "aaa") "bbb"
+  (subql #\a #\b "abc") "bbc")
+
+(mtest
+  (subqual #\a #\b "") ""
+  (subqual #\a #\b "a") "b"
+  (subqual #\a #\b "aaa") "bbb"
+  (subqual #\a #\b "abc") "bbc")
+
+(mtest
+  (subq 0 1 nil) nil
+  (subq 0 1 '(0)) (1)
+  (subq 0 1 '(0 0 0)) (1 1 1)
+  (subq 0 1 '(0 1 2)) (1 1 2))
+
+(mtest
+  (subql 0 1 nil) nil
+  (subql 0 1 '(0)) (1)
+  (subql 0 1 '(0 0 0)) (1 1 1)
+  (subql 0 1 '(0 1 2)) (1 1 2))
+
+(mtest
+  (subqual 0 1 nil) nil
+  (subqual 0 1 '(0)) (1)
+  (subqual 0 1 '(0 0 0)) (1 1 1)
+  (subqual 0 1 '(0 1 2)) (1 1 2))
+
+(mtest
+  (subqual "foo" "bar" nil) nil
+  (subqual "foo" "bar" '#"foo") #"bar"
+  (subqual "foo" "bar" '#"foo foo foo") #"bar bar bar"
+  (subqual "foo" "bar" '#"xyzzy foo quuz") #"xyzzy bar quuz")
+
+(mtest
+  (subqual "brown" "black" #("how" "now" "brown" "cow")) #("how" "now" "black" "cow")
+  (subst "brown" "black" #("how" "now" "brown" "cow")) #("how" "now" "black" "cow"))
+
+(mtest
+  [subst "brown" "black" #("how" "now" "BROWN" "cow") : downcase-str] #("how" "now" "black" "cow")
+  [subst 5 0 '(1 2 3 4 5 6 7 8 9 10) <] (1 2 3 4 5 0 0 0 0 0))
