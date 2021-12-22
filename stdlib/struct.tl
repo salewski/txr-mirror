@@ -43,153 +43,152 @@
       (compile-warning form "~s is a built-in type" name))
     (unless (proper-listp slot-specs)
       (compile-error form "bad syntax: dotted form"))
-    (let* ((instance-init-form nil)
-           (instance-postinit-form nil)
-           (instance-fini-form nil)
-           (slot-init-forms (collect-each ((slot slot-specs))
-                              (tree-case slot
-                                ((word name args . body)
-                                 (caseq word
-                                   (:method
-                                     (when (not args)
-                                       (compile-error form
-                                                      "method ~s needs \
-                                                      \ at least one parameter"
-                                                      name))
-                                     ^(:function ,name
-                                        (lambda ,args
-                                              (block ,name ,*body))))
-                                   (:function ^(,word ,name
-                                                 (lambda ,args
-                                                   (block ,name
-                                                     ,*body))))
-                                   ((:static :instance)
-                                     (when body
-                                       (sys:bad-slot-syntax form slot))
-                                     ^(,word ,name ,args))
-                                   (t :)))
-                                ((word (arg) . body)
-                                 (caseq word
-                                   (:init
-                                     (unless (bindable arg)
-                                       (sys:bad-slot-syntax form slot))
-                                     (when instance-init-form
-                                       (compile-error form
-                                                      "duplicate :init"))
-                                     (set instance-init-form
-                                          (cons arg body))
-                                     ^(,word nil nil))
-                                   (:postinit
-                                     (unless (bindable arg)
-                                       (sys:bad-slot-syntax form slot))
-                                     (when instance-postinit-form
-                                       (compile-error form
-                                                      "duplicate :postinit"))
-                                     (set instance-postinit-form
-                                          (cons arg body))
-                                     ^(,word nil nil))
-                                   (:fini
-                                     (unless (bindable arg)
-                                       (sys:bad-slot-syntax form slot))
-                                     (when instance-fini-form
-                                       (compile-error form
-                                                      "duplicate :fini"))
-                                     (set instance-fini-form
-                                          (cons arg body))
-                                     ^(,word nil nil))
-                                   (t (when body
-                                        (sys:bad-slot-syntax form slot))
-                                      :)))
-                                ((word name)
-                                   (caseq word
-                                     ((:static)
-                                      ^(,word ,name))
-                                     ((:instance)
-                                      ^(,word ,name nil))
-                                     ((:method :function)
-                                      (sys:bad-slot-syntax form slot))
-                                     (t ^(:instance ,word ,name))))
-                                ((name)
-                                  ^(:instance ,name nil))
-                                (name
-                                  ^(:instance ,name nil)))))
-           (supers (if (and super-spec (atom super-spec))
-                     (list super-spec)
-                     super-spec))
-           (stat-si-forms [keep-if (op member @1 '(:static :function))
-                                   slot-init-forms car])
-           (pruned-si-forms (sys:prune-missing-inits stat-si-forms))
-           (func-si-forms [keep-if (op eq :function) pruned-si-forms car])
-           (val-si-forms [keep-if (op eq :static) pruned-si-forms car])
-           (inst-si-forms [keep-if (op eq :instance) slot-init-forms car])
-           (stat-slots [mapcar second stat-si-forms])
-           (inst-slots [mapcar second inst-si-forms]))
-      (whenlet ((bad [find-if [notf bindable]
-                              (append stat-slots inst-slots)]))
-        (compile-error form
-                       (if (symbolp bad)
-                         "slot name ~s isn't a bindable symbol"
-                         "invalid slot specifier syntax: ~s")
-                       bad))
-      (each ((s supers))
-        (or (find-struct-type s)
-            (compile-defr-warning form ^(struct-type . ,s)
-                                  "inheritance base ~s \
-                                  \ does not name a struct type"
-                                  s)))
-      (let ((arg-sym (gensym))
-            (type-sym (gensym)))
-        (register-tentative-def ^(struct-type . ,name))
-        (each ((s stat-slots))
-          (register-tentative-def ^(slot . ,s)))
-        (each ((s inst-slots))
-          (register-tentative-def ^(slot . ,s)))
-        ^(sys:make-struct-type
-           ',name ',supers ',stat-slots ',inst-slots
-           ,(if (or func-si-forms val-si-forms)
-               ^(lambda (,arg-sym)
-                  ,*(mapcar (aret ^(when (static-slot-p ,arg-sym ',@2)
-                                     (static-slot-set ,arg-sym ',@2 ,@3)))
-                            (append func-si-forms val-si-forms))))
-           ,(if (or inst-si-forms instance-init-form instance-fini-form)
-              ^(lambda (,arg-sym)
-                 ,*(if (cdr instance-fini-form)
-                     ^((finalize ,arg-sym (lambda (,(car instance-fini-form))
-                                            ,*(cdr instance-fini-form))
-                                 t)))
-                 ,*(if inst-si-forms
-                     ^((let ((,type-sym (struct-type ,arg-sym)))
-                         ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)
-                                            (slotset ,arg-sym ',@2 ,@3)))
-                                   inst-si-forms))))
-                 ,*(if (cdr instance-init-form)
-                     ^((let ((,(car instance-init-form) ,arg-sym))
-                         ,*(cdr instance-init-form))))))
-           ,(when args
-              (when (> (countql : args) 1)
-                (compile-error form
-                               "multiple colons in boa syntax"))
-              (let ((col-pos (posq : args)))
-                (let ((req-args [args 0..col-pos])
-                      (opt-args (if col-pos [args (succ col-pos)..:])))
-                  (let ((r-gens (mapcar (ret (gensym)) req-args))
-                        (o-gens (mapcar (ret (gensym)) opt-args))
-                        (p-gens (mapcar (ret (gensym)) opt-args)))
-                    ^(lambda (,arg-sym ,*r-gens
-                              ,*(if opt-args '(:))
-                              ,*(if opt-args
-                                  (mapcar (ret ^(,@1 nil ,@2))
-                                          o-gens p-gens)))
-                       ,*(mapcar (ret ^(slotset ,arg-sym ',@1 ,@2))
-                                 req-args r-gens)
-                       ,*(mapcar (ret ^(if ,@3
-                                         (slotset ,arg-sym ',@1 ,@2)))
-                                 opt-args o-gens p-gens))))))
-           ,(if instance-postinit-form
-              ^(lambda (,arg-sym)
-                 ,*(if (cdr instance-postinit-form)
-                     ^((let ((,(car instance-postinit-form) ,arg-sym))
-                         ,*(cdr instance-postinit-form)))))))))))
+    (let ((instance-init-form nil)
+          (instance-postinit-form nil)
+          (instance-fini-form nil))
+      (labels ((expand-slot (form slot)
+                 (tree-case slot
+                   ((word name args . body)
+                    (caseq word
+                      (:method
+                        (when (not args)
+                          (compile-error form "method ~s needs at least one parameter" name))
+                        ^(:function ,name
+                           (lambda ,args
+                             (block ,name ,*body))))
+                      (:function ^(,word ,name
+                                         (lambda ,args
+                                           (block ,name
+                                             ,*body))))
+                      ((:static :instance)
+                       (when body
+                         (sys:bad-slot-syntax form slot))
+                       ^(,word ,name ,args))
+                      (t :)))
+                   ((word (arg) . body)
+                    (caseq word
+                      (:init
+                        (unless (bindable arg)
+                          (sys:bad-slot-syntax form slot))
+                        (when instance-init-form
+                          (compile-error form
+                                         "duplicate :init"))
+                        (set instance-init-form
+                             (cons arg body))
+                        ^(,word nil nil))
+                      (:postinit
+                        (unless (bindable arg)
+                          (sys:bad-slot-syntax form slot))
+                        (when instance-postinit-form
+                          (compile-error form
+                                         "duplicate :postinit"))
+                        (set instance-postinit-form
+                             (cons arg body))
+                        ^(,word nil nil))
+                      (:fini
+                        (unless (bindable arg)
+                          (sys:bad-slot-syntax form slot))
+                        (when instance-fini-form
+                          (compile-error form
+                                         "duplicate :fini"))
+                        (set instance-fini-form
+                             (cons arg body))
+                        ^(,word nil nil))
+                      (t (when body
+                           (sys:bad-slot-syntax form slot))
+                         :)))
+                   ((word name)
+                    (caseq word
+                      ((:static)
+                       ^(,word ,name))
+                      ((:instance)
+                       ^(,word ,name nil))
+                      ((:method :function)
+                       (sys:bad-slot-syntax form slot))
+                      (t ^(:instance ,word ,name))))
+                   ((name)
+                    ^(:instance ,name nil))
+                   (name
+                     ^(:instance ,name nil)))))
+        (let* ((slot-init-forms (collect-each ((slot slot-specs))
+                                  (expand-slot form slot)))
+               (supers (if (and super-spec (atom super-spec))
+                         (list super-spec)
+                         super-spec))
+               (stat-si-forms [keep-if (op member @1 '(:static :function))
+                                       slot-init-forms car])
+               (pruned-si-forms (sys:prune-missing-inits stat-si-forms))
+               (func-si-forms [keep-if (op eq :function) pruned-si-forms car])
+               (val-si-forms [keep-if (op eq :static) pruned-si-forms car])
+               (inst-si-forms [keep-if (op eq :instance) slot-init-forms car])
+               (stat-slots [mapcar second stat-si-forms])
+               (inst-slots [mapcar second inst-si-forms]))
+          (whenlet ((bad [find-if [notf bindable]
+                                  (append stat-slots inst-slots)]))
+            (compile-error form
+                           (if (symbolp bad)
+                             "slot name ~s isn't a bindable symbol"
+                             "invalid slot specifier syntax: ~s")
+                           bad))
+          (each ((s supers))
+            (or (find-struct-type s)
+                (compile-defr-warning form ^(struct-type . ,s)
+                                      "inheritance base ~s \
+                                      \ does not name a struct type"
+                                      s)))
+          (let ((arg-sym (gensym))
+                (type-sym (gensym)))
+            (register-tentative-def ^(struct-type . ,name))
+            (each ((s stat-slots))
+              (register-tentative-def ^(slot . ,s)))
+            (each ((s inst-slots))
+              (register-tentative-def ^(slot . ,s)))
+            ^(sys:make-struct-type
+               ',name ',supers ',stat-slots ',inst-slots
+               ,(if (or func-si-forms val-si-forms)
+                   ^(lambda (,arg-sym)
+                      ,*(mapcar (aret ^(when (static-slot-p ,arg-sym ',@2)
+                                         (static-slot-set ,arg-sym ',@2 ,@3)))
+                                (append func-si-forms val-si-forms))))
+               ,(if (or inst-si-forms instance-init-form instance-fini-form)
+                  ^(lambda (,arg-sym)
+                     ,*(if (cdr instance-fini-form)
+                         ^((finalize ,arg-sym (lambda (,(car instance-fini-form))
+                                                ,*(cdr instance-fini-form))
+                                     t)))
+                     ,*(if inst-si-forms
+                         ^((let ((,type-sym (struct-type ,arg-sym)))
+                             ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)
+                                                (slotset ,arg-sym ',@2 ,@3)))
+                                       inst-si-forms))))
+                     ,*(if (cdr instance-init-form)
+                         ^((let ((,(car instance-init-form) ,arg-sym))
+                             ,*(cdr instance-init-form))))))
+               ,(when args
+                  (when (> (countql : args) 1)
+                    (compile-error form
+                                   "multiple colons in boa syntax"))
+                  (let ((col-pos (posq : args)))
+                    (let ((req-args [args 0..col-pos])
+                          (opt-args (if col-pos [args (succ col-pos)..:])))
+                      (let ((r-gens (mapcar (ret (gensym)) req-args))
+                            (o-gens (mapcar (ret (gensym)) opt-args))
+                            (p-gens (mapcar (ret (gensym)) opt-args)))
+                        ^(lambda (,arg-sym ,*r-gens
+                                  ,*(if opt-args '(:))
+                                  ,*(if opt-args
+                                      (mapcar (ret ^(,@1 nil ,@2))
+                                              o-gens p-gens)))
+                           ,*(mapcar (ret ^(slotset ,arg-sym ',@1 ,@2))
+                                     req-args r-gens)
+                           ,*(mapcar (ret ^(if ,@3
+                                             (slotset ,arg-sym ',@1 ,@2)))
+                                     opt-args o-gens p-gens))))))
+               ,(if instance-postinit-form
+                  ^(lambda (,arg-sym)
+                     ,*(if (cdr instance-postinit-form)
+                         ^((let ((,(car instance-postinit-form) ,arg-sym))
+                             ,*(cdr instance-postinit-form)))))))))))))
 
 (defmacro sys:struct-lit (name . plist)
   ^(sys:make-struct-lit ',name ',plist))
