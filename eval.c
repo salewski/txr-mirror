@@ -973,11 +973,10 @@ static val bind_args(val env, val params, struct args *args, val ctx)
       val present = nil;
 
       if (arg == colon_k) {
-        if (initform) {
+        if (initform)
           initval = eval(initform, new_env, ctx);
-          new_env = lex_or_dyn_bind_seq(&dyn_env_made, new_env,
-                                        param, initval);
-        }
+        new_env = lex_or_dyn_bind_seq(&dyn_env_made, new_env,
+                                      param, initval);
       } else {
         lex_or_dyn_bind(&dyn_env_made, new_env, param, arg);
         present = t;

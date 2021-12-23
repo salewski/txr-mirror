@@ -87,6 +87,20 @@
   [(lambda (x y : (a 3) (b 4)) (list x y a b)) . vl] (a b c d)
   [(lambda (x y : (a 3) (b 4)) (list x y a b)) 1 . vl] :error)
 
+(mtest
+  [(lambda (x : y) (list x y)) 1 :] (1 nil)
+  [(lambda (x : y z) (list x y z)) 1 :] (1 nil nil)
+  [(lambda (x : y z) (list x y z)) 1 2 :] (1 2 nil)
+  [(lambda (x : y z) (list x y z)) 1 nil :] (1 nil nil)
+  [(lambda (x : y z) (list x y z)) 1 nil nil] (1 nil nil))
+
+(mtest
+  [(lambda (x : (y nil)) (list x y)) 1 :] (1 nil)
+  [(lambda (x : (y nil) (z)) (list x y z)) 1 :] (1 nil nil)
+  [(lambda (x : (y nil) (z)) (list x y z)) 1 2 :] (1 2 nil)
+  [(lambda (x : (y nil) (z)) (list x y z)) 1 nil :] (1 nil nil)
+  [(lambda (x : (y nil) (z)) (list x y z)) 1 nil nil] (1 nil nil))
+
 (defvarl vc '(: : : :))
 
 (mtest
