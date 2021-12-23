@@ -24,6 +24,9 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
+
+(defvar *struct-clause-expander* (hash))
+
 (defun sys:bad-slot-syntax (form arg)
   (compile-error form "bad slot syntax ~s" arg))
 
@@ -48,22 +51,27 @@
           (instance-fini-form nil))
       (labels ((expand-slot (form slot)
                  (tree-case slot
+                   ((op . args)
+                    (iflet ((expander [*struct-clause-expander* op]))
+                      (append-each ((exslot [expander slot form]))
+                        [expand-slot form exslot])
+                      :))
                    ((word name args . body)
                     (caseq word
                       (:method
                         (when (not args)
                           (compile-error form "method ~s needs at least one parameter" name))
-                        ^(:function ,name
-                           (lambda ,args
-                             (block ,name ,*body))))
-                      (:function ^(,word ,name
-                                         (lambda ,args
-                                           (block ,name
-                                             ,*body))))
+                        ^((:function ,name
+                            (lambda ,args
+                              (block ,name ,*body)))))
+                      (:function ^((,word ,name
+                                          (lambda ,args
+                                            (block ,name
+                                              ,*body)))))
                       ((:static :instance)
                        (when body
                          (sys:bad-slot-syntax form slot))
-                       ^(,word ,name ,args))
+                       ^((,word ,name ,args)))
                       (t :)))
                    ((word (arg) . body)
                     (caseq word
@@ -75,7 +83,7 @@
                                          "duplicate :init"))
                         (set instance-init-form
                              (cons arg body))
-                        ^(,word nil nil))
+                        ^((,word nil nil)))
                       (:postinit
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
@@ -84,7 +92,7 @@
                                          "duplicate :postinit"))
                         (set instance-postinit-form
                              (cons arg body))
-                        ^(,word nil nil))
+                        ^((,word nil nil)))
                       (:fini
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
@@ -93,24 +101,24 @@
                                          "duplicate :fini"))
                         (set instance-fini-form
                              (cons arg body))
-                        ^(,word nil nil))
+                        ^((,word nil nil)))
                       (t (when body
                            (sys:bad-slot-syntax form slot))
                          :)))
                    ((word name)
                     (caseq word
                       ((:static)
-                       ^(,word ,name))
+                       ^((,word ,name)))
                       ((:instance)
-                       ^(,word ,name nil))
+                       ^((,word ,name nil)))
                       ((:method :function)
                        (sys:bad-slot-syntax form slot))
-                      (t ^(:instance ,word ,name))))
+                      (t ^((:instance ,word ,name)))))
                    ((name)
-                    ^(:instance ,name nil))
+                    ^((:instance ,name nil)))
                    (name
-                     ^(:instance ,name nil)))))
-        (let* ((slot-init-forms (collect-each ((slot slot-specs))
+                     ^((:instance ,name nil))))))
+        (let* ((slot-init-forms (append-each ((slot slot-specs))
                                   (expand-slot form slot)))
                (supers (if (and super-spec (atom super-spec))
                          (list super-spec)
@@ -380,3 +388,32 @@
                                    (sys:rslotset ,',struct ,',sym
                                              ,',meth-sym ,val))))
        ,body)))
+
+(defmacro define-struct-clause (:form form keyword (. params) . body)
+  (if (meq keyword :static :instance :function :method :init :postinit :fini)
+    (compile-error form "~s is a reserved defstruct clause keyword" keyword))
+  (unless (keywordp keyword)
+    (compile-error form "~s: clauses must be named by keyword symbols" keyword))
+  (with-gensyms (slot form)
+    ^(progn
+       (set [*struct-clause-expander* ,keyword]
+          (lambda (,slot ,form)
+            (mac-param-bind ,form ,params (cdr ,slot) ,*body)))
+       ,keyword)))
+
+(compile-only
+  (load-for (struct sys:param-parser-base "param")))
+
+(define-struct-clause :delegate (:form form
+                                 meth-name params delegate-expr
+                                 : (target-method meth-name))
+  (unless params
+    (compile-error form "delegate method requires at least one argument"))
+  (let* ((obj (car params))
+         (pp (new (fun-param-parser (cdr params) form)))
+         (opt pp.(opt-syms))
+         (args (append pp.req opt pp.rest)))
+    ^((:method ,meth-name (,obj ,*pp.req
+                           ,*(if opt (cons : (mapcar (lop list :) opt)))
+                           ,*pp.rest)
+        (qref ,delegate-expr (,target-method ,*args))))))

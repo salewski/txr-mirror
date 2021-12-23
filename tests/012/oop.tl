@@ -93,3 +93,18 @@
     (new* type a 3 b 4)) #S(ab a 3 b 4)
   (let ((type (find-struct-type 'ab)))
     (new* (type 3 4))) #S(ab a 3 b 4))
+
+(defstruct worker ()
+  name
+  (:method work (me) `worker @{me.name} works`)
+  (:method relax (me : (min 15)) `worker @{me.name} relaxes for @min min`))
+
+(defstruct contractor ()
+  sub
+  (:delegate work (me) me.sub.sub)
+  (:delegate break (me : min) me.sub.sub relax))
+
+(let ((co (new contractor sub (new contractor sub (new worker name "foo")))))
+  (mtest co.(work) "worker foo works"
+         co.(break) "worker foo relaxes for 15 min"
+         co.(break 5) "worker foo relaxes for 5 min"))

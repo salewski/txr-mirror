@@ -28196,6 +28196,23 @@ compares the replacement object in place of the original, and an
 hash table uses the replacement object as the key for the purposes of
 hashing and comparison.
 
+.NP* Custom Slot Expansion
+
+The
+.code defstruct
+macro has a provision for for application-defined clauses, which may
+be defined using the
+.code define-struct-clause
+macro. This macro associates new clause keywords with custom expansion.
+The
+.code :delegate
+clause of
+.code defstruct
+is in fact implemented externally to
+.code defstruct
+using
+.codn define-struct-clause .
+
 .coNP Macro @ defstruct
 .synb
 .mets (defstruct >> { name | >> ( name << arg *)} < super
@@ -30802,6 +30819,229 @@ last form is returned, or else
 if there are no forms. The invocations of
 .code call-finalizers
 take place just before the value of the last form is returned.
+
+.coNP Macro @ define-struct-clause
+.synb
+.mets (define-struct-clause < keyword < params <> [ body-form ]*)
+.syne
+.desc
+The
+.code define-struct-clause
+macro makes available a new, application-defined
+.code defstruct
+clause. The clause is named by
+.metn keyword ,
+which must be a keyword symbol, and is implemented as a macro
+transformation by the
+.meta params
+and
+.metn body-form s
+of the definition. The definition established by
+.code define-struct-clause
+is called a
+.IR "struct clause macro" .
+
+A struct clause macro is invoked when
+.code defstruct
+syntax is processed which contains one or more clauses which are
+headed by the matching
+.meta keyword
+symbol.
+
+The
+.meta params
+comprise a macro-style parameter list which must match the
+invoking clause, otherwise an error exception is thrown.
+When
+.meta params
+successfully matches the clause parameters, the parameters
+are destructured into the parameters and the
+.metn body-form s
+are evaluated in the scope of those parameters.
+
+The
+.metn body-form s
+must return a possibly list of
+.code defstruct
+clauses, not a single clause.
+
+Each of the returned clauses is examined for the possibility that
+it may be a struct clause macro; if so, it is expanded.
+
+The built-in clause keywords
+.codn :static ,
+.codn :instance ,
+.codn :function ,
+.codn :method ,
+.codn :init ,
+.code :postinit
+and
+.code :fini
+may not be used as the names of a struct clause macro; if any of these
+symbols is used as the
+.meta keyword
+parameter of
+.codn define-struct-clause ,
+an error exception is thrown.
+
+The return value of a
+.code define-struct-clause
+macro invocation is the
+.meta keyword
+argument.
+
+.TP* Examples:
+
+.verb
+  ;; Trivial struct clause macro which consumes any number of
+  ;; arguments and produces no slots:
+
+  (define-struct-clause :nothing (. ignored-args))
+
+  ;; Consequently, the following defines a struct with one slot, x:
+  ;; The (:nothing ...) clause disappears by producing no clauses.
+
+  (defstruct foo ()
+    (:nothing 1 2 3 beeblebrox)
+    x)
+
+  ;; struct clause macro called :multi which takes an initial value
+  ;; and zero or more slot names. It produces instance slot definitions
+  ;; which all use that same initial value.
+
+  (define-struct-clause :multi (init-val . names)
+    (mapcar (lop list init-val) names))
+
+  ;; define a struct with three slots initialized to zero:
+
+  (defstruct bar ()
+    (:multi 0 a b c)) ;; expands to (a 0) (b 0) (c 0)
+
+  ;; struct clause macro to define a slot along with a
+  ;; get and set method.
+
+  (define-struct-clause :getset (slot getter setter : init-val)
+    ^((,slot ,init-val)
+      (:method ,getter (obj) obj.,slot)
+      (:method ,setter (obj new) (set obj.,slot new))))
+
+  ;; Example use:
+
+  (defstruct point ()
+    (:getset x get-x set-x 0)
+    (:getset y get-y set-y 0))
+
+  ;; This has exactly the same effect as the following defstruct:
+
+  (defstruct point ()
+    (x 0)
+    (y 0)
+    (:method get-x (obj) obj.x)
+    (:method set-x (ob new) (set obj.x new))
+    (:method get-y (obj) obj.y)
+    (:method set-y (ob new) (set obj.y new)))
+.brev
+
+.coNP Struct clause macro @ :delegate
+.synb
+.mets (:delegate < name <> ( param +) < delegate-expr <> [ target-name ])
+.syne
+.desc
+The
+:delegate
+struct clause macro provides a way to define a method  which is implemented entirely
+by delegation to a different object.  The name of the method is
+.meta name
+and its parameter list is specified in the sme way as in the
+.meta :method
+clause. Instead of a method body, the
+.code :delegate
+clause has an expression
+.meta delegate-expr
+and an optional
+.meta target-name
+which defaults to
+.metn name .
+The
+.meta delegate-expr
+must be an expression which the delegate method can evaluate to
+produce a delegate object. The delegate method then passes its
+arguments to the target method, given by the
+.meta target-name
+argument, invoked on the delegate object. If the delegate method has optional
+parameters which have not received an argument value, those parameters
+are treated as if they had received the colon symbol
+.code :
+as their value, and that value is passed on. If the delegate method has
+variadic parameters, they are applied to the target. If optional parameters
+specified in
+.code :delegate
+are given argument values, those are discarded, playing no role in the
+delegation.
+
+.TP* Example:
+
+Structure definitions:
+
+.verb
+  (defstruct worker ()
+    name
+    (:method work (me)
+      `worker @{me.name} works`)
+    (:method relax (me : (min 15))
+      `worker @{me.name} relaxes for @min min`))
+
+  ;; "contractor" class has a sub ("subcontractor") slot
+  ;; which is another contractor of the same type.
+  ;; The subcontractor's own sub slot, however is going
+  ;; to be a worker.
+
+  (defstruct contractor ()
+    sub
+    (:delegate work (me) me.sub.sub)
+    (:delegate break (me : min) me.sub.sub relax))
+.brev
+
+The
+.code contractor
+structure's
+.code work
+and
+.code break
+methods delegate to the sub-subcontractor, which is going to be
+instantiated as a
+.code worker
+object.  Note that the
+.code break
+method delegates to a differently named method
+.codn relax .
+
+.verb
+  ;; The objects are set up as described above.
+  ;; general contractor co has a co.sub subcontractor,
+  ;; and co.sub.sub is a worker:
+
+  (defvar co (new contractor
+                  sub (new contractor
+                           sub (new worker name "foo"))))
+
+  ;; Call work method on general contractor:
+  ;; this invokes co.sub.sub.(work) on the worker.
+
+  co.(work) -> "worker foo works"
+
+  ;; Call break method on general contractor with
+  ;; no argument. This causes co.sub.sub.(relax :)
+  ;; to be invoked, triggering argument defaulting:
+
+  co.(break) -> "worker foo relaxes for 15 min"
+
+  ;; Call break method with argument. This
+  ;; invokes co.sub.sub.(relax 5), specifying a
+  ;; value for the default argument:
+
+  co.(break 5) -> "worker foo relaxes for 5 min"
+.brev
 
 .SS* Special Structure Functions
 

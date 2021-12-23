@@ -213,7 +213,8 @@ static val struct_set_entries(val dlt, val fun)
   val name[] = {
     lit("defstruct"), lit("qref"), lit("uref"), lit("new"), lit("lnew"),
     lit("new*"), lit("lnew*"),
-    lit("meth"), lit("umeth"), lit("usl"), lit("defmeth"), lit("rslot"), nil
+    lit("meth"), lit("umeth"), lit("usl"), lit("defmeth"), lit("rslot"),
+    lit("*struct-clause-expander*"), lit("define-struct-clause"), nil
   };
 
   set_dlt_entries_sys(dlt, sys_name, fun);
