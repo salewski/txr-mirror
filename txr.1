@@ -31043,6 +31043,158 @@ method delegates to a differently named method
   co.(break 5) -> "worker foo relaxes for 5 min"
 .brev
 
+.coNP Struct clause macro @ :mass-delegate
+.synb
+.mets (:mass-delegate < self-var < delegate-expr
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \   < from-type <> [ * ] <> [ method ]*)
+.syne
+.desc
+The
+:mass-delegate
+struct macro provides a way to define multiple methods which are implemented
+as delegates to corresponding methods on another object.
+The implementation of
+.code :mass-delegate
+depends on the
+.code :delegate
+macro.
+
+The
+.meta self-var
+argument must be a bindable symbol. In each generated delegate method,
+this symbol will be the first argument. The purpose of this symbol is
+to enable the
+.meta delegate-expr
+to refer to the delegating object.
+
+The
+.meta delegate-expr
+is an expression which is inserted into every method. It is required
+to evaluates to the delegate object. This expression may make a reference to
+.meta self-var
+in order to retrieve the delegate from the delegating object.
+
+The
+.meta from-type
+argument is a symbol naming an existing structure type. If no such
+structure type has been defined, an error exception is thrown.
+
+After the
+.meta from-type
+argument, either zero or more slot names appear, optionally preceded by the
+.code *
+(asterisk) symbol.
+
+If the
+.code *
+symbol is present, and isn't followed by any other symbols, it indicates
+that all methods from
+.meta from-type
+are to be delegated. If symbols appear after the
+.code *
+then those specify exceptions: methods not to be delegated.
+No validation is performed on the exception list; it may specify
+nonexistent method names which have no effect.
+
+If the
+.code *
+symbol is absent, then every
+.meta method
+symbol specifies a method to be delegated.
+It is consequently expected to name a method of the
+.metn from-type :
+a static slot which contains a function. If any
+.meta method
+isn't a static slot of
+.metn from-type ,
+or not a static slot which contains a function, an error exception is thrown.
+
+The
+.code :mass-delegate
+struct macro iterates over all of the methods of
+.meta from-type
+that selected for delegation, and for each one it generates a
+.code :delegate
+macro clause based on the existing method's parameter list.
+For instance, the delegate for a method which has two required arguments and
+one optional will itself have two required arguments and one optional.
+Delegates are not simply wrapper functions which take any number of arguments
+and try to pass them to the target.
+
+The generated
+.code :delegate
+clauses are then processed by that struct clause macro.
+
+Note: composition with delegation is a useful alternative when
+multiple inheritance is not applicable or desired for various reasons.
+One such reason is that structures that would be used as multiple inheritance
+bases use the same symbols for certain slots, and the semantics of those
+slots conflict. Under inheritance, same-named slots coming from different
+bases become one slot,
+
+Note: a particular
+.meta from-type
+being nominated in the
+.code :mass-delegate
+clause doesn't mean that the specific methods of that type shall be called
+by the generated delegates.  The methods that shall be called are those
+of the calculated delegate object selected by the
+.metn delegate-expr .
+The
+.meta from-type
+is used as a source of the argument info, and method existence validation.
+It is up to the application to ensure that the delegation using
+.meta from-type
+makes sense with respect to the delegate object that is selected by the
+.metn delegate-expr :
+for instance, by ensuring that this object is an instance of
+.meta from-type
+or a subtype thereof.
+
+.TP* Example:
+
+.verb
+  (defstruct foo-api ()
+    name
+    (:method begin (me) ^(foo ,me.name begin))
+    (:method increment (me delta) ^(foo ,me.name increment ,delta))
+    (:method end (me) ^(foo ,me.name end)))
+
+  (defstruct bar-api ()
+    name
+    (:method open (me) ^(bar ,me.name open))
+    (:method read (me buf) ^(bar ,me.name read ,buf))
+    (:method write (me buf) ^(bar ,me.name write ,buf))
+    (:method close (me) ^(bar ,me.name close)))
+
+  ;; facade holds the two API objects by composition:
+
+  (defstruct facade ()
+    (foo (new foo-api name "foo"))
+    (bar (new bar-api name "bar"))
+
+    ;; delegate foo-api style calls via me.foo
+    (:mass-delegate me me.foo foo-api *)
+
+    ;; delegate bar-api style calls via me.bar
+    ;; exclude the write method.
+    (:mass-delegate me me.bar bar-api * write))
+
+  ;; instantiate facade as variable fa
+  (defvar fa (new facade)) -> fa
+
+  ;; begin call on facade delegates through foo-api object.
+  fa.(begin) -> (foo "foo" begin)
+
+  fa.(increment) -> ;; error: too few arguments
+
+  fa.(increment 3) -> (foo "foo" increment 3)
+
+  fa.(open) -> (bar "bar" open)
+
+  fa.(write 4) -> ;; error: fa has no such method
+.brev
+
 .SS* Special Structure Functions
 
 Special structure functions are user-defined methods or structure functions

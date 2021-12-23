@@ -417,3 +417,30 @@
                            ,*(if opt (cons : (mapcar (lop list :) opt)))
                            ,*pp.rest)
         (qref ,delegate-expr (,target-method ,*args))))))
+
+(define-struct-clause :mass-delegate (:form form self-var delegate-expr
+                                      from-struct . methods)
+  (let ((from-type (find-struct-type from-struct)))
+    (flet ((is-meth (slot)
+             (and (static-slot-p from-type slot)
+                  (let ((f (static-slot from-type slot)))
+                    (and (functionp f)
+                         (plusp (fun-fixparam-count f)))))))
+      (unless from-type
+        (compile-error form "~s doesn't name a struct type" from-struct))
+      (if (starts-with '(*) methods)
+        (set methods
+             (diff [keep-if is-meth (slots from-type)]
+                   (cdr methods)))
+        (iflet ((badmeth [remove-if is-meth methods]))
+          (compile-error form "~s aren't methods of type ~s" badmeth from-struct)))
+      (collect-each ((m methods))
+        (let* ((f (static-slot from-type m))
+               (fix (fun-fixparam-count f))
+               (opt (fun-optparam-count f))
+               (var (fun-variadic f))
+               (parms ^(,*(take (- fix opt) (cons self-var (gun (gensym))))
+                        ,*(if (plusp opt)
+                            ^(: ,*(take opt (gun (gensym)))))
+                        ,*(if var (gensym)))))
+          ^(:delegate ,m ,parms ,delegate-expr))))))

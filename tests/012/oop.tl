@@ -108,3 +108,36 @@
   (mtest co.(work) "worker foo works"
          co.(break) "worker foo relaxes for 15 min"
          co.(break 5) "worker foo relaxes for 5 min"))
+
+(defstruct api-x ()
+  (:method get (x a b : c . d) ^(api-x get ,x ,a ,b ,c ,d))
+  (:method put (x s) ^(api-x put ,x ,s)))
+
+(defstruct api-y ()
+  (:method frob (y r : s) ^(api-y frob ,y ,r ,s))
+  (:method tweak (y) ^(api-y tweak ,y)))
+
+(defstruct api-z ()
+  (:method decrement (z n) ^(api-z decrement ,z ,n))
+  (:method increment (z n) ^(api-z increment ,z ,n)))
+
+(defstruct component ()
+  (ax (new api-x))
+  (ay (new api-y))
+  (az (new api-z))
+  (:mass-delegate o o.ax api-x *)
+  (:mass-delegate o o.ay api-y frob)
+  (:mass-delegate o o.az api-z * decrement))
+
+(let ((c (new component)))
+  (mtest
+    c.(get 1 2 3 . 4) (api-x get #S(api-x) 1 2 3 4)
+    c.(put 5) (api-x put #S(api-x) 5)
+    c.(get) :error
+    c.(put 5 6) :error
+    c.(frob 7 8) (api-y frob #S(api-y) 7 8)
+    c.(frob 9) (api-y frob #S(api-y) 9 nil)
+    c.(frob 7 8 9) :error
+    c.(tweak) :error
+    c.(increment 1) (api-z increment #S(api-z) 1)
+    c.(decrement) :error))

@@ -78,6 +78,7 @@
       ("/=" "N-003BE40C")
       (":delegate" "N-037F664C")
       (":key" "N-01697547")
+      (":mass-delegate" "N-000BBDEA")
       (":match" "N-03B92C0D")
       ("<" "D-0057")
       ("<!" "N-02B10DF9")
