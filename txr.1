@@ -43157,7 +43157,7 @@ A quasiliteral pattern matches in a linear fashion, from left to right.
 Variables bound earlier in the pattern can be referenced later in the pattern
 as bound variables.
 
-Bound variables denote character strings in accordance with the usual
+With one exception, bound variables denote character strings in accordance with the usual
 quasiliteral conversion and formatting rules. All of the modifier notations may
 be used.  For instance, if
 .code x
@@ -43167,6 +43167,11 @@ denotes the value of
 .code x
 converted to a string, and right-aligned in a forty-character-wide field.
 Consequently, the notation matches exactly such a forty-character text.
+The exception is that if a bound variable has a regular expression modifier,
+as in
+.code "@{x #/re/}"
+then it has a special meaning as a pattern. Moreover, this syntax has no
+meaning in a quasiliteral.
 
 In the following description of the quasiliteral pattern-matching rules, the
 symbols
@@ -43257,6 +43262,20 @@ match. If a prefix of the input string matches
 then the match is successful and
 .meta uv
 captures that prefix. The rest of the pattern
+.code {P}
+is then matched against the rest of the string after the prefix.
+.meIP >> `@{ bv <> #/ regex /}{P}`
+A bound variable
+.meta bv
+which carries a regular expression modifier specifies a regular expression
+match exactly like an unbound variable. This syntax produces a successful
+match if two conditions are met: a prefix of the input string matches
+.metn regex ,
+and the matched prefix is
+.meta equal
+to the value of
+.metn bv .
+The rest of the pattern
 .code {P}
 is then matched against the rest of the string after the prefix.
 .meIP <> `@ bv {P}`

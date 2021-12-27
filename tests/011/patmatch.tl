@@ -417,6 +417,12 @@
 (let ((a "$"))
   (test (when-match `@a-@b` "$-@" b) "@"))
 
+(mtest
+  (when-match `@{a #/\d+/}-@{a #/\d+/}` "123-123" a) "123"
+  (when-match `@{a #/\d+/}-@{a #/\d+/}-` "123-123-" a) "123"
+  (when-match `@{a #/\d+/}-@{a #/\d+/}` "123-1234" a) nil
+  (when-match `@{a #/\d+/}-@{a #/\d+/}-` "123-1234-" a) nil)
+
 (test
   (build
     (each-match (`(@a) @b-@c` '("x"
