@@ -2495,9 +2495,8 @@ extends over all characters from the current position which match
 the regular expression
 .metn regex .
 (See the Regular Expressions section below.)
-If the variable already has a value, then the regular expression is
-ignored; the variable's value is used to match and extract text, which
-may be different from what the regular expression would match.
+If the variable already has a value, the text extracted by the regular
+expression must exactly match the variable.
 
 In the
 .mono
@@ -2547,7 +2546,7 @@ is all text within the specified field, but excluding leading and
 trailing whitespace. If the field contains only spaces, then an empty
 string is extracted. This fixed-field extraction takes place whether or not the
 variable already has a binding. If it already has a binding, then it must match
-the extracted text.
+the extracted, trimmed text.
 
 The
 .mono
@@ -86697,7 +86696,15 @@ has a binding. The variable is then matched against the text spanned
 by the function to either give it a new binding or match the existing binding.
 The old behavior, restored by 272 or lower compatibility, is that the
 function is not invoked when the variable has a binding; the
-variable's value is instead used to match text.
+variable's value is instead used to match text. Lastly, a similar change
+took place in positive match regular expression variables of the
+.mono
+.meti >> @{ bident <> / regex /}
+.onom
+form.
+Prior to 273, when a variable of this form has an existing binding, the regex
+is ignored, and the situation is treated as a match for the variable content.
+This old behavior is also restored.
 .IP 265
 Until \*(TX 265, the
 .code with-resources

@@ -17,12 +17,23 @@
 @(bind d ("d"))
 @(cases)
 @  {d (fun "x" "a")}
+@  {require (not "get here")}
 @(or)
 @  (require "get here")
 @(end)
 @(next :string "ab")
 @(cases)
 @  {d (fun2 "x" "a")}
+@  {require (not "get here")}
 @(or)
 @  (require "get here")
+@(end)
+@(bind n "123")
+@(next :string "123456")
+@(cases)
+@  {n /\d+/}
+@  {require (not "get here")}
+@(or)
+@  {m /\d+/}
+@  (require (equal m "123456"))
 @(end)

@@ -843,41 +843,8 @@ static val h_var(match_line_ctx *c)
     modifier = cdr(mpair);
   }
 
-  if (pair && !consp(modifier)) {
-    /* Except in two cass, if the variable already has a binding, we replace
-       it with its value, and treat it as a string match. And if the spec looks
-       like ((var <sym>) <next> ...) and it must be transformed into
-       (<sym-substituted> <next> ...).
-       The special cases are:
-       - if the variable is a fix sized field match, then it has to match
-         that much text;
-       - if the variable is a function-spanning match, the function has
-         to be called every time; hence he !consp(modifier) check above,
-         and the use of dest_bind in the function spanning case. */
-    if (integerp(modifier)) {
-      val past = plus(c->pos, modifier);
-
-      if (length_str_lt(c->dataline, past) || lt(past, c->pos))
-      {
-        LOG_MISMATCH("fixed field size");
-        return nil;
-      }
-
-      if (!tree_find(trim_str(sub_str(c->dataline, c->pos, past)),
-                     cdr(pair), equal_f))
-      {
-        LOG_MISMATCH("fixed field contents");
-        return nil;
-      }
-
-      LOG_MATCH("fixed field", past);
-      c->pos = past;
-      c->specline = rest(c->specline);
-    } else {
-      c->specline = rlcp(cons(cdr(pair), c->specline), c->specline);
-    }
-    return repeat_spec_k;
-  } else if (consp(modifier) || regexp(modifier)) { /* var bound over text matched by form */
+  if (consp(modifier) || regexp(modifier)) {
+    /* var bound over text matched by regex or function */
     cons_bind (new_bindings, new_pos,
                match_line(ml_specline(*c, cons(modifier, nil))));
 
@@ -888,13 +855,12 @@ static val h_var(match_line_ctx *c)
 
     new_pos = minus(new_pos, c->base);
 
-
     LOG_MATCH("var spanning form", new_pos);
 
     c->bindings = dest_bind(c->specline, new_bindings, sym,
                             sub_str(c->dataline, c->pos, new_pos), equal_f);
     if (c->bindings == t) {
-      LOG_MISMATCH("function span mismatch");
+      LOG_MISMATCH("span mismatch");
       return nil;
     }
 
@@ -912,8 +878,15 @@ static val h_var(match_line_ctx *c)
       return nil;
     }
     LOG_MATCH("count based var", past);
-    if (sym)
-      c->bindings = acons(sym, trim_str(sub_str(c->dataline, c->pos, past)), c->bindings);
+
+    c->bindings = dest_bind(c->specline, c->bindings, sym,
+                            trim_str(sub_str(c->dataline, c->pos, past)),
+                            equal_f);
+    if (c->bindings == t) {
+      LOG_MISMATCH("count based mismatch");
+      return nil;
+    }
+
     c->pos = past;
     /* This may have another variable attached */
     if (next) {
@@ -923,6 +896,11 @@ static val h_var(match_line_ctx *c)
   } else if (modifier && modifier != t) {
     sem_error(elem, lit("invalid modifier ~s on variable ~s"),
               modifier, sym, nao);
+  } else if ((pair = if2(sym, tx_lookup_var(sym, c->bindings)))) {
+    /* Variable is not of the above types and has an existing binding,
+     * Just substitute its value into the spec stream and match. */
+    c->specline = rlcp(cons(cdr(pair), c->specline), c->specline);
+    return repeat_spec_k;
   } else if (next == nil) { /* no modifier, no elem -> to end of line */
     if (sym)
       c->bindings = acons(sym, sub_str(c->dataline, c->pos, nil), c->bindings);
