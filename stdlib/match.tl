@@ -970,7 +970,7 @@
                 (unless (plusp len)
                   (compile-error *match-form*
                                  "variable ~s: positive integer required,\ \
-                                  not ~a" sym))
+                                  not ~a" sym len))
                 (with-gensyms (npos)
                   (list* ^@(require @(with ,npos (+ ,pos ,len))
                              (<= ,npos (len ,str)))
