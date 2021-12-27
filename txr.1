@@ -43190,7 +43190,7 @@ and
 .metn uv1 .
 The symbol
 .meta bv
-represents an unbound variables: a variable which has an existing binding,
+represents a bound variable: a variable which has an existing binding,
 which can occur in the form of the ordinary notation, or the braced notation
 with or without modifiers.
 The notation
@@ -43259,9 +43259,7 @@ then the match is successful and
 captures that prefix. The rest of the pattern
 .code {P}
 is then matched against the rest of the string after the prefix.
-.mono
-.meti >> @ bv {R}
-.onom
+.meIP <> `@ bv {P}`
 The bound variable
 .meta bv
 is converted to text the manner of an ordinary quasiliteral substitution.
