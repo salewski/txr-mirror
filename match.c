@@ -2316,6 +2316,39 @@ typedef val (*v_match_func)(match_files_ctx *cout);
   val specline = first(spec);                           \
   val first_spec = first(specline)
 
+static val v_var_compat(match_files_ctx *c)
+{
+  (void) c;
+  return decline_k;
+}
+
+static val v_var(match_files_ctx *c)
+{
+  spec_bind (specline, var_elem, c->spec);
+
+  if (!rest(specline)) {
+    val varsym  = second(var_elem);
+    val modifiers = third(var_elem);
+    val modifier = first(modifiers);
+
+    if (consp(modifier)) {
+      match_files_ctx fc = mf_spec(*c, cons(modifiers, nil));
+      val data = c->data;
+
+      val ret = v_fun(&fc);
+
+      if (ret == next_spec_k) {
+        c->data = fc.data;
+        c->bindings = acons(varsym, ldiff(data, fc.data), fc.bindings);
+      }
+
+      return ret;
+    }
+  }
+
+  return decline_k;
+}
+
 static val v_skip(match_files_ctx *c)
 {
   val self = lit("skip");
@@ -4662,11 +4695,11 @@ repeat_spec_same_data:
     if (consp(first_spec) && !rest(specline)) {
       val lfe_save = set_last_form_evaled(first_spec);
       val sym = first(first_spec);
-      val entry = gethash(v_directive_table, sym);
+      val entry;
 
-      if (sym == var_s || sym == text_s) {
-        /* It's actually a var or text; go to horizontal processing below */
-      } else if (entry) {
+      if (sym == text_s) {
+        /* It's literal text; go to horizontal processing below */
+      } else if ((entry = gethash(v_directive_table, sym))) {
         v_match_func vmf = coerce(v_match_func, cptr_get(entry));
         val result = vmf(&c);
 
@@ -4985,7 +5018,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, data_s, cptr(coerce(mem_t *, v_data)));
   sethash(v_directive_table, name_s, cptr(coerce(mem_t *, v_name)));
   sethash(v_directive_table, call_s, cptr(coerce(mem_t *, v_call)));
-
+  sethash(v_directive_table, var_s, cptr(coerce(mem_t *, v_var)));
   sethash(h_directive_table, text_s, cptr(coerce(mem_t *, h_text)));
   sethash(h_directive_table, var_s, cptr(coerce(mem_t *, h_var)));
   sethash(h_directive_table, skip_s, cptr(coerce(mem_t *, h_skip)));
@@ -5061,4 +5094,10 @@ void match_init(void)
 {
   syms_init();
   dir_tables_init();
+}
+
+void match_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 272)
+    sethash(v_directive_table, var_s, cptr(coerce(mem_t *, v_var_compat)));
 }

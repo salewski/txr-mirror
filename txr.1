@@ -2494,7 +2494,7 @@ In the
 .mono
 .meti >> ( fun >> [ args ...])
 .onom
-form, the match extends over characters which
+form, the match extends over lines or characters which
 are matched by the call to the function, if the call
 succeeds. Thus
 .code "@{x (y z w)}"
@@ -2505,7 +2505,23 @@ text skipped over by
 .code "@(y z w)"
 is also bound to the variable
 .codn x .
-See Functions below.
+Except in one special case, the matching takes place horizontally within the
+current line, and the spanned range of text is treated as a string.
+The exception is that if the
+.mono
+.meti >> @{ bident >> ( fun >> [ args ...])}
+.onom
+appears as the only element of a line, and
+.meta fun
+has a binding as a vertical function, then the function is invoked in
+the same manner as it would be by the
+.mono
+.meti >> @( fun >> [ args ...])
+.onom
+syntax. Then the variable indicated by
+.meta bident
+is bound to the list of lines matched by the function call.
+Pattern functions are described in the Functions section below.
 
 In the
 .meta number
@@ -86652,6 +86668,21 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 272
+\*(TX 273 introduce a new feature into the pattern language: a pattern variable
+of the form
+.mono
+.meti >> @{ bident >> ( fun >> [ args ...])}
+.onom
+matches multiple lines, if it appears as the only element of a query line,
+and if
+.meta fun
+has a binding as a vertical pattern function.  Prior to 273, this situation was
+not given any special treatment; the vertical function
+.meta fun
+was called such that only one line of input is visible, and if it produced
+a match, the variable was bound to that line. A compatibility value of 272
+or lower restores this behavior.
 .IP 265
 Until \*(TX 265, the
 .code with-resources

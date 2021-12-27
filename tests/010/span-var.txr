@@ -1,0 +1,15 @@
+@(define fun (x y))
+@(bind x "x")
+@y
+@y
+@y
+@(end)
+@(next :list '("a" "a" "a" "b" "c"))
+@{z (fun x "a")}
+@(require (equal x "x"))
+@(require (equal z '("a" "a" "a")))
+@(define fun2 (x y))@(bind x "x")@y@(end)
+@(next :string "ab")
+@{w (fun2 x "a")}@y
+@(require (equal w "a"))
+@(require (equal y "b"))

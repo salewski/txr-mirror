@@ -451,6 +451,8 @@ static int compat(val optval)
   }
 
   sysroot_compat_fixup(compat);
+  match_compat_fixup(compat);
+
   opt_compat = compat;
   reg_varl(intern(lit("compat"), system_package), num(compat));
   return 1;

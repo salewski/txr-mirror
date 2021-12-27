@@ -40,3 +40,4 @@ void match_reg_var(val sym);
 void match_reg_params(val params);
 void match_reg_elem(val elem);
 void match_init(void);
+void match_compat_fixup(int compat_ver);
