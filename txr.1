@@ -2481,18 +2481,27 @@ from a regular expression, function or character count, rather than from
 trailing material (which is regarded as a "negative" match, since the
 variable is bound to material which is
 .B skipped
-in order to match the trailing material). In the
+in order to match the trailing material).
+
+The positive match syntax is processed without considering any following
+syntax, and therefore may be followed by an unbound variable.
+
+In the
 .mono
-.meti <> / regex /
+.meti >> @{ bident <> / regex /}
 .onom
 form, the match
 extends over all characters from the current position which match
 the regular expression
 .metn regex .
 (See the Regular Expressions section below.)
+If the variable already has a value, then the regular expression is
+ignored; the variable's value is used to match and extract text, which
+may be different from what the regular expression would match.
+
 In the
 .mono
-.meti >> ( fun >> [ args ...])
+.meti >> @{ bident >> ( fun >> [ args ...])}
 .onom
 form, the match extends over lines or characters which
 are matched by the call to the function, if the call
@@ -2522,9 +2531,13 @@ syntax. Then the variable indicated by
 .meta bident
 is bound to the list of lines matched by the function call.
 Pattern functions are described in the Functions section below.
+The function is invoked even if the variable already has a value.
+The text matched by the function must match the variable.
 
 In the
-.meta number
+.mono
+.meti >> @{ bident << number }
+.onom
 form, the match processes a field of text which
 consists of the specified number of characters, which must be a nonnegative
 number.  If the data line doesn't have that many characters starting at the
@@ -2532,10 +2545,9 @@ current position, the match fails. A match for zero characters produces an
 empty string.  The text which is actually bound to the variable
 is all text within the specified field, but excluding leading and
 trailing whitespace. If the field contains only spaces, then an empty
-string is extracted.
-
-This syntax is processed without considering any following syntax.
-A positive match may be directly followed by an unbound variable.
+string is extracted. This fixed-field extraction takes place whether or not the
+variable already has a binding. If it already has a binding, then it must match
+the extracted text.
 
 The
 .mono
@@ -86669,20 +86681,23 @@ is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
 .IP 272
-\*(TX 273 introduce a new feature into the pattern language: a pattern variable
-of the form
+The compatibility version value 272 restores old behaviors in the pattern
+language with regard to the regex and function cases of positive match variables.
+\*(TX 273, several semantic improvements took place in this area, which
+can break existing code.  Pattern variables of the form
 .mono
 .meti >> @{ bident >> ( fun >> [ args ...])}
 .onom
-matches multiple lines, if it appears as the only element of a query line,
-and if
-.meta fun
-has a binding as a vertical pattern function.  Prior to 273, this situation was
-not given any special treatment; the vertical function
-.meta fun
-was called such that only one line of input is visible, and if it produced
-a match, the variable was bound to that line. A compatibility value of 272
-or lower restores this behavior.
+can now invoke a vertical function against the full input, and the variable
+consequently to be bound to multiple lines. Previously this syntax invoked
+only horizontal functions or else vertical functions in a single-line
+horizontal mode. That behavior is restored by 272 or lower compatibility.
+Secondly, the function is now always invoked, whether or not the variable
+has a binding. The variable is then matched against the text spanned
+by the function to either give it a new binding or match the existing binding.
+The old behavior, restored by 272 or lower compatibility, is that the
+function is not invoked when the variable has a binding; the
+variable's value is instead used to match text.
 .IP 265
 Until \*(TX 265, the
 .code with-resources

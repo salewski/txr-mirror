@@ -13,3 +13,16 @@
 @{w (fun2 x "a")}@y
 @(require (equal w "a"))
 @(require (equal y "b"))
+@(next :list '("a" "a" "a" "b" "c"))
+@(bind d ("d"))
+@(cases)
+@  {d (fun "x" "a")}
+@(or)
+@  (require "get here")
+@(end)
+@(next :string "ab")
+@(cases)
+@  {d (fun2 "x" "a")}
+@(or)
+@  (require "get here")
+@(end)
