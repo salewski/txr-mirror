@@ -1,3 +1,82 @@
+                                    TXR 273
+                                   2021-12-28
+
+
+  Features
+
+  - compiler:
+    - new jump optimizations.
+    - register compacting optimization: greatly reduces stack use,
+      especially of complex functions, and improves cache locality.
+
+  - pattern language:
+    - @{var /regex/} changes:
+      - regex no longer ignored when var already has binding
+        - text is extracted with regex, then compared to variable
+    - @{var (fun ..)} changes:
+      - (fun ...) now processed in vertical mode if sole item in line.
+      - variable captures lines skipped over in vertical processing.
+      - (fun ...) no longer ignored when var already has binding.
+        - fun executed like in unbound case.
+        - text that would be bound to variable is compared to existing value.
+
+  - structural pattern matching:
+    - in quasiliteral patterns, @{var #/regex/} can specify bound variable now:
+      - matches text in same way as unbound case
+      - matched text must then match content of var
+
+  - lib:
+    - new functions: tuples*, rot, nrot, subq, subq, subqual, subst, pairlis.
+
+  - hash tables:
+    - use 64 bit hash on 64 bit platforms, rather than 32 bit.
+
+  - search trees:
+    - new function tree-count, and length/len works on trees.
+    - duplicate keys supported:
+      - tree, tree-insert, tree-insert-node have optional argument for
+        allowing duplicates.
+      - tree-delete-specific-node allows specific node to be
+        removed, when removing by key is ambiguous.
+    - priority queue support:
+      - tree-min, tree-min-node, tree-del-min, tree-del-min-node
+
+  - oop/structs:
+    - new feature: application-defined struct clause macros.
+    - new: :delegate and :mass-delegate clause macros for
+      generating delegate method boilerplate with minimal code.
+
+  Bugs
+
+  - compiler:
+    - fix non-working (compile '(lambda ...)).
+
+  - buffers:
+    - file-get-buf and command-get-buf use unbuffered I/O
+      to read the exact number of bytes into the buffer,
+      avoiding reading more bytes than requested.
+
+  - case macros (mainly affecting casequal):
+    - fixed 2017 regression causing a key value like ((a b c)),
+      which is the single key (a b c), to be wrongly converted
+      into a list of three keys.
+
+  - each-match, each-prod, sum-each family of macros:
+    - documented and added missing anonymous block
+
+  - maprodo: spurious non-nil return value issue.
+
+  - interpreter: bug in interpreting optional parameters,
+    present in original implementation from 2014 (absent in compiler).
+
+  - iteration: gc stability problem in iter-begin and iter-reset.
+
+  - define-accessor: broken argument handling.
+
+  - less/greater: gaping bug, vectors not supported.
+
+
+
                                     TXR 272
                                    2021-11-11
 
