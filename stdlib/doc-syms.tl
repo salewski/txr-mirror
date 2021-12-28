@@ -54,6 +54,7 @@
       ("*stdlog*" "N-00854995")
       ("*stdnull*" "N-006566FB")
       ("*stdout*" "N-006566FB")
+      ("*struct-clause-expander*" "N-0141A208")
       ("*trace-output*" "N-0067A6AC")
       ("*tree-fun-whitelist*" "N-025AB9C9")
       ("*unhandled-hook*" "N-02B4A4FB")

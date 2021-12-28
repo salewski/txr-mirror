@@ -31222,6 +31222,36 @@ or a subtype thereof.
   fa.(write 4) -> ;; error: fa has no such method
 .brev
 
+.coNP Special variable @ *struct-clause-expander*
+.desc
+The
+.code *struct-clause-expander*
+special variable holds the hash table of associations between
+keyword symbols and struct clause expander functions, defined by
+.codn define-struct-clause .
+
+If the expression
+.code "[*struct-clause-expander* :sym]"
+yields a function, then symbol
+.code :sym
+has a binding as a struct clause macro. If that
+expression yields
+.codn nil ,
+then there is no such binding.
+
+The macro expanders in
+.code *struct-clause-expander*
+are two-parameter functions. The first parameter accepts the
+clause to to be expanded. The second parameter accepts the
+.code defstruct
+form in which that clause is found; this is useful for error
+reporting.
+
+An expander function returns a list of clauses, which may be any, possibly
+empty mixture of primary clauses accepted by
+.code defstruct
+and clause macros.
+
 .SS* Special Structure Functions
 
 Special structure functions are user-defined methods or structure functions
