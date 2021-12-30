@@ -363,7 +363,9 @@ distclean:
 else
 rebuild: clean $(PROG)
 
-clean: conftest.clean clean-tlo
+clean: conftest.clean clean-c clean-tlo
+
+clean-c:
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
 	rm -f y.tab.h.old
 	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE) .build_id
