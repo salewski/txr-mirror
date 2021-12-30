@@ -82,6 +82,12 @@ int opt_compat;
 int opt_dbg_expansion;
 val stdlib_path;
 
+#if HAVE_FORK_STUFF
+#define IF_HAVE_FORK_STUFF(THEN, ELSE) THEN
+#else
+#define IF_HAVE_FORK_STUFF(THEN, ELSE) ELSE
+#endif
+
 static void help(void)
 {
   val text = lit(
@@ -169,9 +175,10 @@ static void help(void)
 "                       copies of it to be to be embedded in the\n"
 "                       encoded arguments. See the manual.\n"
 "--noprofile            Do not read .txr_profile when entering listener.\n"
-#if HAVE_FORK_STUFF
-"--reexec               Re-execute TXR with remaining arguments.\n"
-#endif
+IF_HAVE_FORK_STUFF(
+"--reexec               Re-execute TXR with remaining arguments.\n",
+""
+)
 "--debug-autoload       Allow debugger to step through library auto-loading.\n"
 "--debug-expansion      Allow debugger to step through macro-expansion of query.\n"
 "--yydebug              Debug Yacc parser, if compiled with YYDEBUG support.\n"
