@@ -8,40 +8,40 @@ SECTION                                                                    LINE
 0.       Overview                                                            47
 
 1.       Coding Practice                                                     54
-1.2      Program File Structure                                              77
-1.3      Style                                                               91
-1.3      Error Handling                                                     153
-1.4      I/O                                                                166
-1.5      Type Safety                                                        176
-1.6      Regression                                                         218
+1.2      Program File Structure                                              95
+1.3      Style                                                              109
+1.3      Error Handling                                                     171
+1.4      I/O                                                                184
+1.5      Type Safety                                                        194
+1.6      Regression                                                         236
 
-2.       Dynamic Types                                                      227
-2.1      Two Kinds of Values                                                234
-2.1      Pointer Bitfield                                                   245
-2.2      Heap Objects                                                       268
-2.3      The COBJ type                                                      288
-2.4      Strings                                                            305
-2.4.1    Encapsulated C Strings                                             320
-2.4.2    Representation Hacks for 2-byte wchar_t                            364
+2.       Dynamic Types                                                      245
+2.1      Two Kinds of Values                                                252
+2.1      Pointer Bitfield                                                   263
+2.2      Heap Objects                                                       286
+2.3      The COBJ type                                                      306
+2.4      Strings                                                            323
+2.4.1    Encapsulated C Strings                                             338
+2.4.2    Representation Hacks for 2-byte wchar_t                            382
 
-3.       Garbage Collection                                                 423
-3.1      Root Pointers                                                      441
-3.2      GC-safe Code                                                       464
-3.2.1    Rule One: Full Initialization                                      490
-3.2.2    Rule Two: Make it Reachable                                        519
-3.3      Weak Reference Support                                             707
-3.4      Finalization                                                       750
-3.5      Generational GC                                                    774
-3.5.2    Representation of Generations                                      783
-3.5.3    Basic Algorithm                                                    819
-3.5.4    Handling Backpointers                                              854
-3.5.5    Generational GC and Finalization                                   932
+3.       Garbage Collection                                                 441
+3.1      Root Pointers                                                      459
+3.2      GC-safe Code                                                       482
+3.2.1    Rule One: Full Initialization                                      508
+3.2.2    Rule Two: Make it Reachable                                        537
+3.3      Weak Reference Support                                             725
+3.4      Finalization                                                       768
+3.5      Generational GC                                                    792
+3.5.2    Representation of Generations                                      801
+3.5.3    Basic Algorithm                                                    837
+3.5.4    Handling Backpointers                                              872
+3.5.5    Generational GC and Finalization                                   950
 
-4.       Debugging                                                          961
-4.2.     Debugging the Yacc-generated Parser                               1092
-4.3.     Debugging GC Issues                                               1105
-4.4      Object Breakpoint                                                 1128
-4.5      Valgrind: Your Friend                                             1147
+4.       Debugging                                                          979
+4.2.     Debugging the Yacc-generated Parser                               1110
+4.3.     Debugging GC Issues                                               1123
+4.4      Object Breakpoint                                                 1146
+4.5      Valgrind: Your Friend                                             1165
 
 
 0. Overview
@@ -56,11 +56,29 @@ provide rationale and make coding recommendations.
 1.1  Language
 
 Txr is written in a language that consists of the common dialect between C90
-and C++98.  The code can be built with either the GNU C compiler or the GNU C++
-compiler.  Use is made of some Unix functions from before Unix95, which are
-requested by means of -D_XOPEN_SOURCE (POSIX.1, POSIX.2, X/Open Portability
-Guide 4).  Also, the <wchar.h> header is used, which was introduced by a 1995
-addendum to the C language, so it may be said that the actual C dialect is C95.
+and C++98, with some GCC extensions, such as:
+
+- initializing structure members with values not computable at load-time
+- converting between object and function pointers
+- certain extensions detected by the configure script as working, such
+  as the long long type
+- bitfields of an enum type rather than int.
+
+The code can be built with either the GNU C compiler or the GNU C++
+compiler.
+
+Use is made of numerous library functions which are detected by the configure
+script without regard for dialect. For instance, some C99 mathematics functions
+are used, if available, as well as numerous POSIX functions. Effectively, these
+can be regarded as extensions to the C90 language, since they are revealed in
+the headers and library linkage.
+
+The <inttypes.h> header isn't used, though there is a reference to it in
+the Flex-generated scanner, active only if that is compiled in C99 mode.
+
+The <wchar.h> header is used, which was introduced by a 1995 addendum to the C
+language, so it may be said that the actual C dialect is C95 with some
+extensions.
 
 In coding new features or fixing bugs, care must be taken to preserve this.
 Code must continue to compile as C and C++, and not increase the portability

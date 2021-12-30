@@ -398,6 +398,16 @@ NORETURN void invalid_op(val self, val obj);
     return VAL;                                 \
   } while (0)
 
+#define uw_block_beg(TAG, RESULTVAR)            \
+  do {                                          \
+    uw_frame_t uw_blk;                          \
+    obj_t **uw_rslt = &RESULTVAR;               \
+    uw_push_block(&uw_blk, TAG);                \
+    if (extended_setjmp(uw_blk.bl.jb)) {        \
+      RESULTVAR = uw_blk.bl.result;             \
+    } else {                                    \
+      enum { dummy ## __LINE__ }
+
 #define uw_block_begin(TAG, RESULTVAR)          \
   obj_t *RESULTVAR = nil;                       \
   do {                                          \
@@ -407,7 +417,7 @@ NORETURN void invalid_op(val self, val obj);
     if (extended_setjmp(uw_blk.bl.jb)) {        \
       RESULTVAR = uw_blk.bl.result;             \
     } else {                                    \
-      do { } while (0)
+      enum { dummy ## __LINE__ }
 
 #define uw_block_end                            \
     }                                           \
@@ -417,9 +427,12 @@ NORETURN void invalid_op(val self, val obj);
 #define uw_match_env_begin              \
   do {                                  \
     uw_frame_t uw_env;                  \
-    uw_push_match_env(&uw_env)
+    uw_push_match_env(&uw_env);         \
+    {                                   \
+      enum { dummy ## __LINE__ }
 
 #define uw_match_env_end                \
+    }                                   \
     uw_pop_frame(&uw_env);              \
   } while (0)
 

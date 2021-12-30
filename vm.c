@@ -1142,18 +1142,20 @@ val vm_execute_closure(val fun, struct args *args)
   }
 
   while (fixparam >= 2) {
-    fixparam -= 2;
-    argw = vm.code[vm.ip++];
-    unsigned xreg = vm_arg_operand_lo(argw);
-    unsigned yreg = vm_arg_operand_hi(argw);
+    vm_word_t aw = vm.code[vm.ip++];
+    unsigned xreg = vm_arg_operand_lo(aw);
+    unsigned yreg = vm_arg_operand_hi(aw);
     vm_set(dspl, xreg, args_get(args, &ix));
     vm_set(dspl, yreg, args_get(args, &ix));
+    fixparam -= 2;
+    argw = aw;
   }
 
   if (fixparam) {
-    argw = vm.code[vm.ip++];
-    unsigned xreg = vm_arg_operand_lo(argw);
+    vm_word_t aw = vm.code[vm.ip++];
+    unsigned xreg = vm_arg_operand_lo(aw);
     vm_set(dspl, xreg, args_get(args, &ix));
+    argw = aw;
   }
 
   if (variadic) {

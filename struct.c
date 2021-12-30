@@ -1167,9 +1167,9 @@ static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
       }
     }
   } else {
-    slot_cache = coerce(slot_cache_set_t *,
-                        chk_calloc(SLOT_CACHE_SIZE,
-                                   sizeof (slot_cache_set_t)));
+    slot_cache_set_t *slot_cache = coerce(slot_cache_set_t *,
+                                          chk_calloc(SLOT_CACHE_SIZE,
+                                                     sizeof *slot_cache));
     slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
     val key = cons(sym, num_fast(id));
     val sl = gethash(slot_hash, key);
@@ -1734,13 +1734,12 @@ static val umethod_args_fun(val dargs, struct args *args)
     cnum da_nargs = da->fill + c_num(length(da->list), self);
     cnum index = 0;
     val strct = args_get(args, &index);
+    struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
     args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
     args_add(args_call, strct);
     args_cat(args_call, da);
     args_normalize_exact(args_call, da_nargs + 1);
     args_cat_zap_from(args_call, args, index);
-
-    struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
 
     if (sym && symbolp(sym)) {
       loc ptr = lookup_slot(strct, si, sym);
@@ -2035,10 +2034,13 @@ val static_slot_type_reg(val slot, val strct)
 val get_special_slot(val obj, enum special_slot spidx)
 {
   val slot = *special_sym[spidx];
-  if (opt_compat && opt_compat <= 224)
+
+  if (opt_compat && opt_compat <= 224) {
     return maybe_slot(obj, slot);
-  struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
-  return get_special_static_slot(si->type, spidx, slot);
+  } else {
+    struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
+    return get_special_static_slot(si->type, spidx, slot);
+  }
 }
 
 val get_special_required_slot(val obj, enum special_slot spidx)

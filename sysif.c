@@ -271,10 +271,12 @@ val usleep_wrap(val usec)
   sig_save_enable;
 
 #if HAVE_POSIX_NANOSLEEP
-  struct timespec ts;
-  ts.tv_sec = u / 1000000;
-  ts.tv_nsec = (u % 1000000) * 1000;
-  retval = if3(nanosleep(&ts, 0) == 0, t, nil);
+  {
+    struct timespec ts;
+    ts.tv_sec = u / 1000000;
+    ts.tv_nsec = (u % 1000000) * 1000;
+    retval = if3(nanosleep(&ts, 0) == 0, t, nil);
+  }
 #elif HAVE_POSIX_SLEEP && HAVE_POSIX_USLEEP
   retval = if2(sleep(u / 1000000) == 0 &&
                usleep(u % 1000000) == 0, t);
@@ -2525,13 +2527,17 @@ val setrlimit_wrap(val resource, val rlim)
 {
   val self = lit("setrlimit");
   struct rlimit rl;
+
   rl.rlim_cur = c_unum(slot(rlim, cur_s), self);
   rl.rlim_max = c_unum(slot(rlim, max_s), self);
-  int res = setrlimit(c_int(resource, self), &rl);
 
-  if (res != 0)
-    uw_ethrowf(system_error_s, lit("~a failed for ~a: ~d/~s"),
-               self, resource, num(errno), errno_to_str(errno), nao);
+  {
+    int res = setrlimit(c_int(resource, self), &rl);
+
+    if (res != 0)
+      uw_ethrowf(system_error_s, lit("~a failed for ~a: ~d/~s"),
+                 self, resource, num(errno), errno_to_str(errno), nao);
+  }
 
   return t;
 }

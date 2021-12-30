@@ -167,8 +167,8 @@ nm='$(cross)$(tool_prefix)nm'
 opt_flags='-O2 -fno-stack-protector'
 lang_flags='-D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE'
 diag_flags="-Wall -Wextra -Werror=implicit-function-declaration \
-           -Werror=missing-prototypes -Werror=strict-prototypes \
-           -Werror=old-style-definition"
+           -Werror=missing-prototypes -Werror=strict-prototypes -Werror=vla \
+           -Werror=old-style-definition -Werror=declaration-after-statement"
 debug_flags=-g
 debug_only_flags=-DTXR_DEBUG
 debug_also=
@@ -810,6 +810,7 @@ if [ $cplusplus ] ; then
    diag_flags=''
    for flag in "$@" ; do
      case $flag in
+       *=declaration-after-statement | \
        *=implicit-function-declaration | \
        *=missing-prototypes | \
        *=old-style-* | \

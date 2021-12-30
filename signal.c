@@ -370,8 +370,8 @@ int sig_mask(int how, const small_sigset_t *set, small_sigset_t *oldset)
   if (sig_blocked_cache.set != pnew->set) {
     static sigset_t blank;
     sigset_t real_newset = blank, real_oldset;
-    sig_blocked_cache = *pnew;
     int ret;
+    sig_blocked_cache = *pnew;
 #if HAVE_VALGRIND
     VALGRIND_MAKE_MEM_DEFINED(&real_oldset, sizeof real_oldset);
 #endif

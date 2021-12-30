@@ -407,9 +407,10 @@ static val time_string_meth(val time_struct, val format)
 {
   val self = lit("(meth time-string)");
   struct tm tms = all_zero_init;
-  time_struct_to_tm(&tms, time_struct, t, self);
   char buffer[512] = "";
   char *fmt = utf8_dup_to(c_str(format, self));
+
+  time_struct_to_tm(&tms, time_struct, t, self);
 
   if (strftime(buffer, sizeof buffer, fmt, &tms) == 0)
     buffer[0] = 0;
@@ -425,8 +426,9 @@ static val time_parse_meth(val time_struct, val format, val string)
 {
   val self = lit("(meth time-parse)");
   struct tm tms = all_zero_init;
-  time_struct_to_tm(&tms, time_struct, nil, self);
   val ret = nil;
+
+  time_struct_to_tm(&tms, time_struct, nil, self);
 
   {
     const wchar_t *w_str = c_str(string, self);

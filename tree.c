@@ -537,28 +537,30 @@ static val tr_do_delete_specific(val tree, struct tree *tr, val subtree,
     return subtree;
   }
 
-  val tr_key = if3(tr->key_fn,
-                   funcall1(tr->key_fn, subtree->tn.key),
-                   subtree->tn.key);
+  {
+    val tr_key = if3(tr->key_fn,
+                     funcall1(tr->key_fn, subtree->tn.key),
+                     subtree->tn.key);
 
-  if (if3(tr->less_fn,
-          funcall2(tr->less_fn, key, tr_key),
-          less(key, tr_key)))
-  {
-    val le = subtree->tn.left;
-    return tr_do_delete_specific(tree, tr, le, subtree, key, thisnode);
-  } else if (if3(tr->equal_fn == nil,
-                 equal(key, tr_key),
-                 funcall2(tr->equal_fn, key, tr_key)))
-  {
-    uses_or2;
-    val le = subtree->tn.left;
-    val ri = subtree->tn.right;
-    return or2(tr_do_delete_specific(tree, tr, le, subtree, key, thisnode),
-               tr_do_delete_specific(tree, tr, ri, subtree, key, thisnode));
-  } else {
-    val ri = subtree->tn.right;
-    return tr_do_delete_specific(tree, tr, ri, subtree, key, thisnode);
+    if (if3(tr->less_fn,
+            funcall2(tr->less_fn, key, tr_key),
+            less(key, tr_key)))
+    {
+      val le = subtree->tn.left;
+      return tr_do_delete_specific(tree, tr, le, subtree, key, thisnode);
+    } else if (if3(tr->equal_fn == nil,
+                   equal(key, tr_key),
+                   funcall2(tr->equal_fn, key, tr_key)))
+    {
+      uses_or2;
+      val le = subtree->tn.left;
+      val ri = subtree->tn.right;
+      return or2(tr_do_delete_specific(tree, tr, le, subtree, key, thisnode),
+                 tr_do_delete_specific(tree, tr, ri, subtree, key, thisnode));
+    } else {
+      val ri = subtree->tn.right;
+      return tr_do_delete_specific(tree, tr, ri, subtree, key, thisnode);
+    }
   }
 }
 

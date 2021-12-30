@@ -2096,6 +2096,8 @@ void hash_early_init(void)
 
 void hash_init(void)
 {
+  val ghu = func_n1(get_hash_userdata);
+
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
   weak_and_k = intern(lit("weak-and"), keyword_package);
@@ -2105,7 +2107,6 @@ void hash_init(void)
   eq_based_k = intern(lit("eq-based"), keyword_package);
   userdata_k = intern(lit("userdata"), keyword_package);
   hash_seed_s = intern(lit("*hash-seed*"), user_package);
-  val ghu = func_n1(get_hash_userdata);
 
   hash_cls->cls_sym = hash_s;
   hash_iter_cls->cls_sym = hash_iter_s;

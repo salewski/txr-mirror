@@ -1072,6 +1072,7 @@ static val revive_cont(val dc, val arg)
     mem_t *ptr;
     uw_frame_t *new_uw_stack = coerce(uw_frame_t *, space + UW_CONT_FRAME_BEFORE), *fr;
     int env_set = 0;
+    val result = nil;
 
     memcpy(space, cont->stack, cont->size);
 
@@ -1101,7 +1102,7 @@ static val revive_cont(val dc, val arg)
 #endif
     }
 
-    uw_block_begin (cont->tag, result);
+    uw_block_beg (cont->tag, result);
 
     for (fr = new_uw_stack; ; fr = fr->uw.up) {
       if (!env_set && fr->uw.type == UW_MENV) {

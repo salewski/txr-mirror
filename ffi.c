@@ -509,17 +509,17 @@ static val ffi_void_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_simple_release(struct txr_ffi_type *tft, val obj,
                                mem_t *dst, val self)
 {
+  mem_t **loc = coerce(mem_t **, dst);
   (void) tft;
   (void) obj;
   (void) self;
-  mem_t **loc = coerce(mem_t **, dst);
   free(*loc);
   *loc = 0;
 }
 
 #if __i386__ || __x86_64__ || __PPC64__ || __ARM_FEATURE_UNALIGNED
 
-#define align_sw_get(type, src)
+#define align_sw_get(type, src) enum { dummy ## __LINE__ }
 #define align_sw_end
 #define align_sw_put_end
 #define align_sw_put(type, dst, expr) (expr)
@@ -531,7 +531,7 @@ static void ffi_simple_release(struct txr_ffi_type *tft, val obj,
   const size_t sz = sizeof (type);                                      \
   mem_t *src_prev = src;                                                \
   mem_t *buf = al ? src : convert(mem_t *, alloca(sz));                 \
-  mem_t *src = al ? buf : (memcpy(buf, src_prev, sz), buf);
+  mem_t *src = al ? buf : (memcpy(buf, src_prev, sz), buf)
 
 #define align_sw_end                                                    \
 }
@@ -557,8 +557,8 @@ static void ffi_simple_release(struct txr_ffi_type *tft, val obj,
 #if HAVE_I8
 static void ffi_i8_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
-  (void) tft;
   i8_t v = c_i8(n, self);
+  (void) tft;
   *coerce(i8_t *, dst) = v;
 }
 
@@ -571,8 +571,8 @@ static val ffi_i8_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static void ffi_u8_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
-  (void) tft;
   u8_t v = c_u8(n, self);
+  (void) tft;
   *coerce(u8_t *, dst) = v;
 }
 

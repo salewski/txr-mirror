@@ -2670,11 +2670,12 @@ static val op_dohash(val form, val env)
   val valvar = cons(valsym, nil);
   val new_env = make_env(cons(keyvar, cons(valvar, nil)), nil, env);
   val cell;
+  val result = nil;
   struct hash_iter hi;
 
   hash_iter_init(&hi, eval(hashform, env, hashform), op);
 
-  uw_block_begin (nil, result);
+  uw_block_beg (nil, result);
 
   while ((cell = hash_iter_next(&hi)) != nil) {
     /* These assignments are gc-safe, because keyvar and valvar
@@ -3125,8 +3126,9 @@ static val op_upenv(val form, val env)
 
 static val op_load_time_lit(val form, val env)
 {
-  (void) env;
   val args = cdr(form);
+  (void) env;
+
   if (car(args)) {
     return cadr(args);
   } else {

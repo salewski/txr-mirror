@@ -1232,11 +1232,12 @@ static int is_balanced_line(const wchar_t *line, void *ctx)
   };
   int count[32], sp = 0;
   enum state state[32];
-  count[sp] = 0;
-  state[sp] = ST_START;
   wchar_t ch;
 
   (void) ctx;
+
+  count[sp] = 0;
+  state[sp] = ST_START;
 
   while ((ch = *line++) != 0) {
   again:

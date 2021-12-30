@@ -4173,11 +4173,11 @@ struct strm_ctx *get_ctx(val stream)
   return s->ctx;
 }
 
-val get_string(val stream_in, val nchars, val close_after_p)
+val get_string(val stream_in, val nchars_in, val close_after_p)
 {
   val stream = default_arg_strict(stream_in, std_input);
   val strstream = make_string_output_stream();
-  nchars = default_null_arg(nchars);
+  val nchars = default_null_arg(nchars_in);
   val ch;
 
   if (nchars) {

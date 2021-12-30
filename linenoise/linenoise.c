@@ -2008,8 +2008,9 @@ static void edit_in_editor(lino_t *l) {
 
     if (fo) {
         char cmd[256];
-        snprintf(cmd, sizeof cmd, "%s %s", ed, path);
         int preserve = 0;
+
+        snprintf(cmd, sizeof cmd, "%s %s", ed, path);
         tr(l->data, '\r', '\n');
 
         if (lino_os.puts_file_fn(fo, l->data) && lino_os.puts_file_fn(fo, L"\n"))

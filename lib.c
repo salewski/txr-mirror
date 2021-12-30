@@ -2256,8 +2256,9 @@ static val revlist(val in, val *tail)
 loc list_collect_revappend(loc ptail, val obj)
 {
   val last;
-  obj = nullify(obj);
   val tailobj = deref(ptail);
+
+  obj = nullify(obj);
 
 again:
   switch (type(tailobj)) {
@@ -2520,9 +2521,10 @@ static val sub_iter(val obj, val from, val to)
 {
   val self = lit("sub");
   seq_iter_t iter;
-  seq_iter_init(self, &iter, obj);
   val idx = zero, elem;
   list_collect_decl (out, ptail);
+
+  seq_iter_init(self, &iter, obj);
 
   if (from == t)
     return nil;
@@ -5443,9 +5445,10 @@ val replace_str(val str_in, val items, val from, val to)
                c_str(items, self), c_num(len_it, self));
     } else {
       seq_iter_t item_iter;
-      seq_iter_init(self, &item_iter, items);
       cnum f = c_num(from, self);
       cnum t = c_num(to, self);
+
+      seq_iter_init(self, &item_iter, items);
 
       for (; f != t; f++)
         str_in->st.str[f] = c_chr(seq_geti(&item_iter));
@@ -6719,9 +6722,9 @@ val make_sym(val name)
   }
 }
 
-val gensym(val prefix)
+val gensym(val prefix_in)
 {
-  prefix = default_arg(prefix, lit("g"));
+  val prefix = default_arg(prefix_in, lit("g"));
   loc gs_loc = lookup_var_l(nil, gensym_counter_s);
   val name = format(nil, lit("~a~,04d"), prefix,
                     set(gs_loc, plus(deref(gs_loc), one)), nao);
@@ -9220,10 +9223,11 @@ val replace_vec(val vec_in, val items, val from, val to)
       mut(vec_in);
     } else {
       seq_iter_t item_iter;
-      seq_iter_init(self, &item_iter, items);
       int mut_needed = 0;
       cnum f = c_num(from, self);
       cnum t = c_num(to, self);
+
+      seq_iter_init(self, &item_iter, items);
 
       for (; f != t; f++) {
         val item = seq_geti(&item_iter);
@@ -10126,9 +10130,10 @@ val mapcar_listout(val fun, val seq)
 {
   val self = lit("mapcar");
   seq_iter_t iter;
-  seq_iter_init(self, &iter, seq);
   val elem;
   list_collect_decl (out, ptail);
+
+  seq_iter_init(self, &iter, seq);
 
   while (seq_get(&iter, &elem))
     ptail = list_collect(ptail, funcall1(fun, elem));
@@ -10158,9 +10163,10 @@ val mappend(val fun, val seq)
 {
   val self = lit("mappend");
   seq_iter_t iter;
-  seq_iter_init(self, &iter, seq);
   val elem;
   list_collect_decl (out, ptail);
+
+  seq_iter_init(self, &iter, seq);
 
   while (seq_get(&iter, &elem))
     ptail = list_collect_append(ptail, funcall1(fun, elem));
@@ -10172,8 +10178,9 @@ val mapdo(val fun, val seq)
 {
   val self = lit("mapdo");
   seq_iter_t iter;
-  seq_iter_init(self, &iter, seq);
   val elem;
+
+  seq_iter_init(self, &iter, seq);
 
   while (seq_get(&iter, &elem))
     funcall1(fun, elem);
@@ -10239,9 +10246,11 @@ static val window_map_list(val range, val boundary, val fun, val list,
     args->arg[i] = ref(boundary, num(j++));
 
   for (;;) {
+    val item;
     args_decl (args_cp, ws);
     args_copy(args_cp, args);
-    val item = generic_funcall(fun, args_cp);
+
+    item = generic_funcall(fun, args_cp);
 
     switch (op) {
     case WMAP_MAP: ptail = list_collect(ptail, item); break;
@@ -10819,11 +10828,11 @@ val rot(val seq, val n_in)
   return seq;
 }
 
-val find(val item, val seq, val testfun, val keyfun)
+val find(val item, val seq, val testfun_in, val keyfun_in)
 {
   val self = lit("find");
-  testfun = default_arg(testfun, equal_f);
-  keyfun = default_arg(keyfun, identity_f);
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
   seq_info_t si = seq_info(seq);
 
   switch (si.kind) {
@@ -10877,11 +10886,11 @@ val find(val item, val seq, val testfun, val keyfun)
   }
 }
 
-val rfind(val item, val seq, val testfun, val keyfun)
+val rfind(val item, val seq, val testfun_in, val keyfun_in)
 {
   val self = lit("rfind");
-  testfun = default_arg(testfun, equal_f);
-  keyfun = default_arg(keyfun, identity_f);
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
   seq_info_t si = seq_info(seq);
 
   switch (si.kind) {
@@ -11199,11 +11208,11 @@ val rfind_if(val predi, val seq, val key)
   return found;
 }
 
-val pos(val item, val seq, val testfun, val keyfun)
+val pos(val item, val seq, val testfun_in, val keyfun_in)
 {
   val self = lit("pos");
-  testfun = default_arg(testfun, equal_f);
-  keyfun = default_arg(keyfun, identity_f);
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
   seq_info_t si = seq_info(seq);
 
   switch (si.kind) {
@@ -11260,11 +11269,11 @@ val pos(val item, val seq, val testfun, val keyfun)
   }
 }
 
-val rpos(val item, val seq, val testfun, val keyfun)
+val rpos(val item, val seq, val testfun_in, val keyfun_in)
 {
   val self = lit("rpos");
-  testfun = default_arg(testfun, equal_f);
-  keyfun = default_arg(keyfun, identity_f);
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
   seq_info_t si = seq_info(seq);
 
   switch (si.kind) {
@@ -11525,11 +11534,12 @@ val subst(val oldv, val newv, val seq, val testfun_in, val keyfun_in)
 {
   val self = lit("subst");
   seq_iter_t iter;
-  seq_iter_init(self, &iter, seq);
   val elem;
   val testfun = default_arg(testfun_in, equal_f);
   val keyfun = default_arg(keyfun_in, identity_f);
   list_collect_decl (out, ptail);
+
+  seq_iter_init(self, &iter, seq);
 
   while (seq_get(&iter, &elem)) {
     val key = funcall1(keyfun, elem);
@@ -12003,7 +12013,7 @@ val drop_until(val pred, val seq, val keyfun)
   }
 }
 
-val in(val seq, val item, val testfun, val keyfun)
+val in(val seq, val item, val testfun_in, val keyfun_in)
 {
   val self = lit("in");
   seq_info_t si = seq_info(seq);
@@ -12015,8 +12025,8 @@ val in(val seq, val item, val testfun, val keyfun)
   case STR:
   case LSTR:
     {
-      testfun = default_arg(testfun, equal_f);
-      keyfun = default_arg(keyfun, identity_f);
+      val testfun = default_arg(testfun_in, equal_f);
+      val keyfun = default_arg(keyfun_in, identity_f);
       val len = length_str(seq);
       val ind;
 
@@ -12032,8 +12042,8 @@ val in(val seq, val item, val testfun, val keyfun)
     }
   case VEC:
     {
-      testfun = default_arg(testfun, equal_f);
-      keyfun = default_arg(keyfun, identity_f);
+      val testfun = default_arg(testfun_in, equal_f);
+      val keyfun = default_arg(keyfun_in, identity_f);
       val len = length_vec(seq);
       val ind;
 
@@ -12050,7 +12060,7 @@ val in(val seq, val item, val testfun, val keyfun)
   default:
     switch (si.kind) {
     case SEQ_HASHLIKE:
-      if (null_or_missing_p(testfun) && null_or_missing_p(keyfun))
+      if (null_or_missing_p(testfun_in) && null_or_missing_p(keyfun_in))
         return tnil(gethash_e(self, si.obj, item));
       /* fallthrough */
     case SEQ_LISTLIKE:
@@ -12058,11 +12068,10 @@ val in(val seq, val item, val testfun, val keyfun)
       {
         seq_iter_t iter;
         val elem;
+        val testfun = default_arg(testfun_in, equal_f);
+        val keyfun = default_arg(keyfun_in, identity_f);
 
         seq_iter_init(self, &iter, seq);
-
-        testfun = default_arg(testfun, equal_f);
-        keyfun = default_arg(keyfun, identity_f);
 
         while (seq_get(&iter, &elem)) {
           val key = funcall1(keyfun, elem);
@@ -12629,10 +12638,10 @@ val update(val seq, val fun)
 }
 
 static val search_common(val self, int from_right,
-                         val seq, val key, val testfun, val keyfun)
+                         val seq, val key, val testfun_in, val keyfun_in)
 {
-  testfun = default_arg(testfun, equal_f);
-  keyfun = default_arg(keyfun, identity_f);
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
   seq_iter_t si, ki;
 
   seq_iter_init(self, &si, seq);

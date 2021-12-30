@@ -914,14 +914,16 @@ void gc_init(val *stack_bottom)
   gc_stack_bottom = stack_bottom;
   gc_stack_limit = gc_stack_bottom - DFL_STACK_LIMIT / sizeof (val);
 #if HAVE_RLIMIT
-  struct rlimit rl;
-  if (getrlimit(RLIMIT_STACK, &rl) == 0) {
-    rlim_t lim = rl.rlim_cur;
-    if (lim != RLIM_INFINITY) {
-      ptrdiff_t delta = (lim >= MIN_STACK_LIMIT
-                         ? (lim - lim / 16)
-                         : MIN_STACK_LIMIT) / sizeof (val);
-      gc_stack_limit = gc_stack_bottom - delta;
+  {
+    struct rlimit rl;
+    if (getrlimit(RLIMIT_STACK, &rl) == 0) {
+      rlim_t lim = rl.rlim_cur;
+      if (lim != RLIM_INFINITY) {
+        ptrdiff_t delta = (lim >= MIN_STACK_LIMIT
+                           ? (lim - lim / 16)
+                           : MIN_STACK_LIMIT) / sizeof (val);
+        gc_stack_limit = gc_stack_bottom - delta;
+      }
     }
   }
 #endif

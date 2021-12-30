@@ -1104,8 +1104,8 @@ static void nfa_map_states(nfa_state_t *s,
 
 static void nfa_count_one(nfa_state_t *s, mem_t *ctx)
 {
-  (void) s;
   int *pcount = coerce(int *, ctx);
+  (void) s;
   (*pcount)++;
 }
 
@@ -2346,9 +2346,9 @@ static void print_rec(val exp, val stream, int *semi_flag)
     val args = rest(exp);
 
     if (sym == set_s || sym == cset_s) {
-      putc_clear_flag(chr('['), stream, semi_flag);
-
       val first_p = t;
+
+      putc_clear_flag(chr('['), stream, semi_flag);
 
       if (sym == cset_s) {
         put_char(chr('^'), stream);

@@ -351,9 +351,10 @@ val replace_buf(val buf, val items, val from, val to)
       memmove(buf->b.data + c_num(from, self), items->b.data, c_num(len_it, self));
     } else {
       seq_iter_t item_iter;
-      seq_iter_init(self, &item_iter, items);
       cnum f = c_num(from, self);
       cnum t = c_num(to, self);
+
+      seq_iter_init(self, &item_iter, items);
 
       for (; f != t; f++) {
         val item = seq_geti(&item_iter);
@@ -367,7 +368,7 @@ val replace_buf(val buf, val items, val from, val to)
 
 val buf_list(val list)
 {
-  val self = lit("buf-list");;
+  val self = lit("buf-list");
   val len = length(list);
   val buf = make_buf(zero, zero, len);
   seq_iter_t iter;
