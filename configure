@@ -3391,13 +3391,15 @@ else
   printf "no\n"
 fi
 
-printf "Checking how to enable 64 bit file offsets ... "
+printf "Checking how to enable 64 bit off_t and time_t ..."
 
 file_offset_define=none
+time_bits_define=none
 
-for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 ; do
+for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 _TIME_BITS=64; do
   cat > conftest.c <<!
 #include <limits.h>
+#include <time.h>
 #include <sys/types.h>
 
 #define D(N, Z) ((N) ? (N) + '0' : Z)
@@ -3408,10 +3410,12 @@ for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 ; do
 struct sizes {
   char h_BYTE[32], s_BYTE[2];
   char h_OFF_T[32], s_OFF_T[2];
+  char h_TIME_T[32], s_TIME_T[2];
   char nl[2];
 } foo = {
   "\nSIZEOF_BYTE=", DEC(CHAR_BIT),
   "\nSIZEOF_OFF_T=", DEC(sizeof (off_t)),
+  "\nSIZEOF_TIME_T=", DEC(sizeof (time_t)),
   "\n"
 };
 
@@ -3431,23 +3435,44 @@ struct sizes {
     exit 1
   fi
 
-  if [ $(( SIZEOF_BYTE * SIZEOF_OFF_T )) -eq 64 ] ; then
-    if [ $try = NOTHING ] ; then
-      printf "default\n"
-      file_offset_define=
-    else
-      printf -- "-D%s\n" $try
-      file_offset_define=$try
+  if [ "$file_offset_define" = none ] ; then
+    if [ $(( SIZEOF_BYTE * SIZEOF_OFF_T )) -eq 64 ] ; then
+      if [ $try = NOTHING ] ; then
+        file_offset_define=
+      else
+        printf -- " -D%s" $try
+        file_offset_define=$try
+      fi
     fi
-    break;
   fi
+
+  if [ "$time_bits_define" = none ] ; then
+    if [ $(( SIZEOF_BYTE * SIZEOF_TIME_T )) -eq 64 ] ; then
+      if [ $try = NOTHING ] ; then
+        time_bits_define=
+      else
+        printf -- " -D%s" $try
+        time_bits_define=$try
+      fi
+    fi
+  fi
+
+  [ $file_offset_define = none -o $time_bits_define = none ] || break
 done
 
 if [ "$file_offset_define" = none ] ; then
-  printf "unable\n"
+  printf " (no 64 bit off_t)"
 elif [ -n "$file_offset_define" ] ; then
   lang_flags="$lang_flags -D$file_offset_define"
 fi
+
+if [ "$time_bits_define" = none ] ; then
+  printf " (no 64 bit time_t)"
+elif [ -n "$time_bits_define" ] ; then
+  lang_flags="$lang_flags -D$time_bits_define"
+fi
+
+printf "\n"
 
 printf "Checking for socket API ... "
 
