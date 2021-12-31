@@ -3416,7 +3416,7 @@ struct sizes {
 };
 
 !
-  if ! conftest_o ; then
+  if ! conftest_o EXTRA_FLAGS=-D$try ; then
     printf "failed\n\n"
 
     printf "Errors from compilation: \n\n"
