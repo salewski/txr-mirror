@@ -3426,8 +3426,6 @@ struct sizes {
 
   eval $(tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/  *//')
 
-  tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/=  */ /' -e 's/^/#define /' >> config.h
-
   if [ $SIZEOF_OFF_T -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
     printf "failed\n"
     exit 1
