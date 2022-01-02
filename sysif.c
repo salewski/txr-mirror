@@ -106,6 +106,9 @@
 #include "itypes.h"
 #include "txr.h"
 #include "sysif.h"
+#if CONFIG_LARGE_FILE_OFFSET
+#include "arith.h"
+#endif
 
 #ifndef DT_DIR
 #undef DT_UNKNOWN
@@ -3158,9 +3161,22 @@ void sysif_init(void)
 #if HAVE_RLIMIT
   reg_fun(intern(lit("getrlimit"), user_package), func_n2o(getrlimit_wrap, 1));
   reg_fun(intern(lit("setrlimit"), user_package), func_n2(setrlimit_wrap));
+#if CONFIG_LARGE_FILE_OFFSET
+  {
+    val rlim_inf = bignum_dbl_uipt(RLIM_INFINITY);
+    val rlim_smax = if3(RLIM_SAVED_MAX == RLIM_INFINITY,
+                        rlim_inf, bignum_dbl_uipt(RLIM_SAVED_MAX));
+    val rlim_scur = if3(RLIM_SAVED_CUR == RLIM_INFINITY,
+                        rlim_inf, bignum_dbl_uipt(RLIM_SAVED_CUR));
+    reg_varl(intern(lit("rlim-saved-max"), user_package), rlim_smax);
+    reg_varl(intern(lit("rlim-saved-cur"), user_package), rlim_scur);
+    reg_varl(intern(lit("rlim-infinity"), user_package), rlim_inf);
+  }
+#else
   reg_varl(intern(lit("rlim-saved-max"), user_package), num_fast(RLIM_SAVED_MAX));
   reg_varl(intern(lit("rlim-saved-cur"), user_package), num_fast(RLIM_SAVED_CUR));
   reg_varl(intern(lit("rlim-infinity"), user_package), num_fast(RLIM_INFINITY));
+#endif
   reg_varl(intern(lit("rlimit-core"), user_package), num_fast(RLIMIT_CORE));
   reg_varl(intern(lit("rlimit-cpu"), user_package), num_fast(RLIMIT_CPU));
   reg_varl(intern(lit("rlimit-data"), user_package), num_fast(RLIMIT_DATA));

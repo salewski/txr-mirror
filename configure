@@ -3463,6 +3463,7 @@ done
 if [ "$file_offset_define" = none ] ; then
   printf " (no 64 bit off_t)"
 elif [ -n "$file_offset_define" ] ; then
+  printf "#define CONFIG_LARGE_FILE_OFFSET 1\n" >> config.h
   lang_flags="$lang_flags -D$file_offset_define"
 fi
 
