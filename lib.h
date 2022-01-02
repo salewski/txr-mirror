@@ -768,6 +768,8 @@ val plist_to_alist(val list);
 val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
 val unum(ucnum u);
+#define num_ex(x) if3((x) > (ucnum) INT_PTR_MAX, unum(x), num(x))
+
 val flo(double val);
 cnum c_num(val num, val self);
 ucnum c_unum(val num, val self);

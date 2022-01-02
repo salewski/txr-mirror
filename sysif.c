@@ -3173,9 +3173,9 @@ void sysif_init(void)
     reg_varl(intern(lit("rlim-infinity"), user_package), rlim_inf);
   }
 #else
-  reg_varl(intern(lit("rlim-saved-max"), user_package), num_fast(RLIM_SAVED_MAX));
-  reg_varl(intern(lit("rlim-saved-cur"), user_package), num_fast(RLIM_SAVED_CUR));
-  reg_varl(intern(lit("rlim-infinity"), user_package), num_fast(RLIM_INFINITY));
+  reg_varl(intern(lit("rlim-saved-max"), user_package), num_ex(RLIM_SAVED_MAX));
+  reg_varl(intern(lit("rlim-saved-cur"), user_package), num_ex(RLIM_SAVED_CUR));
+  reg_varl(intern(lit("rlim-infinity"), user_package), num_ex(RLIM_INFINITY));
 #endif
   reg_varl(intern(lit("rlimit-core"), user_package), num_fast(RLIMIT_CORE));
   reg_varl(intern(lit("rlimit-cpu"), user_package), num_fast(RLIMIT_CPU));
