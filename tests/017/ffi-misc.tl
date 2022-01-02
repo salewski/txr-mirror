@@ -70,3 +70,16 @@
   (typeof (ffi (enumed int64 e (x 0) (y #x7fffffffffffffff)))) ffi-type
   (typeof (ffi (enumed int64 e (x #x-8000000000000001)))) :error
   (typeof (ffi (enumed int64 e (x #x8000000000000000)))) :error)
+
+(typedef abc (struct abc
+               (a (enumed (bit 1 uint8) bit fals true))
+               (b (enumed (bit 1 uint8) bit fals true))
+               (c (enumed (bit 1 uint8) bit fals true))))
+
+(mtest
+  (sizeof abc) 1
+  (znew abc) #S(abc a fals b fals c fals))
+
+(each-match ((a b c) (rperm '(fals true) 3))
+  (let ((s (new abc a a b b c c)))
+    (test (ffi-get (ffi-put s (ffi abc)) (ffi-abc)) s)))

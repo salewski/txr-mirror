@@ -78588,6 +78588,24 @@ the representation range of
 which is not checked until the conversion of a symbol
 through the enumeration is attempted at run time.
 
+The
+.code enumed
+type is a clone of the underlying type, inheriting most of its properties.
+In particular, it is possible to derive an
+.code enumed
+type from an underlying bitfield type. The resulting type is still a bitfield,
+and may only be used as a
+.code struct
+or
+.code union
+member. Moreover, because it is a bitfield type, there is a restriction against
+creating aliases for it with
+.codn typedef .
+
+An
+.code enumed
+bitfield allows the values of a bit field to be specified symbolically.
+
 .coNP FFI type @ struct
 .synb
 .mets (struct < name >> {( slot < type <> [ init-form ])}*)

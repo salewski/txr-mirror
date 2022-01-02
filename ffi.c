@@ -3084,6 +3084,20 @@ static val ffi_union_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return make_union_tft(src, tft);
 }
 
+static val ffi_type_copy(val orig)
+{
+  struct txr_ffi_type *otft = ffi_type_struct(orig);
+  struct txr_ffi_type *ctft = otft->clone(otft);
+  return cobj(coerce(mem_t *, ctft), orig->co.cls, orig->co.ops);
+}
+
+static val ffi_type_copy_new_ops(val orig, struct cobj_ops *ops)
+{
+  struct txr_ffi_type *otft = ffi_type_struct(orig);
+  struct txr_ffi_type *ctft = otft->clone(otft);
+  return cobj(coerce(mem_t *, ctft), orig->co.cls, ops);
+}
+
 static struct txr_ffi_type *ffi_simple_clone(struct txr_ffi_type *orig)
 {
   return coerce(struct txr_ffi_type *, chk_copy_obj(coerce(mem_t *, orig),
@@ -3639,34 +3653,29 @@ static val ffi_eval_expr(val expr, val menv, val env)
 static val make_ffi_type_enum(val syntax, val enums,
                               val base_type, val self)
 {
-  struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
-                                    chk_calloc(1, sizeof *tft));
+  val type_copy = ffi_type_copy_new_ops(base_type, &ffi_type_enum_ops);
+  struct txr_ffi_type *tft = ffi_type_struct(type_copy);
   struct txr_ffi_type *btft = ffi_type_struct(base_type);
-
   val sym_num = make_hash(hash_weak_none, t);
   val num_sym = make_hash(hash_weak_none, nil);
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_enum_ops);
   val cur;
   val iter;
   val enum_env = make_env(nil, nil, nil);
   val shadow_menv = make_env(nil, nil, nil);
 
-  tft->self = obj;
+  if (btft->kind != FFI_KIND_NUM)
+    uw_throwf(error_s, lit("~a: type ~s can't be basis for enum"),
+              self, btft->syntax, nao);
+
   tft->kind = FFI_KIND_ENUM;
-  tft->ft = btft->ft;
   tft->syntax = syntax;
   tft->lt = sym_s;
-  tft->size = btft->size;
-  tft->align = btft->align;
-  tft->clone = btft->clone;
   tft->put = ffi_enum_put;
   tft->get = ffi_enum_get;
 #if !HAVE_LITTLE_ENDIAN
   tft->rput = ffi_enum_rput;
   tft->rget = ffi_enum_rget;
 #endif
-  tft->alloc = btft->alloc;
-  tft->free = btft->free;
   tft->eltype = base_type;
 
   tft->num_sym = num_sym;
@@ -3716,14 +3725,7 @@ static val make_ffi_type_enum(val syntax, val enums,
     env_vbind(shadow_menv, sym, special_s);
   }
 
-  return obj;
-}
-
-static val ffi_type_copy(val orig)
-{
-  struct txr_ffi_type *otft = ffi_type_struct(orig);
-  struct txr_ffi_type *ctft = otft->clone(otft);
-  return cobj(coerce(mem_t *, ctft), orig->co.cls, orig->co.ops);
+  return type_copy;
 }
 
 static val ffi_type_lookup(val sym)
@@ -4024,6 +4026,10 @@ val ffi_type_compile(val syntax)
                   self, nbits, num_fast(bits_int), nao);
       tft->nelem = c_num(nbits, self);
       tft->bitfield = 1;
+      if (nb == bits_int)
+        tft->mask = UINT_MAX;
+      else
+        tft->mask = ((1U << nb) - 1);
       return type;
     } else if (sym == bit_s && !consp(cddr(syntax))) {
       goto toofew;
@@ -4034,7 +4040,7 @@ val ffi_type_compile(val syntax)
       val xsyntax = list(sym, nbits, type_syntax, nao);
       val type = ffi_type_compile(type_syntax);
       struct txr_ffi_type *tft = ffi_type_struct(type);
-      const cnum max_bits = 8 * tft->size;
+      const int bits_int = 8 * sizeof(int);
       val type_copy = ffi_type_copy(type);
       struct txr_ffi_type *tft_cp = ffi_type_struct(type_copy);
       val syn = tft->syntax;
@@ -4054,15 +4060,20 @@ val ffi_type_compile(val syntax)
                   self, type, nao);
       }
 
-      if (nb < 0 || nb > max_bits)
+      if (nb < 0 || nb > bits_int)
         uw_throwf(error_s, lit("~a: invalid bitfield size ~s; "
                                "must be 0 to ~s"),
-                  self, nbits, num_fast(max_bits), nao);
+                  self, nbits, num_fast(bits_int), nao);
       tft_cp->syntax = xsyntax;
       tft_cp->nelem = nb;
       tft_cp->put = if3(unsgnd, ffi_generic_ubit_put, ffi_generic_sbit_put);
       tft_cp->get = if3(unsgnd, ffi_generic_ubit_get, ffi_generic_sbit_get);
       tft_cp->bitfield = 1;
+      /* mask needed at type compilation time by (enumed (bit ...)) */
+      if (nb == bits_int)
+        tft_cp->mask = UINT_MAX;
+      else
+        tft_cp->mask = ((1U << nb) - 1);
       return type_copy;
     } else if (sym == enum_s) {
       val name = cadr(syntax);
