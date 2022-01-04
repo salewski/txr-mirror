@@ -2774,7 +2774,7 @@ static val v_freeform(match_files_ctx *c)
       }
 
       if (integerp(success)) {
-        c->data = lazy_str_get_trailing_list(mlc.dataline, success);
+        c->data = lazy_str_get_trailing_list(mlc.dataline, minus(success, mlc.base));
         c->data_lineno = plus(c->data_lineno, one);
       } else if (success == t && lim) {
         c->data = lazy_str_get_trailing_list(mlc.dataline, length_str(mlc.dataline));

@@ -1,0 +1,8 @@
+@(next :list (append (repeat (list (mkstring 99 #\A)) 100)
+                     '("FOOBARXYZZY" "NEXT" "NEXTNEXT")))
+@(freeform)
+@(skip)FOO@{bar}XY
+@zzy
+
+@next
+@nextnext
