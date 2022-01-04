@@ -25949,6 +25949,9 @@ expresses a maximum limit on how many elements will be consumed from
 .meta string-list
 in order to feed the lazy string. Once that many elements are
 drawn, the string ends, even if the list has not been exhausted.
+However, that remaining list, though not contributing to the string, is still
+incorporated into the value returned by
+.codn lazy-str-get-trailing-list .
 
 .coNP Function @ lazy-stringp
 .synb
@@ -25982,9 +25985,15 @@ position, exactly as used in the
 .code chr-str
 function.
 
+It is an error if the
+.meta lazy-str
+argument isn't a lazy string.
+
 Some positions beyond
 .meta index
-may also materialize, as a side effect.
+may also materialize, as a side effect, because the operation
+takes only whole strings from the internal list, according
+to the algorithm described below.
 
 If the string is already materialized through to at least
 .metn index ,
@@ -25993,13 +26002,46 @@ possible to materialize the string that far, then the value
 .code t
 is returned to indicate success.
 
-If there is insufficient material to force the lazy string through to the
+If there is sufficient material to force the lazy string through to the
 .meta index
-position, then nil is returned.
+position, then
+.code t
+is returned, otherwise
+.codn nil .
 
-It is an error if the
+The
 .meta lazy-str
-argument isn't a lazy string.
+object's
+.meta limit-count
+is observed: a total of no more than
+.meta limit-count
+elements are taken from the object's list.
+
+The algorithm is as follows:
+.RS
+.IP 1.
+While the length of the materialized prefix of the string is less than or equal to
+.meta index
+and while elements are available in the list, subject to observance of the
+.metn limit-count ,
+perform the following steps 2 and 3:
+.IP 2.
+Remove the next available string from the list, and add it as a suffix to the materialized prefix.
+.IP 3.
+Add the
+.meta terminator
+string to the materialized prefix.
+.IP 4.
+Return
+.code t
+if the length of the materialized prefix exceeds
+.metn index ,
+otherwise
+.codn nil .
+.RE
+.IP
+The algorithm does not take portions of strings from the list, and always adds the terminator
+after incorporating each piece into the materialized prefix.
 
 .coNP Function @ lazy-str-force
 .synb
@@ -26014,6 +26056,24 @@ to fully materialize.
 The return value is an ordinary, non-lazy string equivalent to the fully
 materialized lazy string.
 
+The
+.meta lazy-str
+object's
+.meta limit-count
+is observed: a total of no more than
+.meta limit-count
+elements are taken from the object's list.
+
+The algorithm that is followed by
+.code lazy-str-force
+is similar to the one followed by
+.codn lazy-str-force-upto ,
+with only the following modification. The test in step 1 isn't concerned with
+the length of the materialized prefix, since the goal is to materialize all available
+characters. Steps 2 and 3 are performed while elements are available in
+the list, subject to observance of the
+.metn limit-count .
+
 .coNP Function @ lazy-str-get-trailing-list
 .synb
 .mets (lazy-str-get-trailing-list < string << index )
@@ -26024,33 +26084,58 @@ The
 function can be considered, in some way, an inverse operation to
 the production of the lazy string from its associated list.
 
-First,
+Note: the behavior of this function changed in \*(TX 274. This is subject
+to a note in the COMPATIBILITY section.
+
+First, the lazy string
 .meta string
 is forced up through the position
-.metn index .
-That is the only extent to which
-.meta string
-is modified by this function.
-
-Next, the suffix of the materialized part of the lazy string starting at
-position
 .metn index ,
-is split into pieces on occurrences of the
-terminator character (which had been given as the
-.meta terminator
-argument in the
-.code lazy-str
-constructor, and defaults to newline).   If the
-.meta index
-position is beyond the part of the string which can be materialized
-(in adherence with the lazy string's
-.meta limit-count
-constructor parameter), then the list of pieces is considered
-to be empty.
+as if by a call to
+.metn lazy-str-force-upto .
 
-Finally, a list is returned consisting of the pieces produced by the split,
-to which is appended the remaining list of the string which has not yet been
-forced to materialize.
+
+If
+.meta string
+consists of
+.meta index
+or more characters, then after the forcing operation, it is guaranteed that
+at least
+.meta index
+characters of the string have been materialized into a single string, called the
+.IR "materialized prefix"
+of the lazy string. If fewer than
+.meta index
+characters are available, taking into account the contribution of the
+terminator string, then the number of characters in the materialized prefix fall short of
+.metn index .
+The materialized prefix never takes fractional strings from the lazy string's
+list, and is always terminated by the terminator string.
+
+Next, the materialized prefix is split into pieces on occurrences of
+.metn string 's
+terminator string, as if by using
+.code spl
+function. If the terminator string is empty, it is split into individual characters,
+in accordance with the semantics of that function.
+
+Then, if the last piece of the split prefix is an empty string, it is removed.
+This situation occurs in two cases: the materialized prefix is empty, or else
+it ends in the terminating string. For example, if the terminating
+string is a single newline, and the prefix is
+.strn "foo\en" .
+In this case,
+.code "(spl \(dq\en\(dq \(dqfoo\en\(dq)"
+produces
+.code "(\(dqfoo\(dq \(dq\(dq)"
+from which the trailing empty string is removed, leaving
+.codn "(\(dqfoo\(dq)" .
+
+Finally, a list is formed by appending the split piece of the materialized prefix,
+calculated as described above, with
+.metn string 's
+remaining list of strings which have not been pulled into the materialized
+prefix. This list is returned.
 
 .coNP Functions @, length-str-> @, length-str->= @ length-str-< and @ length-str-<=
 .synb
@@ -86743,6 +86828,32 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 273
+In \*(TX 273 and older versions,
+.code lazy-str-get-trailing-list
+has a flaw, which causes it to produce an extra empty string. Because the
+.code @(freeform)
+directive in the pattern language is based on lazy strings, and depends
+on this function, it is affected by this issue.
+The extra empty string is produced because the materialized prefix of the lazy
+string is split on the terminator without regard for the fact that it ends in
+the terminator, producing an extra empty piece. For instance, if the terminator is
+.strn \en
+the materialized prefix of the lazy string is
+.strn foo\en
+and the remaining list of not-yet-materialized lazy string material is
+.codn "(\(dqbar\(dq \(dqbaz\(dq)" ,
+then the returned list is
+.codn "(\(dqfoo\(dq \(dq\(dq \(dqbar\(dq \(dqbaz\(dq)" ,
+rather than
+.codn "(\(dqfoo\(dq \(dqbar\(dq \(dqbaz\(dq)" .
+Whenever the lazy string's
+.meta terminator
+is non-empty, this issue reproduces in almost all instances, because
+the materialized prefix, unless it is empty, is always terminated by the
+.meta terminator
+and so the split always produces the extra empty string. This is not a rare edge case.
+Compatibility values of 273 and lower restore this behavior.
 .IP 272
 The compatibility version value 272 restores old behaviors in the pattern
 language with regard to the regex and function cases of positive match variables.

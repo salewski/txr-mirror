@@ -3,6 +3,5 @@
 @(freeform)
 @(skip)FOO@{bar}XY
 @zzy
-
 @next
 @nextnext

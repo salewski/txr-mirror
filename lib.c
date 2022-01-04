@@ -9671,6 +9671,12 @@ val lazy_str_get_trailing_list(val lstr, val index)
     if (!cdr(split_suffix) && equal(car(split_suffix), null_string))
       return lstr->ls.list;
 
+    if (!opt_compat || opt_compat > 273) {
+      val penult = nthlast(two, split_suffix);
+      if (equal(cadr(penult), null_string))
+        rplacd(penult, nil);
+    }
+
     return nappend2(split_suffix, lstr->ls.list);
   }
 }
