@@ -185,6 +185,8 @@ txr_dbg_opts=--gc-debug
 valgrind=
 extra_debugging=
 debug_support=y
+big_time=
+big_time_given=
 gen_gc=y
 small_mem=
 full_repl=y
@@ -532,6 +534,23 @@ extra-debugging [$extra_debugging]
 
   Use --extra_debugging to configure some additional debugging features,
   which incur a run-time penalty.
+
+big-time [$big_time]
+
+  Systems whose time_t type is 32 bits wide have a Y2038 problem.
+  On some of these systems, it is possible to specify some compiler option
+  to make time_t 64 bits wide. If this configure script detects this
+  situation: that time is 32 bits, but may be switched to 64, it
+  refuses to run. You must explicitly choose what will happen. Use
+  --big-time to choose the 64 bit time, or else --no-big-time.
+
+  If time_t is 64 bits by default then specifying --no-big-time is
+  erroneous. Downgrading from a 64 bit default is not supported by
+  this script, even if it is possible; if that is necessary, use external
+  options vial EXTRA_FLAGS or CFLAGS.
+
+  Specifying --big-time is erroneous if time_t is 32 bits, and there is no way
+  to enable 64.
 
 gen-gc [$gen_gc]
 
@@ -3457,8 +3476,35 @@ struct sizes {
     fi
   fi
 
-  [ $file_offset_define = none -o $time_bits_define = none ] || break
+  [ "$file_offset_define" = none -o "$time_bits_define" = none ] || break
 done
+
+case "$time_bits_define" in
+none )
+  if [ "$big_time" ] ; then
+    printf "\n$0: --big-time specified, yet no way to enable 64 bit time_t found\n"
+    exit 1
+  fi
+  ;;
+"" )
+  if [ $big_time_given ] && [ -z "$big_time" ] ; then
+    printf "\n$0: --no-big-time specified, yet time_t is 64 bits in this system\n"
+    exit 1
+  fi
+  ;;
+* )
+  if [ -n "$big_time_given" ] ; then
+    printf "\n$0: this system has a 32 bit time_t that can be overriden to 64\n"
+    printf "$0: specify --big-time to do this, or --no-big-time not to do it\n"
+    exit 1
+  else
+    if [ -z "$big_time" ]; then
+      printf " (%s disabled by --no-big-time)" "$time_bits_define"
+      time_bits_define=
+    fi
+  fi
+  ;;
+esac
 
 if [ "$file_offset_define" = none ] ; then
   printf " (no 64 bit off_t)"
