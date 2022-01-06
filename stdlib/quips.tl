@@ -95,6 +95,7 @@
     "If you get your macros hot enough, you get syntactic caramel!"
     "Syntactic toffee recipe: melt butter over low heat, stir in Lisp macros."
     "TXR needs money, so even abnormal exits now go through the gift shop."
+    "TXR Lisp has no protected class members; C++ refugees may face discrimination."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
