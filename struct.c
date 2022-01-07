@@ -364,7 +364,7 @@ static val get_duplicate_supers(val supers, val self)
     val super = us_car(iter);
     struct struct_type *st = stype_handle(&super, self);
     int pos = st->id % (sizeof bloom * CHAR_BIT);
-    ucnum mask = (ucnum) 1 << pos;
+    ucnum mask = convert(ucnum, 1) << pos;
 
     if ((mask & bloom) != 0) {
       if (memq(super, all_supers) != iter && !memq(super, dup_supers)) {
@@ -709,7 +709,7 @@ static void call_initfun_chain(struct struct_type *st, val strct,
           const int bits_ucnum = sizeof *seen * CHAR_BIT;
           cnum index = i / bits_ucnum;
           cnum bit = i % bits_ucnum;
-          ucnum mask = (ucnum) 1 << bit;
+          ucnum mask = convert(ucnum, 1) << bit;
           if ((seen[index] & mask) != 0)
             return;
           seen[index] |= mask;
@@ -736,7 +736,7 @@ static void call_postinitfun_chain(struct struct_type *st, val strct,
           const int bits_ucnum = sizeof *seen * CHAR_BIT;
           cnum index = i / bits_ucnum;
           cnum bit = i % bits_ucnum;
-          ucnum mask = (ucnum) 1 << bit;
+          ucnum mask = convert(ucnum, 1) << bit;
           if ((seen[index] & mask) != 0)
             return;
           seen[index] |= mask;

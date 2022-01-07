@@ -3071,11 +3071,11 @@ val prof_call(val (*fun)(mem_t *ctx), mem_t *ctx)
   alloc_bytes_t delta_mlbytes = malloc_bytes - start_mlbytes;
   alloc_bytes_t delta_gcbytes = gc_bytes - start_gcbytes;
 #if SIZEOF_ALLOC_BYTES_T > SIZEOF_PTR
-  val dmb = if3(delta_mlbytes <= (alloc_bytes_t) INT_PTR_MAX,
+  val dmb = if3(delta_mlbytes <= convert(alloc_bytes_t, INT_PTR_MAX),
                 unum(delta_mlbytes),
                 logior(ash(unum(delta_mlbytes >> 32), num_fast(32)),
                        unum(delta_mlbytes & 0xFFFFFFFF)));
-  val dgc = if3(delta_gcbytes <= (alloc_bytes_t) INT_PTR_MAX,
+  val dgc = if3(delta_gcbytes <= convert(alloc_bytes_t, INT_PTR_MAX),
                 unum(delta_gcbytes),
                 logior(ash(unum(delta_gcbytes >> 32), num_fast(32)),
                        unum(delta_gcbytes & 0xFFFFFFFF)));

@@ -1724,7 +1724,7 @@ val cyr(val addr, val obj)
       mp_int *a = mp(addr);
       if (!mp_isneg(a)) {
         mp_size i, n = mp_count_bits(a);
-        for (i = n - 2; i != (mp_size) -1; i--)
+        for (i = n - 2; i != convert(mp_size, -1); i--)
           obj = if3(mp_bit(a, i) == MP_YES, car(obj), cdr(obj));
         return obj;
       }
@@ -4408,7 +4408,7 @@ mem_t *chk_xalloc(ucnum m, ucnum n, val self)
   ucnum mn = m * n;
   size_t size = mn;
 
-  if ((m > 0 && mn / m != n) || (ucnum) size != mn)
+  if ((m > 0 && mn / m != n) || convert(ucnum, size) != mn)
     uw_throwf(error_s, lit("~a: memory allocation size overflow"),
               self, nao);
 
@@ -5764,7 +5764,7 @@ val split_str_keep(val str, val sep, val keep_sep)
 
       for (;;) {
         const wchar_t *psep = wcsstr(cstr, csep);
-        size_t span = (psep != 0) ? (size_t) (psep - cstr) : wcslen(cstr);
+        size_t span = (psep != 0) ? convert(size_t, psep - cstr) : wcslen(cstr);
         val piece = mkustring(num(span));
         init_str(piece, cstr, self);
         iter = list_collect(iter, piece);
@@ -8906,7 +8906,7 @@ val vector(val length, val initval)
   unsigned i;
   ucnum len = c_unum(length, self);
   ucnum alloc_plus = len + 2;
-  ucnum size = if3(alloc_plus > len, alloc_plus, (ucnum) -1);
+  ucnum size = if3(alloc_plus > len, alloc_plus, convert(ucnum, -1));
   val *v = coerce(val *, chk_xalloc(size, sizeof *v, self));
   val vec = make_obj();
   vec->v.type = VEC;
@@ -9683,7 +9683,7 @@ val lazy_str_get_trailing_list(val lstr, val index)
 
 struct cobj_class *cobj_register(val cls_sym)
 {
-  if ((size_t) (cobj_ptr - cobj_class) >= nelem(cobj_class))
+  if (convert(size_t, cobj_ptr - cobj_class) >= nelem(cobj_class))
     internal_error("cobj array too small");
   cobj_ptr->cls_sym = cls_sym;
   return cobj_ptr++;

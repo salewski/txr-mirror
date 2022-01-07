@@ -446,8 +446,10 @@ static void free_undo_stack(lino_t *l)
 
 static void record_undo(lino_t *l)
 {
-    struct lino_undo *rec = (struct lino_undo *) lino_os.alloc_fn(sizeof *rec), *iter;
-    wchar_t *data = (wchar_t *) lino_os.wstrdup_fn(l->data);
+    struct lino_undo *rec = coerce(struct lino_undo *,
+                                   lino_os.alloc_fn(sizeof *rec));
+    struct lino_undo *iter;
+    wchar_t *data = lino_os.wstrdup_fn(l->data);
     int count;
 
     if (rec == 0 || data == 0) {
@@ -1523,7 +1525,7 @@ static void flash(lino_t *l, int ch)
     wchar_t on[2] = { ch };
     const wchar_t *off = L"\b \b";
 
-    if (l->dlen >= (int) nelem (l->data) - 1)
+    if (l->dlen >= convert(int, nelem (l->data)) - 1)
         return;
 
     for (i = 0; i < 2 && !cancel; i++) {
@@ -1612,7 +1614,7 @@ static void delete_sel(lino_t *l)
  *
  * On error writing to the terminal -1 is returned, otherwise 0. */
 static int edit_insert(lino_t *l, wchar_t c) {
-    if (l->dlen < (int) nelem(l->data) - 1) {
+    if (l->dlen < convert(int, nelem(l->data)) - 1) {
         record_triv_undo(l);
         delete_sel(l);
         if (l->dpos == l->dlen) {
@@ -1671,7 +1673,7 @@ static int edit_insert(lino_t *l, wchar_t c) {
 
 static int edit_insert_str(lino_t *l, const wchar_t *s, int nchar)
 {
-    if (l->dlen < (int) nelem (l->data) - nchar) {
+    if (l->dlen < convert(int, nelem (l->data)) - nchar) {
         record_undo(l);
         delete_sel(l);
 

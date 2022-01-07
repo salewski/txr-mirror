@@ -121,18 +121,23 @@ u64_t c_u64(val n, val self)
 i64_t c_i64(val n, val self)
 {
   dbl_cnum v = c_dbl_num(n);
-  if (v < (- (dbl_cnum) 0x7FFFFFFFFFFFFFFF - 1) || v > (dbl_cnum) 0x7FFFFFFFFFFFFFFF)
+  if (v < (- convert(dbl_cnum, 0x7FFFFFFFFFFFFFFF) - 1) ||
+      v > convert(dbl_cnum, 0x7FFFFFFFFFFFFFFF))
+  {
     uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
               self, n, nao);
+  }
   return v;
 }
 
 u64_t c_u64(val n, val self)
 {
   dbl_ucnum v = c_dbl_unum(n);
-  if (v > (dbl_ucnum) 0xFFFFFFFFFFFFFFFF)
+  if (v > convert(dbl_ucnum, 0xFFFFFFFFFFFFFFFF))
+  {
     uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
               self, n, nao);
+  }
   return v;
 }
 #else

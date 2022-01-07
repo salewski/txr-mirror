@@ -80,7 +80,7 @@
 #define alignof(type) offsetof(struct {char x; type y;}, y)
 
 #define pad_retval(size) (!(size) || convert(size_t, size) > sizeof (ffi_arg) \
-                          ? (size_t) (size) \
+                          ? convert(size_t, size) \
                           : sizeof (ffi_arg))
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -470,7 +470,7 @@ static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
   cnum dynsize = ffi_varray_dynsize(tft, obj, self);
   size_t size = dynsize;
-  if ((cnum) size != dynsize)
+  if (convert(cnum, size) != dynsize)
     uw_throwf(error_s, lit("~a: array too large"), self,  nao);
   return chk_calloc(size, 1);
 }
@@ -3580,9 +3580,9 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
       if (biggest_size < size)
         biggest_size = size;
     } else {
-      if (most_align < (ucnum) mtft->align)
+      if (most_align < convert(ucnum, mtft->align))
         most_align = mtft->align;
-      if (biggest_size < (ucnum) mtft->size)
+      if (biggest_size < convert(ucnum, mtft->size))
         biggest_size = mtft->size;
     }
   }
@@ -5408,7 +5408,7 @@ val carray_dup(val carray)
               self, carray, nao);
   } else {
     cnum elsize = scry->eltft->size;
-    cnum size = (ucnum) scry->nelem * (ucnum) elsize;
+    cnum size = convert(ucnum, scry->nelem) * convert(ucnum, elsize);
     mem_t *dup = chk_copy_obj(scry->data, scry->nelem * scry->eltft->size);
 
     if (size < 0 || (elsize > 0 && size / elsize != scry->nelem))
@@ -5828,7 +5828,7 @@ val carray_replace(val carray, val values, val from, val to)
     cnum tn = c_num(to, self);
     struct txr_ffi_type *eltft = scry->eltft;
     cnum elsize = eltft->size;
-    cnum size = (ucnum) ln * (ucnum) elsize;
+    cnum size = convert(ucnum, ln) * convert(ucnum, elsize);
     cnum vn = c_num(vlen, self);
     cnum sn;
     mem_t *ptr;
@@ -6074,7 +6074,7 @@ val uint_carray(val carray)
   val self = lit("uint-carray");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
-  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  ucnum size = convert(ucnum, etft->size) * convert(ucnum, scry->nelem);
   val ubn = make_bignum();
   mp_err mpe = mp_read_unsigned_bin(mp(ubn), scry->data, size);
   if (mpe != MP_OKAY)
@@ -6087,7 +6087,7 @@ val int_carray(val carray)
   val self = lit("int-carray");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
-  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  ucnum size = convert(ucnum, etft->size) * convert(ucnum, scry->nelem);
   ucnum bits = size * 8;
   val ubn = make_bignum();
   mp_err mpe = mp_read_unsigned_bin(mp(ubn), scry->data, size);
@@ -6101,7 +6101,7 @@ val put_carray(val carray, val offs, val stream)
   val self = lit("put-carray");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
-  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  ucnum size = convert(ucnum, etft->size) * convert(ucnum, scry->nelem);
   val buf = make_borrowed_buf(unum(size), scry->data);
   val pos = default_arg(offs, zero);
   val ret = put_buf(buf, pos, stream);
@@ -6114,7 +6114,7 @@ val fill_carray(val carray, val offs, val stream)
   val self = lit("fill-carray");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
-  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  ucnum size = convert(ucnum, etft->size) * convert(ucnum, scry->nelem);
   val buf = make_borrowed_buf(unum(size), scry->data);
   val pos = default_arg(offs, zero);
   val ret = fill_buf(buf, pos, stream);

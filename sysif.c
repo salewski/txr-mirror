@@ -1227,7 +1227,9 @@ static val exit_star_wrap(val status)
 
 time_t c_time(val time, val self)
 {
-  return if3(convert(time_t, -1) > 0, (time_t) c_unum(time, self), (time_t) c_num(time, self));
+  return if3(convert(time_t, -1) > 0,
+             convert(time_t, c_unum(time, self)),
+             convert(time_t, c_num(time, self)));
 }
 
 val num_time(time_t time)

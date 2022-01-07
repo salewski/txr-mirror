@@ -200,10 +200,10 @@ val make_random_state(val seed, val warmup)
 
     for (i = 0; i < 16; i++) {
       if (len >= 4) {
-        r->state[i] = (((rand32_t) data[0]) << 24 |
-                       ((rand32_t) data[1]) << 16 |
-                       ((rand32_t) data[2]) <<  8 |
-                       ((rand32_t) data[3]));
+        r->state[i] = ((convert(rand32_t, data[0])) << 24 |
+                       (convert(rand32_t, data[1])) << 16 |
+                       (convert(rand32_t, data[2])) <<  8 |
+                       (convert(rand32_t, data[3])));
         data += 4;
         len -= 4;
       } else if (len == 0) {
@@ -215,18 +215,18 @@ val make_random_state(val seed, val warmup)
           len = 0;
           break;
         case 1:
-          r->state[i] = (((rand32_t) data[0]) << 24);
+          r->state[i] = ((convert(rand32_t, data[0])) << 24);
           len = 0;
           break;
         case 2:
-          r->state[i] = (((rand32_t) data[0]) << 24 |
-                         ((rand32_t) data[1]) << 16);
+          r->state[i] = ((convert(rand32_t, data[0])) << 24 |
+                         (convert(rand32_t, data[1])) << 16);
           len = 0;
           break;
         case 3:
-          r->state[i] = (((rand32_t) data[0]) << 24 |
-                         ((rand32_t) data[1]) << 16 |
-                         ((rand32_t) data[2]) <<  8);
+          r->state[i] = ((convert(rand32_t, data[0])) << 24 |
+                         (convert(rand32_t, data[1])) << 16 |
+                         (convert(rand32_t, data[2])) <<  8);
           len = 0;
           break;
         }
@@ -455,10 +455,10 @@ val random_buf(val size, val state)
   for (; sz >= 4; sz -= 4, data += 4) {
     rand32_t rnd = rand32(r);
 #if HAVE_LITTLE_ENDIAN
-    *(rand32_t *) data = rnd;
+    *coerce(rand32_t *, data) = rnd;
 #else
     rnd = (0xFF00FF00U & rnd) >> 8 | (0x00FF00FFU & rnd) << 8;
-    *(rand32_t *) data = (rnd << 16 | rnd >> 16);
+    *coerce(rand32_t *, data) = (rnd << 16 | rnd >> 16);
 #endif
   }
 

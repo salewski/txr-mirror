@@ -843,7 +843,7 @@ val generic_get_line(val stream)
 
   for (;;) {
     val chr = ops->get_char(stream);
-    wint_t ch = chr ? (wint_t) c_chr(chr) : WEOF;
+    wint_t ch = chr ? convert(wint_t, c_chr(chr)) : WEOF;
 
     if (ch == WEOF && buf == 0)
       break;
@@ -1530,13 +1530,13 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
       }
 
       if (ms[1] != '(') {
-        if (!isdigit((unsigned char) ms[1]) || !ms[2]) {
+        if (!isdigit(convert(unsigned char, ms[1])) || !ms[2]) {
           m.malformed = 1;
           return m;
         }
 
         m.redir[nredir][0] = ms[1] - '0';
-        if (isdigit((unsigned char) ms[2])) {
+        if (isdigit(convert(unsigned char, ms[2]))) {
           m.redir[nredir][1] = ms[2] - '0';
         } else switch (ms[2]) {
         case 'n': case 'x':

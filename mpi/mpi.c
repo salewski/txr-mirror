@@ -4102,7 +4102,7 @@ int s_mp_ispow2d(mp_digit d)
     return -1; /* not a power of two */
 
   /* If d == 0, s_highest_bit returns 0, thus we return -1. */
-  return (int) s_highest_bit(d) - 1;
+  return convert(int, s_highest_bit(d)) - 1;
 }
 
 /* Convert the given character to its digit value, in the given radix.

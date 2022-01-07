@@ -381,7 +381,7 @@ static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
       set(mkloc(subtree->tn.left, subtree), node);
       if (++tr->size > tr->max_size)
         tr->max_size = tr->size;
-      if (subtree->tn.right == nil && (((ucnum) 1) << dep) > tr->size) {
+      if (subtree->tn.right == nil && (convert(ucnum, 1) << dep) > tr->size) {
         set(mkloc(ti->path[ti->depth++], ti->self), subtree);
         tr_find_rebuild_scapegoat(tree, tr, ti, node, 1);
       }
@@ -412,7 +412,7 @@ static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
       set(mkloc(subtree->tn.right, subtree), node);
       if (++tr->size > tr->max_size)
         tr->max_size = tr->size;
-      if (subtree->tn.left == nil && (((ucnum) 1) << dep) > tr->size) {
+      if (subtree->tn.left == nil && (convert(ucnum, 1) << dep) > tr->size) {
         set(mkloc(ti->path[ti->depth++], ti->self), subtree);
         tr_find_rebuild_scapegoat(tree, tr, ti, node, 1);
       }
