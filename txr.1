@@ -30227,7 +30227,12 @@ method similar to the following:
       my-copy))
 .brev
 
-since this logic is generic, it can be placed in a base
+which can then be invoked on whatever object needs copying.
+(Note that this method is not a special structure function, and is thus
+not taken into account by the
+.code copy
+function.)
+Since this logic is generic, it can be placed in a base
 method. The
 .code copied
 method which it calls is the means by which the new object is notified that it
