@@ -30,7 +30,7 @@
                        (tree-case cl
                          ((type . body)
                           (if (symbolp type)
-                            ^((typep ,val ',type) ,*body)
+                            ^((typep ,val ',type) ,*(or body '(nil)))
                             :))
                          (else (throwf 'eval-error
                                        "~s: bad clause syntax: ~s"
