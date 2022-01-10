@@ -5732,23 +5732,24 @@ val carray_sub(val carray, val from, val to)
 
   if (null_or_missing_p(from))
     from = zero;
-
-  if (null_or_missing_p(to)) {
-    if (ln < 0)
-      goto nolen;
-    to = len;
-  }
-
-  if (minusp(to)) {
-    if (ln < 0)
-      goto nolen;
-    to = plus(to, len);
-  }
-
-  if (minusp(from)) {
+  else if (from == t)
+    from = len;
+  else if (minusp(from)) {
     if (ln < 0)
       goto nolen;
     from = plus(from, len);
+    if (to == zero)
+      to = len;
+  }
+
+  if (null_or_missing_p(to) || to == t) {
+    if (ln < 0)
+      goto nolen;
+    to = len;
+  } else if (minusp(to)) {
+    if (ln < 0)
+      goto nolen;
+    to = plus(to, len);
   }
 
   {
@@ -5786,6 +5787,8 @@ val carray_replace(val carray, val values, val from, val to)
 
   if (null_or_missing_p(from)) {
     from = zero;
+  } else if (from == t) {
+    from = len;
   } else if (!integerp(from)) {
     seq_iter_t wh_iter, item_iter;
     val wh, item;
@@ -5810,9 +5813,11 @@ val carray_replace(val carray, val values, val from, val to)
     if (ln < 0)
       goto nolen;
     from = plus(from, len);
+    if (to == zero)
+      to = len;
   }
 
-  if (null_or_missing_p(to)) {
+  if (null_or_missing_p(to) || to == t) {
     if (ln < 0)
       goto nolen;
     to = len;
