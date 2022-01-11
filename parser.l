@@ -1250,11 +1250,6 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
            chr(yytext[0]), nao);
 }
 
-<JSON>\" {
-  yy_push_state(JLIT, yyscanner);
-  return yytext[0];
-}
-
 <JMARKER>. {
   internal_error("scanner processed input JMARKER state");
 }
