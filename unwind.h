@@ -374,7 +374,7 @@ val uw_find_frames(val extype, val frtype);
 val uw_find_frames_by_mask(val mask);
 val uw_last_form_expanded(void);
 #else
-define uw_last_form_expanded() ((void) 0)
+#define uw_last_form_expanded() ((void) 0)
 #endif
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
 val uw_muffle_warning(val exc, struct args *);
