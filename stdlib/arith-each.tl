@@ -31,43 +31,73 @@
   (whenlet ((bad (find-if [notf consp] vars)))
     (compile-error form "~s isn't a var-initform pair" bad)))
 
-(defmacro sys:arith-each (:form f op-iv vars . body)
+(defmacro sys:arith-each (:form f fn iv short-circ vars . body)
   (let* ((gens (mapcar (ret (gensym)) vars))
          (syms [mapcar car vars])
-         (accum (gensym))
-         (op (car op-iv))
-         (iv (cdr op-iv)))
+         (accum (gensym)))
     (if (null vars)
       iv
       ^(let* (,*(mapcar (ret ^(,@1 (iter-begin ,@2))) gens syms)
                (,accum ,iv))
          (block nil
            (sys:for-op ()
-             ((and ,*(mapcar (op list 'iter-more) gens)) ,accum)
+             ((and ,*(mapcar (op list 'iter-more) gens)
+                   ,*(cond
+                       ((eq t short-circ) ^(,accum))
+                       ((null short-circ) ^((null ,accum)))
+                       ((eq '+ short-circ) ^((nzerop ,accum)))))
+              ,accum)
              (,*(mapcar (ret ^(sys:setq ,@1 (iter-step ,@1))) gens))
              ,*(mapcar (ret ^(sys:setq ,@1 (iter-item ,@2))) syms gens)
-             (set ,accum (,op ,accum (progn ,*body)))))))))
+             (set ,accum ,(cond
+                            ((consp fn) ^(,(car fn) ,accum (progn ,*body)))
+                            (fn ^(,fn (progn ,*body)))
+                            (t ^(progn ,*body))))))))))
 
 (defmacro sum-each (:form f vars . body)
   (sys:vars-check f vars)
   ^(let ,vars
      (block nil
-       (sys:arith-each (+ . 0) ,vars ,*body))))
+       (sys:arith-each (+) 0 : ,vars ,*body))))
 
 (defmacro sum-each* (:form f vars . body)
   (sys:vars-check f vars)
   ^(let* ,vars
      (block nil
-       (sys:arith-each (+ . 0) ,vars ,*body))))
+       (sys:arith-each (+) 0 : ,vars ,*body))))
 
 (defmacro mul-each (:form f vars . body)
   (sys:vars-check f vars)
   ^(let ,vars
      (block nil
-       (sys:arith-each (* . 1) ,vars ,*body))))
+       (sys:arith-each (*) 1 + ,vars ,*body))))
 
 (defmacro mul-each* (:form f vars . body)
   (sys:vars-check f vars)
   ^(let* ,vars
      (block nil
-       (sys:arith-each (* . 1) ,vars ,*body))))
+       (sys:arith-each (*) 1 + ,vars ,*body))))
+
+(defmacro each-true (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let* ,vars
+     (block nil
+       (sys:arith-each nil t t ,vars ,*body))))
+
+(defmacro some-true (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let* ,vars
+     (block nil
+       (sys:arith-each nil nil nil ,vars ,*body))))
+
+(defmacro each-false (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let* ,vars
+     (block nil
+       (sys:arith-each not t t ,vars ,*body))))
+
+(defmacro some-false (:form f vars . body)
+  (sys:vars-check f vars)
+  ^(let* ,vars
+     (block nil
+       (sys:arith-each not nil nil ,vars ,*body))))

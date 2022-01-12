@@ -848,6 +848,7 @@ static val arith_each_set_entries(val dlt, val fun)
 {
   val name[] = {
     lit("sum-each"), lit("mul-each"), lit("sum-each*"), lit("mul-each*"),
+    lit("each-true"), lit("some-true"), lit("each-false"), lit("some-false"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

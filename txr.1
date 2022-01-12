@@ -17765,6 +17765,132 @@ Note that this behavior differs from
 and its closely-related operators, which loop infinitely when no variables are
 specified.
 
+It is unspecified whether
+.code mul-each
+and
+.code mul-each*
+continue iterating when the accumulator takes on a value satisfying the
+.code zerop
+predicate.
+
+.coNP Macros @, each-true @, some-true @ each-false and @ some-false
+.synb
+.mets (each-true >> ({( sym << init-form )}*) << body-form *)
+.mets (some-true >> ({( sym << init-form )}*) << body-form *)
+.mets (each-false >> ({( sym << init-form )}*) << body-form *)
+.mets (some-false >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+These macros iterate zero or more variables over sequences, similarly to the
+.code each
+operator and calculate logical results, with short-circuiting semantics.
+
+The
+.code each-true
+macro initializes an internal result variable to the
+.code t
+value. It then evaluates the
+.metn body-form s
+for each tuple of variable values, replacing the result variable with
+the value produced by these forms. If that value is
+.codn nil ,
+the iteration stops. When the iteration terminates normally, the
+value of the result variable is returned.
+
+If no variables are specified, termination occurs immediately.
+Note that this is different from the
+.code each
+operator, which iterates infinitely if no variables are specified.
+
+The
+.metn body-form s
+are surrounded by an implicit anonymous block, making it possible
+to terminate via
+.code return
+or
+.codn return-from .
+In these cases, the form terminates with
+.code nil
+or the specified return value. The internal result is ignored.
+
+The
+.code some-true
+macro is similar to
+.codn each-true ,
+with these differences. The internal result variable is initialized to
+.code nil
+rather than
+.codn t .
+The iteration stops whenever the
+.metn body-form s
+produce a true value, and that value is returned.
+
+The
+.code each-false
+and
+.code some-false
+macros are, respectively, similar to
+.code each-true
+and
+.codn some-true ,
+with one difference. After each iteration, the value produced by the
+.metn body-form s
+is logically inverted using the
+.code not
+function prior to being assigned to the result variable.
+
+.TP* Examples:
+
+.verb
+  (each-true ()) -> t
+  (each-true ((a ()))) -> t
+  (each-true ((a '(1 2 3))) a) -> 3
+
+  (each-true ((a '(1 2 3))
+              (b '(4 5 6)))
+    (< a b))
+  -> t
+
+  (each-true ((a '(1 2 3))
+              (b '(4 0 6)))
+    (< a b))
+  -> nil
+
+  (some-true ((a '(1 2 3))) a) -> 1
+  (some-true ((a '(nil 2 3))) a) -> 2
+  (some-true ((a '(nil nil nil))) a) -> nil
+
+  (some-true ((a '(1 2 3))
+              (b '(4 0 6)))
+    (< a b))
+  -> t
+
+  (some-true ((a '(1 2 3))
+              (b '(0 1 2)))
+    (< a b))
+  -> nil
+
+  (each-false ((a '(1 2 3))
+               (b '(4 5 6)))
+    (> a b))
+  -> t
+
+  (each-false ((a '(1 2 3))
+               (b '(4 0 6)))
+    (> a b))
+  -> nil
+
+  (some-false ((a '(1 2 3))
+               (b '(4 0 6)))
+    (> a b))
+  -> t
+
+  (some-false ((a '(1 2 3))
+               (b '(0 1 2)))
+    (> a b))
+  -> nil
+.brev
+
 .coNP Macros @, each-prod @ collect-each-prod and @ append-each-prod
 .synb
 .mets (each-prod >> ({( sym << init-form )}*) << body-form *)
