@@ -255,10 +255,18 @@
    1.5 2.25 2.625 2.8125 2.90625))
 
 (mtest
+  (sum-each ())
+  0
+  (sum-each ((x nil)))
+  0
   (sum-each ((x '(1 2 3))
              (y '(4 5 6)))
     (* x y))
   32
+  (mul-each ())
+  1
+  (mul-each ((x nil)))
+  1
   (mul-each ((x '(1 2 3))
              (y '(4 5 6)))
     (+ x y))
@@ -281,6 +289,12 @@
   :error)
 
 (mtest
+  (sum-each-prod ())
+  0
+  (sum-each-prod ((x nil)))
+  0
+  (sum-each-prod ((x '(4))) x)
+  4
   (sum-each-prod ((x '(1 2 3))
                   (y '(4 3 2)))
     (* x y))
@@ -295,6 +309,12 @@
   :error)
 
 (mvtest
+  (mul-each-prod ())
+  1
+  (mul-each-prod ((x nil)))
+  1
+  (mul-each-prod ((x '(4))) x)
+  4
   (mul-each-prod ((x '(1 2 3))
                   (y '(4 3 2)))
     (+ x y))

@@ -34,15 +34,19 @@
 (defmacro sys:arith-each (:form f op-iv vars . body)
   (let* ((gens (mapcar (ret (gensym)) vars))
          (syms [mapcar car vars])
-         (accum (gensym)))
-    ^(let* (,*(mapcar (ret ^(,@1 (iter-begin ,@2))) gens syms)
-            (,accum ,(cdr op-iv)))
-       (block nil
-         (sys:for-op ()
-           ((and ,*(mapcar (op list 'iter-more) gens)) ,accum)
-           (,*(mapcar (ret ^(sys:setq ,@1 (iter-step ,@1))) gens))
-           ,*(mapcar (ret ^(sys:setq ,@1 (iter-item ,@2))) syms gens)
-           (set ,accum (,(car op-iv) ,accum (progn ,*body))))))))
+         (accum (gensym))
+         (op (car op-iv))
+         (iv (cdr op-iv)))
+    (if (null vars)
+      iv
+      ^(let* (,*(mapcar (ret ^(,@1 (iter-begin ,@2))) gens syms)
+               (,accum ,iv))
+         (block nil
+           (sys:for-op ()
+             ((and ,*(mapcar (op list 'iter-more) gens)) ,accum)
+             (,*(mapcar (ret ^(sys:setq ,@1 (iter-step ,@1))) gens))
+             ,*(mapcar (ret ^(sys:setq ,@1 (iter-item ,@2))) syms gens)
+             (set ,accum (,op ,accum (progn ,*body)))))))))
 
 (defmacro sum-each (:form f vars . body)
   (sys:vars-check f vars)

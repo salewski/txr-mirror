@@ -17747,6 +17747,24 @@ are enclosed in an implicit anonymous block. If the forms terminate
 by returning from the anonymous block then these macros terminate
 with the specified value.
 
+When
+.code sum-each*
+and
+.code sum-each
+are specified with variables whose values specify zero iterations,
+or with no variables at all, the form terminates with a value of
+.codn 0 .
+In this situation,
+.code mul-each
+and
+.code mul-each*
+terminate with
+.codn 1 .
+Note that this behavior differs from
+.codn each ,
+and its closely-related operators, which loop infinitely when no variables are
+specified.
+
 .coNP Macros @, each-prod @ collect-each-prod and @ append-each-prod
 .synb
 .mets (each-prod >> ({( sym << init-form )}*) << body-form *)
@@ -17782,6 +17800,14 @@ operator family, the
 are surrounded by an anonymous block. If these forms execute a return from
 this block, then these macros terminate with the specified return value.
 
+When no iterations are performed, including in the case when an empty
+list of variables is specified, all these macro forms terminate and return
+.codn nil .
+Note that this behavior differs from
+.codn each ,
+and its closely-related operators, which loop infinitely when no variables are
+specified.
+
 With one caveat noted below, these macros can be understood as providing
 syntactic sugar according to the pattern established by the following
 equivalences:
@@ -17798,7 +17824,6 @@ equivalences:
      (y yinit))       <-->     (maprod (lambda (x y)
     body)                                body)
                                        #:gx #:gy))
-
 
   (append-each-prod        (block nil
     ((x xinit)               (let ((#:gx xinit) (#:gy yinit))
@@ -17913,6 +17938,16 @@ The
 .metn body-form s
 are surrounded by an implicit anonymous block. If these forms execute a return
 from this block, then these macros terminate with the specified return value.
+
+When no iterations are specified, including in the case when an empty
+list of variables is specified, the summing macros terminate, yielding
+.codn 0 ,
+and the multiplicative macros terminate with
+.codn 1 .
+Note that this behavior differs from
+.codn each ,
+and its closely-related operators, which loop infinitely when no variables are
+specified.
 
 .TP* Examples:
 
