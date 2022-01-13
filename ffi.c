@@ -5877,11 +5877,11 @@ val carray_replace(val carray, val values, val from, val to)
       } else if (newrange < oldrange) {
         cnum delta = oldrange - newrange;
         memmove(ptr + newrange, ptr + oldrange, tail);
-        memset(ptr + whole - delta, 0, delta);
+        memset(scry->data + whole - delta, 0, delta);
       }
     }
 
-    for (; fn < vn; fn++, ptr += elsize) {
+    for (; fn < sn; fn++, ptr += elsize) {
       val item = seq_geti(&item_iter);
       eltft->put(eltft, item, ptr, self);
     }
