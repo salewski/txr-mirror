@@ -9817,7 +9817,10 @@ val cptr_int(val n, val type_sym_in)
 {
   val self = lit("cptr-int");
   val type_sym = default_null_arg(type_sym_in);
-  return cptr_typed(coerce(mem_t *, c_num(n, self)), type_sym, 0);
+  return cptr_typed(if3(plusp(n),
+                        coerce(mem_t *, c_unum(n, self)),
+                        coerce(mem_t *, c_num(n, self))),
+                    type_sym, 0);
 }
 
 val cptr_obj(val obj, val type_sym_in)

@@ -62058,12 +62058,25 @@ object.
 
 The
 .meta integer
-parameter must be an integer which is in range for a pointer value.
+argument must be an integer which is in range for a pointer value.
 Note: this range is wider than the
 .code fixnum
 range; a portion of the range of
 .code bignum
 integers can denote pointers.
+
+An extended range of values is accepted. The entire addressable space may be
+expressed by non-negative values. A range of negative values also expresses a
+portion of the address space, in accordance with the platform's concept of a
+signed integer.
+
+For instance, on a system with 32 bit addresses, the values 0 to 4294967295
+express all of the addresses as a pure binary value. Furthermore, the values
+-2147483648 to -1 also express the upper part of this range, corresponding,
+respectively, to the addresses 2147483648 to 4294967295. On that platform,
+values of
+.meta integer
+outside of the range -2147483648 to 4294967295 are invalid.
 
 The
 .meta type-symbol
