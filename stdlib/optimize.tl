@@ -444,6 +444,15 @@
              bl.next nil
              bl.links (list [bb.hash jlabel]))
         ^((jmp ,jlabel)))
+      ;; wasteful move of previously tested value
+      (@(require ((ifq (t @reg) (d @n) @nil) . @nil)
+                 (let* ((nxbl bl.next)
+                        (nxinsns nxbl.insns))
+                   (if (null (cdr nxbl.rlinks))
+                     (if-match (@label (mov (t @reg) (d @n)) . @rest) nxinsns
+                       (set nxbl.insns ^(,label ,*rest)
+                            bb.recalc t)))))
+        insns)
       (((jmp @jlabel) . @nil)
        (let* ((jinsns (cdr [bb.hash jlabel].insns))
               (oinsns (match-case jinsns
@@ -497,9 +506,12 @@
 (defmeth basic-blocks elim-next-jump (bb bl nx)
   (let* ((tail (last bl.insns))
          (linsn (car tail)))
-    (when-match (jmp @jlabel) linsn
-      (when (eql nx.label jlabel)
-        (set bl.insns (butlast bl.insns))))))
+    (match-case linsn
+      (@(or (jmp @jlabel)
+            (if @nil @jlabel)
+            (@(or ifq ifql) @nil @nil @jlabel))
+       (when (eql nx.label jlabel)
+         (set bl.insns (butlast bl.insns)))))))
 
 (defmeth basic-blocks join-blocks (bb)
   (labels ((joinbl (list)
