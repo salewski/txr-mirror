@@ -96,6 +96,7 @@
     "Syntactic toffee recipe: melt butter over low heat, stir in Lisp macros."
     "TXR needs money, so even abnormal exits now go through the gift shop."
     "TXR Lisp has no protected class members; C++ refugees may face discrimination."
+    "In programming, you want rigor, but also to recognize and avoid rigor mortis."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
