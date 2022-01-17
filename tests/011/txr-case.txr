@@ -1,4 +1,5 @@
 @(load `@{stdlib}txr-case`)
+@(include "../common")
 @(define date (year month day))
 @{year /\d\d\d\d/}-@{month /\d\d/}-@{day /\d\d/}
 @(end)
@@ -18,4 +19,8 @@ blah
                                             "foo bar"))
 
        (notmatch () (put-line "notexpected"))
-       (stuff (y m d a b) (put-line `match: year @y, month @m, day @d, @a:@b`))))
+       (stuff (y m d a b) (put-line `match: year @y, month @m, day @d, @a:@b`)))
+   (mtest
+     (match-fboundp 'notmatch) t
+     (match-fboundp 'stuff) t
+     (match-fboundp 'xyzzy) nil))

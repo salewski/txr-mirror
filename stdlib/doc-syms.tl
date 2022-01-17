@@ -1241,6 +1241,7 @@
       ("match" "N-01BE5C4A")
       ("match-case" "N-0282196B")
       ("match-ecase" "N-0282196B")
+      ("match-fboundp" "N-02AF4E8B")
       ("match-fun" "N-033F766A")
       ("match-regex" "N-02E3A26F")
       ("match-regex-right" "N-019430C5")

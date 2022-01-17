@@ -34,6 +34,7 @@ val match_expand_keyword_args(val elem);
 val match_expand_elem(val elem);
 val match_filter(val name, val arg, val other_args);
 val match_fun(val name, val args, val input, val files);
+val match_fboundp(val name);
 val include(val specline);
 val extract(val spec, val filenames, val bindings);
 void match_reg_var(val sym);

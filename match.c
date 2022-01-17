@@ -5032,6 +5032,11 @@ val match_fun(val name, val args, val input_in, val files_in)
   return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
 }
 
+val match_fboundp(val name)
+{
+  return tnil(uw_get_func(name));
+}
+
 val include(val specline)
 {
   val spec = cons(specline, nil);

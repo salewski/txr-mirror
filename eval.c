@@ -7397,6 +7397,7 @@ void eval_init(void)
   reg_fun(intern(lit("abscond*"), system_package), func_n2o(abscond_star, 1));
 
   reg_fun(intern(lit("match-fun"), user_package), func_n4o(match_fun, 2));
+  reg_fun(intern(lit("match-fboundp"), user_package), func_n1(match_fboundp));
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n2o(source_loc_str, 1));
