@@ -37,3 +37,14 @@
                                        'typecase cl))))))
     ^(let ((,val ,form))
        (cond ,*cond-pairs))))
+
+(defmacro etypecase (form . clauses)
+  (if [find t clauses eq car]
+    ^(typecase ,form ,*clauses)
+    (let ((val (gensym)))
+      ^(let ((,val ,form))
+         (typecase ,val
+           ,*clauses
+           (t (throwf 'case-error
+                      "~s: unhandled type: ~s"
+                      'etypecase (typeof ,val))))))))

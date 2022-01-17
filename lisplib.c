@@ -292,7 +292,9 @@ static val except_instantiate(val set_fun)
 
 static val type_set_entries(val dlt, val fun)
 {
-  val name[] = { lit("typecase"), nil };
+  val name[] = {
+    lit("typecase"), lit("etypecase"), nil
+  };
   set_dlt_entries(dlt, name, fun);
   return nil;
 }

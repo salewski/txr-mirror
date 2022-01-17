@@ -658,6 +658,7 @@
       ("etime" "N-036B1BDB")
       ("etimedout" "N-036B1BDB")
       ("etxtbsy" "N-036B1BDB")
+      ("etypecase" "N-033FBE77")
       ("eval" "N-0286C8B8")
       ("eval-only" "N-030BF4F5")
       ("evenp" "D-001C")

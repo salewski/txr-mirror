@@ -19850,6 +19850,42 @@ always matches.  If such a clause is placed as the last clause of a
 it provides a fallback case, whose forms are evaluated if none of the
 previous clauses match.
 
+.coNP Macro @ etypecase
+.synb
+.mets (etypecase < test-form >> {( type-sym << clause-form *)}*)
+.syne
+.desc
+The
+.code etypecase
+macro is the error-catching variant of
+.codn typecase ,
+similar to the relationship between the
+.code ecaseq
+and
+.code caseq
+families of macros.
+
+If one of the clauses has a
+.meta type-sym
+which is the symbol
+.codn t ,
+then
+.code etypecase
+is precisely equivalent to
+.codn typecase .
+Otherwise,
+a clause with a
+.meta type-sym
+of
+.code t
+and which throws an exception of type
+.codn case-error ,
+derived from
+.codn error ,
+is appended to the existing clauses,
+after which the semantics follows that of
+.codn typecase .
+
 .coNP Function @ built-in-type-p
 .synb
 .mets (built-in-type-p << object )
