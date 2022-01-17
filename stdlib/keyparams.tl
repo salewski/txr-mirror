@@ -24,28 +24,23 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
-(defun sys:extract-keys (keys args)
-  (build
-    (each ((k keys))
-      (iflet ((f (memp (car k) args)))
-        (add (cadr f))
-        (add (cdr k))))))
 
-(defun sys:extract-keys-p (keys args)
-  (build
-    (each ((k keys))
-      (add (if (memp k args) t)))))
-
-(defun sys:build-key-list-expr (key-params menv)
-  (let ((exprs (collect-each ((kp key-params))
-                 (let ((kw (intern (symbol-name (first kp)) 'keyword))
-                       (ex (second kp)))
-                   (if (constantp ex menv)
-                     ^(quote (,kw . ,(second kp)))
-                     ^(cons ,kw ,(second kp)))))))
-    (if [all exprs (op eq 'quote) car]
-      ^(quote ,[mapcar cadr exprs])
-      ^(list ,*exprs))))
+(defun sys:stuff-key-params (keys args)
+  (with-gensyms (cell)
+    (collect-each ((k keys))
+      (tree-bind (sym : init sym-p) k
+        (let ((kw (intern (symbol-name sym) :keyword)))
+          ^(let ((,cell (memp ,kw ,args)))
+             ,(if init
+               ^(cond
+                  (,cell
+                    (set ,sym (cadr ,cell))
+                    ,*(if sym-p ^((set ,sym-p t))))
+                  (t
+                    (set ,sym ,init)))
+               ^(when ,cell
+                  (set ,sym (cadr ,cell))
+                  ,*(if sym-p ^((set ,sym-p t)))))))))))
 
 (define-param-expander :key (param body menv form)
   (let* ((excluding-rest (butlastn 0 param))
@@ -74,17 +69,9 @@
            (compile-error form "invalid dotted form ~s" key-spec))
          (unless (bindable sym)
            (compile-error form "~s isn't a bindable symbol" sym)))))
-    (let* ((key-params-p [keep-if third key-params])
-           (key-vars [mapcar first key-params])
-           (key-vars-p [mapcar third key-params-p])
-           (keys (sys:build-key-list-expr key-params menv))
-           (keys-p (mapcar (op intern (symbol-name (first @1)) 'keyword)
-                           key-params-p)))
+    (let* ((key-syms [mapcar first key-params])
+           (key-syms-p (remq nil [mapcar third key-params])))
       (list eff-param
-            ^(tree-bind ,key-vars
-                        (sys:extract-keys ,keys ,rest-param)
-               ,*(if keys-p
-                   ^((tree-bind ,key-vars-p
-                                (sys:extract-keys-p ',keys-p ,rest-param)
-                        ,*body))
-                   body))))))
+            ^(let (,*key-syms ,*key-syms-p)
+               ,*(sys:stuff-key-params key-params rest-param)
+               ,*body)))))
