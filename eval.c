@@ -3661,6 +3661,7 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
     return cons(quote_s, cons(qquoted_form, nil));
   } else {
     val sym = car(qquoted_form);
+    val args, uqform;
 
     if (sym == spl) {
       val error_msg = if3(spl == sys_splice_s,
@@ -3691,6 +3692,18 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
       val opts = expand_qquote(second(qquoted_form), qq, unq, spl);
       val keys = expand_qquote(rest(rest(qquoted_form)), qq, unq, spl);
       return rlcp(list(tree_construct_s, opts, keys, nao), qquoted_form);
+    } else if (sym == expr_s && consp((args = cdr(qquoted_form)))
+               && !cdr(args) && consp((uqform = car(args))) &&
+               car(uqform) == unq && consp(cdr(uqform)) && !cddr(uqform))
+    {
+      val gs = gensym(nil);
+      val ret = list(let_s, cons(list(gs, cadr(uqform), nao), nil),
+                     list(if_s, list(atom_s, gs, nao),
+                          list(list_s, list(quote_s, var_s, nao),
+                               gs, nao),
+                          list(list_s, list(quote_s, expr_s, nao),
+                               gs, nao), nao), nao);
+      return rlcp_tree(ret, qquoted_form);
     } else {
       val f = sym;
       val r = cdr(qquoted_form);

@@ -12175,6 +12175,36 @@ The expression
 is evaluated to produce the list
 .codn "(6 8)" ,
 and this list is spliced into the quoted template.
+
+.meIP >> @,* expr
+This syntax is not a distinct quasiquoting operator, but rather the combination of
+an unquote occurring as a meta-expression, denoting the structure
+.codn "(sys:expr ,expr)" .
+This structure is treated specially by the quasiquote expander. Code is generated
+for it such that if
+.meta expr
+evaluates to an value
+.meta val
+which is an
+.codn atom ,
+then the result will be the
+.mono
+.meti (sys:var << val )
+.onom
+structure. If
+.meta val
+is a
+.code cons
+rather than an
+.codn atom ,
+then the result is the
+.mono
+.meti (sys:expr << val )
+.onom
+structure. In other words, when quasiquoting is used to insert a value under the
+.code @
+meta prefix, the expander generates code to analyze the type of the value, and
+produce to the form which is most likely intended.
 .RE
 
 .TP* "Dialect Notes:"
