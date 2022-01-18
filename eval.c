@@ -3642,6 +3642,14 @@ static val optimize_qquote(val form)
   return optimize_qquote_args(optimize_qquote_form(form));
 }
 
+static val is_meta_unquote(val args, val unq)
+{
+  val uqform;
+  return tnil(consp(args) && !cdr(args) &&
+              consp((uqform = car(args))) &&
+              car(uqform) == unq && consp(cdr(uqform)) && !cddr(uqform));
+}
+
 static val expand_qquote(val qquoted_form, val qq, val unq, val spl);
 
 static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
@@ -3661,7 +3669,6 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
     return cons(quote_s, cons(qquoted_form, nil));
   } else {
     val sym = car(qquoted_form);
-    val args, uqform;
 
     if (sym == spl) {
       val error_msg = if3(spl == sys_splice_s,
@@ -3692,12 +3699,9 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
       val opts = expand_qquote(second(qquoted_form), qq, unq, spl);
       val keys = expand_qquote(rest(rest(qquoted_form)), qq, unq, spl);
       return rlcp(list(tree_construct_s, opts, keys, nao), qquoted_form);
-    } else if (sym == expr_s && consp((args = cdr(qquoted_form)))
-               && !cdr(args) && consp((uqform = car(args))) &&
-               car(uqform) == unq && consp(cdr(uqform)) && !cddr(uqform))
-    {
+    } else if (sym == expr_s && is_meta_unquote(cdr(qquoted_form), unq)) {
       val gs = gensym(nil);
-      val ret = list(let_s, cons(list(gs, cadr(uqform), nao), nil),
+      val ret = list(let_s, cons(list(gs, cadadr(qquoted_form), nao), nil),
                      list(if_s, list(atom_s, gs, nao),
                           list(list_s, list(quote_s, var_s, nao),
                                gs, nao),
@@ -3730,7 +3734,10 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
 
       if (nilp(r_ex)) {
         return rlcp_tree(cons(append_s, cons(f_ex, nil)), qquoted_form);
-      } else if (atom(r_ex)) {
+      } else if (atom(r_ex) ||
+                 (consp(r) && car(r) == expr_s &&
+                  is_meta_unquote(cdr(r), unq)))
+      {
         return rlcp_tree(cons(append_s, cons(f_ex, cons(r_ex, nil))), qquoted_form);
       } else {
         if (consp(r) && car(r) == unq)
