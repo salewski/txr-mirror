@@ -11764,36 +11764,46 @@ to the same object: the first occurrence creates the symbol and associates it
 with its name in a package. Subsequent occurrences do not create a new symbol,
 but retrieve the existing one.
 
-.NP* Meta-Symbols, Meta-Numbers and Meta-Expressions
+.NP* Meta-Atoms and Meta-Expressions
 
-The syntax of a symbol, integer or compound expression may be preceded by the
-character
-.codn @ .
+An expression may be preceded by the
+.code @
+(at sign) character. If the expression is an
+.codn atom ,
+then this is a meta-atom, otherwise it is a meta-expression.
 
-This is "meta syntax", whose meaning is unassigned as far as \*(TL
-evaluation is concerned. It plays a syntactic role in the
+When the atom is a symbol, this is also called a meta-symbol and in situations
+when such a symbol behaves like a variable, it is also referred to as a
+meta-variable.
+
+When the atom is an integer, the meta-atom expression is called a meta-number.
+
+Meta-atom and meta-expression expressions have no evaluation semantics;
+evaluating them throws an exception.  They plays a syntactic role in the
 .code op
-operator, and in structural pattern matching. It also appears
-in the quasiliteral notation.  In other situations, application code may assign
-meaning to meta syntax as the programmer sees fit.
+operator, which makes use of meta-variables and meta-numbers, and in structural
+pattern matching, which uses meta-variables as pattern variables and whose
+operator vocabulary is based on meta-expressions.
+
+Meta-expressions also appear in the quasiliteral notation.
+
+In other situations, application code may assign meaning to meta syntax as the
+programmer sees fit.
 
 Meta syntax is defined as a shorthand notation, as follows:
 
 If
 .code X
-is a symbol or integer, the syntax
+is the syntax of an atom, such as a symbol, string or vector, then
 .code @X
-is a shorthand for the compound expression
+is a shorthand for the expression
 .codn "(sys:var X)" .
-This is referred to as a
-.I meta-symbol
-if
-.code X
-is a symbol, or a
-.I meta-number
-if
-.code X
-is an integer.
+Here,
+.code sys:var
+refers to the
+.code var
+symbol in the
+.codn system-package .
 
 If
 .code X
@@ -11803,10 +11813,8 @@ or
 .codn "[...]" ,
 then
 .code @X
-is a shorthand for
+is a shorthand for the expression
 .codn "(sys:expr X)" .
-This is called a
-.IR meta-expression .
 
 The behavior of
 .code @
