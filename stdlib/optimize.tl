@@ -437,13 +437,22 @@
         (pushnew bl.next bb.rescan)
         (set bb.recalc t)
         nil)
-      (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
+      (@(require @(or ((@(or ifq ifql) @(as reg (d @dn)) (t 0) @jlabel) . @nil)
+                      ((@(or ifq ifql) (t 0) @(as reg (d @dn)) @jlabel) . @nil))
                  (not (memqual reg bb.lt-dregs)))
         (pushnew bl.next bb.rescan)
         (set bb.recalc t
              bl.next nil
              bl.links (list [bb.hash jlabel]))
         ^((jmp ,jlabel)))
+      (@(require ((@(or ifq ifql) @(as reg0 (d @n0)) @(as reg1 (d @n1)) @label)
+                  . @nil)
+                 (neql n0 n1)
+                 (not (and (memqual reg0 bb.lt-dregs)
+                           (memqual reg1 bb.lt-dregs))))
+        ^((jmp ,label)))
+      (((@(or ifq ifql) @reg @reg . @nil) . @nil)
+       (rest insns))
       ;; wasteful move of previously tested value
       (@(require ((ifq (t @reg) (d @n) @nil) . @nil)
                  (let* ((nxbl bl.next)
