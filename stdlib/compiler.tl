@@ -508,6 +508,7 @@
               ;; function call
               ((+ *) me.(comp-arith-form oreg env form))
               ((- /) me.(comp-arith-neg-form oreg env form))
+              (typep me.(comp-typep oreg env form))
               (t me.(comp-fun-form oreg env form))))
            ((and (consp sym)
                  (eq (car sym) 'lambda)) me.(compile oreg env ^(call ,*form)))
@@ -1278,6 +1279,17 @@
        me.(comp-fun-form oreg env
                          (rlcp ^(,nop ,a1 ,sform) form))))
     (else me.(comp-fun-form oreg env form))))
+
+(defmeth compiler comp-typep (me oreg env form)
+  (match-case form
+    ((typep @exp @(require @(constantp @type)
+                           (eq t (safe-const-eval type))))
+     me.(compile oreg env ^(progn ,exp t)))
+    ((typep @exp @(require @(constantp @type)
+                           (null (safe-const-eval type))))
+     me.(compile oreg env ^(progn ,exp nil)))
+    (@else
+     me.(comp-fun-form oreg env form))))
 
 (defmeth compiler comp-fun-form (me oreg env form)
   (let* ((olev *opt-level*)
