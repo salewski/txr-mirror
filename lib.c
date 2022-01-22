@@ -8862,6 +8862,16 @@ val notf(val fun)
   return func_f0v(fun, do_not);
 }
 
+val nandv(struct args *funlist)
+{
+  return notf(andv(funlist));
+}
+
+val norv(struct args *funlist)
+{
+  return notf(orv(funlist));
+}
+
 static val do_iff(val env, struct args *args_in)
 {
   cons_bind (condfun, choices, env);

@@ -1090,6 +1090,8 @@ val andv(struct args *funlist);
 val orf(val first_fun, ...);
 val orv(struct args *funlist);
 val notf(val fun);
+val nandv(struct args *funlist);
+val norv(struct args *funlist);
 val iff(val condfun, val thenfun, val elsefun);
 val iffi(val condfun, val thenfun, val elsefun);
 val dupl(val fun);

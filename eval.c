@@ -3279,6 +3279,18 @@ static val rt_pprof(val prof_list)
   return retval;
 }
 
+static val me_nand(val form, val menv)
+{
+  (void) menv;
+  return list(not_s, cons(and_s, cdr(form)), nao);
+}
+
+static val me_nor(val form, val menv)
+{
+  (void) menv;
+  return list(not_s, cons(or_s, cdr(form)), nao);
+}
+
 static val me_when(val form, val menv)
 {
   (void) menv;
@@ -6356,6 +6368,11 @@ static val or_fun(struct args *vals)
   return nil;
 }
 
+static val nor_fun(struct args *vals)
+{
+  return tnil(!or_fun(vals));
+}
+
 static val and_fun(struct args *vals)
 {
   val item = t;
@@ -6368,6 +6385,11 @@ static val and_fun(struct args *vals)
   }
 
   return item;
+}
+
+static val nand_fun(struct args *vals)
+{
+  return tnil(!and_fun(vals));
 }
 
 static val progn_fun(struct args *vals)
@@ -6816,6 +6838,8 @@ void eval_init(void)
   reg_mac(sys_qquote_s, me_qquote_f);
   reg_mac(intern(lit("equot"), user_package), func_n2(me_equot));
   reg_mac(intern(lit("pprof"), user_package), func_n2(me_pprof));
+  reg_mac(intern(lit("nand"), user_package), func_n2(me_nand));
+  reg_mac(intern(lit("nor"), user_package), func_n2(me_nor));
   reg_mac(when_s, func_n2(me_when));
   reg_mac(intern(lit("unless"), user_package), func_n2(me_unless));
   reg_mac(while_s, me_while_until_f);
@@ -7089,13 +7113,17 @@ void eval_init(void)
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
   reg_fun(intern(lit("notf"), user_package), func_n1(notf));
+  reg_fun(intern(lit("nandf"), user_package), func_n0v(nandv));
+  reg_fun(intern(lit("norf"), user_package), func_n0v(norv));
   reg_fun(intern(lit("iff"), user_package), func_n3o(iff, 1));
   reg_fun(intern(lit("iffi"), user_package), func_n3o(iffi, 2));
   reg_fun(intern(lit("dup"), user_package), func_n1(dupl));
   reg_fun(intern(lit("flipargs"), user_package), func_n1(swap_12_21));
   reg_fun(if_s, func_n3o(if_fun, 2));
   reg_fun(or_s, func_n0v(or_fun));
+  reg_fun(intern(lit("nor"), user_package), func_n0v(nor_fun));
   reg_fun(and_s, func_n0v(and_fun));
+  reg_fun(intern(lit("nand"), user_package), func_n0v(nand_fun));
   reg_fun(progn_s, func_n0v(progn_fun));
   reg_fun(prog1_s, func_n0v(prog1_fun));
   reg_fun(prog2_s, func_n0v(prog2_fun));

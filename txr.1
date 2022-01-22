@@ -16443,7 +16443,7 @@ operator and an
 function. A list form with the
 symbol
 .code and
-in the fist position is interpreted as an invocation of the
+in the first position is interpreted as an invocation of the
 operator.  The function can be accessed using the DWIM bracket notation and in
 other ways.
 
@@ -16465,28 +16465,60 @@ The
 .metn form s,
 if any, are
 evaluated from left to right.  The return value is overwritten with
-the result of each form. Evaluation stops when all forms are exhausted,
-or when
+the result of each
+.metn form .
+Evaluation stops when all
+.metn form s
+are exhausted, or when
 .code nil
 is stored in the return value.
 When evaluation stops, the operator yields the return value.
 
 The
 .code and
-function provides no evaluation control; it receives all of its
+function provides no evaluation control: it receives all of its
 arguments fully evaluated. If it is given no arguments, it returns
 .codn t .
 If it is given one or more arguments, and any of them are
 .codn nil ,
 it returns
 .codn nil .
-Otherwise it returns the value of the last argument.
+Otherwise, it returns the value of the last argument.
 
 .TP* Examples:
 .verb
   (and) -> t
   (and (> 10 5) (stringp "foo")) -> t
   (and 1 2 3) -> 3  ;; shorthand for (if (and 1 2) 3).
+.brev
+
+.coNP Macro/function @ nand
+.synb
+.mets (nand << form *)
+.mets '['nand << arg *']'
+.syne
+.desc
+There exist both a
+.code nand
+macro and a
+.code nand
+function.
+A list form with the symbol
+.code nand
+in the first position is interpreted as an invocation of the macro.
+The function can be accessed using the DWIM bracket notation and in
+other ways.
+
+The
+.code nand
+macro and function are the logical negation of the
+.code and
+operator and function.
+They are related according to the following equivalences:
+
+.verb
+  (nand f0 f1 f2 ...) <--> (not (and f0 f1 f2 ...))
+  [nand f0 f1 f2 ...] <--> (not [and f0 f1 f2 ...])
 .brev
 
 .coNP Operator/function @ or
@@ -16502,16 +16534,19 @@ operator and an
 function. A list form with the
 symbol
 .code or
-in the fist position is interpreted as an invocation of the
+in the first position is interpreted as an invocation of the
 operator.  The function can be accessed using the DWIM bracket notation and in
 other ways.
 
-The or operator provides three functionalities in one.  It computes the
+The
+.code or
+operator provides three functionalities in one.  It computes the
 logical "or" function over several forms.  It controls evaluation (a.k.a.
 "short-circuiting").  The behavior of
 .code or
-also provides an idiom for the selection of the first non-nil value from a
-sequence of forms.
+also provides an idiom for the selection of the first
+.cod2 non- nil
+value from a sequence of forms.
 
 The
 .code or
@@ -16524,13 +16559,14 @@ if any,
 are evaluated from left to right. The return value is overwritten
 with the result of each
 .metn form .
-Evaluation stops when all forms are
-exhausted, or when a true value is stored into the return value.
+Evaluation stops when all
+.metn form s
+are exhausted, or when a true value is stored into the return value.
 When evaluation stops, the operator yields the return value.
 
 The
 .code or
-function provides no evaluation control; it receives all of its
+function provides no evaluation control: it receives all of its
 arguments fully evaluated. If it is given no arguments, it returns
 .codn nil .
 If all of its arguments are
@@ -16547,6 +16583,35 @@ returns the value of the first argument which isn't
   (or 1 2) -> 1
   (or nil 2) -> 2
   (or (> 10 20) (stringp "foo")) -> t
+.brev
+
+.coNP Macro/function @ nor
+.synb
+.mets (nor << form *)
+.mets '['nor << arg *']'
+.syne
+.desc
+There exist both a
+.code nor
+macro and a
+.code nor
+function.
+A list form with the symbol
+.code nor
+in the first position is interpreted as an invocation of the macro.
+The function can be accessed using the DWIM bracket notation and in
+other ways.
+
+The
+.code nor
+macro and function are the logical negation of the
+.code or
+operator and function.
+They are related according to the following equivalences:
+
+.verb
+  (nor f0 f1 f2 ...) <--> (not (or f0 f1 f2 ...))
+  [nor f0 f1 f2 ...] <--> (not [or f0 f1 f2 ...])
 .brev
 
 .coNP Macros @ when and @ unless
@@ -56866,37 +56931,45 @@ resulting combined function is then callable with that many arguments.
 The
 .code andf
 function returns a function which combines the input functions with
-a short-circuiting logical conjunction. The resulting function passes its
-arguments to the functions successively, in left-to-right order. As soon as any
-of the functions returns
+a short-circuiting logical conjunction.
+The resulting function passes its arguments to the input functions
+successively,
+in left-to-right order.
+As soon as any of the functions returns
 .codn nil ,
-then nil is returned immediately, and the
-remaining functions are not called.  Otherwise, if none of the functions return
+then
+.code nil
+is returned and the remaining functions are not called.
+If none of the functions return
 .codn nil ,
-then the value returned by the last function is returned. If the list of
-functions is empty, then
+then the value returned by the last function is returned.
+If the list of functions is empty, then
 .code t
-is returned.  That is,
+is returned.
+That is,
 .code (andf)
-returns a function
-which accepts any arguments, and returns
+returns a function which accepts any arguments and returns
 .codn t .
 
 The
 .code orf
-function combines the input functions with a short-circuiting logical
-disjunction. The function produced by
-.code orf
-passes its arguments down to the
-functions successively, in left-to-right order.  As soon as any function
-returns a
+function returns a function which combines the input functions with
+a short-circuiting logical disjunction.
+The resulting function passes its arguments to the input functions
+successively,
+in left-to-right order.
+As soon as any of the functions returns a
 .cod2 non- nil
-value, that value is returned and the remaining functions are
-not called. If all functions return
+value, that value is returned and the remaining functions are not called.
+If all of the functions return
 .codn nil ,
 then
 .code nil
-is returned. The expression
+is returned.
+If the list of functions is empty, then
+.code nil
+is returned.
+That is,
 .code (orf)
 returns a function which accepts any arguments and returns
 .codn nil .
@@ -56915,8 +56988,30 @@ of
 The returned function takes a variable number of arguments. When
 invoked, it passes all of these arguments to
 .meta function
-and then inverts the result as if by application of the
+and then inverts the result as if by application of
 .codn not .
+
+.coNP Functions @ nandf and @ norf
+.synb
+.mets (nandf << func *)
+.mets (norf << func *)
+.syne
+.desc
+The
+.code nandf
+and
+.code norf
+functions are the logical negation of the
+.code andf
+and
+.code orf
+functions.
+They are related according to the following equivalences:
+
+.verb
+  [nandf f0 f1 f2 ...] <--> (notf [andf f0 f1 f2 ...])
+  [norf f0 f1 f2 ...] <--> (notf [orf f0 f1 f2 ...])
+.brev
 
 .coNP Functions @ iff and @ iffi
 .synb
