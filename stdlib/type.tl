@@ -24,27 +24,29 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
-(defmacro typecase (form . clauses)
+(defun sys:typecase-expander (form obj clauses)
   (let* ((val (gensym))
          (cond-pairs (collect-each ((cl clauses))
                        (tree-case cl
                          ((type . body)
-                          (if (symbolp type)
-                            ^((typep ,val ',type) ,*(or body '(nil)))
-                            :))
-                         (else (throwf 'eval-error
-                                       "~s: bad clause syntax: ~s"
-                                       'typecase cl))))))
-    ^(let ((,val ,form))
-       (cond ,*cond-pairs))))
+                          (cond
+                            ((eq type t)
+                             ^(t ,*(or body '(nil))))
+                            ((symbolp type)
+                             ^((typep ,val ',type) ,*(or body '(nil))))
+                            (t :)))
+                         (else (compile-error form
+                                              "~s: bad clause syntax: ~s"
+                                              'typecase cl))))))
+    ^(let ((,val ,obj))
+       (cond ,*cond-pairs
+         ,*(if (eq (car form) 'etypecase)
+             ^((t (throwf 'case-error
+                          "~s: unhandled type: ~s"
+                          'etypecase (typeof ,val)))))))))
 
-(defmacro etypecase (form . clauses)
-  (if [find t clauses eq car]
-    ^(typecase ,form ,*clauses)
-    (let ((val (gensym)))
-      ^(let ((,val ,form))
-         (typecase ,val
-           ,*clauses
-           (t (throwf 'case-error
-                      "~s: unhandled type: ~s"
-                      'etypecase (typeof ,val))))))))
+(defmacro typecase (:form f obj . clauses)
+  (sys:typecase-expander f obj clauses))
+
+(defmacro etypecase (:form f obj . clauses)
+  (sys:typecase-expander f obj clauses))
