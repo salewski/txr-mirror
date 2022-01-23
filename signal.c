@@ -218,7 +218,7 @@ void sig_init(void)
 #if HAVE_SIGALTSTACK
 
 static mem_t *stack;
-int stack_refcount;
+static int stack_refcount;
 
 static void addref_alt_stack(void)
 {
