@@ -387,16 +387,6 @@ FILE *w_popen(const wchar_t *wcmd, const wchar_t *wmode)
 }
 #endif
 
-FILE *w_freopen(const wchar_t *wname, const wchar_t *wmode, FILE *fold)
-{
-  char *name = utf8_dup_to(wname);
-  char *mode = utf8_dup_to(wmode);
-  FILE *f = fold ? freopen(name, mode, fold) : fopen(name, mode);
-  free(name);
-  free(mode);
-  return f;
-}
-
 FILE *w_fdopen(int fd, const wchar_t *wmode)
 {
   char *mode = utf8_dup_to(wmode);

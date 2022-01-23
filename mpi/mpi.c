@@ -150,6 +150,7 @@ int s_mp_tovalue(wchar_t ch, int r); /* convert ch to value */
 char s_mp_todigit(int val, int r, int low); /* convert val to digit */
 size_t s_mp_outlen(mp_size bits, int r); /* output length in bytes */
 
+#if !MP_FOR_TXR
 unsigned int mp_get_prec(void)
 {
   return s_mp_defprec;
@@ -162,6 +163,7 @@ void mp_set_prec(unsigned int prec)
   else
     s_mp_defprec = prec;
 }
+#endif
 
 /* Initialize a new zero-valued mp_int.  Returns MP_OKAY if successful,
  * MP_MEM if memory could not be allocated for the structure.
@@ -171,6 +173,7 @@ mp_err mp_init(mp_int *mp)
   return mp_init_size(mp, s_mp_defprec);
 }
 
+#if !MP_FOR_TXR
 mp_err mp_init_array(mp_int mp[], int count)
 {
   mp_err res;
@@ -191,6 +194,7 @@ mp_err mp_init_array(mp_int mp[], int count)
 
   return res;
 }
+#endif
 
 /* Initialize a new zero-valued mp_int with at least the given
  * precision; returns MP_OKAY if successful, or MP_MEM if memory could
@@ -323,6 +327,7 @@ void mp_clear(mp_int *mp)
   ALLOC(mp) = 0;
 }
 
+#if !MP_FOR_TXR
 void mp_clear_array(mp_int mp[], int count)
 {
   ARGCHK(mp != NULL && count > 0, MP_BADARG);
@@ -330,6 +335,7 @@ void mp_clear_array(mp_int mp[], int count)
   while (--count >= 0)
     mp_clear(&mp[count]);
 }
+#endif
 
 /* Set mp to zero.  Does not change the allocated size of the structure,
  * and therefore cannot fail (except on a bad argument, which we ignore)
@@ -621,6 +627,7 @@ int mp_in_double_uintptr_range(mp_int *mp)
 
 #endif
 
+#if !MP_FOR_TXR
 mp_err mp_set_word(mp_int *mp, mp_word w, int sign)
 {
   USED(mp) = 2;
@@ -629,6 +636,7 @@ mp_err mp_set_word(mp_int *mp, mp_word w, int sign)
   SIGN(mp) = sign;
   return MP_OKAY;
 }
+#endif
 
 /* Compute the sum b = a + d, for a single digit d.  Respects the sign of
  * its primary addend (single digits are unsigned anyway).
@@ -1574,6 +1582,7 @@ mp_err mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
   return res;
 }
 
+#if !MP_FOR_TXR
 mp_err mp_exptmod_d(mp_int *a, mp_digit d, mp_int *m, mp_int *c)
 {
   mp_int s, x;
@@ -1611,6 +1620,7 @@ X:
 
   return res;
 }
+#endif
 
 #endif /* if MP_MODARITH */
 
@@ -1626,6 +1636,7 @@ int mp_cmp_z(mp_int *a)
 }
 
 /* Compare a <=> d.  Returns <0 if a<d, 0 if a=d, >0 if a>d */
+#if !MP_FOR_TXR
 int mp_cmp_d(mp_int *a, mp_digit d)
 {
   ARGCHK(a != NULL, MP_EQ);
@@ -1635,6 +1646,7 @@ int mp_cmp_d(mp_int *a, mp_digit d)
 
   return s_mp_cmp_d(a, d);
 }
+#endif
 
 int mp_cmp(mp_int *a, mp_int *b)
 {
@@ -1658,6 +1670,7 @@ int mp_cmp(mp_int *a, mp_int *b)
   }
 }
 
+#if !MP_FOR_TXR
 /* Compares |a| <=> |b|, and returns an appropriate comparison result */
 int mp_cmp_mag(mp_int *a, mp_int *b)
 {
@@ -1684,6 +1697,7 @@ int mp_cmp_int(mp_int *a, long z)
 
   return out;
 }
+#endif
 
 /* Returns a true (non-zero) value if a is odd, false (zero) otherwise.
  */
@@ -1823,6 +1837,7 @@ mp_err mp_gcd(mp_int *a, mp_int *b, mp_int *c)
   return res;
 }
 
+#if !MP_FOR_TXR
 /* We compute the least common multiple using the rule:
  *
  *  ab = [a, b](a, b)
@@ -2009,6 +2024,7 @@ X:
 
   return res;
 }
+#endif
 
 #endif /* if MP_NUMTH */
 
@@ -2845,10 +2861,12 @@ mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix)
   return mp_toradix_case(mp, str, radix, 0);
 }
 
+#if !MP_FOR_TXR
 int mp_char2value(char ch, int r)
 {
   return s_mp_tovalue(ch, r);
 }
+#endif
 
 /* Return a string describing the meaning of error code 'ec'.  The
  * string returned is allocated in static memory, so the caller should

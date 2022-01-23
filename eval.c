@@ -593,12 +593,6 @@ loc lookup_var_l(val env, val sym)
   return if3(binding, cdr_l(binding), nulloc);
 }
 
-loc lookup_global_var_l(val sym)
-{
-  val binding = lookup_global_var(sym);
-  return if3(binding, cdr_l(binding), nulloc);
-}
-
 static val lookup_mac(val menv, val sym);
 
 val lookup_fun(val env, val sym)

@@ -8,6 +8,10 @@
 #define MP_MODARITH 1 /* include modular arithmetic ? */
 #endif
 
+#ifndef MP_FOR_TXR
+#define MP_FOR_TXR 1
+#endif
+
 #ifndef MP_NUMTH
 #define MP_NUMTH 1 /* include number theoretic functions? */
 #endif

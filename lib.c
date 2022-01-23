@@ -125,7 +125,6 @@ val wrap_k, reflect_k;
 
 val null_string;
 val nil_string;
-val null_list;
 
 val identity_f, identity_star_f;
 val equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
@@ -4487,19 +4486,6 @@ void rcyc_cons(val cons)
   recycled_conses = cons;
 }
 
-void rcyc_list(val list)
-{
-  if (list) {
-    val rl_orig = recycled_conses;
-    recycled_conses = list;
-
-    while (list->c.cdr)
-      list = list->c.cdr;
-
-    list->c.cdr = rl_orig;
-  }
-}
-
 void rcyc_empty(void)
 {
   recycled_conses = nil;
@@ -6409,12 +6395,6 @@ val lequal(val left, val right)
   return or2(equal(left, right), less(left, right));
 }
 
-val gequal(val left, val right)
-{
-  uses_or2;
-  return or2(equal(left, right), less(right, left));
-}
-
 val lessv(val first, struct args *rest)
 {
   cnum index = 0;
@@ -7693,45 +7673,6 @@ val func_n5v(val (*fun)(val, val, val, val, val, varg))
   return obj;
 }
 
-val func_n6v(val (*fun)(val, val, val, val, val, val, varg))
-{
-  val obj = make_obj();
-  obj->f.type = FUN;
-  obj->f.functype = N6;
-  obj->f.env = nil;
-  obj->f.f.n6v = fun;
-  obj->f.variadic = 1;
-  obj->f.fixparam = 6;
-  obj->f.optargs = 0;
-  return obj;
-}
-
-val func_n7v(val (*fun)(val, val, val, val, val, val, val, varg))
-{
-  val obj = make_obj();
-  obj->f.type = FUN;
-  obj->f.functype = N7;
-  obj->f.env = nil;
-  obj->f.f.n7v = fun;
-  obj->f.variadic = 1;
-  obj->f.fixparam = 7;
-  obj->f.optargs = 0;
-  return obj;
-}
-
-val func_n8v(val (*fun)(val, val, val, val, val, val, val, val, varg))
-{
-  val obj = make_obj();
-  obj->f.type = FUN;
-  obj->f.functype = N8;
-  obj->f.env = nil;
-  obj->f.f.n8v = fun;
-  obj->f.variadic = 1;
-  obj->f.fixparam = 8;
-  obj->f.optargs = 0;
-  return obj;
-}
-
 val func_n1o(val (*fun)(val), int reqargs)
 {
   val obj = func_n1(fun);
@@ -8618,16 +8559,6 @@ val pa_123_1(val fun3, val arg2, val arg3)
   return func_f1(cons(fun3, cons(arg2, arg3)), do_pa_123_1);
 }
 
-static val do_pa_123_23(val fcons, val arg2, val arg3)
-{
-  return funcall3(car(fcons), cdr(fcons), arg2, arg3);
-}
-
-val pa_123_23(val fun3, val arg1)
-{
-  return func_f2(cons(fun3, arg1), do_pa_123_23);
-}
-
 static val do_pa_1234_1(val fcons, val arg1)
 {
   cons_bind (fun, dr, fcons);
@@ -8826,25 +8757,6 @@ static val do_or(val fun1_list, struct args *args_in)
   }
 
   return ret;
-}
-
-val orf(val first_fun, ...)
-{
-  va_list vl;
-  list_collect_decl (out, iter);
-
-  if (first_fun != nao) {
-    val next_fun;
-    va_start (vl, first_fun);
-    iter = list_collect(iter, first_fun);
-
-    while ((next_fun = va_arg(vl, val)) != nao)
-      iter = list_collect(iter, next_fun);
-
-    va_end (vl);
-  }
-
-  return func_f0v(out, do_or);
 }
 
 val orv(struct args *funlist)
@@ -10027,24 +9939,6 @@ val aconsql_new(val key, val value, val list)
     return cons(cons(key, value), list);
   }
 }
-
-val aconsql_new_c(val key, loc new_p, loc list)
-{
-  val existing = assql(key, deref(list));
-
-  if (existing) {
-    if (!nullocp(new_p))
-      deref(new_p) = nil;
-    return existing;
-  } else {
-    val nc = cons(key, nil);
-    set(list, cons(nc, deref(list)));
-    if (!nullocp(new_p))
-      deref(new_p) = t;
-    return nc;
-  }
-}
-
 
 static val alist_remove_test(val item, val key)
 {
@@ -13114,7 +13008,7 @@ static void obj_init(void)
 
   protect(&packages, &system_package, &keyword_package,
           &user_package, &public_package,
-          &null_list, &equal_f, &eq_f, &eql_f,
+          &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &identity_star_f, &less_f, &greater_f,
           &prog_string, &cobj_hash,
@@ -13122,7 +13016,6 @@ static void obj_init(void)
 
   nil_string = lit("nil");
   null_string = lit("");
-  null_list = cons(nil, nil);
 
   hash_s = make_sym(lit("hash"));
   system_package = make_package(lit("sys"), nil);

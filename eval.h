@@ -55,7 +55,6 @@ val env_vbind(val env, val sym, val obj);
 val lookup_var(val env, val sym);
 val lookup_global_var(val sym);
 loc lookup_var_l(val env, val sym);
-loc lookup_global_var_l(val sym);
 val lookup_fun(val env, val sym);
 val lookup_sym_lisp1(val env, val sym);
 val set_dyn_env(val de);

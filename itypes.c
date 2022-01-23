@@ -193,11 +193,6 @@ char c_char(val n, val self)
 #endif
 }
 
-signed char c_schar(val n, val self)
-{
-  return c_i8(n, self);
-}
-
 unsigned char c_uchar(val n, val self)
 {
   return c_u8(n, self);

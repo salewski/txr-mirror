@@ -106,7 +106,6 @@ val unum_64(u64_t n);
 #endif
 
 char c_char(val, val self);
-signed char c_schar(val, val self);
 unsigned char c_uchar(val, val self);
 
 short c_short(val, val self);
