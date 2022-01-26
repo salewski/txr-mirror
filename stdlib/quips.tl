@@ -97,6 +97,7 @@
     "TXR needs money, so even abnormal exits now go through the gift shop."
     "TXR Lisp has no protected class members; C++ refugees may face discrimination."
     "In programming, you want rigor, but also to recognize and avoid rigor mortis."
+    "TXR Labs engaged in gain-of-function experiments as far back as 2009."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
