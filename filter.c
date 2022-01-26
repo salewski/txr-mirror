@@ -305,6 +305,8 @@ static val trie_filter_string(val filter, val str)
 
 val filter_string_tree(val filter, val obj)
 {
+  val self = lit("filter-string-tree");
+
   switch (type(obj)) {
   case NIL:
     return nil;
@@ -320,8 +322,8 @@ val filter_string_tree(val filter, val obj)
         return trie_filter_string(filter, obj);
       else if (type == fun_s)
         return funcall1(filter, obj);
-      return obj;
-      uw_throwf(error_s, lit("invalid filter ~a"), filter, nao);
+      uw_throwf(type_error_s, lit("~a: ~s isn't a filter"),
+                self, filter, nao);
     }
   }
 }
