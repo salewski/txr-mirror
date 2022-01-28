@@ -9779,6 +9779,12 @@ val cptr_cast(val to_type, val cptr)
   return cptr_typed(ptr, to_type, 0);
 }
 
+val copy_cptr(val cptr)
+{
+  mem_t *ptr = cptr_handle(cptr, nil, lit("cptr-copy"));
+  return cptr_typed(ptr, cptr->cp.cls, 0);
+}
+
 val int_cptr(val cptr)
 {
   return num(coerce(cnum, cptr_handle(cptr, nil, lit("int-cptr"))));
@@ -12185,6 +12191,8 @@ val copy(val seq)
     return copy_fun(seq);
   case TNOD:
     return copy_tnode(seq);
+  case CPTR:
+    return copy_cptr(seq);
   case COBJ:
     if (seq->co.cls == hash_cls)
       return copy_hash(seq);

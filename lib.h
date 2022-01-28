@@ -1136,6 +1136,7 @@ val cptr_buf(val buf, val type_sym);
 val cptr_zap(val cptr);
 val cptr_free(val cptr);
 val cptr_cast(val to_type, val cptr);
+val copy_cptr(val cptr);
 val int_cptr(val cptr);
 mem_t *cptr_get(val cptr);
 mem_t *cptr_handle(val cobj, val type_sym, val self);

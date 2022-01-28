@@ -400,6 +400,7 @@
       ("copy-buf" "N-00BE75E1")
       ("copy-carray" "N-006593D0")
       ("copy-cons" "N-037EBB77")
+      ("copy-cptr" "N-018EBB92")
       ("copy-file" "N-019D6582")
       ("copy-files" "N-019D6582")
       ("copy-fun" "N-003E7671")

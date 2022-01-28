@@ -20742,6 +20742,10 @@ the type of the argument, as follows:
 .mono
 .meti (copy-tree-iter << object )
 .onom
+.coIP cptr
+.mono
+.meti (copy-cptr << object )
+.onom
 .RE
 
 .IP
@@ -55051,7 +55055,7 @@ The
 .code copy-tnode
 function creates a new
 .code tnode
-objects, whose
+object, whose
 .codn key ,
 .code left
 and
@@ -62381,6 +62385,20 @@ objects with
 circumvents the safety mechanism which
 .code cptr
 type tagging provides.
+
+.coNP Function @ copy-cptr
+.synb
+.mets (cptr-copy << cptr )
+.syne
+.desc
+The
+.code copy-cptr
+function creates a new
+.code cptr
+object similar to
+.codn cptr ,
+which has the same address and type symbol as
+.codn cptr .
 
 .coNP Function @ cptr-zap
 .synb
