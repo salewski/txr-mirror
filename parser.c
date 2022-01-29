@@ -1562,6 +1562,9 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 #endif
     reg_varl(counter_sym, counter);
     reg_varl(var_counter_sym, var_counter);
+
+    uw_catch_begin (catch_all, exsym, exvals);
+
     line_w = linenoise(ls, c_str(prompt, self));
 
 #if CONFIG_FULL_REPL
@@ -1572,34 +1575,30 @@ val repl(val bindings, val in_stream, val out_stream, val env)
       switch (lino_get_error(ls)) {
       case lino_intr:
         put_line(lit("** intr"), out_stream);
-        continue;
+        goto contin;
       case lino_eof:
         break;
       default:
         put_line(lit("** error reading interactive input"), out_stream);
         break;
       }
-      break;
+      done = t;
+      goto contin;
     }
 
     {
       size_t wsp = wcsspn(line_w, L" \t\n\r");
 
-      if (line_w[wsp] == 0) {
-        free(line_w);
-        continue;
-      }
+      if (line_w[wsp] == 0)
+        goto contin;
 
       if (line_w[wsp] == ';') {
         lino_hist_add(ls, line_w);
-        free(line_w);
-        continue;
+        goto contin;
       }
     }
 
     counter = succ(counter);
-
-    uw_catch_begin (catch_all, exsym, exvals);
 
     uw_push_handler(&uw_handler, cons(warning_s, nil), rw_f);
 
@@ -1658,10 +1657,13 @@ val repl(val bindings, val in_stream, val out_stream, val env)
       val exinfo = cons(exsym, exvals);
       reg_varl(var_sym, exinfo);
       sethash(result_hash, var_counter, exinfo);
-      lino_hist_add(ls, line_w);
+      if (line_w)
+        lino_hist_add(ls, line_w);
 
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
         format(out_stream, lit("** syntax error: ~a\n"), car(exvals), nao);
+      } else if (uw_exception_subtype_p(exsym, intr_s)) {
+        format(out_stream, lit("** intr\n"), nao);
       } else if (uw_exception_subtype_p(exsym, error_s)) {
         error_trace(exsym, exvals, out_stream, lit("**"));
       } else {
@@ -1670,6 +1672,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
       }
     }
 
+  contin:
     uw_unwind {
       free(line_w);
       line_w = 0;
