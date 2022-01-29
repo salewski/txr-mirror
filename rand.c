@@ -543,10 +543,19 @@ static val random_sample(val size, val seq, val state_in)
       }
     }
   } else {
-    for (; seq_get(&iter, &elem) && i <= INT_PTR_MAX; i++) {
-      cnum r = c_n(random(state, unum(i)));
-      if (r < sz)
-        samp->v.vec[r] = elem;
+    double weight = elrd(sz, state);
+
+    for (;;) {
+      cnum nx = i + flrd(weight, state) + 1;
+      for (; seq_get(&iter, &elem) && i < nx; i++)
+        ; /* nothing */
+
+      if (i < nx)
+        break;
+
+      samp->v.vec[c_n(random(state, size))] = elem;
+      mut(samp);
+      weight *= elrd(sz, state);
     }
   }
 
