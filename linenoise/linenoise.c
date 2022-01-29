@@ -2581,7 +2581,7 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
 
     if (plain) {
         wchar_t *ret = 0;
-        size_t len = 0, i;
+        size_t len = 0;
         const wchar_t *condensed_prompt = prompt + wcslen(prompt);
         int show_prompt = ls->show_prompt || (noninteractive && isatty(ifd));
 
@@ -2616,6 +2616,9 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
                 wmemcpy(nret + len, ls->data, nlen + 1);
                 ret = nret;
                 len = len + nlen;
+
+                if (len && ret[len-1] == '\n')
+                    ret[len-1] = '\r';
             }
 
             if (!ls->enter_callback || ls->enter_callback(ret, ls->ce_ctx))
@@ -2625,11 +2628,6 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
         if (ret != 0) {
             if (len && ret[len - 1] == '\n')
                 ret[len-1] = '\0';
-
-            for (i = 0; i < len; i++) {
-                if (ret[i] == '\n')
-                    ret[i] = '\r';
-            }
         }
 
         return ret;
