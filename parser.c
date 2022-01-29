@@ -1471,7 +1471,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
                    lino_ctx,
                    lino_ctx = lino_make(coerce(mem_t *, in_stream),
                                         coerce(mem_t *, out_stream)));
-  wchar_t *line_w = 0;
+  wchar_t *volatile line_w = 0;
   val quit_k = intern(lit("quit"), keyword_package);
   val read_k = intern(lit("read"), keyword_package);
   val prompt_k = intern(lit("prompt"), keyword_package);
