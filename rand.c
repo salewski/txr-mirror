@@ -31,6 +31,7 @@
 #include <wchar.h>
 #include <limits.h>
 #include <signal.h>
+#include <math.h>
 #include "config.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -44,6 +45,7 @@
 #include "buf.h"
 #include "txr.h"
 #include "itypes.h"
+#include "gc.h"
 #include "rand.h"
 
 #define random_warmup (deref(lookup_var_l(nil, random_warmup_s)))
@@ -284,7 +286,7 @@ val random_fixnum(val state)
   return num(rand32(r) & NUM_MAX);
 }
 
-static val random_float(val state)
+static double random_float_impl(val state)
 {
   val self = lit("random-float");
   struct rand_state *r = coerce(struct rand_state *,
@@ -309,7 +311,12 @@ static val random_float(val state)
    * this subtraction, reducing us to 51 bits of precision.
    * Still; an attractive approach.
    */
-  return flo(h.d - 1.0);
+  return h.d - 1.0;
+}
+
+static val random_float(val state)
+{
+  return flo(random_float_impl(state));
 }
 
 static val random_float_incl(val state)
@@ -493,6 +500,59 @@ void rand_compat_fixup(int compat_ver)
   }
 }
 
+static double elrd(double denom, val state)
+{
+    return exp(log(random_float_impl(state))/denom);
+}
+
+static double flrd(double weight, val state)
+{
+    return floor(log(random_float_impl(state))/log(1.0 - weight));
+}
+
+static val random_sample(val size, val seq, val state_in)
+{
+  val self = lit("random-sample");
+  val state = default_arg(state_in, random_state);
+  cnum sz = c_fixnum(size, self), i;
+  seq_iter_t iter;
+  val samp, elem;
+
+  seq_iter_init(self, &iter, seq);
+
+  samp = vector(size, nil);
+
+  for (i = 0; i < sz && seq_get(&iter, &elem); i++)
+    samp->v.vec[i] = elem;
+
+  if (i < sz) {
+    vec_set_length(samp, unum(i));
+    return samp;
+  }
+
+  if (iter.inf.kind == SEQ_VECLIKE) {
+    cnum len = c_fixnum(length(seq), self);
+    double weight = elrd(sz, state);
+
+    while (i < len) {
+      i += flrd(weight, state) + 1;
+      if (i < len) {
+        samp->v.vec[c_n(random(state, size))] = ref(seq, unum(i));
+        mut(samp);
+        weight *= elrd(sz, state);
+      }
+    }
+  } else {
+    for (; seq_get(&iter, &elem) && i <= INT_PTR_MAX; i++) {
+      cnum r = c_n(random(state, unum(i)));
+      if (r < sz)
+        samp->v.vec[r] = elem;
+    }
+  }
+
+  return samp;
+}
+
 void rand_init(void)
 {
   random_state_var_s = intern(lit("*random-state*"), user_package);
@@ -515,4 +575,5 @@ void rand_init(void)
   reg_fun(intern(lit("random"), user_package), func_n2(random));
   reg_fun(intern(lit("rand"), user_package), func_n2o(rnd, 1));
   reg_fun(intern(lit("random-buf"), user_package), func_n2o(random_buf, 1));
+  reg_fun(intern(lit("random-sample"), user_package), func_n3o(random_sample, 2));
 }

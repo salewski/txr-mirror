@@ -64759,6 +64759,37 @@ for a description of
 .code buf
 objects.
 
+.coNP Function @ random-sample
+.synb
+.mets (random-sample < size < seq <> [ random-state ])
+.syne
+.desc
+The
+.code random-sample
+function returns a vector of
+.meta size
+randomly selected elements from the sequence
+.metn seq ,
+using reservoir sampling.
+
+If the number of elements in
+.meta seq
+is equal to or smaller than
+.metn size ,
+then the function returns a vector of all the elements of
+.meta seq
+in their original order.
+
+In other cases, the selected elements are not required to appear
+in their original order.
+
+No element of sequence
+.meta seq
+is selected more than once; duplicate values can appear
+in the output only if
+.meta seq
+itself contains duplicates.
+
 .SS* Time
 .coNP Functions @, time @ time-usec and @ time-nsec
 .synb
