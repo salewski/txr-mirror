@@ -763,6 +763,8 @@ static int history_search(lino_t *l)
                 verbatim:
                     if (hl >= convert(int, nelem(hpat)))
                         break;
+                    if (c == CTL('J'))
+                        c = '\r';
                     hpat[hl++] = c;
                     /* fallthrough */
                     if (0) {
@@ -2129,6 +2131,8 @@ static int edit(lino_t *l, const wchar_t *prompt)
         if (verbatim ||
             (paste && c != ESC && c != BACKSPACE && c != CTL('H')))
         {
+            if (verbatim && c == CTL('J'))
+                c = '\r';
             if (edit_insert(l,c)) {
                 l->error = lino_ioerr;
                 goto out;
