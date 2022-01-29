@@ -718,6 +718,7 @@ mp_err mp_mul_d(mp_int *a, mp_digit d, mp_int *b)
   return res;
 }
 
+#if !MP_FOR_TXR
 mp_err mp_mul_2(mp_int *a, mp_int *c)
 {
   mp_err res;
@@ -729,6 +730,7 @@ mp_err mp_mul_2(mp_int *a, mp_int *c)
 
   return s_mp_mul_2(c);
 }
+#endif
 
 /* Compute the quotient q = a / d and remainder r = a mod d, for a
  * single digit d.  Respects the sign of its divisor (single digits are
@@ -1297,12 +1299,14 @@ X:
 
 /* Compute a = 2^k */
 
+#if !MP_FOR_TXR
 mp_err mp_2expt(mp_int *a, mp_digit k)
 {
   ARGCHK(a != NULL, MP_BADARG);
 
   return s_mp_2expt(a, k);
 }
+#endif
 
 /* Compute c = a (mod m).  Result will always be 0 <= c < m.  */
 mp_err mp_mod(mp_int *a, mp_int *m, mp_int *c)
@@ -1433,6 +1437,7 @@ out:
 
 #if MP_MODARITH
 
+#if !MP_FOR_TXR
 /* Compute c = (a + b) mod m */
 mp_err mp_addmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
 {
@@ -1492,6 +1497,7 @@ mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c)
 
   return MP_OKAY;
 }
+#endif
 #endif
 
 /* Compute c = (a ** b) mod m.  Uses a standard square-and-multiply
