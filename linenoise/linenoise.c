@@ -2606,6 +2606,8 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
             /* Not a tty: read from file / pipe. */
             if (lino_os.getl_fn(ls->tty_ifs, ls->data, nelem(ls->data)) == 0) {
                 ls->error = (lino_os.eof_fn(ls->tty_ifs) ? lino_eof : lino_ioerr);
+                if (!lino_os.puts_fn(ls->tty_ofs, L"\n"))
+                    ls->error = lino_ioerr;
                 break;
             }
 
