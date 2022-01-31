@@ -24,6 +24,7 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
+
 (defsymacro %lev-size% 1024)
 (defsymacro %max-lev-idx% (pred %lev-size%))
 (defsymacro %lev-bits% 10)

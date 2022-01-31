@@ -24,6 +24,7 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
+
 (defmacro ifa (:env e :form f test then : else)
   (flet ((candidate-p (form)
            (not (or (constantp form e) (symbolp form)))))

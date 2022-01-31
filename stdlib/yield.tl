@@ -24,6 +24,7 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
+
 (defstruct (sys:yld-item val cont) nil val cont)
 
 (defstruct (sys:rcv-item val cont) nil val cont)

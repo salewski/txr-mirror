@@ -24,6 +24,7 @@
 ;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
+
 (defvarl sys:%quips%
   #("TXR was taped live before a studio audience. The laughter is genuine."
     "Exclusive of recycled stuffing, TXR contains new materials only."
