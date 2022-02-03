@@ -52008,8 +52008,9 @@ and
   (defun amb (. args)
     (suspend amb-scope cont
       (each ((a args))
-        (when (and a (call cont a))
-          (return-from amb a)))))
+        (if a
+          (iflet ((r (call cont a)))
+            (return-from amb-scope r))))))
 .brev
 
 Use
