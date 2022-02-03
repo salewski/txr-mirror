@@ -294,7 +294,9 @@
                    (long long)
                    (short `@{"" 21}  @short`)))
              (lines (if od.helptext  (sys:wdwrap od.helptext 43))))
-        (put-line `  @{ls 34}@(pop lines)` stream)
+        (if (>= (len ls) 34)
+          (put-line `  @ls` stream)
+          (put-line `  @{ls 34}@(pop lines)` stream))
         (while lines
           (put-line `  @{"" 34}@(pop lines)` stream))))
     (put-line : stream)
