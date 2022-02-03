@@ -274,7 +274,7 @@
                                              opt-desc-list)) :
                        (do if @1.long @1.long @1.short)])
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
-    (put-line "\nOptions:\n")
+    (put-line "\nOptions:\n" stream)
     (each ((od sorted))
       (let* ((type (if (and (consp od.type) (eq (car od.type) 'cumul))
                      (cadr od.type)
@@ -294,19 +294,19 @@
                    (long long)
                    (short `@{"" 21}  @short`)))
              (lines (if od.helptext  (sys:wdwrap od.helptext 43))))
-        (put-line `  @{ls 34}@(pop lines)`)
+        (put-line `  @{ls 34}@(pop lines)` stream)
         (while lines
-          (put-line `  @{"" 34}@(pop lines)`))))
-    (put-line)
+          (put-line `  @{"" 34}@(pop lines)` stream))))
+    (put-line : stream)
     (when undocumented
-      (put-line "Undocumented options:\n")
+      (put-line "Undocumented options:\n" stream)
       (let* ((undoc-str `@{[mapcar sys:opt-dash
                                    (flatten (mappend (op list @1.short @1.long)
                                                      undocumented))] ", "}`))
         (each ((line (sys:wdwrap undoc-str 75)))
-          (put-line `    @line`)))
-      (put-line))
-    (put-line "Notes:\n")
+          (put-line `    @line` stream)))
+      (put-line : stream))
+    (put-line "Notes:\n" stream)
     (let* ((have-short (some sorted (usl short)))
            (have-long (some sorted (usl long)))
            (have-arg-p (some sorted (usl arg-p)))
@@ -349,12 +349,12 @@
                         may appear. It means \"end of options\": the\ \
                         arguments which follow are not treated as options\ \
                         even if they look like options.")))
-      (mapdo (do put-line `  @1`)
+      (mapdo (do put-line `  @1` stream)
              (sys:wdwrap `@{(flatten texts)}` 77)))
-    (put-line)
+    (put-line : stream)
     (whenlet ((types (keep-if [andf keywordp (op neq :bool)]
                               (uniq (mapcar (usl type) sorted)))))
-      (put-line "Type legend:\n")
+      (put-line "Type legend:\n" stream)
       (each ((ty types))
         (iflet ((ln (caseql ty
                       (:dec   "  DEC    - Decimal integer: -123, 0, 5, +73")
@@ -369,9 +369,8 @@
                               \ as TXR Lisp string literals\n\
                               \           syntax: foo, foo\\tbar, abc\\nxyz")
                       (:text  "  TEXT   - Unprocessed text"))))
-           (put-line ln)))
-    (put-line))))
-
+           (put-line ln stream)))
+    (put-line : stream))))
 
 (defstruct sys:option-base nil
   in-args
