@@ -68160,8 +68160,9 @@ arguments.
 
 The
 .code opthelp
-function takes a list of option descriptors and an output stream,
-and generates help text on that stream. A program supporting a
+function takes a list of option descriptors, an output stream, and an arg
+indicating whether to print extra notes on command line conventions.
+It then generates help text on that stream. A program supporting a
 .code --help
 option can use this to generate that portion of its help text which
 describes the available options, as well as the conventions that they use.
@@ -68653,7 +68654,7 @@ arguments.
 
 .coNP Function @ opthelp
 .synb
-.mets (opthelp < opt-desc-list <> [ stream ])
+.mets (opthelp < opt-desc-list <> [ stream ] <> [ inchelp ])
 .syne
 .desc
 The
@@ -68663,9 +68664,11 @@ function processes the list of
 structures
 .meta opt-desc-list
 and compiles a customized body of help text describing all of the
-options, as well as general description of the command-line option
-conventions to guide the user in in the correct use of command
-line options.
+options. If
+.meta inchelp
+is non-nil then a general description of the command-line option
+conventions will also be printed to guide the user in in the correct
+use of command line options.
 
 The text is formatted to fit within 79 columns, and begins and ends with a
 blank line. Its format consists of headings which begin in the first column,
@@ -68749,7 +68752,8 @@ When the argument list is successfully processed.
 
 The
 .code opthelp
-method takes an optional stream argument.
+method takes an optional stream argument, and an argument to indicate whether
+or not to include general notes on command line conventions.
 
 Note: to encode the option names
 .str "t"
