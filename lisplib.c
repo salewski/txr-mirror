@@ -483,7 +483,8 @@ static val getopts_set_entries(val dlt, val fun)
 {
   val name[] = {
     lit("opt-desc"), lit("opts"),
-    lit("opt"), lit("getopts"), lit("opthelp"), lit("define-option-struct"),
+    lit("opt"), lit("getopts"), lit("opthelp"), lit("opthelp-conventions"),
+    lit("opthelp-types"), lit("define-option-struct"),
     nil
   };
   val name_noload[] = {

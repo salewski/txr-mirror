@@ -68160,12 +68160,22 @@ arguments.
 
 The
 .code opthelp
-function takes a list of option descriptors, an output stream, and an arg
-indicating whether to print extra notes on command line conventions.
-It then generates help text on that stream. A program supporting a
+function takes a list of option descriptors and an output stream,
+and generates help text on that stream. A program supporting a
 .code --help
 option can use this to generate that portion of its help text which
-describes the available options, as well as the conventions that they use.
+describes the available options. Also provided are functions
+.code opthelp-conventions
+and
+.codn opthelp-types ,
+which have the same interface as
+.code opthelp
+and print additional information. These may be used together with
+.code opthelp
+to provide more detailed help under a single
+.code --help
+option, or under separate options like
+.codn --extra-help .
 
 The
 .code define-option-struct
@@ -68285,6 +68295,9 @@ macro:
                  "Verbosity level. Higher values produce more chatter.")
     (nil help    :bool
                  "List this help text.")
+    (nil extra-help
+                 :bool
+                 "List help text with more detailed information.")
     (x   nil     :hex
                  "The X factor: a number with a mysterious\e \e
                   interpretation, affecting the program\e \e
@@ -68308,10 +68321,15 @@ macro:
 
   (let ((o (new prog-opts)))
     o.(getopts *args*)
-    (when o.help
+    (when (or o.help o.extrahelp)
       (put-line "Usage:\en")
       (put-line `  @{prog-name} [options] arg*`)
       o.(opthelp)
+      (when o.extrahelp
+        (put-line)
+        o.(opthelp-types)
+        (put-line)
+        o.(opthelp-conventions))
       (exit -1))
     (put-line `args after opts are: @{o.out-args ", "}`))
 .brev
@@ -68652,9 +68670,11 @@ returns an instance of the
 structure describing the parsed options and listing the non-option
 arguments.
 
-.coNP Function @ opthelp
+.coNP Functions @, opthelp @ opthelp-types and @ opthelp-conventions
 .synb
-.mets (opthelp < opt-desc-list <> [ stream ] <> [ inchelp ])
+.mets (opthelp < opt-desc-list <> [ stream ])
+.mets (opthelp-types < opt-desc-list <> [ stream ])
+.mets (opthelp-conventions < opt-desc-list <> [ stream ])
 .syne
 .desc
 The
@@ -68663,12 +68683,10 @@ function processes the list of
 .code opt-desc
 structures
 .meta opt-desc-list
-and compiles a customized body of help text describing all of the
-options. If
-.meta inchelp
-is non-nil then a general description of the command-line option
-conventions will also be printed to guide the user in in the correct
-use of command line options.
+and compiles a customized body of help describing all of the
+options which have help text. These are presented in alphabetical
+order. Options which do not have help text, if any, are simply
+listed together under a heading which indicates their undocumented status.
 
 The text is formatted to fit within 79 columns, and begins and ends with a
 blank line. Its format consists of headings which begin in the first column,
@@ -68686,6 +68704,24 @@ If there are problems in
 itself, then an exception of type
 .code error
 is thrown.
+
+The
+.code opthelp-types
+supplementary help function processes the
+.metn opt-desc-list ,
+considering only those options which are documented. If any of them have typed
+arguments, then a legend is printed explaining the types. The legend includes
+only information about those option argument types which appear in
+.metn opt-desc-list .
+
+The
+.code opthelp-conventions
+supplementary help function processes
+.metn opt-desc-list ,
+considering only those options which are documented. It prints a guide
+to the use of options, which includes information only about the kinds
+of options actually present in
+.metn opt-desc-list .
 
 .coNP Macro @ define-option-struct
 .synb
@@ -68732,10 +68768,12 @@ shall exist in the structure.
 
 The struct type defined by
 .code define-option-struct
-has two methods:
-.code getopts
+has four methods:
+.codn getopts ,
+.codn opthelp ,
+.code opthelp-types
 and
-.codn opthelp .
+.codn opthelp-conventions .
 It also has two slots:
 .code in-args
 and
@@ -68751,9 +68789,11 @@ method takes a single argument: the argument list to be processed.
 When the argument list is successfully processed.
 
 The
-.code opthelp
-method takes an optional stream argument, and an argument to indicate whether
-or not to include general notes on command line conventions.
+.codn opthelp ,
+.code opthelp-types
+and
+.code opthelp-conventions
+methods takes an optional stream argument.
 
 Note: to encode the option names
 .str "t"
@@ -68763,7 +68803,7 @@ or option names which clash with the slot names
 .code in-args
 and
 .code out-args
-or the methods
+or the method names such as
 .code getopts
 or
 .codn opthelp ,

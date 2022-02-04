@@ -269,7 +269,7 @@
          (opr (new sys:opt-processor od-list opt-desc-list opts opts)))
     opr.(parse-opts args)))
 
-(defun opthelp (opt-desc-list : (stream *stdout*) (incnotes t))
+(defun opthelp (opt-desc-list : (stream *stdout*))
   (let ((sorted [nsort (copy-list (remove-if (op null @1.helptext)
                                              opt-desc-list)) :
                        (do if @1.long @1.long @1.short)])
@@ -306,74 +306,78 @@
                                    (flatten (mappend (op list @1.short @1.long)
                                                      undocumented))] ", "}`))
         (each ((line (sys:wdwrap undoc-str 75)))
-          (put-line `    @line` stream)))
-      (put-line : stream))
-    (when incnotes
-      (put-line "Notes:\n" stream)
-      (let* ((have-short (some sorted (usl short)))
-             (have-long (some sorted (usl long)))
-             (have-arg-p (some sorted (usl arg-p)))
-             (have-bool (some sorted (op eq @1.type :bool)))
-             (texts (list (if have-short
-                            "Short options can be invoked with long syntax: \ \
-                             for example, --a can be used when -a exists.\ \
-                             Short no-argument options can be clumped into\ \
-                             one argument as exemplified by -xyz.")
-                          (if have-bool
-                            (if have-arg-p
-                              "Options that take no argument are Boolean:"
-                              (if undocumented
-                                "All documented options are Boolean:"
-                                "All options are Boolean:")))
-                          (if have-bool
-                            "they are true when present, false when absent.")
-                          (if (and have-bool have-arg-p)
-                            "The --no- prefix can explicitly specify \ \
-                             Boolean options as false: if a Boolean option\ \
-                             X exists,\ \
-                             --no-X specifies it as false. This is useful\ \
-                             for making false those options which default\ \
-                             to true. "
-                            "The --no- prefix can explicitly specify \ \
-                             options as false: if an X option exists,\ \
-                             --no-X specifies it as false. This is useful\ \
-                             for making false those options which default\ \
-                             to true. ")
-                          (if (not have-long)
-                            "Note the double dash on --no.")
-                          (if (and have-short have-long)
-                            "The --no- prefix can be applied to a short\ \
-                             or long option name.")
+          (put-line `    @line` stream))))))
+
+(defun opthelp-conventions (opt-desc-list : (stream *stdout*))
+  (let ((documented (remove-if (op null @1.helptext) opt-desc-list))
+        (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
+    (put-line "Option Conventions:\n" stream)
+    (let* ((have-short (some documented (usl short)))
+           (have-long (some documented (usl long)))
+           (have-arg-p (some documented (usl arg-p)))
+           (have-bool (some documented (op eq @1.type :bool)))
+           (texts (list (if have-short
+                          "Short options can be invoked with long syntax: \ \
+                           for example, --a can be used when -a exists.\ \
+                           Short no-argument options can be clumped into\ \
+                           one argument as exemplified by -xyz.")
+                        (if have-bool
                           (if have-arg-p
-                            "The argument to a long option can be given in one\ \
-                             argument as --option=arg or as a separate\ \
-                             argument using --option arg.")
-                          "The special argument -- can be used where an option\ \
-                           may appear. It means \"end of options\": the\ \
-                           arguments which follow are not treated as options\ \
-                           even if they look like options.")))
-        (mapdo (do put-line `  @1` stream)
-               (sys:wdwrap `@{(flatten texts)}` 77)))
-      (put-line : stream)
-      (whenlet ((types (keep-if [andf keywordp (op neq :bool)]
-                (uniq (mapcar (usl type) sorted)))))
-        (put-line "Type legend:\n" stream)
-        (each ((ty types))
-          (iflet ((ln (caseql ty
-                        (:dec   "  DEC    - Decimal integer: -123, 0, 5, +73")
-                        (:hex   "  HEX    - Hexadecimal integer -EF, 2D0, +9A")
-                        (:oct   "  OCT    - Octal integer: -773, 5677, +326")
-                        (:cint  "  CINT   - C-style integer: leading 0 octal,\
-                                \ leading 0x hex, else decimal;\n\
-                                \           leading sign allowed: -0777, 0xFDC, +123")
-                        (:float "  FLOAT  - Floating-point: -1.3e+03, +5, 3.3,\
-                                \ 3., .5, .12e9, 53.e-3, 3e-015")
-                        (:str   "  STR    - String with embedded escapes, valid\
-                                \ as TXR Lisp string literals\n\
-                                \           syntax: foo, foo\\tbar, abc\\nxyz")
-                        (:text  "  TEXT   - Unprocessed text"))))
-            (put-line ln stream)))
-        (put-line : stream)))))
+                            "Options that take no argument are Boolean:"
+                            (if undocumented
+                              "All documented options are Boolean:"
+                              "All options are Boolean:")))
+                        (if have-bool
+                          "they are true when present, false when absent.")
+                        (if (and have-bool have-arg-p)
+                          "The --no- prefix can explicitly specify \ \
+                           Boolean options as false: if a Boolean option\ \
+                           X exists,\ \
+                           --no-X specifies it as false. This is useful\ \
+                           for making false those options which default\ \
+                           to true. "
+                          "The --no- prefix can explicitly specify \ \
+                           options as false: if an X option exists,\ \
+                           --no-X specifies it as false. This is useful\ \
+                           for making false those options which default\ \
+                           to true. ")
+                        (if (not have-long)
+                          "Note the double dash on --no.")
+                        (if (and have-short have-long)
+                          "The --no- prefix can be applied to a short\ \
+                           or long option name.")
+                        (if have-arg-p
+                          "The argument to a long option can be given in one\ \
+                           argument as --option=arg or as a separate\ \
+                           argument using --option arg.")
+                        "The special argument -- can be used where an option\ \
+                         may appear. It means \"end of options\": the\ \
+                         arguments which follow are not treated as options\ \
+                         even if they look like options.")))
+      (mapdo (do put-line `  @1` stream)
+             (sys:wdwrap `@{(flatten texts)}` 77)))))
+
+(defun opthelp-types (opt-desc-list : (stream *stdout*))
+  (let ((documented (remove-if (op null @1.helptext) opt-desc-list)))
+    (whenlet ((types (keep-if [andf keywordp (op neq :bool)]
+                              (uniq (mapcar (usl type) documented)))))
+      (put-line "Type legend:\n" stream)
+      (each ((ty types))
+        (iflet ((ln (caseql ty
+                      (:dec   "  DEC    - Decimal integer: -123, 0, 5, +73")
+                      (:hex   "  HEX    - Hexadecimal integer -EF, 2D0, +9A")
+                      (:oct   "  OCT    - Octal integer: -773, 5677, +326")
+                      (:cint  "  CINT   - C-style integer: leading 0 octal,\
+                              \ leading 0x hex, else decimal;\n\
+                              \           leading sign allowed: -0777, 0xFDC, +123")
+                      (:float "  FLOAT  - Floating-point: -1.3e+03, +5, 3.3,\
+                              \ 3., .5, .12e9, 53.e-3, 3e-015")
+                      (:str   "  STR    - String with embedded escapes, valid\
+                              \ as TXR Lisp string literals\n\
+                              \           syntax: foo, foo\\tbar, abc\\nxyz")
+                      (:text  "  TEXT   - Unprocessed text"))))
+          (put-line ln stream)))
+      (put-line : stream))))
 
 (defstruct sys:option-base nil
   in-args
@@ -390,8 +394,12 @@
     (set me.in-args args me.out-args args)
     (let ((opr (new sys:opt-processor od-list me.opt-desc-list opts me)))
       opr.(parse-opts args)))
-  (:method opthelp (me : (stream *stdout*) (incnotes t))
-    (opthelp me.opt-desc-list stream incnotes)))
+  (:method opthelp (me : (stream *stdout*))
+    (opthelp me.opt-desc-list stream))
+  (:method opthelp-conventions (me : (stream *stdout*))
+    (opthelp-conventions me.opt-desc-list stream))
+  (:method opthelp-types (me : (stream *stdout*))
+    (opthelp-types me.opt-desc-list stream)))
 
 (defmacro define-option-struct (name super-spec . opts)
   (let* ((slots (mapcar (tb ((short long . rest))
