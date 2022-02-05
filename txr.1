@@ -537,8 +537,10 @@ query, so that all occurrences of the variable are substituted and
 match the equivalent text.  If the value contains commas, these
 are interpreted as separators, which give rise to a list value.
 For instance
-.code -Da,b,c
-creates a list of the strings
+.code -Dvar=a,b,c
+binds
+.code var
+to the list of the strings
 .strn "a" ,
 .str "b"
 and
