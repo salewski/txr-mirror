@@ -668,7 +668,7 @@ int txr_main(int argc, char **argv)
       else if (deflist)
         bindings = cons(cons(sym, car(deflist)), bindings);
       else
-        bindings = cons(cons(sym, t), bindings);
+        bindings = cons(cons(sym, string(L"")), bindings);
 
       match_reg_var(sym);
 
