@@ -269,12 +269,12 @@
          (opr (new sys:opt-processor od-list opt-desc-list opts opts)))
     opr.(parse-opts args)))
 
-(defun opthelp (opt-desc-list : (stream *stdout*))
+(defun opthelp (opt-desc-list : (*stdout* *stdout*))
   (let ((sorted [nsort (copy-list (remove-if (op null @1.helptext)
                                              opt-desc-list)) :
                        (do if @1.long @1.long @1.short)])
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
-    (put-line "\nOptions:\n" stream)
+    (put-line "\nOptions:\n")
     (each ((od sorted))
       (let* ((type (if (and (consp od.type) (eq (car od.type) 'cumul))
                      (cadr od.type)
@@ -295,23 +295,23 @@
                    (short `@{"" 21}  @short`)))
              (lines (if od.helptext  (sys:wdwrap od.helptext 43))))
         (if (>= (len ls) 34)
-          (put-line `  @ls` stream)
-          (put-line `  @{ls 34}@(pop lines)` stream))
+          (put-line `  @ls`)
+          (put-line `  @{ls 34}@(pop lines)`))
         (while lines
-          (put-line `  @{"" 34}@(pop lines)` stream))))
-    (put-line : stream)
+          (put-line `  @{"" 34}@(pop lines)`))))
+    (put-line)
     (when undocumented
-      (put-line "Undocumented options:\n" stream)
+      (put-line "Undocumented options:\n")
       (let* ((undoc-str `@{[mapcar sys:opt-dash
                                    (flatten (mappend (op list @1.short @1.long)
                                                      undocumented))] ", "}`))
         (each ((line (sys:wdwrap undoc-str 75)))
-          (put-line `    @line` stream))))))
+          (put-line `    @line`))))))
 
-(defun opthelp-conventions (opt-desc-list : (stream *stdout*))
+(defun opthelp-conventions (opt-desc-list : (*stdout* *stdout*))
   (let ((documented (remove-if (op null @1.helptext) opt-desc-list))
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
-    (put-line "Option Conventions:\n" stream)
+    (put-line "Option Conventions:\n")
     (let* ((have-short (some documented (usl short)))
            (have-long (some documented (usl long)))
            (have-arg-p (some documented (usl arg-p)))
@@ -354,14 +354,14 @@
                          may appear. It means \"end of options\": the\ \
                          arguments which follow are not treated as options\ \
                          even if they look like options.")))
-      (mapdo (do put-line `  @1` stream)
+      (mapdo (do put-line `  @1`)
              (sys:wdwrap `@{(flatten texts)}` 77)))))
 
-(defun opthelp-types (opt-desc-list : (stream *stdout*))
+(defun opthelp-types (opt-desc-list : (*stdout* *stdout*))
   (let ((documented (remove-if (op null @1.helptext) opt-desc-list)))
     (whenlet ((types (keep-if [andf keywordp (op neq :bool)]
                               (uniq (mapcar (usl type) documented)))))
-      (put-line "Type legend:\n" stream)
+      (put-line "Type legend:\n")
       (each ((ty types))
         (iflet ((ln (caseql ty
                       (:dec   "  DEC    - Decimal integer: -123, 0, 5, +73")
@@ -376,8 +376,8 @@
                               \ as TXR Lisp string literals\n\
                               \           syntax: foo, foo\\tbar, abc\\nxyz")
                       (:text  "  TEXT   - Unprocessed text"))))
-          (put-line ln stream)))
-      (put-line : stream))))
+          (put-line ln)))
+      (put-line))))
 
 (defstruct sys:option-base nil
   in-args
