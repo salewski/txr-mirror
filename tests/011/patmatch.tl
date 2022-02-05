@@ -355,7 +355,10 @@
 (mtest
   (when-match `` "" t) t
   (when-match `abc` "abc" t) t
-  (when-match `@a` "abc" a) "abc")
+  (when-match `abc` "abcdef" t) nil
+  (when-match `@a` "abc" a) "abc"
+  (let ((x "foo")) (when-match `@x` "foobar" t)) nil
+  (let ((x "foo")) (when-match `@x` "foo" x)) "foo")
 
 (mtest
   (when-match `@a@b` "abc" a) :error

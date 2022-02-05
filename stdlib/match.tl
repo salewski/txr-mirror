@@ -920,7 +920,7 @@
              (match-case args
                ;; `text`
                ((@(stringp @txt))
-                (list ^@(require @nil (match-str ,str ,txt ,pos))))
+                (list ^@(require @nil (eql (len ,str) (match-str ,str ,txt ,pos)))))
                ;; `txt@...`
                ((@(stringp @txt) . @rest)
                 (with-gensyms (npos)
@@ -940,8 +940,9 @@
                          (quasi-match vlist rest vars str npos))))
                ;; `@var` (existing binding)
                (((@(eq 'sys:var) @(bound-p vlist vars @sym) . @nil))
-                (list ^@(require @nil (match-str ,str (sys:quasi ,(car args))
-                                                 ,pos))))
+                (list ^@(require @nil (eql (len ,str)
+                                           (match-str ,str (sys:quasi ,(car args))
+                                                      ,pos)))))
                ;; `@var@...` (existing binding)
                ((@(as avar (@(eq 'sys:var) @(bound-p vlist vars @sym) . @nil))
                  . @rest)
