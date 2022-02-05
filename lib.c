@@ -13166,7 +13166,7 @@ static void obj_init(void)
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);
-  colon_k = intern(lit(""), keyword_package);
+  colon_k = intern(null_string, keyword_package);
   auto_k = intern(lit("auto"), keyword_package);
   fun_k = intern(lit("fun"), keyword_package);
   wrap_k = intern(lit("wrap"), keyword_package);

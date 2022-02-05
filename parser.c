@@ -620,7 +620,8 @@ val regex_parse(val string, val error_stream)
 
   {
     int gc = gc_state(0);
-    parse(&parser, if3(std_error != std_null, lit("regex"), lit("")), prime_regex);
+    parse(&parser, if3(std_error != std_null, lit("regex"), null_string),
+          prime_regex);
     gc_state(gc);
   }
 
@@ -668,7 +669,7 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
 
   for (;;) {
     int gc = gc_state(0);
-    parse(pi, if3(std_error != std_null, name, lit("")), prime);
+    parse(pi, if3(std_error != std_null, name, null_string), prime);
     mut(parser);
     gc_state(gc);
 
@@ -962,7 +963,7 @@ static void find_matching_syms(lino_completions_t *cpl,
   val qualify = tnil(force_qualify || !is_cur);
   val pkg_name = if2(qualify,
                      if3(package == keyword_package && !force_qualify,
-                         lit(""),
+                         null_string,
                          package_name(package)));
   val syms = ((kind == 'S' || kind == 'M')
               ? hash_keys((get_slot_syms(package, is_cur, tnil(kind == 'M'))))

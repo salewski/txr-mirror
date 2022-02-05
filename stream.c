@@ -1443,7 +1443,7 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
                                        val self)
 {
   struct stdio_mode m = stdio_mode_init_blank;
-  const wchar_t *ms = c_str(default_arg_strict(mode_str, lit("")), self);
+  const wchar_t *ms = c_str(default_arg_strict(mode_str, null_string), self);
   int nredir = 0;
 
   switch (*ms) {

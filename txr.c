@@ -329,7 +329,7 @@ static void sysroot_init(void)
   prog_dir = dir_name(prog_path);
 
   if (ref(prog_dir, negone) != chr(psc[0]))
-    prog_dir = scat3(prog_dir, chr(psc[0]), lit(""));
+    prog_dir = scat3(prog_dir, chr(psc[0]), null_string);
 
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
         maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
@@ -668,7 +668,7 @@ int txr_main(int argc, char **argv)
       else if (deflist)
         bindings = cons(cons(sym, car(deflist)), bindings);
       else
-        bindings = cons(cons(sym, string(L"")), bindings);
+        bindings = cons(cons(sym, null_string), bindings);
 
       match_reg_var(sym);
 

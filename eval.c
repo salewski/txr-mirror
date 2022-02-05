@@ -4663,7 +4663,7 @@ val load(val target)
 
   open_txr_file(path, &txr_lisp_p, &name, &stream, self);
 
-  if (match_str(or2(get_line(stream), lit("")), lit("#!"), nil))
+  if (match_str(or2(get_line(stream), null_string), lit("#!"), nil))
     parser_set_lineno(self, stream, two);
   else
     seek_stream(stream, zero, from_start_k);

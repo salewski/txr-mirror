@@ -519,14 +519,14 @@ typedef val (*h_match_func)(match_line_ctx *c);
           plus(c->pos, c->base), c->file, c->data_lineno, nao);         \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(c->pos, lit("txr")) < 77)                                   \
-    debuglf(elem, lit("  ~*a^"), c->pos, lit(""), nao)
+    debuglf(elem, lit("  ~*a^"), c->pos, null_string, nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
   debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~d)"),           \
           plus(c->pos, c->base), EXTENT, c->file, c->data_lineno, nao); \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(EXTENT, lit("txr")) < 77)                                   \
-    debuglf(elem, lit("  ~*a~<*a^"), c->pos, lit(""),                   \
+    debuglf(elem, lit("  ~*a~<*a^"), c->pos, null_string,               \
               minus(EXTENT, c->pos), lit("^"), nao)
 
 #define elem_bind(elem_var, directive_var, specline)    \
@@ -2005,7 +2005,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     uw_catch (exc_sym, exc) {
       val msg = if3(consp(exc), car(exc), exc);
 
-      if (stringp(msg) && !equal(msg, lit("")) &&
+      if (stringp(msg) && !equal(msg, null_string) &&
           chr_str(msg, zero) == chr('('))
       {
         uw_throw (exc_sym, exc);
