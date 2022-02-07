@@ -659,18 +659,31 @@ int txr_main(int argc, char **argv)
     /* Odd case 3: -Dfoo=bar syntax. */
     if (equal(sub(arg, zero, two), lit("-D"))) {
       val dopt_arg = sub(arg, two, t);
-      cons_bind(var, def, split_str(dopt_arg, lit("=")));
-      val deflist = if2(def, split_str(car(def), lit(",")));
-      val sym = intern(var, cur_package);
+      val eq_pos = search_str(dopt_arg, lit("="), nil, nil);
 
-      if (rest(deflist))
-        bindings = cons(cons(sym, deflist), bindings);
-      else if (deflist)
-        bindings = cons(cons(sym, car(deflist)), bindings);
-      else
-        bindings = cons(cons(sym, null_string), bindings);
+      if (eq_pos) {
+        val var = sub_str(dopt_arg, zero, eq_pos);
+        val def = sub_str(dopt_arg, succ(eq_pos), t);
+        val deflist = split_str(def, lit(","));
+        val sym = intern(var, cur_package);
 
-      match_reg_var(sym);
+        if (rest(deflist))
+          bindings = cons(cons(sym, deflist), bindings);
+        else
+          bindings = cons(cons(sym, car(deflist)), bindings);
+
+        match_reg_var(sym);
+      } else {
+        if (search_str(dopt_arg, lit(","), nil, nil)) {
+          format(std_error,
+                 lit("~a: bad -D syntax: ~a\n"), prog_string, arg, nao);
+          return EXIT_FAILURE;
+        } else {
+          val sym = intern(dopt_arg, cur_package);
+          bindings = cons(cons(sym, null_string), bindings);
+          match_reg_var(sym);
+        }
+      }
 
       continue;
     }
