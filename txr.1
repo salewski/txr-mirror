@@ -11783,7 +11783,7 @@ meta-variable.
 When the atom is an integer, the meta-atom expression is called a meta-number.
 
 Meta-atom and meta-expression expressions have no evaluation semantics;
-evaluating them throws an exception.  They plays a syntactic role in the
+evaluating them throws an exception.  They play a syntactic role in the
 .code op
 operator, which makes use of meta-variables and meta-numbers, and in structural
 pattern matching, which uses meta-variables as pattern variables and whose
@@ -17889,7 +17889,7 @@ predicate.
 .desc
 These macros iterate zero or more variables over sequences, similarly to the
 .code each
-operator and calculate logical results, with short-circuiting semantics.
+operator, and calculate logical results, with short-circuiting semantics.
 
 The
 .code each-true
@@ -17906,7 +17906,7 @@ value of the result variable is returned.
 If no variables are specified, termination occurs immediately.
 Note that this is different from the
 .code each
-operator, which iterates infinitely if no variables are specified.
+operator, which iterates indefinitely if no variables are specified.
 
 The
 .metn body-form s
@@ -17923,7 +17923,8 @@ The
 .code some-true
 macro is similar to
 .codn each-true ,
-with these differences. The internal result variable is initialized to
+with the following differences.
+The internal result variable is initialized to
 .code nil
 rather than
 .codn t .
@@ -62406,9 +62407,9 @@ The
 function creates a new
 .code cptr
 object similar to
-.codn cptr ,
+.metn cptr ,
 which has the same address and type symbol as
-.codn cptr .
+.metn cptr .
 
 .coNP Function @ cptr-zap
 .synb
@@ -68112,7 +68113,7 @@ list to
 .desc
 The
 .code *child-env*
-variable specifies the list of command line variables established for programs
+variable specifies the list of command-line variables established for programs
 executed via the functions
 .codn exec ,
 .codn run ,
@@ -68803,7 +68804,7 @@ The
 .code opthelp-types
 and
 .code opthelp-conventions
-methods takes an optional stream argument.
+methods take an optional stream argument.
 
 Note: to encode the option names
 .str "t"
@@ -87077,8 +87078,8 @@ this area is filled with null bytes.
 If the \*(TX executable is edited such that this area is replaced
 with a nonempty, null-terminated UTF-8 string, the program will,
 for the purposes of command-line-argument processing, treat this string as if
-it were the one and only command-line argument. (The original command
-line arguments are still retained in the
+it were the one and only command-line argument.
+(The original command-line arguments are still retained in the
 .code *args*
 and
 .code *args-full*
