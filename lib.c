@@ -3153,7 +3153,7 @@ val separate(val pred, val seq_in, val keyfun_in)
 
   switch (type(seq_in)) {
   case NIL:
-    return nil;
+    return cons(nil, cons(nil, nil));
   case CONS:
   case LCONS:
   case COBJ:
