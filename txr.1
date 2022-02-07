@@ -4333,8 +4333,10 @@ the next 15 lines:
   size: @SIZE
 .brev
 
-Without the range limitation skip will keep searching until it consumes
-the entire input source.  In a horizontal
+Without the range limitation,
+.code skip
+will keep searching until it consumes the entire input source.
+In a horizontal
 .codn skip ,
 the range-limiting numeric argument is expressed in characters, so that
 
@@ -4710,7 +4712,7 @@ argument is given, its value limits the range of lines which are combined
 together. For instance
 .code "@(freeform 5)"
 means to only consider the next five lines
-to to be one big line. Without this argument,
+to be one big line. Without this argument,
 .code freeform
 is "bottomless".
 It can match the entire file,
@@ -11042,7 +11044,7 @@ unbound, and if it is bound, it stays as is.
 .IP code:
 .mono
 \ @(try)
- @(trow e "honda" unbound)
+ @(throw e "honda" unbound)
  @(catch e (car1 car2))
  @car1 @car2
  @(end)
@@ -11082,7 +11084,7 @@ parameters are left alone. They may be bound or unbound variables.
 .IP code:
 .mono
 \ @(try)
- @(trow e "honda")
+ @(throw e "honda")
  @(catch e (car1 car2))
  @car1 @car2
  @(end)
@@ -14997,7 +14999,7 @@ whether or not the optional parameter had been specified by the caller.
 
 Each
 .meta expr
-that is evaluated is evaluated an environment in which
+that is evaluated is evaluated in an environment in which
 all of the previous parameters are visible, in addition to the surrounding
 environment of the
 .codn lambda .
@@ -15154,7 +15156,6 @@ single parameter
 .synb
 .mets (flet >> ({( name < param-list << function-body-form *)}*)
 .mets \ \  << body-form *)
-
 .mets (labels >> ({( name < param-list << function-body-form *)}*)
 .mets \ \  << body-form *)
 .syne
@@ -15342,7 +15343,7 @@ Note that if
 .meta trailing-args
 value is an atom or an improper list, the function is then
 invoked with an improper argument list. Only a variadic
-function may be invoked with an improper argument lists.
+function may be invoked with an improper argument list.
 Moreover, all of the function's required and optional
 parameters must be satisfied by elements of the
 improper list, such that the terminating atom either
@@ -15838,17 +15839,17 @@ The symbol
 .code t
 represents the position one past the end of the vector, string or
 list, so
-.code "0 .. t"
+.code 0..t
 denotes the entire list or vector, and the range
-.code "t .. t"
+.code t..t
 represents the empty range just beyond the last element.
 It is possible to assign to
-.codn "t .. t" .
+.codn t..t .
 For instance:
 
 .verb
   (defvar list '(1 2 3))
-  (set [list t .. t] '(4)) ;; list is now (1 2 3 4)
+  (set [list t..t] '(4)) ;; list is now (1 2 3 4)
 .brev
 
 The value zero has a "floating" behavior when used as the end of a range.
@@ -16026,7 +16027,7 @@ The
 .code progn
 operator evaluates each
 .meta form
-in in left-to-right order, and returns the value
+in left-to-right order, and returns the value
 of the last form. The value of the form
 .code (progn)
 is
@@ -16391,7 +16392,7 @@ operator and an
 .code if
 function. A list form with the symbol
 .code if
-in the fist position is interpreted as an invocation of the
+in the first position is interpreted as an invocation of the
 .code if
 operator.
 The function can be accessed using the DWIM bracket notation and in other
@@ -16421,7 +16422,7 @@ were specified as
 
 The
 .code if
-function provides no evaluation control. All of arguments
+function provides no evaluation control. All of its arguments
 are evaluated from left to right. If the
 .meta cond
 argument is true, then it
@@ -16844,7 +16845,7 @@ counterpart.
 If the list of variable bindings is empty, it is interpreted as the atom
 .code nil
 and treated as an
-.codn atom-form .
+.metn atom-form .
 
 If one or more bindings are specified rather than
 .metn atom-form ,
@@ -18746,8 +18747,7 @@ which it produces is returned. The optional
 .meta env
 object specifies an environment for
 resolving the function and variable references encountered in the expression.
-If this argument is omitted
-.code nil
+If this argument is omitted,
 then evaluation takes place in the global environment.
 
 The
@@ -19659,6 +19659,8 @@ brackets indicate a plurality of types which are not listed by name:
         |                              |
         |                              +--- bignum
         |
+        +--- chr
+        |
         +--- sym
         |
         +--- env
@@ -19670,6 +19672,8 @@ brackets indicate a plurality of types which are not listed by name:
         +--- pkg
         |
         +--- fun
+        |
+        +--- args
 .brev
 
 In addition to the above hierarchy, the following relationships also exist:
@@ -20236,7 +20240,9 @@ if they have the same length, and
 their corresponding elements are
 .codn equal .
 
-If two objects are strings, they are equal if they are textually identical.
+If two objects are strings, they are
+.code equal
+if they are textually identical.
 
 If two objects are functions, they are
 .code equal
@@ -23050,7 +23056,7 @@ element of the input list.
 .desc
 The
 .code pairlis
-function returns a association list consisting of pairs formed from
+function returns an association list consisting of pairs formed from
 the elements of
 .meta keys
 and
@@ -23304,7 +23310,7 @@ is an empty list, then the sorted database will
 emerge in the original order. If
 .meta less-funcs
 contains exactly one function,
-then the rows of the database is sorted according to the first column. The
+then the rows of the database are sorted according to the first column. The
 remaining columns simply follow their row. If
 .meta less-funcs
 contains more than
@@ -23579,7 +23585,7 @@ function:
 
 .coNP Functions @ lazy-stream-cons and @ get-lines
 .synb
-.mets (lazy-stream-cons << stream <> [ no-throw-close-p ])
+.mets (lazy-stream-cons < stream <> [ no-throw-close-p ])
 .mets (get-lines >> [ stream <> [ no-throw-close-p ]])
 .syne
 .desc
@@ -25165,8 +25171,7 @@ The
 .code join-with
 and
 .code join
-functions combine items, into
-a single string, which is returned.
+functions combine items into a single string, which is returned.
 
 Every
 .meta item
@@ -29024,7 +29029,7 @@ function.
 
 Slots are first initialized according to their
 .metn init-form s,
-regardless of whether they are involved in boa construction
+regardless of whether they are involved in boa construction.
 
 A slot initialized in this style still has a
 .meta init-form
@@ -31638,7 +31643,7 @@ then there is no such binding.
 The macro expanders in
 .code *struct-clause-expander*
 are two-parameter functions. The first parameter accepts the
-clause to to be expanded. The second parameter accepts the
+clause to be expanded. The second parameter accepts the
 .code defstruct
 form in which that clause is found; this is useful for error
 reporting.
@@ -36202,7 +36207,7 @@ In the case of
 .codn reduce-left ,
 the
 .meta list
-argument required to be an object which is iterable according to the
+argument is required to be an object which is iterable according to the
 .code iter-begin
 function. The
 .code reduce-right
@@ -36999,7 +37004,7 @@ are lists, and not lazy lists.
 
 .coNP Function @ tuples*
 .synb
-.mets (tuples < length < sequence <> [ fill-value ])
+.mets (tuples* < length < sequence <> [ fill-value ])
 .syne
 .desc
 The
@@ -37017,7 +37022,7 @@ argument must be a positive integer.
 Tuples are subsequences of consecutive items from the input
 .metn sequence ,
 beginning with consecutive elements.  The first tuple in the returned list
-begins with the fist item of
+begins with the first item of
 .metn sequence ;
 the second tuple begins with the second item, and so forth.
 
@@ -37203,7 +37208,7 @@ A range is considered to be a numeric or character range if the
 .code from
 element is a number or character. The
 .code to
-is then required to to be either value which is comparable with that number
+is then required to be either a value which is comparable with that number
 or character using the
 .code <
 function, or else it must be one of the two objects
@@ -38184,7 +38189,7 @@ macro for deleting a place.
 .syne
 .desc
 The
-.code rperm
+.code perm
 function returns a lazy list which consists of all
 length
 .meta len
@@ -39617,7 +39622,7 @@ form.
 
 The
 .code defsymacro
-form must be evaluated for its defining to to take place; therefore,
+form must be evaluated for its defining to take place; therefore,
 the definition is not available in the top-level form which contains the
 .code defsymacro
 invocation; it becomes available to a subsequent top-level form.
@@ -40090,7 +40095,7 @@ as if by
 If the match is successful, then the parameters are bound to the
 corresponding elements from the argument structure and each successive
 .meta form
-is evaluated an environment in which those bindings are visible.
+is evaluated in an environment in which those bindings are visible.
 The value of the last
 .meta form
 is the return value of the function. If there are no forms,
@@ -43029,7 +43034,7 @@ allows
 .code inc-positive
 to simply make multiple references to
 .code "(,getter)"
-which will cache the value; the macro doesn't have to to introduce its own
+which will cache the value; the macro doesn't have to introduce its own
 hidden caching variable.
 
 .coNP Special variables @, *place-update-expander* @ *place-clobber-expander* and @ *place-delete-expander*
@@ -44250,7 +44255,7 @@ which is embedded in the syntax.
 First, if
 .meta main-pattern
 is present in the syntax,
-it is matched its corresponding object. This match must
+it is matched against its corresponding object. This match must
 succeed, or else the
 .code with
 operator fails to match, in which case
@@ -44971,7 +44976,7 @@ macro is related to the
 macro according to the following equivalence:
 
 .verb
-  @(end pat var)  <-->  @(sme () () pat : : var)
+  @(end pat var)  <-->  @(sme () () pat : var)
 .brev
 
 All of the requirements given for
@@ -45014,7 +45019,7 @@ apply accordingly.
 .desc
 The
 .codn when-match ,
-.code must-match
+.code match
 and
 .code if-match
 macros conditionally evaluate code based on whether the value of
@@ -46199,13 +46204,13 @@ then traverse the result of the inner compilation and find the
 
 In Lisp dialects which have a published quasiquoting operator syntax, there is
 the expectation that the quasiquote read syntax corresponds to it. That is to
-say, that for instance the read syntax
+say, the read syntax
 .code "^(a b ,c)"
-is expected translated to
-.codn "(qquote b (unquote c))" .
+is expected to translate to
+.codn "(qquote a b (unquote c))" .
 
 In \*(TL, this is not true! Although
-.code "^(b b ,c)"
+.code "^(a b ,c)"
 is translated to a
 quasiquoting macro, it is an internal one, not based on the public
 .codn qquote ,
@@ -48850,7 +48855,7 @@ method, then an
 exception is thrown. A few unary methods are not named after the corresponding function.
 The unary case of the
 .code -
-function excepts an object to have a method named
+function expects an object to have a method named
 .codn neg ;
 thus,
 .code "(- x)"
@@ -49735,7 +49740,7 @@ error.
     (open-file "AsDf")
     (error (msg)
       ;; the value 2 is retrieved from msg
-      ;; 2 is the common common value of ENOENT
+      ;; 2 is the common value of ENOENT
       (list (string-get-code msg) msg)))
 
   -> (2 "error opening \e"AsDf\e": 2/\e"No such file or directory\e"")
@@ -52876,9 +52881,9 @@ is unspecified.
 .syne
 .desc
 These functions provide functionality similar to the
-.meta match-regst
+.code match-regst
 and
-.meta match-regst-right
+.code match-regst-right
 functions, but under alternative interfaces which are more
 convenient.
 
@@ -53311,7 +53316,7 @@ and
 .SS* Hashing Library
 
 A hash table is an object which retains an association between pairs of
-objects. Each pair consists of a key and value. Given an object which is
+objects. Each pair consists of a key and a value. Given an object which is
 similar to a key in the hash table, it is possible to retrieve the
 corresponding value. Entries in a hash table are not ordered in any way, and
 lookup is facilitated by hashing: quickly mapping a key object to a numeric
@@ -53322,8 +53327,10 @@ In addition to keys and values, a hash table contains a storage location
 which allows it to be associated with user data.
 
 Important to the operation of a hash table is the criterion by which keys are
-considered same. By default, this similarity follows the eql function.  A hash
-table will search for a stored key which is
+considered same. By default, this similarity follows the
+.code eql
+function.
+A hash table will search for a stored key which is
 .code eql
 to the given search key.
 A hash table constructed with the
@@ -53387,7 +53394,7 @@ references to some object are weak references, then that object is considered
 garbage, just as if it had no references to it. The object is reclaimed, and
 the weak references "lapse" in some way, which depends on what kind they are.
 Hash-table weak references lapse by entry removal.  When an object used
-as a key in in one or more weak-key hash tables becomes unreachable, those hash
+as a key in one or more weak-key hash tables becomes unreachable, those hash
 entries disappear. This happens even if the values are themselves reachable.
 Vice versa, when an object appearing as a value in one or more weak-value hash
 tables becomes unreachable, those entries disappear, even if the keys are
@@ -54214,7 +54221,7 @@ for each entry stored in
 .metn hash .
 Each entry's key and value are passed as arguments
 to
-.codn binary-function .
+.metn binary-function .
 
 The function returns
 .codn nil .
@@ -54413,7 +54420,7 @@ value perturbs the hashing function used by
 .code hash-equal
 for strings and buffer objects.  This seed value must be a nonnegative integer
 no wider than 64 bits: that is, in the range 0 to 18446744073709551615.
-If the value isn't specified, it defaults to zero.  On systems with 32 bit
+If the value isn't specified, it defaults to zero.  On systems with 32-bit
 addresses, only the low 32 bits of this value may be significant.
 
 Effectively, each possible value of the significant part of the seed specifies
@@ -54850,7 +54857,7 @@ degrade.
 The value of
 .code *hash-seed*
 must be a nonnegative integer, no wider than 64 bits.
-On systems with 32 bit addresses, only the least significant 32 bits of
+On systems with 32-bit addresses, only the least significant 32 bits of
 this value may be significant.
 
 .coNP Function @ gen-hash-seed
@@ -56052,8 +56059,6 @@ symbols in the program.
   (op +) -> (lambda rest [+ . rest])
 
   (op + foo) -> (lambda rest [+ foo . rest])
-
-  (op @1 @2) -> (lambda (arg1 arg2 . rest) [arg1 arg2])
 
   (op @1 . @rest) -> (lambda (arg1 . rest) [arg1 . @rest])
 
@@ -60977,8 +60982,10 @@ and
 .code iread
 are given below.
 
-Multiple calls to read on the same stream will extract successive objects
-from the stream. To parse successive objects from a string, it is necessary
+Multiple calls to
+.code read
+on the same stream will extract successive objects from the stream.
+To parse successive objects from a string, it is necessary
 to convert it to a string stream.
 
 The optional
@@ -61636,7 +61643,7 @@ as its exit status. This value can be retrieved via
 The
 .meta argument-list
 argument is a list of strings which specifies additional
-optional arguments to be passed passed to the program. The
+optional arguments to be passed to the program. The
 .meta program
 argument
 becomes the first argument, and
@@ -62252,7 +62259,7 @@ expressed by non-negative values. A range of negative values also expresses a
 portion of the address space, in accordance with the platform's concept of a
 signed integer.
 
-For instance, on a system with 32 bit addresses, the values 0 to 4294967295
+For instance, on a system with 32-bit addresses, the values 0 to 4294967295
 express all of the addresses as a pure binary value. Furthermore, the values
 -2147483648 to -1 also express the upper part of this range, corresponding,
 respectively, to the addresses 2147483648 to 4294967295. On that platform,
@@ -63919,6 +63926,7 @@ resolve to existing packages. Symbols are reduced to strings via
 .coNP Functions @ intern and @ intern-fb
 .synb
 .mets (intern < name <> [ package ])
+.mets (intern-fb < name <> [ package ])
 .syne
 .desc
 The argument
@@ -66015,7 +66023,7 @@ field expression, expanded over the scope of the
 .code awk
 macro. The
 .code -
-symbol is a place holder which doesn't bind a symbol macro to the
+symbol is a placeholder which doesn't bind a symbol macro to the
 corresponding field.
 Additionally, every two-element entry which associates the field symbol
 .meta sym
@@ -66807,7 +66815,7 @@ If there is no next input source,
 .code awk
 terminates.
 
-.coNP Macros @, rng @, -rng @ rng- @, -rng- @, --rng @, --rng- @, rng+ @ -rng+ and @ --rng+
+.coNP Macros @, rng @, -rng @, rng- @, -rng- @, --rng @, --rng- @, rng+ @ -rng+ and @ --rng+
 .synb
 .mets (rng < from-condition << to-condition )
 .mets (-rng < from-condition << to-condition )
@@ -67456,7 +67464,7 @@ evaluate each
 .meta form
 in a dynamic environment in which
 .code *stdin*
-is bound to to a file input stream or input command pipe, respectively.
+is bound to a file input stream or input command pipe, respectively.
 
 The
 .meta path
@@ -68878,8 +68886,8 @@ argument also specifies a successful termination status.
 If
 .meta status
 is an integer value, it specifies a successful termination if it is
-.code 0
-otherwise the interpretation of the value is platform specific.
+.codn 0 ,
+otherwise the interpretation of the value is platform-specific.
 
 .coNP Variables @, e2big @, eacces @, eaddrinuse @, eaddrnotavail @, eafnosupport @, eagain @, ealready @, ebadf @, ebadmsg @, ebusy @, ecanceled @, echild @, econnaborted @, econnrefused @, econnreset @, edeadlk @, edestaddrreq @, edom @, edquot @, eexist @, efault @, efbig @, ehostunreach @, eidrm @, eilseq @, einprogress @, eintr @, einval @, eio @, eisconn @, eisdir @, eloop @, emfile @, emlink @, emsgsize @, emultihop @, enametoolong @, enetdown @, enetreset @, enetunreach @, enfile @, enobufs @, enodata @, enodev @, enoent @, enoexec @, enolck @, enolink @, enomem @, enomsg @, enoprotoopt @, enospc @, enosr @, enostr @, enosys @, enotconn @, enotdir @, enotempty @, enotrecoverable @, enotsock @, enotsup @, enotty @, enxio @, eopnotsupp @, eoverflow @, eownerdead @, eperm @, epipe @, eproto @, eprotonosupport @, eprototype @, erange @, erofs @, espipe @, esrch @, estale @, etime @, etimedout @, etxtbsy @ ewouldblock and @ exdev
 .desc
@@ -69960,11 +69968,11 @@ Both paths are opened using
 .code open-file
 in binary mode, as if using
 .mono
-.meti (open-file < from-path "b")
+.meti (open-file < from-path \(dqb\(dq)
 .onom
 and
 .mono
-.meti (open-file < to-path "wb")
+.meti (open-file < to-path \(dqwb\(dq)
 .onom
 respectively. Then bytes are read from one stream and written to the other,
 in blocks which whose size is a power of two at least as large as 16834.
@@ -75727,7 +75735,7 @@ stream must support output. In the decode operation, it must support
 byte output.
 The
 .meta in
-stream must support input. In in the encode operation it must support
+stream must support input. In the encode operation it must support
 byte input.
 
 The
@@ -77930,7 +77938,7 @@ a vector of JSON-conforming objects.
 a hash table whose keys and values are JSON-conforming objects.
 .RE
 .IP
-Note that if unless the keys in a hash table are all strings, nonstandard JSON
+Note that unless the keys in a hash table are all strings, nonstandard JSON
 is produced, since RFC 8259 requires JSON object keys to be strings.
 
 If the
@@ -79738,7 +79746,7 @@ valid pointer. The pointer is retrieved from the argument space, and the
 Lisp value is encoded into the memory referenced by that pointer.
 
 Note that only Lisp objects with mutable slots can be meaningfully passed by
-pointer with in-out semantics. If a Lisp objects without immutable slots, such
+pointer with in-out semantics. If a Lisp object without immutable slots, such
 as an integer, is passed using
 .code ptr
 the incoming updated value of the external representation will be ignored.
@@ -83243,7 +83251,7 @@ The
 .code carray-own
 function resembles
 .codn carray-dup ,
-differing from that function only in in two ways.
+differing from that function only in two ways.
 Instead of allocating a duplicate copy of the underlying array storage,
 .code carray-own
 causes
@@ -84714,7 +84722,7 @@ each top-level form after compiling it.  The
 .code compile-only
 operator suppresses this evaluation.
 
-When a
+When an
 .code eval-only
 form appears as a top-level form under file compilation, it indicates to the
 file compiler that the
