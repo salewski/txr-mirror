@@ -68332,14 +68332,12 @@ macro:
 
   (let ((o (new prog-opts)))
     o.(getopts *args*)
-    (when (or o.help o.extrahelp)
+    (when (or o.help o.extra-help)
       (put-line "Usage:\en")
       (put-line `  @{prog-name} [options] arg*`)
       o.(opthelp)
-      (when o.extrahelp
-        (put-line)
+      (when o.extra-help
         o.(opthelp-types)
-        (put-line)
         o.(opthelp-conventions))
       (exit -1))
     (put-line `args after opts are: @{o.out-args ", "}`))

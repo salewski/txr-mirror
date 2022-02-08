@@ -306,12 +306,13 @@
                                    (flatten (mappend (op list @1.short @1.long)
                                                      undocumented))] ", "}`))
         (each ((line (sys:wdwrap undoc-str 75)))
-          (put-line `    @line`))))))
+          (put-line `    @line`)))
+      (put-line))))
 
 (defun opthelp-conventions (opt-desc-list : (*stdout* *stdout*))
   (let ((documented (remove-if (op null @1.helptext) opt-desc-list))
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
-    (put-line "Option Conventions:\n")
+    (put-line "Option conventions:\n")
     (let* ((have-short (some documented (usl short)))
            (have-long (some documented (usl long)))
            (have-arg-p (some documented (usl arg-p)))
@@ -355,7 +356,8 @@
                          arguments which follow are not treated as options\ \
                          even if they look like options.")))
       (mapdo (do put-line `  @1`)
-             (sys:wdwrap `@{(flatten texts)}` 77)))))
+             (sys:wdwrap `@{(flatten texts)}` 77)))
+    (put-line)))
 
 (defun opthelp-types (opt-desc-list : (*stdout* *stdout*))
   (let ((documented (remove-if (op null @1.helptext) opt-desc-list)))
