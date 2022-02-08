@@ -330,24 +330,26 @@
                               "All options are Boolean:")))
                         (if have-bool
                           "they are true when present, false when absent.")
-                        (if (and have-bool have-arg-p)
-                          "The --no- prefix can explicitly specify \ \
-                           Boolean options as false: if a Boolean option\ \
-                           X exists,\ \
-                           --no-X specifies it as false. This is useful\ \
-                           for making false those options which default\ \
-                           to true. "
-                          "The --no- prefix can explicitly specify \ \
-                           options as false: if an X option exists,\ \
-                           --no-X specifies it as false. This is useful\ \
-                           for making false those options which default\ \
-                           to true. ")
-                        (if (not have-long)
-                          "Note the double dash on --no.")
-                        (if (and have-short have-long)
-                          "The --no- prefix can be applied to a short\ \
-                           or long option name.")
-                        (if have-arg-p
+                        (if have-bool
+                          (if have-arg-p
+                            "The --no- prefix can explicitly specify\ \
+                             Boolean options as false: if a Boolean option\ \
+                             X exists,\ \
+                             --no-X specifies it as false. This is useful\ \
+                             for making false those options which default\ \
+                             to true."
+                            "The --no- prefix can explicitly specify\ \
+                             options as false: if an X option exists,\ \
+                             --no-X specifies it as false. This is useful\ \
+                             for making false those options which default\ \
+                             to true."))
+                        (if have-bool
+                          (if (not have-long)
+                            "Note the double dash on --no."
+                            (if have-short
+                              "The --no- prefix can be applied to a short\ \
+                               or long option name.")))
+                        (if (and have-long have-arg-p)
                           "The argument to a long option can be given in one\ \
                            argument as --option=arg or as a separate\ \
                            argument using --option arg.")
