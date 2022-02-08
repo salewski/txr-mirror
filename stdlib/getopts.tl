@@ -305,8 +305,8 @@
       (let* ((undoc-str `@{[mapcar sys:opt-dash
                                    (flatten (mappend (op list @1.short @1.long)
                                                      undocumented))] ", "}`))
-        (each ((line (sys:wdwrap undoc-str 75)))
-          (put-line `    @line`)))
+        (each ((line (sys:wdwrap undoc-str 77)))
+          (put-line `  @line`)))
       (put-line))))
 
 (defun opthelp-conventions (opt-desc-list : (*stdout* *stdout*))
