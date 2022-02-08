@@ -274,32 +274,34 @@
                                              opt-desc-list)) :
                        (do if @1.long @1.long @1.short)])
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
-    (put-line "\nOptions:\n")
-    (each ((od sorted))
-      (let* ((type (if (and (consp od.type) (eq (car od.type) 'cumul))
-                     (cadr od.type)
-                     od.type))
-             (tstr (cond
-                     ((keywordp type) (upcase-str (symbol-name type)))
-                     ((and (consp type) (eq (car type) 'list))
+    (put-line)
+    (when sorted
+      (put-line "Options:\n")
+      (each ((od sorted))
+        (let* ((type (if (and (consp od.type) (eq (car od.type) 'cumul))
+                       (cadr od.type)
+                       od.type))
+               (tstr (cond
+                       ((keywordp type) (upcase-str (symbol-name type)))
+                       ((and (consp type) (eq (car type) 'list))
                         (let ((ts (upcase-str (symbol-name (cadr type)))))
                           `@ts[,@ts...]`))
-                     (t "ARG")))
-             (long (if od.long
-                     `--@{od.long}@(if od.arg-p `=@tstr`)`))
-             (short (if od.short
-                      `-@{od.short}@(if od.arg-p ` @tstr`)`))
-             (ls (cond
-                   ((and long short) `@{long 21} (@short)`)
-                   (long long)
-                   (short `@{"" 21}  @short`)))
-             (lines (if od.helptext  (sys:wdwrap od.helptext 43))))
-        (if (>= (len ls) 34)
-          (put-line `  @ls`)
-          (put-line `  @{ls 34}@(pop lines)`))
-        (while lines
-          (put-line `  @{"" 34}@(pop lines)`))))
-    (put-line)
+                       (t "ARG")))
+               (long (if od.long
+                       `--@{od.long}@(if od.arg-p `=@tstr`)`))
+               (short (if od.short
+                        `-@{od.short}@(if od.arg-p ` @tstr`)`))
+               (ls (cond
+                     ((and long short) `@{long 21} (@short)`)
+                     (long long)
+                     (short `@{"" 21}  @short`)))
+               (lines (if od.helptext  (sys:wdwrap od.helptext 43))))
+          (if (>= (len ls) 34)
+            (put-line `  @ls`)
+            (put-line `  @{ls 34}@(pop lines)`))
+          (while lines
+            (put-line `  @{"" 34}@(pop lines)`))))
+      (put-line))
     (when undocumented
       (put-line "Undocumented options:\n")
       (let* ((undoc-str `@{[mapcar sys:opt-dash
