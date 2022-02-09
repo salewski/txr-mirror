@@ -958,8 +958,11 @@
                 (list ^@(with ,sym (sub-str ,str ,pos t))))
                ;; `@{var #/rx/}` (new binding)
                (((@(eq 'sys:var) @sym (@(regexp @reg))))
-                (list ^@(require @(with ,sym (sub-str ,str ,pos t))
-                          (m^$ ,reg ,sym))))
+                (if sym
+                  (list ^@(require @(with ,sym (sub-str ,str ,pos t))
+                            (m^$ ,reg ,sym)))
+                  (list ^@(require @nil
+                            (m^$ ,reg (sub-str ,str ,pos t))))))
                ;; `@{var #/rx/}@...` (new binding)
                (((@(eq 'sys:var) @sym (@(regexp @reg))) . @rest)
                 (with-gensyms (len npos)
