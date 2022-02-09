@@ -24197,7 +24197,7 @@ catenated together.
 
 .coNP Function @ pad
 .synb
-.mets (pad < sequence < object <> [ count ])
+.mets (pad < sequence >> [ object <> [ count ]])
 .syne
 .desc
 The
@@ -24207,6 +24207,11 @@ elements of
 .meta sequence
 followed by repetitions of
 .metn object .
+
+If
+.meta object
+is omitted, it defaults to
+.codn nil .
 
 If
 .meta count
