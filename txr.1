@@ -14487,10 +14487,10 @@ some form known as a
 and the corresponding environment is instantiated during the evaluation
 of that construct. There also exist bindings outside of any binding
 construct, in the so-called
-.I global environment .
+.IR "global environment" .
 Bindings in the global environment can be temporarily shadowed by
 lexically-established binding in the
-.I dynamic environment .
+.IR "dynamic environment" .
 See the Special Variables section above.
 
 Certain special symbols cannot be used as variable names, namely the
@@ -22338,7 +22338,7 @@ expression.
 .syne
 .desc
 The
-.I a-d accessors
+.I "a-d accessors"
 provide a shorthand notation for accessing two to five
 levels deep into a cons-cell-based tree structure. For instance, the
 the equivalent of the nested function call expression
@@ -50347,7 +50347,7 @@ symbols must be specified for a useful effect to take place.  If exactly two
 symbols are specified, then, subject to error checks,
 .code defex
 makes the left symbol an
-.I exception subtype
+.I "exception subtype"
 of the right symbol.
 
 This behavior generalizes to three or more arguments: if three or more symbols
@@ -60267,7 +60267,7 @@ is reduced to
 .strn "/" .
 
 The resulting trimmed path is the
-.I "effective path" .
+.IR "effective path" .
 
 If the effective path is an empty string, then
 .code dir-name
@@ -62225,9 +62225,8 @@ type, the object inherits the type tag from the FFI type.
 Although
 .code cptr
 objects are conceptually non-aggregate values, corresponding to pointers,
-they are
-.I "de facto"
-aggregates due to their implementation as references to heap objects.
+they are de facto aggregates
+due to their implementation as references to heap objects.
 When a
 .code cptr
 object is passed to a foreign function by pointer, for
@@ -67836,7 +67835,7 @@ options and others.
 The
 .code *args-eff*
 variable holds the list of
-.I "effective arguments" ,
+.IR "effective arguments" ,
 which is the argument list after these transformations are applied.
 This variable is established and set to the same value as
 .code *args-full*
@@ -77217,7 +77216,7 @@ Depending on whether the tentative pathname is suffixed,
 .code load
 tries to make one or more attempts to open several variations of that name.
 These variations are called
-.I "actual paths" .
+.IR "actual paths" .
 If any attempt fails due to an error other than non-existence,
 such as a permission error, then no further attempts are made; the
 error exception propagates to
@@ -81890,7 +81889,8 @@ If
 denotes an incomplete array or structure type, and the
 .meta object-expr
 argument is present, then a
-.I "dynamic size" is computed: the actual number of bytes required to store
+.I "dynamic size"
+is computed: the actual number of bytes required to store
 that object value as a foreign representation.
 
 The
