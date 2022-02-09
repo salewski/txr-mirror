@@ -374,6 +374,8 @@
   (when-match `#@a-@b` "#a-$" (list a b)) ("a" "$")
   (when-match `#@{a #/ab*c/}` "#abbbc" a) "abbbc"
   (when-match `#@{a #/ab*c/}d` "#abbbcd" a) "abbbc"
+  (when-match `#@{nil #/ab*c/}` "#abbbc" t) t
+  (when-match `#@{nil #/ab*c/}d` "#abbbcd" t) t
   (when-match `#@{a 3}@b` "#abb" a) "abb"
   (when-match `#@{a 3}@b` "#abbbc" (list a b)) ("abb" "bc")
   (when-match `#@{a 4}@b` "#abb" a) nil
