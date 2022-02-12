@@ -368,7 +368,12 @@
 (defun opthelp-types (opt-desc-list : (*stdout* *stdout*))
   (let ((documented (remove-if (op null @1.helptext) opt-desc-list)))
     (whenlet ((types (keep-if [andf keywordp (op neq :bool)]
-                              (uniq (mapcar (usl type) documented)))))
+                              (uniq (mapcar (chain (usl type)
+                                                   (ldo match-ecase
+                                                     ((@(or list cumul) @type)
+                                                      @(rec type))
+                                                     (@type type)))
+                                            documented)))))
       (put-line "Type legend:\n")
       (each ((ty types))
         (iflet ((ln (caseql ty
