@@ -68,7 +68,11 @@
   `@(if (> (length name) 1) "-")-@name`)
 
 (defmeth opt-desc basic-type-p (me type)
-  (or (functionp type) (fboundp type) (member type me.valid-types)))
+  (tree-case type
+    ((type name) (and (neq type :bool)
+                      me.(basic-type-p type)
+                      (stringp name)))
+    (type (or (functionp type) (fboundp type) (member type me.valid-types)))))
 
 (defmeth opt-desc list-type-p (me type)
   (tree-case type
@@ -108,7 +112,7 @@
     (when (and (neq type :bool)
                (eq me.arg :explicit-no))
       (sys:opt-err "Non-Boolean option ~a explicitly specified as false" name))
-    (caseql type
+    (caseql [[iffi [andf consp [chain car keywordp]] car] type]
       (:bool
         (set me.arg (neq me.arg :explicit-no)))
       (:dec (set me.arg
@@ -285,10 +289,13 @@
                        od.type))
                (tstr (cond
                        ((keywordp type) (upcase-str (symbol-name type)))
-                       ((and (consp type) (eq (car type) 'list))
-                        (let ((ts (upcase-str (symbol-name (cadr type)))))
+                       ((not (consp type)) "ARG")
+                       ((eq (car type) 'list)
+                        (let ((ts (ifa (consp (cadr type))
+                                    (cadr it)
+                                    (upcase-str (symbol-name it)))))
                           `@ts[,@ts...]`))
-                       (t "ARG")))
+                       (t (cadr type))))
                (long (if od.long
                        `--@{od.long}@(if od.arg-p `=@tstr`)`))
                (short (if od.short
@@ -372,6 +379,7 @@
                                                  (ldo match-ecase
                                                    ((@(or list cumul) @type)
                                                     @(rec type))
+                                                   ((@type @nil) type)
                                                    (@type type)))
                                           documented))))
             (entries (isec
@@ -390,7 +398,20 @@
                         (:text  "  TEXT  - Unprocessed text"))
                       types : [iffi consp car])))
     (put-line "Type legend:\n")
-    (mapdo (opip cadr put-line) entries)
+    (mapdo (tb ((btype legend))
+             ;; TODO Make coherent the punctuation?
+             (put-line legend)
+             (whenlet ((names (uniq (mappend (chain (usl type)
+                                                    (ldo match-case
+                                                      ((@(or list cumul) @type)
+                                                       @(rec type))
+                                                      ((@btype @name)
+                                                       (list name))))
+                                             documented))))
+               (mapdo (do put-line `@{"" 10}@1`)
+                      (sys:wdwrap `Arguments of this type:\
+                                  \ @(cat-str names #\ )` 69))))
+           entries)
     (put-line)))
 
 (defstruct sys:option-base nil
