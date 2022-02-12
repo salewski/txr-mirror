@@ -366,31 +366,32 @@
     (put-line)))
 
 (defun opthelp-types (opt-desc-list : (*stdout* *stdout*))
-  (let ((documented (remove-if (op null @1.helptext) opt-desc-list)))
-    (whenlet ((types (keep-if [andf keywordp (op neq :bool)]
-                              (uniq (mapcar (chain (usl type)
-                                                   (ldo match-ecase
-                                                     ((@(or list cumul) @type)
-                                                      @(rec type))
-                                                     (@type type)))
-                                            documented)))))
-      (put-line "Type legend:\n")
-      (each ((ty types))
-        (iflet ((ln (caseql ty
-                      (:dec   "  DEC    - Decimal integer: -123, 0, 5, +73")
-                      (:hex   "  HEX    - Hexadecimal integer -EF, 2D0, +9A")
-                      (:oct   "  OCT    - Octal integer: -773, 5677, +326")
-                      (:cint  "  CINT   - C-style integer: leading 0 octal,\
-                              \ leading 0x hex, else decimal;\n\
-                              \           leading sign allowed: -0777, 0xFDC, +123")
-                      (:float "  FLOAT  - Floating-point: -1.3e+03, +5, 3.3,\
-                              \ 3., .5, .12e9, 53.e-3, 3e-015")
-                      (:str   "  STR    - String with embedded escapes, valid\
-                              \ as TXR Lisp string literals\n\
-                              \           syntax: foo, foo\\tbar, abc\\nxyz")
-                      (:text  "  TEXT   - Unprocessed text"))))
-          (put-line ln)))
-      (put-line))))
+  (whenlet ((documented (remove-if (op null @1.helptext) opt-desc-list))
+            (types (keep-if [andf keywordp (op neq :bool)]
+                            (uniq (mapcar (chain (usl type)
+                                                 (ldo match-ecase
+                                                   ((@(or list cumul) @type)
+                                                    @(rec type))
+                                                   (@type type)))
+                                          documented))))
+            (entries (isec
+                      '((:dec   "  DEC   - Decimal integer: -123, 0, 5, +73")
+                        (:hex   "  HEX   - Hexadecimal integer: -EF, 2D0, +9A")
+                        (:oct   "  OCT   - Octal integer: -773, 5677, +326")
+                        (:cint  "  CINT  - C-style integer: leading 0 octal,\
+                                \ leading 0x hex, else decimal;\n\
+                                \          leading sign allowed: -0777, 0xFDC,\
+                                \ +123")
+                        (:float "  FLOAT - Floating-point: -1.3e+03, +5, 3.3,\
+                                \ 3., .5, .12e9, 53.e-3, 3e-015")
+                        (:str   "  STR   - String with embedded escapes, valid\
+                                \ as TXR Lisp string literal\n\
+                                \          syntax: foo, foo\\tbar, abc\\nxyz")
+                        (:text  "  TEXT  - Unprocessed text"))
+                      types : [iffi consp car])))
+    (put-line "Type legend:\n")
+    (mapdo (opip cadr put-line) entries)
+    (put-line)))
 
 (defstruct sys:option-base nil
   in-args
