@@ -3132,6 +3132,20 @@ static val op_load_time_lit(val form, val env)
   }
 }
 
+static val me_macro_time(val form, val menv)
+{
+    val args = rest(form);
+    val result = nil;
+
+    for (; args; args = cdr(args)) {
+      val arg = car(args);
+      val arg_ex = expand(arg, menv);
+      result = eval(arg_ex, nil, args);
+    }
+
+    return maybe_quote(result);
+}
+
 static val me_def_variable(val form, val menv)
 {
   val args = rest(form);
@@ -5146,15 +5160,6 @@ again:
                                  cons(handle_syms,
                                       if3(body == body_ex,
                                           body, body_ex)))), form);
-    } else if (sym == macro_time_s) {
-      val args = rest(form);
-      val result = nil;
-      for (; args; args = cdr(args)) {
-        val arg = car(args);
-        val arg_ex = expand(arg, menv);
-        result = eval(arg_ex, nil, args);
-      }
-      return maybe_quote(result);
     } else if (sym == macrolet_s) {
       return expand_macrolet(form, menv);
     } else if (sym == symacrolet_s) {
@@ -6756,7 +6761,6 @@ void eval_init(void)
 
   reg_op(macrolet_s, op_error);
   reg_op(symacrolet_s, op_error);
-  reg_op(macro_time_s, op_error);
   reg_op(var_s, op_meta_error);
   reg_op(expr_s, op_meta_error);
   reg_op(quote_s, op_quote);
@@ -6812,6 +6816,7 @@ void eval_init(void)
   reg_op(eval_only_s, op_progn);
   reg_op(load_time_lit_s, op_load_time_lit);
 
+  reg_mac(macro_time_s, func_n2(me_macro_time));
   reg_mac(defvar_s, me_def_variable_f);
   reg_mac(defparm_s, me_def_variable_f);
   reg_mac(defparml_s, me_def_variable_f);

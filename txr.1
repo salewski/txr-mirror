@@ -38618,137 +38618,6 @@ and binds to the entire
 .code tree-bind
 form.
 
-.coNP Operator @ macro-time
-.synb
-.mets (macro-time << form *)
-.syne
-.desc
-The
-.code macro-time
-operator has a syntax similar to the
-.code progn
-operator. Each
-.meta form
-is evaluated from left to right, and the resulting value is that of the last
-form.
-
-The special behavior of
-.code macro-time
-is that the evaluation takes place during
-the expansion phase, rather than during the evaluation phase.
-
-Also,
-.code macro-time
-macro-expands each
-.meta form
-and evaluates it before processing the next
-.meta form
-in the same way. Thus, for instance, if a
-.meta form
-introduces a global definition, that definition will be visible not
-only during the evaluation of a subsequent
-.metn form ,
-but also during its macro-expansion time.
-
-During the expansion phase, all
-.code macro-time
-expressions which occur in a context
-that calls for evaluation are evaluated, and replaced by their quoted values.
-For instance
-.code "(macro-time (list 1 2 3))"
-evaluates
-.code "(list 1 2 3)"
-to the object
-.code "(1 2 3)"
-and the entire
-.code macro-time
-form is replaced by that value, quoted:
-.codn "'(1 2 3)" .
-If the form is evaluated again at evaluation-time, the resulting value will be
-that of the quote, in this case
-.codn "(1 2 3)" .
-
-.code macro-time
-forms do not see the surrounding lexical environment; they see only
-global function and variable bindings and macros.
-
-Note:
-.code macro-time
-supports techniques that require a calculation to be performed in the
-environment where the program is being compiled, and inserting the result of
-that calculation as a literal into the program source. Possibly, the
-calculation can have some useful effect in that environment, or use
-as an input information that is available in that environment.
-The
-.code load-time
-operator also inserts a calculated value as a de facto
-literal into the program, but it performs that calculation in the
-environment where the compiled file is being loaded.
-The two operators may be considered complementary in this sense.
-
-Consider the source file:
-
-.verb
-  (defun host-name-c () (macro-time (uname).nodename))
-
-  (defun host-name-l () (load-time (uname).nodename))
-.brev
-
-If this is compiled via
-.codn compile-file ,
-the
-.code uname
-call in
-.code host-name-c
-takes place when it is macro-expanded. Thereafter, the compiled version
-of the function returns the name of the machine where the
-compilation took place, no matter in what environment it is subsequently
-loaded and called.
-
-In contrast, the compilation of
-.code host-name-l
-arranges for that function's
-.code uname
-call to take place just one time, whenever the compiled file is loaded.
-Each time the function is subsequently called, it will
-return the name of the machine where it was loaded, without making
-any additional calls to
-.codn uname .
-
-The
-.code macro-time
-operator can occasionally be required in order for some constructs to evaluate
-or compile. One way that occurs is when a construct that is being fully
-expanded itself defines a macro which is later required in that same construct.
-For example:
-
-.verb
-  (progn (defmacro mac () 42) (mac))
-.brev
-
-This specific example actually works under
-.code eval
-or file compilation, because in that situation it isn't fully expanded
-all at once. When
-.code eval
-and
-.code compile-file
-process a top-level form that is a
-.codn progn ,
-they treat its argument forms as individual, separate top-level forms. In
-general, \*(TL is designed in such a way as to not to require, in most ordinary
-programs, extra verbiage to tell the compiler or evaluator that certain
-definitions are required by macros. However, somewhat unusual situations can
-arise which are not handled in this way.
-
-Also,
-.codn macro-time ,
-or the related
-.code @(mdo)
-directive, can be occasionally necessary in \*(TX
-queries, which are parsed and subject to macro-expansion in their entirety
-before being executed.
-
 .coNP Operator @ defmacro
 .synb
 .mets (defmacro < name
@@ -39855,6 +39724,121 @@ is used to avoid accidental capture of references
 emanating from the
 .code delta
 form.
+
+.coNP Macro @ macro-time
+.synb
+.mets (macro-time << form *)
+.syne
+.desc
+The
+.code macro-time
+macro evaluates its arguments immediately during macro expansion.
+
+The
+.meta form
+arguments are processed from left to right. Each
+.meta form
+is fully expanded and evaluated in the top-level environment
+before the next form is considered.
+
+The value of the last
+.metn form ,
+or else
+.code nil
+if there aren't any arguments, is converted into a literal expression
+which denotes that value, and the resulting literal is produced
+as the expansion of
+.metn macro-time .
+
+Note:
+.code macro-time
+supports techniques that require a calculation to be performed in the
+environment where the program is being compiled, and inserting the result of
+that calculation as a literal into the program source. Possibly, the
+calculation can have some useful effect in that environment, or use
+as an input information that is available in that environment.
+The
+.code load-time
+operator also inserts a calculated value as a de facto
+literal into the program, but it performs that calculation in the
+environment where the compiled file is being loaded.
+The two operators may be considered complementary in this sense.
+
+Consider the source file:
+
+.verb
+  (defun host-name-c () (macro-time (uname).nodename))
+
+  (defun host-name-l () (load-time (uname).nodename))
+.brev
+
+If this is compiled via
+.codn compile-file ,
+the
+.code uname
+call in
+.code host-name-c
+takes place when it is macro-expanded. Thereafter, the compiled version
+of the function returns the name of the machine where the
+compilation took place, no matter in what environment it is subsequently
+loaded and called.
+
+In contrast, the compilation of
+.code host-name-l
+arranges for that function's
+.code uname
+call to take place just one time, whenever the compiled file is loaded.
+Each time the function is subsequently called, it will
+return the name of the machine where it was loaded, without making
+any additional calls to
+.codn uname .
+
+Note:
+.code macro-time
+can be understood in terms of the following implementation. Note that
+this implementation always produces a
+.code quote
+expression, which
+.code macro-time
+is not required to do if
+.meta val
+is self-evaluating:
+
+.verb
+  (defmacro macro-time (. forms)
+    (let (val)
+      (each ((f forms))
+        (set val (eval f)))
+      ^(quote ,val)))
+.brev
+
+Because
+.code eval
+treats a top-level
+.code progn
+specially, this implementation is also possible:
+
+.verb
+  (defmacro macro-time (. forms)
+    ^(quote ,(eval ^(progn ,*forms))))
+.brev
+
+.TP* Examples:
+
+.verb
+  ;; The (1 2 3) object is produced at macro-expansion time, becoming
+  ;; a quoted literal which evaluates to (1 2 3).
+  (macro-time (list 1 2 3)) -> (1 2 3)
+
+  ;; The above fact is revealed by macroexpand: the list form was
+  ;; evaluated, and then quote was inserted to produce (quote (1 2 3))
+  ;; which is notated '(1 2 3):
+  (macroexpand '(macro-time (list 1 2 3))) -> '(1 2 3)
+
+  ;; Quote isn't required on a self-evaluating object; it serves
+  ;; as a literal expression denoting itself:
+  (macroexpand '(macro-time (join-with "-" "a" "b"))) -> "a-b"
+.brev
 
 .coNP Macro @ equot
 .synb
@@ -84832,14 +84816,14 @@ From time to time, certain situations benefit from the program being
 able to perform an evaluation, and then have the result of that evaluation
 treated as a literal.
 
-There is already an operator named
+The
 .code macro-time
-which makes this possible in its particular manner: that operator
+macro makes this possible in its particular manner: that macro
 allows one or more expressions to be evaluated during macro expansion.
 The result of the
 .code macro-time
 is then quoted and substituted in place of the expression. That result
-then appears as a true quoted literal to the executing code.
+then appears as a true literal to the executing code.
 
 The
 .code load-time
@@ -85241,7 +85225,7 @@ a suffix that adds no value. Lastly,
 .code load-time
 is shorter, and harmonizes with
 .codn macro-time ,
-which preceded it by four years.
+which existed earlier.
 
 .coNP Function @ disassemble
 .synb

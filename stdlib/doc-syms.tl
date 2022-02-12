@@ -1183,7 +1183,7 @@
       ("mac-param-bind" "N-021A9008")
       ("macro-ancestor" "N-00519E96")
       ("macro-form-p" "N-02AC86DE")
-      ("macro-time" "N-0264A0BD")
+      ("macro-time" "N-0131B069")
       ("macroexpand" "N-02ED5471")
       ("macroexpand-1" "N-02ED5471")
       ("macroexpand-1-lisp1" "N-01E62179")
