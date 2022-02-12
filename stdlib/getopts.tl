@@ -73,12 +73,14 @@
 (defmeth opt-desc list-type-p (me type)
   (tree-case type
     ((indicator btype) (and (eq indicator 'list)
+                            (neq btype :bool)
                             me.(basic-type-p btype)))
     (x nil)))
 
 (defmeth opt-desc cumul-type-p (me type)
   (tree-case type
     ((indicator btype) (and (eq indicator 'usr:cumul)
+                            (neq btype :bool)
                             (or me.(basic-type-p btype)
                                 me.(list-type-p btype))))
     (x nil)))

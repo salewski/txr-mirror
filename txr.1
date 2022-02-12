@@ -68314,7 +68314,7 @@ macro:
     (c   nil     upcase-str
                  "Custom treatment: ARG is converted to uppercase.")
     (b   bool    :bool
-         "A flag you can flip true."))
+                 "A flag you can flip true."))
 
   (defvarl prog-name *load-path*)
 
@@ -68440,7 +68440,12 @@ and converted accordingly. The option's argument is then a list object
 whose elements are the converted pieces. For instance
 .code "(list :dec)"
 will convert a list of comma-separated decimal integer tokens into
-a list of integer objects. The
+a list of integer objects.
+The
+.meta type
+argument must be a basic type other than
+.codn :bool .
+The
 .code list
 option type does not nest.
 .meIP (cumul << type )
@@ -68450,14 +68455,17 @@ symbol, it indicates that if the option is specified multiple times,
 the values coming from the multiple occurrences are accumulated into a list.
 The
 .meta type
-argument may be a
+argument must be a
 .code list
-type, exemplified by
+type or a basic type other than
+.codn :bool ,
+for example
 .code "(cumul (list :dec))"
-or a basic type, such as
+and
 .codn "(cumul :str)" .
-However, this type specifier does not nest. Combinations such as
-.code "(cumul (cumul ...)"
+This type specifier does not nest:
+combinations such as
+.code "(cumul (cumul ...))"
 and
 .code "(list (cumul ...))"
 are invalid.
