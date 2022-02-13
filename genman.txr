@@ -295,9 +295,19 @@ function tocjump(hash) {
 </body>
 </html>
 @(end)
-@(bind (name code) @(transpose [nsort (mapcar (tb ((sym code))
-                                                (list (html-decode sym) code))
-                                              (hash-pairs symhash)) : car]))
+@(bind (name code) @(let ((ignames '("*-1" "*-2" "*-20"
+                                     "*0" "*1" "*2" "*99"
+                                     "*n" "*r" "*v"
+                                     "--args" "--eargs" "-C"
+                                     ".."
+                                     "TXR_COMPAT"
+                                     "buf-get-" "buf-put-")))
+                      (flow (hash-pairs symhash)
+                        (remove-if (op in ignames) @1 car)
+                        (mapcar (tb ((sym code))
+                                  (list (html-decode sym) code)))
+                        (nsort @1 : car)
+                        transpose)))
 @(do (let ((syms (append-each* ((entry [remove-if (op equal "pub")
                                                   (package-alist)
                                                   car])
@@ -306,17 +316,10 @@ function tocjump(hash) {
                    (let ((fn (casequal pkg-name
                                (("usr" "keyword") (fun tostringp))
                                (t (opip tostringp (join-with ":" pkg-name))))))
-                     (mapcar fn (package-symbols pkg)))))
-           (ignames '("*-1" "*-2" "*-20"
-                      "*0" "*1" "*2" "*99"
-                      "*n" "*r" "*v"
-                      "--args" "--eargs" "-C"
-                      ".."
-                      "TXR_COMPAT"
-                      "buf-get-" "buf-put-")))
+                     (mapcar fn (package-symbols pkg))))))
        (mapdo (do unless (in syms @1)
-                  (format *stderr* "~a: missing from image\n" @1))
-              (remove-if (op in ignames) name))))
+                (format *stderr* "~a: missing from image\n" @1))
+              name)))
 @(output "stdlib/doc-syms.tl")
 (defparml doc-syms
   (hash-from-pairs
