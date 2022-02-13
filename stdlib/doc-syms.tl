@@ -269,6 +269,7 @@
       ("casequal*" "N-02FB71A2")
       ("cases" "N-039458F2")
       ("cat" "N-03336E1B")
+      ("cat-files" "N-01249D65")
       ("cat-str" "N-00B6ACE3")
       ("cat-streams" "N-020BF082")
       ("cat-vec" "N-01AEB28B")

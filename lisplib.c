@@ -830,7 +830,7 @@ static val copy_file_instantiate(val set_fun)
 static val copy_file_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("copy-path-opts"), lit("copy-file"), lit("copy-files"),
+    lit("copy-path-opts"), lit("copy-file"), lit("copy-files"), lit("cat-files"),
     lit("copy-path-rec"), lit("remove-path-rec"),
     lit("chown-rec"), lit("chmod-rec"), lit("touch"), lit("rel-path"),
     lit("path-equal"),

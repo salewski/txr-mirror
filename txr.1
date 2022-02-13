@@ -70055,6 +70055,26 @@ exception.
     (file-error (throw 'skip)))
 .brev
 
+.coNP Function @ cat-files
+.synb
+.mets (cat-files < to-path << from-path *)
+.syne
+.desc
+The
+.code cat-files
+function catenates the contents of zero or more files into one file.
+The destination path is specified by
+.metn to-path .
+Regardless of whether there are any
+.meta from-path
+arguments, the file named by
+.meta to-path
+is created, if necessary or else truncated to zero length.
+Then, the files named by each
+.meta from-path
+are traversed in left-to-right order; the contents of each file
+is appended to the destination file.
+
 .coNP Function @ copy-path-rec
 .synb
 .mets (copy-path-rec < from-path < to-path << option *)
