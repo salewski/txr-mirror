@@ -1107,7 +1107,7 @@ static val open_socket(val family, val type, val mode_str)
     uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
                self, num(errno), errno_to_str(errno), nao);
 
-  if (SOCK_NONBLOCK || SOCK_CLOEXEC)
+  if (SOCK_NONBLOCK | SOCK_CLOEXEC)
     type = num_fast(c_num(type, self) & ~(SOCK_NONBLOCK | SOCK_CLOEXEC));
 
   return open_sockfd(num(fd), family, type, mode_str, self);
@@ -1126,7 +1126,7 @@ static val socketpair_wrap(val family, val type, val mode_str)
     uw_ethrowf(socket_error_s, lit("~a failed: ~d/~s"),
                self, num(errno), errno_to_str(errno), nao);
 
-  if (SOCK_NONBLOCK || SOCK_CLOEXEC)
+  if (SOCK_NONBLOCK | SOCK_CLOEXEC)
     type = num_fast(c_num(type, self) & ~(SOCK_NONBLOCK | SOCK_CLOEXEC));
 
   {
