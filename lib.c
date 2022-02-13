@@ -3395,7 +3395,7 @@ val all_satisfy(val seq, val pred_in, val key_in)
 {
   val pred = default_arg(pred_in, identity_f);
   val key = default_arg(key_in, identity_f);
-  val self = lit("some");
+  val self = lit("all");
   seq_iter_t iter;
   val elem;
   val ret = t;
