@@ -755,6 +755,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
   val big_endian = nil;
   val parser = ensure_parser(stream, name);
   val not_compiled = null(compiled);
+  val version_form = nil;
 
   if (compiled) {
     parser_t *pi = parser_get_impl(self, parser);
@@ -779,20 +780,26 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
                   stream, nao);
       big_endian = caddr(form);
       first = nil;
+      version_form = form;
     } else if (compiled) {
-      for (; form; form = cdr(form)) {
-        val item = car(form);
-        val nlevels = pop(&item);
-        val nregs = pop(&item);
-        val bytecode = pop(&item);
-        val datavec = pop(&item);
-        val funvec = car(item);
-        val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
-        if ((big_endian && HAVE_LITTLE_ENDIAN) ||
-            (!big_endian && !HAVE_LITTLE_ENDIAN))
-          buf_swap32(bytecode);
-        (void) vm_execute_toplevel(desc);
-        gc_hint(desc);
+      if (consp(car(form))) {
+        for (; form; form = cdr(form)) {
+          val item = car(form);
+          val nlevels = pop(&item);
+          val nregs = pop(&item);
+          val bytecode = pop(&item);
+          val datavec = pop(&item);
+          val funvec = car(item);
+          val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
+          if ((big_endian && HAVE_LITTLE_ENDIAN) ||
+              (!big_endian && !HAVE_LITTLE_ENDIAN))
+            buf_swap32(bytecode);
+          (void) vm_execute_toplevel(desc);
+          gc_hint(desc);
+        }
+      } else if (nequal(form, version_form)) {
+        uw_throwf(error_s, lit("~s: mismatched version ~s in combined .tlo file"),
+                  stream, form, nao);
       }
     } else {
       (void) eval_intrinsic(form, nil);
