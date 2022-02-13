@@ -62755,7 +62755,7 @@ stream operations on the object.
 
 .coNP Method @ put-string
 .synb
-.mets << stream .(put-string str)
+.mets << stream .(put-string << str )
 .syne
 .desc
 The
@@ -62768,7 +62768,7 @@ stream I/O function.
 
 .coNP Method @ put-char
 .synb
-.mets << stream .(put-char chr)
+.mets << stream .(put-char << chr )
 .syne
 .desc
 The
@@ -62781,7 +62781,7 @@ stream I/O function.
 
 .coNP Method @ put-byte
 .synb
-.mets << stream .(put-byte byte)
+.mets << stream .(put-byte << byte )
 .syne
 .desc
 The
@@ -62833,7 +62833,7 @@ stream I/O function.
 
 .coNP Method @ unget-char
 .synb
-.mets << stream .(unget-char chr)
+.mets << stream .(unget-char << chr )
 .syne
 .desc
 The
@@ -62846,7 +62846,7 @@ stream I/O function.
 
 .coNP Method @ unget-byte
 .synb
-.mets << stream .(unget-byte byte)
+.mets << stream .(unget-byte << byte )
 .syne
 .desc
 The
@@ -62859,7 +62859,7 @@ stream I/O function.
 
 .coNP Method @ put-buf
 .synb
-.mets << stream .(put-buf buf pos)
+.mets << stream .(put-buf < buf << pos )
 .syne
 .desc
 The
@@ -62884,7 +62884,7 @@ invocation.
 
 .coNP Method @ fill-buf
 .synb
-.mets << stream .(fill-buf buf pos)
+.mets << stream .(fill-buf < buf << pos )
 .syne
 .desc
 The
@@ -62909,7 +62909,7 @@ invocation.
 
 .coNP Method @ close
 .synb
-.mets << stream .(close throw-on-error-p)
+.mets << stream .(close << throw-on-error-p )
 .syne
 .desc
 The
@@ -62922,7 +62922,7 @@ stream I/O function.
 
 .coNP Method @ flush
 .synb
-.mets << stream .(flush offs whence)
+.mets << stream .(flush < offs << whence )
 .syne
 .desc
 The
@@ -62935,7 +62935,7 @@ stream I/O function.
 
 .coNP Method @ seek
 .synb
-.mets << stream .(seek offs whence)
+.mets << stream .(seek < offs << whence )
 .syne
 .desc
 The
@@ -62948,7 +62948,7 @@ stream I/O function.
 
 .coNP Method @ truncate
 .synb
-.mets << stream .(truncate len)
+.mets << stream .(truncate << len )
 .syne
 .desc
 The
@@ -62961,7 +62961,7 @@ stream I/O function.
 
 .coNP Method @ get-prop
 .synb
-.mets << stream .(get-prop sym)
+.mets << stream .(get-prop << sym )
 .syne
 .desc
 The
@@ -62974,7 +62974,7 @@ stream I/O function.
 
 .coNP Method @ set-prop
 .synb
-.mets << stream .(set-prop sym nval)
+.mets << stream .(set-prop < sym << nval )
 .syne
 .desc
 The
