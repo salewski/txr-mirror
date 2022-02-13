@@ -77333,6 +77333,31 @@ reads reads the first line of the file and discards it.
 Processing of the file then begins with the first byte
 following that line.
 
+Two or more
+.code .tlo
+files produced by the same version of \*(TX may be catenated
+together (for instance, using the
+.code cat-files
+function) to produce a single
+.code .tlo
+file. Such a combined file can be loaded with the
+.code load
+function.
+
+Note: this is a single
+.code load
+operation: all of the binding and unbinding of variables like
+.code *load-path*
+and
+.code *package*
+is performed once over the entire contents of the combined file, and any
+.code *load-hooks*
+are performed one time after the load operation.  Therefore it is possible that
+the load-time behavior differs from that of loading the original files
+individually. The
+.code *load-path*
+is bound to the name of the combined file.
+
 .coNP Special variable @ *load-path*
 .desc
 The
@@ -84625,6 +84650,16 @@ This can only be true if the source file contains no
 or
 .code eval-only
 top-level forms.
+
+Two or more compiled files that are compiled by the same version of \*(TX may be
+catenated together to produce a single
+.code .tlo
+file. Such a file may be loaded by the
+.code load
+function. The behavior of loading such a file may differ from loading the individual
+files, because such a
+.code load
+is treated as a single operation.
 
 .coNP Special variable @ *opt-level*
 
