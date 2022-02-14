@@ -308,7 +308,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
 
   switch (type(obj)) {
   case NIL:
-    return convert(ucnum, -1);
+    return UINT_PTR_MAX;
   case LIT:
     return hash_c_str(litptr(obj), seed, count);
   case CONS:
@@ -384,8 +384,6 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
 
 static ucnum eql_hash(val obj, int *count)
 {
-  val self = lit("hash-eql");
-
   if ((*count)-- <= 0)
     return 0;
 
@@ -393,9 +391,9 @@ static ucnum eql_hash(val obj, int *count)
   case TAG_PTR:
     switch (type(obj)) {
     case NIL:
-      return convert(ucnum, -1);
+      return UINT_PTR_MAX;
     case BGNUM:
-      return convert(ucnum, mp_hash(mp(obj)));
+      return mp_hash(mp(obj));
     case FLNUM:
       return hash_double(obj->fl.n);
     case RNG:
@@ -409,9 +407,8 @@ static ucnum eql_hash(val obj, int *count)
       }
     }
   case TAG_CHR:
-    return convert(ucnum, c_chr(obj));
   case TAG_NUM:
-    return convert(ucnum, c_num(obj, self));
+    return c_u(obj);
   case TAG_LIT:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
@@ -426,8 +423,6 @@ static ucnum eql_hash(val obj, int *count)
 
 static ucnum eq_hash(val obj)
 {
-  val self = lit("hash");
-
   switch (tag(obj)) {
   case TAG_PTR:
     switch (CHAR_BIT * sizeof (mem_t *)) {
@@ -437,9 +432,8 @@ static ucnum eq_hash(val obj)
       return coerce(ucnum, obj) >> 5;
     }
   case TAG_CHR:
-    return convert(ucnum, c_chr(obj));
   case TAG_NUM:
-    return convert(ucnum, c_num(obj, self));
+    return c_u(obj);
   case TAG_LIT:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
@@ -1204,7 +1198,7 @@ void hash_iter_init(struct hash_iter *hi, val hash, val self)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   hi->next = 0;
-  hi->chain = convert(ucnum, -1);
+  hi->chain = UINT_PTR_MAX;
   hi->cons = nil;
   hi->hash = hash;
   h->usecount++;
@@ -1214,7 +1208,7 @@ void us_hash_iter_init(struct hash_iter *hi, val hash)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
   hi->next = 0;
-  hi->chain = convert(ucnum, -1);
+  hi->chain = UINT_PTR_MAX;
   hi->cons = nil;
   hi->hash = hash;
   h->usecount++;

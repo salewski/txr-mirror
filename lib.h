@@ -508,6 +508,12 @@ INLINE cnum c_n(val num)
 {
     return coerce(cnum, num) >> TAG_SHIFT;
 }
+
+INLINE ucnum c_u(val num)
+{
+    return convert(ucnum, coerce(cnum, num) >> TAG_SHIFT);
+}
+
 #if SIZEOF_WCHAR_T < 4
 #define lit_noex(strlit) coerce(obj_t *,\
                                 coerce(cnum, L"\0" L ## strlit L"\0" + 1) | \

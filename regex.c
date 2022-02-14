@@ -597,8 +597,8 @@ static void char_set_add(char_set_t *set, wchar_t ch)
     /* fallthrough */
   case CHSET_SMALL:
     assert (ch < 256);
-    set->s.bitcell[CHAR_SET_INDEX(ch)] |=
-      convert(bitcell_t, 1) << CHAR_SET_BIT(ch);
+    set->s.bitcell[CHAR_SET_INDEX(ch)] |= (convert(bitcell_t, 1)
+                                           << CHAR_SET_BIT(ch));
     break;
   case CHSET_LARGE:
     assert (ch < 0x10000);
