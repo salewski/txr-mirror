@@ -498,7 +498,7 @@ platform-cflags [$platform_cflags]
 platform-ldflags [$platform_ldflags]
 
   Specify additional linker flags for anything else, such as hardening,
-  linking as needed, et cetera.  Flas specifying librariews (-l options)
+  linking as needed, et cetera.  Flags specifying libraries (-l options)
   should be specified using platform-ldlibs instead.  Note that these are in
   addition to any LDFLAGS from the environment or make command line.
 
