@@ -293,10 +293,12 @@ static void tn_find_low(val node, struct tree_diter *tdi,
       }
     }
 
-    while (trit->path[trit->depth - 1] != tdi->lastnode)
+    if (tdi->lastnode) {
+      while (trit->path[trit->depth - 1] != tdi->lastnode)
+        trit->depth--;
       trit->depth--;
-    trit->depth--;
-    trit->state = tr_find_low_prepared;
+      trit->state = tr_find_low_prepared;
+    }
   }
 }
 
@@ -349,14 +351,18 @@ static void tr_find_rebuild_scapegoat(val tree, struct tree *tr,
                                       struct tree_iter *ti,
                                       val child, ucnum child_size)
 {
-  val parent = ti->path[--ti->depth];
-  ucnum parent_size = tn_size_one_child(parent, child, child_size);
-  ucnum sib_size = parent_size - child_size;
+  if (ti->depth > 0) {
+    val parent = ti->path[--ti->depth];
+    ucnum parent_size = tn_size_one_child(parent, child, child_size);
+    ucnum sib_size = parent_size - child_size;
 
-  if (2 * child_size > parent_size || 2 * sib_size > parent_size)
-    tr_rebuild(tree, tr, parent, ti->path[ti->depth - 1], parent_size);
-  else
-    tr_find_rebuild_scapegoat(tree, tr, ti, parent, parent_size);
+    if (2 * child_size > parent_size || 2 * sib_size > parent_size) {
+      val grandparent = if2(ti->depth > 0, ti->path[ti->depth - 1]);
+      tr_rebuild(tree, tr, parent, grandparent, parent_size);
+    } else {
+      tr_find_rebuild_scapegoat(tree, tr, ti, parent, parent_size);
+    }
+  }
 }
 
 static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
