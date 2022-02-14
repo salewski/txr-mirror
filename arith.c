@@ -464,7 +464,7 @@ static int highest_significant_bit(int_ptr_t n)
 {
   if (n >= 0)
     return highest_bit(n);
-  return highest_bit(n ^ INT_PTR_MAX);
+  return highest_bit(-n - 1);
 }
 
 void do_mp_error(val self, mp_err code)
@@ -3426,7 +3426,11 @@ val ash(val a, val bits)
         cnum an = c_n(a);
         int hb = highest_significant_bit(an);
         if (bn + hb < num_bits) {
+#if HAVE_UBSAN
+          return num_fast(an * (convert(cnum, 1) << bn));
+#else
           return num_fast(an << bn);
+#endif
         } else {
           val b = make_bignum();
           mp_int tmp;

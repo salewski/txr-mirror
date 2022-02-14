@@ -317,9 +317,8 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case STR:
     return hash_c_str(obj->st.str, seed, count);
   case CHR:
-    return c_chr(obj);
   case NUM:
-    return c_num(obj, self);
+    return c_u(obj);
   case SYM:
   case PKG:
   case ENV:

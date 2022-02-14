@@ -942,7 +942,7 @@ static val ffi_val_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static u16_t ffi_swap_u16(u16_t n)
 {
-  return (n << 8 | n >> 8);
+  return convert(u16_t, n << 8 | n >> 8);
 }
 
 static u32_t ffi_swap_u32(u32_t n)
