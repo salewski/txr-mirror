@@ -1093,7 +1093,7 @@ static val revive_cont(val dc, val arg)
       if (word >= orig_start - UW_CONT_FRAME_BEFORE &&
           word <= orig_end && is_ptr(coerce(val, word)))
       {
-        *wordptr = word + delta;
+        *wordptr = word + convert(uint_ptr_t, delta);
       }
 
 #if HAVE_VALGRIND
