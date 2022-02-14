@@ -421,7 +421,7 @@ mp_err mp_set_uintptr(mp_int *mp, uint_ptr_t z)
 
 mp_err mp_set_intptr(mp_int *mp, int_ptr_t z)
 {
-  uint_ptr_t w = z;
+  uint_ptr_t w = convert(uint_ptr_t, z);
   uint_ptr_t v = z >= 0 ? w : -w;
   mp_err err = mp_set_uintptr(mp, v);
 

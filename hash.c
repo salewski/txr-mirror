@@ -395,7 +395,7 @@ static ucnum eql_hash(val obj, int *count)
     case NIL:
       return convert(ucnum, -1);
     case BGNUM:
-      return mp_hash(mp(obj));
+      return convert(ucnum, mp_hash(mp(obj)));
     case FLNUM:
       return hash_double(obj->fl.n);
     case RNG:
@@ -409,9 +409,9 @@ static ucnum eql_hash(val obj, int *count)
       }
     }
   case TAG_CHR:
-    return c_chr(obj);
+    return convert(ucnum, c_chr(obj));
   case TAG_NUM:
-    return c_num(obj, self);
+    return convert(ucnum, c_num(obj, self));
   case TAG_LIT:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
@@ -437,9 +437,9 @@ static ucnum eq_hash(val obj)
       return coerce(ucnum, obj) >> 5;
     }
   case TAG_CHR:
-    return c_chr(obj);
+    return convert(ucnum, c_chr(obj));
   case TAG_NUM:
-    return c_num(obj, self);
+    return convert(ucnum, c_num(obj, self));
   case TAG_LIT:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
@@ -1204,7 +1204,7 @@ void hash_iter_init(struct hash_iter *hi, val hash, val self)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   hi->next = 0;
-  hi->chain = -1;
+  hi->chain = convert(ucnum, -1);
   hi->cons = nil;
   hi->hash = hash;
   h->usecount++;
@@ -1214,7 +1214,7 @@ void us_hash_iter_init(struct hash_iter *hi, val hash)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
   hi->next = 0;
-  hi->chain = -1;
+  hi->chain = convert(ucnum, -1);
   hi->cons = nil;
   hi->hash = hash;
   h->usecount++;

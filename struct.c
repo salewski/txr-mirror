@@ -1852,7 +1852,7 @@ static ucnum struct_inst_hash(val obj, int *count, ucnum seed)
   check_init_lazy_struct(obj, si);
 
   for (sl = 0; sl < nslots; sl++) {
-    cnum hash = equal_hash(si->slot[sl], count, seed);
+    ucnum hash = equal_hash(si->slot[sl], count, seed);
     out += hash;
     out &= NUM_MAX;
   }

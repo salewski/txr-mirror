@@ -283,13 +283,13 @@ static int enable_raw_mode(lino_t *ls) {
     raw = ls->orig_termios;  /* modify the original mode */
     /* input modes: no break, no CR to NL, no parity check, no strip char,
      * no start/stop output control. */
-    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    raw.c_iflag &= convert(tcflag_t, ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON));
     /* we don't change any output modes (c_oflag) */
     /* control modes - set 8 bit chars */
     raw.c_cflag |= (CS8);
     /* local modes - choing off, canonical off, no extended functions,
      * no signal chars (^Z,^C) */
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+    raw.c_lflag &= convert(tcflag_t, ~(ECHO | ICANON | IEXTEN | ISIG));
     /* control chars - set return condition: min number of bytes and timer.
      * We want read to return every single byte, without timeout. */
     raw.c_cc[VMIN] = 1; raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
