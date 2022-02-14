@@ -300,7 +300,8 @@ static void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
 
 static int L0_contains(cset_L0_t *L0, wchar_t ch)
 {
-  return ((*L0)[CHAR_SET_INDEX(ch)] & (1 << CHAR_SET_BIT(ch))) != 0;
+  return ((*L0)[CHAR_SET_INDEX(ch)] &
+          (convert(bitcell_t, 1) << CHAR_SET_BIT(ch))) != 0;
 }
 
 static int L1_full(cset_L1_t *L1)

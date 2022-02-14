@@ -3385,35 +3385,35 @@ mp_err s_mp_mul_2d(mp_int *mp, mp_digit d)
     return res;
 
   dp = DIGITS(mp); used = USED(mp);
-  d %= DIGIT_BIT;
 
-  mask = (convert(mp_digit, 1) << d) - 1;
+  if ((d %= DIGIT_BIT) != 0) {
+    mask = (convert(mp_digit, 1) << d) - 1;
 
-  /* If the shift requires another digit, make sure we've got one to
-     work with */
-  if ((dp[used - 1] >> (DIGIT_BIT - d)) & mask) {
-    if ((res = s_mp_grow(mp, used + 1)) != MP_OKAY)
-      return res;
-    dp = DIGITS(mp);
+    /* If the shift requires another digit, make sure we've got one to
+       work with */
+    if ((dp[used - 1] >> (DIGIT_BIT - d)) & mask) {
+      if ((res = s_mp_grow(mp, used + 1)) != MP_OKAY)
+        return res;
+      dp = DIGITS(mp);
+    }
+
+    /* Do the shifting... */
+    save = 0;
+    for (ix = 0; ix < used; ix++) {
+      next = (dp[ix] >> (DIGIT_BIT - d)) & mask;
+      dp[ix] = (dp[ix] << d) | save;
+      save = next;
+    }
+
+    /* If, at this point, we have a nonzero carryout into the next
+     * digit, we'll increase the size by one digit, and store it...
+     */
+    if (save) {
+      dp[used] = save;
+      USED(mp) += 1;
+    }
   }
 
-  /* Do the shifting... */
-  save = 0;
-  for (ix = 0; ix < used; ix++) {
-    next = (dp[ix] >> (DIGIT_BIT - d)) & mask;
-    dp[ix] = (dp[ix] << d) | save;
-    save = next;
-  }
-
-  /* If, at this point, we have a nonzero carryout into the next
-   * digit, we'll increase the size by one digit, and store it...
-   */
-  if (save) {
-    dp[used] = save;
-    USED(mp) += 1;
-  }
-
-  s_mp_clamp(mp);
   return MP_OKAY;
 }
 

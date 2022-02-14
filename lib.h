@@ -491,7 +491,11 @@ INLINE wchar_t *litptr(val obj)
 
 INLINE val num_fast(cnum n)
 {
+#if HAVE_UBSAN
+  return coerce(val, (n * (1 << TAG_SHIFT)) | TAG_NUM);
+#else
   return coerce(val, (n << TAG_SHIFT) | TAG_NUM);
+#endif
 }
 
 INLINE mp_int *mp(val bign)
