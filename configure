@@ -1210,6 +1210,27 @@ else
   printf "done\n"
 fi
 
+printf "Checking for undefined behavior sanitizer (\"ubsan\") being in effect ... "
+
+cat > conftest.c <<!
+#include <stdio.h>
+
+int main(void)
+{
+   return 0;
+}
+!
+if conftest ; then
+  if strings conftest | grep -q -i ubsan ; then
+    printf "yes\n"
+    printf "#define HAVE_UBSAN 1\n" >> config.h
+  else
+    printf "no\n"
+  fi
+else
+  printf "failed\n"
+fi
+
 #
 # Detect Apple environment. We need _DARWIN_C_SOURCE.
 #
