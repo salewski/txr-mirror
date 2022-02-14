@@ -384,6 +384,10 @@ TESTS_OK := $(addprefix tst/,\
                   $(patsubst %.txr,%.ok,\
                      $(wildcard $(addprefix tests/*/*.,txr tl)))))
 
+ifneq ($(have_ubsan),)
+TESTS_OK := $(filter-out %/012/stack.ok,$(TESTS_OK))
+endif
+
 .PHONY: tests
 tests: $(TESTS_OK)
 	$(V)echo "** tests passed!"

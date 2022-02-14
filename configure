@@ -205,6 +205,7 @@ have_windres=
 have_posix_sigs=
 have_sockets=
 have_git=
+have_ubsan=
 have_pwuid=
 have_grgid=
 have_alloca=
@@ -956,6 +957,8 @@ EXE := $exe
 
 have_git := $have_git
 
+have_ubsan := $have_ubsan
+
 add_win_res := $([ -n "$have_windows_h" -a -n "$have_windres" ] && echo "y")
 
 TXR_CC := $cc
@@ -1224,6 +1227,7 @@ if conftest ; then
   if strings conftest | grep -q -i ubsan ; then
     printf "yes\n"
     printf "#define HAVE_UBSAN 1\n" >> config.h
+    have_ubsan=y
   else
     printf "no\n"
   fi
