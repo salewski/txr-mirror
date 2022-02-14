@@ -366,7 +366,9 @@ val random(val state, val modulus)
     ucnum bits = mp_count_bits(m) - mp_is_pow_two(m);
     ucnum rands_needed = (bits + 32 - 1) / 32;
     ucnum msb_rand_bits = bits % 32;
-    rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
+    rand32_t msb_rand_mask = convert(rand32_t, -1) >> (msb_rand_bits
+                                                       ? 32 - msb_rand_bits
+                                                       : 0);
     val out = make_bignum();
     mp_int *om = mp(out);
 
