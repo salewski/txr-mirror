@@ -64898,8 +64898,9 @@ function.
 .coNP Structure @ time
 .synb
 .mets (defstruct time nil
-.mets \ \  year month day hour min sec dst
-.mets \ \  gmtoff zone)
+.mets \ \  year month day hour min sec
+.mets \ \  wday yday
+.mets \ \  dst gmtoff zone)
 .syne
 .desc
 The
@@ -64927,13 +64928,17 @@ uses a zero-based month.  The
 slot is a \*(TL Boolean value. The slots
 .codn hour ,
 .codn min ,
+.codn sec ,
+.code wday
 and
-.code sec
+.code yday
 correspond directly to
 .codn tm_hour ,
 .codn tm_min ,
+.codn tm_sec ,
+.code tm_wday
 and
-.codn tm_sec .
+.codn tm_yday .
 
 The slot
 .code gmtoff

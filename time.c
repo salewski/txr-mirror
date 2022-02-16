@@ -45,7 +45,7 @@
 #include "time.h"
 
 val time_s, time_local_s, time_utc_s, time_string_s, time_parse_s;
-val year_s, month_s, day_s, hour_s, min_s, sec_s;
+val year_s, month_s, day_s, hour_s, min_s, sec_s, wday_s, yday_s;
 val dst_s, gmtoff_s, zone_s;
 
 val time_sec(void)
@@ -164,6 +164,8 @@ static void tm_to_time_struct(val time_struct, struct tm *ptm)
   slotset(time_struct, hour_s, num_fast(ptm->tm_hour));
   slotset(time_struct, min_s, num_fast(ptm->tm_min));
   slotset(time_struct, sec_s, num_fast(ptm->tm_sec));
+  slotset(time_struct, wday_s, num_fast(ptm->tm_wday));
+  slotset(time_struct, yday_s, num_fast(ptm->tm_yday));
   slotset(time_struct, dst_s, tnil(ptm->tm_isdst));
 #if HAVE_TM_GMTOFF
   slotset(time_struct, gmtoff_s, num_fast(ptm->TM_GMTOFF));
@@ -233,8 +235,9 @@ val time_struct_utc(val time)
 
 static void time_fields_to_tm(struct tm *ptm,
                               val year, val month, val day,
-                              val hour, val min, val sec, val dst,
-                              val self)
+                              val hour, val min, val sec,
+                              val wday, val yday,
+                              val dst, val self)
 {
   uses_or2;
   ptm->tm_year = c_num(or2(year, zero), self) - 1900;
@@ -243,6 +246,8 @@ static void time_fields_to_tm(struct tm *ptm,
   ptm->tm_hour = c_num(or2(hour, zero), self);
   ptm->tm_min = c_num(or2(min, zero), self);
   ptm->tm_sec = c_num(or2(sec, zero), self);
+  ptm->tm_wday = c_num(or2(wday, zero), self);
+  ptm->tm_yday = c_num(or2(yday, zero), self);
 
   if (!dst)
     ptm->tm_isdst = 0;
@@ -268,6 +273,8 @@ static void time_struct_to_tm(struct tm *ptm, val time_struct, val strict,
   val hour = slot(time_struct, hour_s);
   val min = slot(time_struct, min_s);
   val sec = slot(time_struct, sec_s);
+  val wday = slot(time_struct, wday_s);
+  val yday = slot(time_struct, yday_s);
   val dst = slot(time_struct, dst_s);
 
   if (!strict) {
@@ -277,9 +284,12 @@ static void time_struct_to_tm(struct tm *ptm, val time_struct, val strict,
     hour = (hour ? hour : zero);
     min = (min ? min : zero);
     sec = (sec ? sec : zero);
+    wday = (wday ? wday : zero);
+    yday = (yday ? yday : zero);
   }
 
-  time_fields_to_tm(ptm, year, month, day, hour, min, sec, dst, self);
+  time_fields_to_tm(ptm, year, month, day, hour, min, sec,
+                    wday, yday, dst, self);
 }
 
 static val make_time_impl(time_t (*pmktime)(struct tm *),
@@ -291,7 +301,7 @@ static val make_time_impl(time_t (*pmktime)(struct tm *),
   time_t time;
 
   time_fields_to_tm(&local, year, month, day,
-                    hour, minute, second, isdst, self);
+                    hour, minute, second, nil, nil, isdst, self);
   time = pmktime(&local);
 
   return time == -1 ? nil : num_time(time);
@@ -486,6 +496,8 @@ void time_init(void)
   hour_s = intern(lit("hour"), user_package);
   min_s = intern(lit("min"), user_package);
   sec_s = intern(lit("sec"), user_package);
+  wday_s = intern(lit("wday"), user_package);
+  yday_s = intern(lit("yday"), user_package);
   dst_s = intern(lit("dst"), user_package);
   gmtoff_s = intern(lit("gmtoff"), user_package);
   zone_s = intern(lit("zone"), user_package);
@@ -494,8 +506,9 @@ void time_init(void)
                              list(time_local_s, time_utc_s,
                                   time_string_s, time_parse_s, nao),
                              list(year_s, month_s, day_s,
-                                  hour_s, min_s, sec_s, dst_s,
-                                  gmtoff_s, zone_s, nao),
+                                  hour_s, min_s, sec_s,
+                                  wday_s, yday_s,
+                                  dst_s, gmtoff_s, zone_s, nao),
                              nil, nil, nil, nil);
 
   static_slot_set(time_st, time_local_s, func_f1(nil, time_meth));
