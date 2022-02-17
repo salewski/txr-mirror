@@ -19208,7 +19208,13 @@ bindings. In \*(TL, they are considered bindings.
 The ANSI Common Lisp
 .code fboundp
 yields true if its argument has a function, macro or operator
-binding. The behavior of the Common Lisp expression
+binding, whereas the \*(TL
+.code fboundp
+does not consider operators or macros.
+The ANSI CL
+.code fboundp
+does not yield true for lambda expressions.
+Behavior similar to the Common Lisp expression
 .code "(fboundp x)"
 in Common Lisp can be obtained in \*(TL using the
 
@@ -19216,7 +19222,9 @@ in Common Lisp can be obtained in \*(TL using the
   (or (fboundp x) (mboundp x) (special-operator-p x))
 .brev
 
-expression.
+expression, except that this will also yield true when
+.code x
+is a lambda expression.
 
 The
 .code mboundp
