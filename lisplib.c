@@ -729,7 +729,7 @@ static val compiler_instantiate(val set_fun)
 static val compiler_set_entries(val dlt, val fun)
 {
   val sys_name[] = {
-    lit("compiler"),
+    lit("compiler"), lit("*in-compilation-unit*"),
     nil
   };
   val name[] = {
