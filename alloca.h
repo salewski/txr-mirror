@@ -37,3 +37,5 @@
 #error portme
 #endif
 #endif
+
+#define zalloca(size) memset(alloca(size), 0, size)

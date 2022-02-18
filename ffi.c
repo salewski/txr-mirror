@@ -44,11 +44,6 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if HAVE_SOCKETS
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#endif
 #if HAVE_MMAP
 #include <sys/mman.h>
 #include <unistd.h>
@@ -74,8 +69,6 @@
 #endif
 #include "ffi.h"
 #include "txr.h"
-
-#define zalloca(size) memset(alloca(size), 0, size)
 
 #define alignof(type) offsetof(struct {char x; type y;}, y)
 
@@ -239,7 +232,7 @@ static struct txr_ffi_type *ffi_type_struct(val obj)
   return coerce(struct txr_ffi_type *, obj->co.handle);
 }
 
-static struct txr_ffi_type *ffi_type_struct_checked(val self, val obj)
+struct txr_ffi_type *ffi_type_struct_checked(val self, val obj)
 {
   return coerce(struct txr_ffi_type *, cobj_handle(self, obj, ffi_type_cls));
 }
@@ -358,6 +351,21 @@ static struct cobj_ops ffi_type_enum_ops =
                 cobj_destroy_free_op,
                 ffi_enum_type_mark,
                 cobj_eq_hash_op);
+
+cnum ffi_type_size(struct txr_ffi_type *tft)
+{
+  return tft->size;
+}
+
+void ffi_type_put(struct txr_ffi_type *tft, val obj, mem_t *dst, val self)
+{
+  tft->put(tft, obj, dst, self);
+}
+
+val ffi_type_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return tft->get(tft, src, self);
+}
 
 #if HAVE_LIBFFI
 
@@ -3728,7 +3736,7 @@ static val make_ffi_type_enum(val syntax, val enums,
   return type_copy;
 }
 
-static val ffi_type_lookup(val sym)
+val ffi_type_lookup(val sym)
 {
   return gethash(ffi_typedef_hash, sym);
 }
@@ -4640,10 +4648,15 @@ static void ffi_init_types(void)
   ffi_typedef(bool_s, ffi_type_compile(cons(bool_s, cons(uchar_s, nil))));
 }
 
+static val type_by_size[2][16];
+
+val ffi_type_by_size(int unsig, size_t size)
+{
+  return type_by_size[unsig][size];
+}
+
 static void ffi_init_extra_types(void)
 {
-  val type_by_size[2][18] = { { 0 }, { 0 } };
-
 #if HAVE_I64
   type_by_size[0][sizeof (i64_t)] = ffi_type_lookup(int64_s);
   type_by_size[1][sizeof (i64_t)] = ffi_type_lookup(uint64_s);
@@ -4728,11 +4741,6 @@ static void ffi_init_extra_types(void)
               type_by_size[convert(ssize_t, -1) > 0][sizeof (ssize_t)]);
   ffi_typedef(intern(lit("uid-t"), user_package),
               type_by_size[convert(uid_t, -1) > 0][sizeof (uid_t)]);
-#endif
-
-#if HAVE_SOCKETS
-  ffi_typedef(intern(lit("socklen-t"), user_package),
-              type_by_size[convert(socklen_t, -1) > 0][sizeof (socklen_t)]);
 #endif
 
   ffi_typedef(intern(lit("longlong"), user_package),
@@ -6698,65 +6706,6 @@ static val dyn_size(val type, val obj)
   return num(tft->dynsize(tft, obj, self));
 }
 
-#if HAVE_SOCKETS
-
-static val sock_opt(val sock, val level, val option, val type_opt)
-{
-  val self = lit("sock-opt");
-  val sfd = stream_fd(sock);
-  int lvl = c_int(level, self);
-  int opt = c_int(option, self);
-  val type = default_arg(type_opt, ffi_type_lookup(int_s));
-  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-
-  if (!sfd) {
-    uw_throwf(socket_error_s, lit("~a: cannot get option on ~s"),
-              self, sock, nao);
-  } else {
-    socklen_t size = convert(socklen_t, tft->size);
-    mem_t *data = coerce(mem_t *, zalloca(size));
-    if (getsockopt(c_num(sfd, self), lvl, opt, data, &size) != 0)
-      uw_ethrowf(socket_error_s, lit("~a failed on ~s: ~d/~s"),
-                 self, sock, num(errno), errno_to_str(errno), nao);
-    /* TODO: Add a separate function to handle options with
-     * variable-size values, for example the platform-specific
-     * SO_BINDTODEVICE.
-     * (Or perhaps add an optional argument following type_opt
-     * specifying the requested length of the value, presumably of type
-     * carray.) */
-    if (size != convert(socklen_t, tft->size))
-      uw_throwf(socket_error_s, lit("~a: variable-size option on ~s"),
-                self, sock, nao);
-    return tft->get(tft, data, self);
-  }
-}
-
-static val sock_set_opt(val sock, val level, val option, val value,
-                        val type_opt)
-{
-  val self = lit("sock-set-opt");
-  val sfd = stream_fd(sock);
-  int lvl = c_int(level, self);
-  int opt = c_int(option, self);
-  val type = default_arg(type_opt, ffi_type_lookup(int_s));
-  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-
-  if (!sfd) {
-    uw_throwf(socket_error_s, lit("~a: cannot set option on ~s"),
-              self, sock, nao);
-  } else {
-    socklen_t size = convert(socklen_t, tft->size);
-    mem_t *data = coerce(mem_t *, zalloca(size));
-    tft->put(tft, value, data, self);
-    if (setsockopt(c_num(sfd, self), lvl, opt, data, size) != 0)
-      uw_ethrowf(socket_error_s, lit("~a failed on ~s: ~d/~s"),
-                 self, sock, num(errno), errno_to_str(errno), nao);
-    return value;
-  }
-}
-
-#endif
-
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -6954,39 +6903,6 @@ void ffi_init(void)
   reg_fun(intern(lit("get-obj"), user_package), func_n2o(get_obj, 1));
   reg_fun(intern(lit("fill-obj"), user_package), func_n3o(fill_obj, 2));
   reg_fun(intern(lit("dyn-size"), system_package), func_n2(dyn_size));
-#if HAVE_SOCKETS
-  reg_fun(intern(lit("sock-opt"), user_package), func_n4o(sock_opt, 3));
-  reg_fun(intern(lit("sock-set-opt"), user_package), func_n5o(sock_set_opt, 4));
-  reg_varl(intern(lit("sol-socket"), user_package), num_fast(SOL_SOCKET));
-  reg_varl(intern(lit("ipproto-ip"), user_package), num_fast(IPPROTO_IP));
-  reg_varl(intern(lit("ipproto-ipv6"), user_package), num_fast(IPPROTO_IPV6));
-  reg_varl(intern(lit("ipproto-tcp"), user_package), num_fast(IPPROTO_TCP));
-  reg_varl(intern(lit("ipproto-udp"), user_package), num_fast(IPPROTO_UDP));
-  reg_varl(intern(lit("so-acceptconn"), user_package), num_fast(SO_ACCEPTCONN));
-  reg_varl(intern(lit("so-broadcast"), user_package), num_fast(SO_BROADCAST));
-  reg_varl(intern(lit("so-debug"), user_package), num_fast(SO_DEBUG));
-  reg_varl(intern(lit("so-dontroute"), user_package), num_fast(SO_DONTROUTE));
-  reg_varl(intern(lit("so-error"), user_package), num_fast(SO_ERROR));
-  reg_varl(intern(lit("so-keepalive"), user_package), num_fast(SO_KEEPALIVE));
-  reg_varl(intern(lit("so-linger"), user_package), num_fast(SO_LINGER));
-  reg_varl(intern(lit("so-oobinline"), user_package), num_fast(SO_OOBINLINE));
-  reg_varl(intern(lit("so-rcvbuf"), user_package), num_fast(SO_RCVBUF));
-  reg_varl(intern(lit("so-rcvlowat"), user_package), num_fast(SO_RCVLOWAT));
-  reg_varl(intern(lit("so-rcvtimeo"), user_package), num_fast(SO_RCVTIMEO));
-  reg_varl(intern(lit("so-reuseaddr"), user_package), num_fast(SO_REUSEADDR));
-  reg_varl(intern(lit("so-sndbuf"), user_package), num_fast(SO_SNDBUF));
-  reg_varl(intern(lit("so-sndlowat"), user_package), num_fast(SO_SNDLOWAT));
-  reg_varl(intern(lit("so-sndtimeo"), user_package), num_fast(SO_SNDTIMEO));
-  reg_varl(intern(lit("so-type"), user_package), num_fast(SO_TYPE));
-  reg_varl(intern(lit("ipv6-join-group"), user_package), num_fast(IPV6_JOIN_GROUP));
-  reg_varl(intern(lit("ipv6-leave-group"), user_package), num_fast(IPV6_LEAVE_GROUP));
-  reg_varl(intern(lit("ipv6-multicast-hops"), user_package), num_fast(IPV6_MULTICAST_HOPS));
-  reg_varl(intern(lit("ipv6-multicast-if"), user_package), num_fast(IPV6_MULTICAST_IF));
-  reg_varl(intern(lit("ipv6-multicast-loop"), user_package), num_fast(IPV6_MULTICAST_LOOP));
-  reg_varl(intern(lit("ipv6-unicast-hops"), user_package), num_fast(IPV6_UNICAST_HOPS));
-  reg_varl(intern(lit("ipv6-v6only"), user_package), num_fast(IPV6_V6ONLY));
-  reg_varl(intern(lit("tcp-nodelay"), user_package), num_fast(TCP_NODELAY));
-#endif
   ffi_typedef_hash = make_hash(hash_weak_none, nil);
   ffi_struct_tag_hash = make_hash(hash_weak_none, nil);
   ffi_init_types();

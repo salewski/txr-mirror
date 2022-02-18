@@ -77,6 +77,7 @@
 #include "buf.h"
 #include "ffi.h"
 #include "chksum.h"
+#include "socket.h"
 #include "txr.h"
 #include "debug.h"
 
@@ -14434,6 +14435,9 @@ void init(val *stack_bottom)
   cadr_init();
   time_init();
   chksum_init();
+#if HAVE_SOCKETS
+  sock_init();
+#endif
 
   cobj_populate_hash();
 

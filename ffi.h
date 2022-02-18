@@ -26,6 +26,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+struct txr_ffi_type;
+
 extern val uint8_s, int8_s;
 extern val uint16_s, int16_s;
 extern val uint32_s, int32_s;
@@ -74,7 +76,13 @@ extern val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 extern struct cobj_class *carray_cls;
 
+struct txr_ffi_type *ffi_type_struct_checked(val self, val typeobj);
+cnum ffi_type_size(struct txr_ffi_type *);
+void ffi_type_put(struct txr_ffi_type *, val obj, mem_t *dst, val self);
+val ffi_type_get(struct txr_ffi_type *, mem_t *src, val self);
+
 val ffi_type_compile(val syntax);
+val ffi_type_lookup(val sym);
 val ffi_type_operator_p(val sym);
 val ffi_type_p(val sym);
 val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes,
@@ -151,5 +159,6 @@ val zero_fill(val type, val obj);
 val put_obj(val obj, val type, val stream);
 val get_obj(val type, val stream);
 val fill_obj(val obj, val type, val stream);
+val ffi_type_by_size(int unsig, size_t size);
 void ffi_init(void);
 void ffi_compat_fixup(int compat_ver);
