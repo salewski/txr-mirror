@@ -64,6 +64,8 @@
 #include "sysif.h"
 #include "itypes.h"
 #include "ffi.h"
+#include "txr.h"
+#include "autoload.h"
 #include "socket.h"
 
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
@@ -1212,13 +1214,60 @@ static val sock_set_opt(val sock, val level, val option, val value,
   }
 }
 
-void sock_init(void)
+static val sock_set_entries(val fun)
 {
-  ffi_typedef(intern(lit("socklen-t"), user_package),
-              ffi_type_by_size(convert(socklen_t, -1) > 0, sizeof (socklen_t)));
+  val sname[] = {
+    lit("sockaddr"), lit("sockaddr-in"), lit("sockaddr-in6"),
+    lit("sockaddr-un"), lit("addrinfo"),
+    nil
+  };
+  val vname[] = {
+    lit("af-unspec"), lit("af-unix"), lit("af-inet"), lit("af-inet6"),
+    lit("sock-stream"), lit("sock-dgram"),
+    lit("inaddr-any"), lit("inaddr-loopback"),
+    lit("in6addr-any"), lit("in6addr-loopback"),
+    lit("sock-nonblock"), lit("sock-cloexec"),
+    lit("ai-passive"), lit("ai-canonname"), lit("ai-numerichost"),
+    lit("ai-v4mapped"), lit("ai-all"), lit("ai-addrconfig"),
+    lit("ai-numericserv"), lit("sol-socket"), lit("ipproto-ip"),
+    lit("ipproto-ipv6"), lit("ipproto-tcp"), lit("ipproto-udp"),
+    lit("so-acceptconn"), lit("so-broadcast"), lit("so-debug"),
+    lit("so-dontroute"), lit("so-error"), lit("so-keepalive"),
+    lit("so-linger"), lit("so-oobinline"), lit("so-rcvbuf"),
+    lit("so-rcvlowat"), lit("so-rcvtimeo"), lit("so-reuseaddr"),
+    lit("so-sndbuf"), lit("so-sndlowat"), lit("so-sndtimeo"),
+    lit("so-type"), lit("ipv6-join-group"), lit("ipv6-leave-group"),
+    lit("ipv6-multicast-hops"), lit("ipv6-multicast-if"),
+    lit("ipv6-multicast-loop"), lit("ipv6-unicast-hops"),
+    lit("ipv6-v6only"), lit("tcp-nodelay"),
+    nil
+  };
+  val name[] = {
+    lit("getaddrinfo"),
+    lit("str-inaddr"), lit("str-in6addr"),
+    lit("str-inaddr-net"), lit("str-in6addr-net"),
+    lit("inaddr-str"), lit("in6addr-str"),
+    lit("shut-rd"), lit("shut-wr"), lit("shut-rdwr"),
+    lit("open-socket"), lit("open-socket-pair"),
+    lit("sock-bind"), lit("sock-connect"), lit("sock-listen"),
+    lit("sock-accept"), lit("sock-shutdown"), lit("open-socket"),
+    lit("open-socket-pair"), lit("sock-send-timeout"), lit("sock-recv-timeout"),
+    lit("sock-opt"), lit("sock-set-opt"),
+    nil
+  };
+  val name_noload[] = {
+    lit("family"), lit("addr"), lit("port"), lit("flow-info"),
+    lit("scope-id"), lit("prefix"), lit("path"), lit("flags"), lit("socktype"),
+    lit("protocol"), lit("canonname"), nil
+  };
+  autoload_set(al_struct, sname, fun);
+  autoload_set(al_var, vname, fun);
+  autoload_set(al_fun, name, fun);
+  autoload_intern(name_noload);
+  return nil;
 }
 
-void sock_load_init(void)
+static val sock_instantiate(void)
 {
   sockaddr_in_s = intern(lit("sockaddr-in"), user_package);
   sockaddr_in6_s = intern(lit("sockaddr-in6"), user_package);
@@ -1315,8 +1364,19 @@ void sock_load_init(void)
   reg_varl(intern(lit("tcp-nodelay"), user_package), num_fast(TCP_NODELAY));
 
   fill_stream_ops(&dgram_strm_ops);
+
   dgram_strm_ops.get_sock_family = dgram_get_sock_family;
   dgram_strm_ops.get_sock_type = dgram_get_sock_type;
   dgram_strm_ops.get_sock_peer = dgram_get_sock_peer;
   dgram_strm_ops.set_sock_peer = dgram_set_sock_peer;
+
+  load(scat2(stdlib_path, lit("socket")));
+  return nil;
+}
+
+void sock_init(void)
+{
+  ffi_typedef(intern(lit("socklen-t"), user_package),
+              ffi_type_by_size(convert(socklen_t, -1) > 0, sizeof (socklen_t)));
+  autoload_reg(sock_instantiate, sock_set_entries);
 }

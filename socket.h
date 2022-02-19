@@ -27,4 +27,3 @@
  */
 
 void sock_init(void);
-void sock_load_init(void);

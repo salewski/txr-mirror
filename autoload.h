@@ -41,3 +41,4 @@ val autoload_try_keyword(val sym);
 void autoload_set(al_ns_t ns, val *name, val fun);
 val autoload_reg(val (*instantiate)(void),
                  val (*set_entries)(val));
+void autoload_intern(val *namearray);
