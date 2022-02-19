@@ -358,7 +358,17 @@ static val sock_set_entries(val fun)
     lit("sock-nonblock"), lit("sock-cloexec"),
     lit("ai-passive"), lit("ai-canonname"), lit("ai-numerichost"),
     lit("ai-v4mapped"), lit("ai-all"), lit("ai-addrconfig"),
-    lit("ai-numericserv"),
+    lit("ai-numericserv"), lit("sol-socket"), lit("ipproto-ip"),
+    lit("ipproto-ipv6"), lit("ipproto-tcp"), lit("ipproto-udp"),
+    lit("so-acceptconn"), lit("so-broadcast"), lit("so-debug"),
+    lit("so-dontroute"), lit("so-error"), lit("so-keepalive"),
+    lit("so-linger"), lit("so-oobinline"), lit("so-rcvbuf"),
+    lit("so-rcvlowat"), lit("so-rcvtimeo"), lit("so-reuseaddr"),
+    lit("so-sndbuf"), lit("so-sndlowat"), lit("so-sndtimeo"),
+    lit("so-type"), lit("ipv6-join-group"), lit("ipv6-leave-group"),
+    lit("ipv6-multicast-hops"), lit("ipv6-multicast-if"),
+    lit("ipv6-multicast-loop"), lit("ipv6-unicast-hops"),
+    lit("ipv6-v6only"), lit("tcp-nodelay"),
     nil
   };
   val name[] = {
