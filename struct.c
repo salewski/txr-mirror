@@ -442,7 +442,7 @@ val make_struct_type(val name, val supers,
   val self = lit("make-struct-type");
   val iter;
 
-  lisplib_try_load(name);
+  lisplib_try_load_struct(name);
 
   if (built_in_type_p(name))
     uw_throwf(error_s, lit("~a: ~s is a built-in type"),
@@ -604,7 +604,7 @@ val find_struct_type(val sym)
 {
   uses_or2;
   return or2(gethash(struct_type_hash, sym),
-             if2(lisplib_try_load(sym),
+             if2(lisplib_try_load_struct(sym),
                  gethash(struct_type_hash, sym)));
 }
 
@@ -1199,7 +1199,7 @@ static loc lookup_slot_load(val inst, struct struct_inst *si, val sym)
 {
   loc ptr = lookup_slot(inst, si, sym);
   if (nullocp(ptr)) {
-    lisplib_try_load(sym);
+    lisplib_try_load_slot(sym);
     return lookup_slot(inst, si, sym);
   }
   return ptr;
@@ -1209,7 +1209,7 @@ static loc lookup_static_slot_load(struct struct_type *st, val sym)
 {
   loc ptr = lookup_static_slot(st, sym);
   if (nullocp(ptr)) {
-    lisplib_try_load(sym);
+    lisplib_try_load_slot(sym);
     return lookup_static_slot(st, sym);
   }
   return ptr;
@@ -1220,7 +1220,7 @@ static struct stslot *lookup_static_slot_desc_load(struct struct_type *st,
 {
   struct stslot *stsl = lookup_static_slot_desc(st, sym);
   if (stsl == 0) {
-    lisplib_try_load(sym);
+    lisplib_try_load_slot(sym);
     return lookup_static_slot_desc(st, sym);
   }
   return stsl;
@@ -1995,7 +1995,7 @@ val slot_types(val slot)
 {
   uses_or2;
   return or2(gethash(slot_type_hash, slot),
-             if2(lisplib_try_load(slot),
+             if2(lisplib_try_load_slot(slot),
                  gethash(slot_type_hash, slot)));
 }
 
@@ -2003,7 +2003,7 @@ val static_slot_types(val slot)
 {
   uses_or2;
   return or2(gethash(static_slot_type_hash, slot),
-             if2(lisplib_try_load(slot),
+             if2(lisplib_try_load_slot(slot),
                  gethash(static_slot_type_hash, slot)));
 }
 

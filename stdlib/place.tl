@@ -61,7 +61,7 @@
 
 (defun sys:get-place-macro (sym)
   (or [*place-macro* sym]
-      (progn (sys:try-load sym) [*place-macro* sym])))
+      (progn (sys:try-load-fun sym) [*place-macro* sym])))
 
 (defun sys:pl-expand (unex-place env)
   (while t

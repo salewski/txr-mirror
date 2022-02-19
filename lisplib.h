@@ -29,7 +29,12 @@
 extern val dl_table;
 extern val trace_loaded;
 void lisplib_init(void);
-val lisplib_try_load(val sym);
+val lisplib_try_load_fun(val sym);
+val lisplib_try_load_var(val sym);
+val lisplib_try_load_fun_var(val sym);
+val lisplib_try_load_slot(val sym);
+val lisplib_try_load_struct(val sym);
+val lisplib_try_load_keyword(val sym);
 void set_dlt_entries(val dlt, val *name, val fun);
 val dlt_register(val dlt,
                  val (*instantiate)(val),

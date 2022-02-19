@@ -1042,10 +1042,10 @@ void lisplib_init(void)
   dlt_register(dl_table, pic_instantiate, pic_set_entries);
   dlt_register(dl_table, constfun_instantiate, constfun_set_entries);
 
-  reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
+  reg_fun(intern(lit("try-load-fun"), system_package), func_n1(lisplib_try_load_fun));
 }
 
-val lisplib_try_load(val sym)
+static val lisplib_try_load(val sym)
 {
   val fun = gethash(dl_table, sym);
 
@@ -1061,4 +1061,34 @@ val lisplib_try_load(val sym)
      return t;
   }
   return nil;
+}
+
+val lisplib_try_load_fun(val sym)
+{
+  return lisplib_try_load(sym);
+}
+
+val lisplib_try_load_var(val sym)
+{
+  return lisplib_try_load(sym);
+}
+
+val lisplib_try_load_fun_var(val sym)
+{
+  return lisplib_try_load(sym);
+}
+
+val lisplib_try_load_slot(val sym)
+{
+  return lisplib_try_load(sym);
+}
+
+val lisplib_try_load_struct(val sym)
+{
+  return lisplib_try_load(sym);
+}
+
+val lisplib_try_load_keyword(val sym)
+{
+  return lisplib_try_load(sym);
 }
