@@ -53,7 +53,7 @@ EXTRA_OBJS-y :=
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o parser.o rand.o combi.o sysif.o
-OBJS += args.o lisplib.o cadr.o struct.o itypes.o buf.o jmp.o protsym.o ffi.o
+OBJS += args.o autoload.o cadr.o struct.o itypes.o buf.o jmp.o protsym.o ffi.o
 OBJS += strudel.o vm.o chksum.o chksums/sha256.o chksums/crc32.o chksums/md5.o
 OBJS += tree.o time.o psquare.o
 OBJS += linenoise/linenoise.o

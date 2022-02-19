@@ -29,7 +29,7 @@
 #include "lib.h"
 #include "eval.h"
 #include "stream.h"
-#include "lisplib.h"
+#include "autoload.h"
 #include "txr.h"
 #include "cadr.h"
 @  (repeat)

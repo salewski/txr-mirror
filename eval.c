@@ -51,7 +51,7 @@
 #include "match.h"
 #include "txr.h"
 #include "combi.h"
-#include "lisplib.h"
+#include "autoload.h"
 #include "struct.h"
 #include "cadr.h"
 #include "filter.h"
@@ -7482,7 +7482,7 @@ void eval_init(void)
   uw_register_subtype(case_error_s, error_s);
 
   atexit(run_load_hooks_atexit);
-  lisplib_init();
+  autoload_init();
 }
 
 void eval_compat_fixup(int compat_ver)

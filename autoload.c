@@ -39,7 +39,7 @@
 #include "debug.h"
 #include "txr.h"
 #include "socket.h"
-#include "lisplib.h"
+#include "autoload.h"
 
 int opt_dbg_autoload;
 val trace_loaded;
@@ -1033,7 +1033,7 @@ val autoload_reg(val (*instantiate)(val),
   return set_entries(func_f0(func_n1(set_entries), instantiate));
 }
 
-static void lisplib_init_tables(void)
+static void autoload_init_tables(void)
 {
   int i;
   for (i = 0; i <= al_max; i++) {
@@ -1042,9 +1042,9 @@ static void lisplib_init_tables(void)
   }
 }
 
-void lisplib_init(void)
+void autoload_init(void)
 {
-  lisplib_init_tables();
+  autoload_init_tables();
   autoload_reg(place_instantiate, place_set_entries);
   autoload_reg(ver_instantiate, ver_set_entries);
   autoload_reg(ifa_instantiate, ifa_set_entries);
@@ -1097,7 +1097,7 @@ void lisplib_init(void)
   reg_fun(intern(lit("autoload-try-fun"), system_package), func_n1(autoload_try_fun));
 }
 
-static val lisplib_try_load(al_ns_t ns, val sym)
+static val autoload_try(al_ns_t ns, val sym)
 {
   val fun = gethash(autoload_hash[ns], sym);
 
@@ -1117,12 +1117,12 @@ static val lisplib_try_load(al_ns_t ns, val sym)
 
 val autoload_try_fun(val sym)
 {
-  return lisplib_try_load(al_fun, sym);
+  return autoload_try(al_fun, sym);
 }
 
 val autoload_try_var(val sym)
 {
-  return lisplib_try_load(al_var, sym);
+  return autoload_try(al_var, sym);
 }
 
 val autoload_try_fun_var(val sym)
@@ -1134,15 +1134,15 @@ val autoload_try_fun_var(val sym)
 
 val autoload_try_slot(val sym)
 {
-  return lisplib_try_load(al_slot, sym);
+  return autoload_try(al_slot, sym);
 }
 
 val autoload_try_struct(val sym)
 {
-  return lisplib_try_load(al_struct, sym);
+  return autoload_try(al_struct, sym);
 }
 
 val autoload_try_keyword(val sym)
 {
-  return lisplib_try_load(al_key, sym);
+  return autoload_try(al_key, sym);
 }

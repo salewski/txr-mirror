@@ -31,7 +31,7 @@ typedef enum autoload_ns {
 } al_ns_t;
 
 extern val trace_loaded;
-void lisplib_init(void);
+void autoload_init(void);
 val autoload_try_fun(val sym);
 val autoload_try_var(val sym);
 val autoload_try_fun_var(val sym);
