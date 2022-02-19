@@ -394,28 +394,6 @@ static val sock_instantiate(void)
 
 #endif
 
-#if HAVE_TERMIOS
-
-static val termios_set_entries(val fun)
-{
-  val slname[] = {
-    lit("set-iflags"), lit("set-oflags"), lit("set-cflags"), lit("set-lflags"),
-    lit("clear-iflags"), lit("clear-oflags"), lit("clear-cflags"), lit("clear-lflags"),
-    lit("go-raw"), lit("go-cbreak"), lit("go-canon"),
-    lit("string-encode"), lit("string-decode"), nil
-  };
-  autoload_set(al_slot, slname, fun);
-  return nil;
-}
-
-static val termios_instantiate(void)
-{
-  load(scat2(stdlib_path, lit("termios")));
-  return nil;
-}
-
-#endif
-
 static val awk_set_entries(val fun)
 {
   val sys_sname[] = {
@@ -1026,9 +1004,6 @@ void autoload_init(void)
   autoload_reg(yield_instantiate, yield_set_entries);
 #if HAVE_SOCKETS
   autoload_reg(sock_instantiate, sock_set_entries);
-#endif
-#if HAVE_TERMIOS
-  autoload_reg(termios_instantiate, termios_set_entries);
 #endif
   autoload_reg(awk_instantiate, awk_set_entries);
   autoload_reg(build_instantiate, build_set_entries);

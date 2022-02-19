@@ -46,6 +46,8 @@
 #include "stream.h"
 #include "struct.h"
 #include "sysif.h"
+#include "txr.h"
+#include "autoload.h"
 #include "termios.h"
 
 val termios_s, iflag_s, oflag_s, cflag_s, lflag_s, cc_s, ispeed_s, ospeed_s;
@@ -371,6 +373,24 @@ static val decode_speeds(val termios)
   return termios;
 }
 
+static val termios_set_entries(val fun)
+{
+  val slname[] = {
+    lit("set-iflags"), lit("set-oflags"), lit("set-cflags"), lit("set-lflags"),
+    lit("clear-iflags"), lit("clear-oflags"), lit("clear-cflags"), lit("clear-lflags"),
+    lit("go-raw"), lit("go-cbreak"), lit("go-canon"),
+    lit("string-encode"), lit("string-decode"), nil
+  };
+  autoload_set(al_slot, slname, fun);
+  return nil;
+}
+
+static val termios_instantiate(void)
+{
+  load(scat2(stdlib_path, lit("termios")));
+  return nil;
+}
+
 void termios_init(void)
 {
   val termios_t;
@@ -583,4 +603,6 @@ void termios_init(void)
   reg_varl(intern(lit("tcsanow"), user_package), num_fast(TCSANOW));
   reg_varl(intern(lit("tcsadrain"), user_package), num_fast(TCSADRAIN));
   reg_varl(intern(lit("tcsaflush"), user_package), num_fast(TCSAFLUSH));
+
+  autoload_reg(termios_instantiate, termios_set_entries);
 }
