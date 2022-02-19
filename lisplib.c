@@ -1094,7 +1094,7 @@ void lisplib_init(void)
   autoload_reg(pic_instantiate, pic_set_entries);
   autoload_reg(constfun_instantiate, constfun_set_entries);
 
-  reg_fun(intern(lit("try-load-fun"), system_package), func_n1(lisplib_try_load_fun));
+  reg_fun(intern(lit("autoload-try-fun"), system_package), func_n1(autoload_try_fun));
 }
 
 static val lisplib_try_load(al_ns_t ns, val sym)
@@ -1115,34 +1115,34 @@ static val lisplib_try_load(al_ns_t ns, val sym)
   return nil;
 }
 
-val lisplib_try_load_fun(val sym)
+val autoload_try_fun(val sym)
 {
   return lisplib_try_load(al_fun, sym);
 }
 
-val lisplib_try_load_var(val sym)
+val autoload_try_var(val sym)
 {
   return lisplib_try_load(al_var, sym);
 }
 
-val lisplib_try_load_fun_var(val sym)
+val autoload_try_fun_var(val sym)
 {
   uses_or2;
-  return or2(lisplib_try_load_fun(sym),
-             lisplib_try_load_var(sym));
+  return or2(autoload_try_fun(sym),
+             autoload_try_var(sym));
 }
 
-val lisplib_try_load_slot(val sym)
+val autoload_try_slot(val sym)
 {
   return lisplib_try_load(al_slot, sym);
 }
 
-val lisplib_try_load_struct(val sym)
+val autoload_try_struct(val sym)
 {
   return lisplib_try_load(al_struct, sym);
 }
 
-val lisplib_try_load_keyword(val sym)
+val autoload_try_keyword(val sym)
 {
   return lisplib_try_load(al_key, sym);
 }

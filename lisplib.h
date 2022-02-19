@@ -32,12 +32,12 @@ typedef enum autoload_ns {
 
 extern val trace_loaded;
 void lisplib_init(void);
-val lisplib_try_load_fun(val sym);
-val lisplib_try_load_var(val sym);
-val lisplib_try_load_fun_var(val sym);
-val lisplib_try_load_slot(val sym);
-val lisplib_try_load_struct(val sym);
-val lisplib_try_load_keyword(val sym);
+val autoload_try_fun(val sym);
+val autoload_try_var(val sym);
+val autoload_try_fun_var(val sym);
+val autoload_try_slot(val sym);
+val autoload_try_struct(val sym);
+val autoload_try_keyword(val sym);
 void autoload_set(al_ns_t ns, val *name, val fun);
 val autoload_reg(val (*instantiate)(val),
                  val (*set_entries)(val));

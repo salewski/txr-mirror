@@ -529,7 +529,7 @@ val lookup_global_var(val sym)
 {
   uses_or2;
   return or2(gethash(top_vb, sym),
-             if2(lisplib_try_load_var(sym), gethash(top_vb, sym)));
+             if2(autoload_try_var(sym), gethash(top_vb, sym)));
 }
 
 val lookup_var(val env, val sym)
@@ -582,7 +582,7 @@ val lookup_sym_lisp1(val env, val sym)
   }
 
   return or3(gethash(top_vb, sym),
-             if2(lisplib_try_load_fun_var(sym),
+             if2(autoload_try_fun_var(sym),
                  gethash(top_vb, sym)),
              gethash(top_fb, sym));
 }
@@ -604,7 +604,7 @@ val lookup_fun(val env, val sym)
       val strct = cadr(sym);
       val slot = caddr(sym);
       val type = or2(find_struct_type(strct),
-                     if2(lisplib_try_load_struct(strct),
+                     if2(autoload_try_struct(strct),
                        find_struct_type(strct)));
       if (slot == init_k) {
         return cons(sym, struct_get_initfun(type));
@@ -634,7 +634,7 @@ val lookup_fun(val env, val sym)
   }
 
   return or2(gethash(top_fb, sym),
-             if2(lisplib_try_load_fun(sym), gethash(top_fb, sym)));
+             if2(autoload_try_fun(sym), gethash(top_fb, sym)));
 }
 
 val func_get_name(val fun, val env)
@@ -684,7 +684,7 @@ static val lookup_mac(val menv, val sym)
 
   if (nilp(menv)) {
     return or2(gethash(top_mb, sym),
-               if2(lisplib_try_load_fun(sym), gethash(top_mb, sym)));
+               if2(autoload_try_fun(sym), gethash(top_mb, sym)));
   } else  {
     type_check(lit("macro lookup"), menv, ENV);
 
@@ -703,7 +703,7 @@ static val lookup_symac(val menv, val sym)
 
   if (nilp(menv)) {
     return or2(gethash(top_smb, sym),
-               if2(lisplib_try_load_var(sym), gethash(top_smb, sym)));
+               if2(autoload_try_var(sym), gethash(top_smb, sym)));
   } else  {
     type_check(lit("symacro lookup"), menv, ENV);
 
@@ -722,7 +722,7 @@ static val lookup_symac_lisp1(val menv, val sym)
 
   if (nilp(menv)) {
     return or2(gethash(top_smb, sym),
-               if2(lisplib_try_load_var(sym), gethash(top_smb, sym)));
+               if2(autoload_try_var(sym), gethash(top_smb, sym)));
   } else  {
     type_check(lit("symacro lookup"), menv, ENV);
 
@@ -755,7 +755,7 @@ static val special_var_p(val sym)
 {
   uses_or2;
   return or2(gethash(special, sym),
-             if2(lisplib_try_load_var(sym), gethash(special, sym)));
+             if2(autoload_try_var(sym), gethash(special, sym)));
 }
 
 static val lexical_var_p(val menv, val sym)
@@ -1209,7 +1209,7 @@ static val expand_param_macro(val params, val body, val menv, val form)
       return cons(params, body);
 
     if (!pmac) {
-      lisplib_try_load_keyword(sym);
+      autoload_try_keyword(sym);
       pmac = gethash(pm_table, sym);
       if (!pmac)
         expand_error(form, lit("~s: keyword ~s has no param macro binding"),
@@ -2031,7 +2031,7 @@ static val rt_defvarl(val sym)
 {
   val self = lit("sys:defvarl");
   val new_p;
-  val cell = (lisplib_try_load_var(sym),
+  val cell = (autoload_try_var(sym),
               gethash_c(self, top_vb, sym, mkcloc(new_p)));
 
   if (new_p || !cdr(cell)) {
@@ -2048,7 +2048,7 @@ static val rt_defv(val sym)
 {
   val self = lit("sys:defv");
   val new_p;
-  val cell = (lisplib_try_load_var(sym),
+  val cell = (autoload_try_var(sym),
               gethash_c(self, top_vb, sym, mkcloc(new_p)));
 
   if (new_p) {
@@ -2082,7 +2082,7 @@ static val op_defsymacro(val form, val env)
 
   (void) env;
 
-  lisplib_try_load_var(sym);
+  autoload_try_var(sym);
   remhash(top_vb, sym);
   if (!opt_compat || opt_compat > 143)
     remhash(special, sym);
@@ -2092,7 +2092,7 @@ static val op_defsymacro(val form, val env)
 
 static val rt_defsymacro(val sym, val def)
 {
-  lisplib_try_load_var(sym);
+  autoload_try_var(sym);
   remhash(top_vb, sym);
   remhash(special, sym);
   sethash(top_smb, sym, cons(sym, def));
@@ -2114,7 +2114,7 @@ void trace_check(val name)
 
 static val rt_defun(val name, val function)
 {
-  lisplib_try_load_fun(name);
+  autoload_try_fun(name);
   sethash(top_fb, name, cons(name, function));
   uw_purge_deferred_warning(cons(fun_s, name));
   uw_purge_deferred_warning(cons(sym_s, name));
@@ -2123,7 +2123,7 @@ static val rt_defun(val name, val function)
 
 static val rt_defmacro(val sym, val name, val function)
 {
-  lisplib_try_load_fun(sym);
+  autoload_try_fun(sym);
   sethash(top_mb, sym, cons(name, function));
   return name;
 }
@@ -5852,7 +5852,7 @@ static val makunbound(val sym)
 {
   val env;
 
-  lisplib_try_load_var(sym);
+  autoload_try_var(sym);
 
   if (!opt_compat || opt_compat > 143) {
     for (env = dyn_env; env; env = env->e.up_env) {
@@ -5875,7 +5875,7 @@ static val makunbound(val sym)
 
 static val fmakunbound(val sym)
 {
-  lisplib_try_load_var(sym);
+  autoload_try_var(sym);
   remhash(top_fb, sym);
   if (opt_compat && opt_compat <= 127)
     remhash(top_mb, sym);
@@ -5885,7 +5885,7 @@ static val fmakunbound(val sym)
 
 static val mmakunbound(val sym)
 {
-  lisplib_try_load_fun(sym);
+  autoload_try_fun(sym);
   remhash(top_mb, sym);
   return sym;
 }
