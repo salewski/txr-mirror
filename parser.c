@@ -972,9 +972,7 @@ static void find_matching_syms(lino_completions_t *cpl,
                      if3(package == keyword_package && !force_qualify,
                          null_string,
                          package_name(package)));
-  val syms = ((kind == 'S' || kind == 'M')
-              ? hash_keys((get_slot_syms(package, is_cur, tnil(kind == 'M'))))
-              : get_visible_syms(package, is_cur != nil && !qualify));
+  val syms = get_visible_syms(package, is_cur != nil && !qualify);
 
   for ( ; syms; syms = cdr(syms)) {
     val sym = car(syms);
@@ -992,7 +990,13 @@ static void find_matching_syms(lino_completions_t *cpl,
           break;
         continue;
       case 'M':
+        if (static_slot_types(sym))
+          break;
+        continue;
       case 'S':
+        if (slot_types(sym))
+          break;
+        continue;
         break;
       case 'Q':
         if (mboundp(sym) || special_operator_p(sym))

@@ -86,7 +86,6 @@ val super_method(val strct, val slotsym);
 val uslot(val slot);
 val umethod(val slot, struct args *);
 val method_name(val fun);
-val get_slot_syms(val package, val is_current, val method_only);
 val slot_types(val slot);
 val static_slot_types(val slot);
 val slot_type_reg(val slot, val strct);

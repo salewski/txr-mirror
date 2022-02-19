@@ -1951,46 +1951,6 @@ val method_name(val fun)
   return nil;
 }
 
-val get_slot_syms(val package, val is_current, val method_only)
-{
-  val result_hash = make_hash(hash_weak_none, nil);
-  struct hash_iter sthi;
-  val sth_cell;
-
-  us_hash_iter_init(&sthi, struct_type_hash);
-
-  while ((sth_cell = hash_iter_next(&sthi))) {
-    val stype = us_cdr(sth_cell);
-    val sl_iter;
-    struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
-
-    for (sl_iter = st->slots; sl_iter; sl_iter = cdr(sl_iter)) {
-      val slot = car(sl_iter);
-
-      if (gethash(result_hash, slot))
-        continue;
-
-      if (!is_current && symbol_package(slot) != package)
-        continue;
-
-      if (!symbol_visible(package, slot))
-        continue;
-
-      if (method_only) {
-        loc ptr = lookup_static_slot(st, slot);
-        if (nullocp(ptr))
-          continue;
-        if (!functionp(deref(ptr)))
-          continue;
-      }
-
-      sethash(result_hash, slot, t);
-    }
-  }
-
-  return result_hash;
-}
-
 val slot_types(val slot)
 {
   uses_or2;
