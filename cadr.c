@@ -340,9 +340,8 @@ val cdddddr(val cons)
   return cdr(cdr(cdr(cdr(cdr(cons)))));
 }
 
-static val cadr_register(val set_fun)
+static val cadr_register(void)
 {
-  funcall1(set_fun, nil);
   reg_fun(intern(lit("caar"), user_package), func_n1(caar));
   reg_fun(intern(lit("cadr"), user_package), func_n1(cadr));
   reg_fun(intern(lit("cdar"), user_package), func_n1(cdar));

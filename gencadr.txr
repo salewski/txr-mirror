@@ -40,9 +40,8 @@ val c@{ad}r(val cons)
 }
 @  (end)
 
-static val cadr_register(val set_fun)
+static val cadr_register(void)
 {
-  funcall1(set_fun, nil);
 @  (repeat)
   reg_fun(intern(lit("c@{ad}r"), user_package), func_n1(c@{ad}r));
 @  (end)
