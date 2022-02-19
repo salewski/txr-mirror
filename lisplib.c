@@ -41,30 +41,36 @@
 #include "socket.h"
 #include "lisplib.h"
 
-val dl_table;
 int opt_dbg_autoload;
 val trace_loaded;
 
-static void set_dlt_entries_impl(val dlt, val *name, val fun, val package)
+static val autoload_hash[al_max + 1];
+
+static void autload_set_impl(al_ns_t ns, val *name, val fun, val package)
 {
   for (; *name; name++) {
     val sym = intern(*name, package);
 
     if (fun)
-      sethash(dlt, sym, fun);
+      sethash(autoload_hash[ns], sym, fun);
     else
-      remhash(dlt, sym);
+      remhash(autoload_hash[ns], sym);
   }
 }
 
-void set_dlt_entries(val dlt, val *name, val fun)
+void autoload_set(al_ns_t ns, val *name, val fun)
 {
-  set_dlt_entries_impl(dlt, name, fun, user_package);
+  autload_set_impl(ns, name, fun, user_package);
 }
 
-static void set_dlt_entries_sys(val dlt, val *name, val fun)
+static void autoload_sys_set(al_ns_t ns, val *name, val fun)
 {
-  set_dlt_entries_impl(dlt, name, fun, system_package);
+  autload_set_impl(ns, name, fun, system_package);
+}
+
+static void autoload_key_set(al_ns_t ns, val *name, val fun)
+{
+  autload_set_impl(ns, name, fun, keyword_package);
 }
 
 static void intern_only(val *name)
@@ -73,16 +79,19 @@ static void intern_only(val *name)
     intern(*name, user_package);
 }
 
-static val place_set_entries(val dlt, val fun)
+static val place_set_entries(val fun)
 {
   val sys_name[] = {
     lit("get-fun-getter-setter"), lit("get-mb"), lit("get-vb"),
     lit("register-simple-accessor"),
     nil
   };
-  val name[] = {
+  val vname[] = {
     lit("*place-clobber-expander*"), lit("*place-update-expander*"),
     lit("*place-delete-expander*"), lit("*place-macro*"),
+    nil
+  };
+  val name[] = {
     lit("get-update-expander"), lit("get-clobber-expander"),
     lit("get-delete-expander"),
     lit("place-form-p"),
@@ -103,8 +112,9 @@ static val place_set_entries(val dlt, val fun)
     nil
   };
 
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+  autoload_sys_set(al_fun, sys_name, fun);
+  autoload_set(al_var, vname, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -115,10 +125,10 @@ static val place_instantiate(val set_fun)
   return nil;
 }
 
-static val ver_set_entries(val dlt, val fun)
+static val ver_set_entries(val fun)
 {
-  val name[] = { lit("*lib-version*"), lit("lib-version"), nil };
-  set_dlt_entries(dlt, name, fun);
+  val vname[] = { lit("*lib-version*"), lit("lib-version"), nil };
+  autoload_set(al_var, vname, fun);
   return nil;
 }
 
@@ -129,12 +139,12 @@ static val ver_instantiate(val set_fun)
   return nil;
 }
 
-static val ifa_set_entries(val dlt, val fun)
+static val ifa_set_entries(val fun)
 {
   val name[] = {
     lit("ifa"), lit("whena"), lit("conda"), lit("condlet"), lit("it"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -145,10 +155,10 @@ static val ifa_instantiate(val set_fun)
   return nil;
 }
 
-static val txr_case_set_entries(val dlt, val fun)
+static val txr_case_set_entries(val fun)
 {
   val name[] = { lit("txr-if"), lit("txr-when"), lit("txr-case"), nil };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -159,14 +169,14 @@ static val txr_case_instantiate(val set_fun)
   return nil;
 }
 
-static val with_resources_set_entries(val dlt, val fun)
+static val with_resources_set_entries(val fun)
 {
   val name[] = {
     lit("with-resources"),
     lit("with-objects"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -177,7 +187,7 @@ static val with_resources_instantiate(val set_fun)
   return nil;
 }
 
-static val path_test_set_entries(val dlt, val fun)
+static val path_test_set_entries(val fun)
 {
   val name[] = {
     lit("path-exists-p"), lit("path-file-p"), lit("path-dir-p"),
@@ -193,8 +203,7 @@ static val path_test_set_entries(val dlt, val fun)
     lit("path-dir-empty"),
     nil
   };
-
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -205,7 +214,7 @@ static val path_test_instantiate(val set_fun)
   return nil;
 }
 
-static val struct_set_entries(val dlt, val fun)
+static val struct_set_entries(val fun)
 {
   val sys_name[] = {
     lit("define-method"), lit("rslotset"), nil
@@ -214,16 +223,20 @@ static val struct_set_entries(val dlt, val fun)
     lit("defstruct"), lit("qref"), lit("uref"), lit("new"), lit("lnew"),
     lit("new*"), lit("lnew*"),
     lit("meth"), lit("umeth"), lit("usl"), lit("defmeth"), lit("rslot"),
-    lit("*struct-clause-expander*"), lit("define-struct-clause"), nil
+    lit("define-struct-clause"), nil
+  };
+  val vname[] = {
+    lit("*struct-clause-expander*"), nil
   };
 
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+  autoload_sys_set(al_fun, sys_name, fun);
+  autoload_set(al_fun, name, fun);
+  autoload_set(al_var, vname, fun);
 
   if (fun)
-    sethash(dlt, struct_lit_s, fun);
+    sethash(autoload_hash[al_fun], struct_lit_s, fun);
   else
-    remhash(dlt, struct_lit_s);
+    remhash(autoload_hash[al_fun], struct_lit_s);
 
   return nil;
 }
@@ -235,7 +248,7 @@ static val struct_instantiate(val set_fun)
   return nil;
 }
 
-static val with_stream_set_entries(val dlt, val fun)
+static val with_stream_set_entries(val fun)
 {
   val name[] = {
     lit("with-out-string-stream"),
@@ -247,7 +260,7 @@ static val with_stream_set_entries(val dlt, val fun)
     lit("with-stream"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -258,10 +271,10 @@ static val with_stream_instantiate(val set_fun)
   return nil;
 }
 
-static val hash_set_entries(val dlt, val fun)
+static val hash_set_entries(val fun)
 {
   val name[] = { lit("with-hash-iter"), nil };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -272,14 +285,14 @@ static val hash_instantiate(val set_fun)
   return nil;
 }
 
-static val except_set_entries(val dlt, val fun)
+static val except_set_entries(val fun)
 {
   val name[] = {
     lit("catch"), lit("catch*"), lit("catch**"), lit("handle"), lit("handle*"),
     lit("ignwarn"), lit("macro-time-ignwarn"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -290,12 +303,12 @@ static val except_instantiate(val set_fun)
   return nil;
 }
 
-static val type_set_entries(val dlt, val fun)
+static val type_set_entries(val fun)
 {
   val name[] = {
     lit("typecase"), lit("etypecase"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -306,7 +319,7 @@ static val type_instantiate(val set_fun)
   return nil;
 }
 
-static val yield_set_entries(val dlt, val fun)
+static val yield_set_entries(val fun)
 {
   val sys_name[] = {
     lit("obtain-impl"), nil
@@ -317,9 +330,8 @@ static val yield_set_entries(val dlt, val fun)
     lit("suspend"), lit("hlet"), lit("hlet*"),
     nil
   };
-
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+  autoload_sys_set(al_fun, sys_name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -331,12 +343,14 @@ static val yield_instantiate(val set_fun)
 }
 
 #if HAVE_SOCKETS
-static val sock_set_entries(val dlt, val fun)
+static val sock_set_entries(val fun)
 {
-  val name[] = {
+  val sname[] = {
     lit("sockaddr"), lit("sockaddr-in"), lit("sockaddr-in6"),
     lit("sockaddr-un"), lit("addrinfo"),
-    lit("getaddrinfo"),
+    nil
+  };
+  val vname[] = {
     lit("af-unspec"), lit("af-unix"), lit("af-inet"), lit("af-inet6"),
     lit("sock-stream"), lit("sock-dgram"),
     lit("inaddr-any"), lit("inaddr-loopback"),
@@ -345,6 +359,10 @@ static val sock_set_entries(val dlt, val fun)
     lit("ai-passive"), lit("ai-canonname"), lit("ai-numerichost"),
     lit("ai-v4mapped"), lit("ai-all"), lit("ai-addrconfig"),
     lit("ai-numericserv"),
+    nil
+  };
+  val name[] = {
+    lit("getaddrinfo"),
     lit("str-inaddr"), lit("str-in6addr"),
     lit("str-inaddr-net"), lit("str-in6addr-net"),
     lit("inaddr-str"), lit("in6addr-str"),
@@ -361,7 +379,9 @@ static val sock_set_entries(val dlt, val fun)
     lit("scope-id"), lit("prefix"), lit("path"), lit("flags"), lit("socktype"),
     lit("protocol"), lit("canonname"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_struct, sname, fun);
+  autoload_set(al_var, vname, fun);
+  autoload_set(al_fun, name, fun);
   intern_only(name_noload);
   return nil;
 }
@@ -378,15 +398,15 @@ static val sock_instantiate(val set_fun)
 
 #if HAVE_TERMIOS
 
-static val termios_set_entries(val dlt, val fun)
+static val termios_set_entries(val fun)
 {
-  val name[] = {
+  val slname[] = {
     lit("set-iflags"), lit("set-oflags"), lit("set-cflags"), lit("set-lflags"),
     lit("clear-iflags"), lit("clear-oflags"), lit("clear-cflags"), lit("clear-lflags"),
     lit("go-raw"), lit("go-cbreak"), lit("go-canon"),
     lit("string-encode"), lit("string-decode"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_slot, slname, fun);
   return nil;
 }
 
@@ -399,9 +419,9 @@ static val termios_instantiate(val set_fun)
 
 #endif
 
-static val awk_set_entries(val dlt, val fun)
+static val awk_set_entries(val fun)
 {
-  val sys_name[] = {
+  val sys_sname[] = {
     lit("awk-state"), nil
   };
   val name[] = {
@@ -419,9 +439,8 @@ static val awk_set_entries(val dlt, val fun)
     lit("iz"), lit("oz"), lit("xz"), lit("bz"), lit("cz"), lit("rz"),
     nil
   };
-
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+  autoload_sys_set(al_struct, sys_sname, fun);
+  autoload_set(al_fun, name, fun);
   intern_only(name_noload);
   return nil;
 }
@@ -433,10 +452,13 @@ static val awk_instantiate(val set_fun)
   return nil;
 }
 
-static val build_set_entries(val dlt, val fun)
+static val build_set_entries(val fun)
 {
+  val sname[] = {
+    lit("list-builder"), nil
+  };
   val name[] = {
-    lit("list-builder"), lit("build-list"), lit("build"), lit("buildn"), nil
+    lit("build-list"), lit("build"), lit("buildn"), nil
   };
   val name_noload[] = {
     lit("head"), lit("tail"), lit("add"), lit("add*"), lit("pend"),
@@ -444,8 +466,8 @@ static val build_set_entries(val dlt, val fun)
     lit("del"), lit("del*"),
     nil
   };
-
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_struct, sname, fun);
+  autoload_set(al_fun, name, fun);
   intern_only(name_noload);
   return nil;
 }
@@ -457,17 +479,20 @@ static val build_instantiate(val set_fun)
   return nil;
 }
 
-static val trace_set_entries(val dlt, val fun)
+static val trace_set_entries(val fun)
 {
   val sys_name[] = {
     lit("trace"), lit("untrace"), nil
   };
-  val name[] = {
-    lit("*trace-output*"), lit("trace"), lit("untrace"), nil
+  val vname[] = {
+    lit("*trace-output*"), nil
   };
-
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+  val name[] = {
+    lit("trace"), lit("untrace"), nil
+  };
+  autoload_sys_set(al_fun, sys_name, fun);
+  autoload_set(al_var, vname, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -479,10 +504,12 @@ static val trace_instantiate(val set_fun)
   return nil;
 }
 
-static val getopts_set_entries(val dlt, val fun)
+static val getopts_set_entries(val fun)
 {
+  val sname[] = {
+    lit("opt-desc"), lit("opts"), nil
+  };
   val name[] = {
-    lit("opt-desc"), lit("opts"),
     lit("opt"), lit("getopts"), lit("opthelp"), lit("opthelp-conventions"),
     lit("opthelp-types"), lit("define-option-struct"),
     nil
@@ -491,7 +518,8 @@ static val getopts_set_entries(val dlt, val fun)
     lit("short"), lit("long"), lit("helptext"), lit("type"),
     lit("in-args"), lit("out-args"), lit("cumul"), lit("opt-error"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_struct, sname, fun);
+  autoload_set(al_fun, name, fun);
   intern_only(name_noload);
   return nil;
 }
@@ -503,13 +531,13 @@ static val getopts_instantiate(val set_fun)
   return nil;
 }
 
-static val package_set_entries(val dlt, val fun)
+static val package_set_entries(val fun)
 {
   val name[] = {
     lit("defpackage"), lit("in-package"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -520,7 +548,7 @@ static val package_instantiate(val set_fun)
   return nil;
 }
 
-static val getput_set_entries(val dlt, val fun)
+static val getput_set_entries(val fun)
 {
   val name[] = {
     lit("get-jsons"), lit("put-jsons"),
@@ -539,7 +567,7 @@ static val getput_set_entries(val dlt, val fun)
     lit("command-get-jsons"), lit("command-put-jsons"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -550,12 +578,12 @@ static val getput_instantiate(val set_fun)
   return nil;
 }
 
-static val tagbody_set_entries(val dlt, val fun)
+static val tagbody_set_entries(val fun)
 {
   val name[] = {
     lit("tagbody"), lit("go"), lit("prog"), lit("prog*"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -566,12 +594,12 @@ static val tagbody_instantiate(val set_fun)
   return nil;
 }
 
-static val pmac_set_entries(val dlt, val fun)
+static val pmac_set_entries(val fun)
 {
   val name[] = {
     lit("define-param-expander"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -582,7 +610,7 @@ static val pmac_instantiate(val set_fun)
   return nil;
 }
 
-static val error_set_entries(val dlt, val fun)
+static val error_set_entries(val fun)
 {
   val sys_name[] = {
     lit("bind-mac-error"), lit("bind-mac-check"),
@@ -594,8 +622,8 @@ static val error_set_entries(val dlt, val fun)
     lit("compile-error"), lit("compile-warning"), lit("compile-defr-warning"),
     nil
   };
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+  autoload_sys_set(al_fun, sys_name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -606,22 +634,20 @@ static val error_instantiate(val set_fun)
   return nil;
 }
 
-static val keyparams_set_entries(val dlt, val fun)
+static val keyparams_set_entries(val fun)
 {
   val sys_name[] = {
-    lit("extract-keys"),
-    nil
+    lit("extract-keys"), nil
+  };
+  val sys_kname[] = {
+    lit("key"), nil
   };
   val name_noload[] = {
     lit("--"),
     nil
   };
-  val key_k = intern(lit("key"), keyword_package);
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  if (fun)
-    sethash(dlt, key_k, fun);
-  else
-    remhash(dlt, key_k);
+  autoload_sys_set(al_fun, sys_name, fun);
+  autoload_key_set(al_key, sys_kname, fun);
   intern_only(name_noload);
   return nil;
 }
@@ -633,7 +659,7 @@ static val keyparams_instantiate(val set_fun)
   return nil;
 }
 
-static val ffi_set_entries(val dlt, val fun)
+static val ffi_set_entries(val fun)
 {
   val name[] = {
     lit("with-dyn-lib"), lit("deffi"), lit("deffi-type"), lit("deffi-cb"),
@@ -645,7 +671,7 @@ static val ffi_set_entries(val dlt, val fun)
     lit("sub-buf"), lit("znew"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -656,13 +682,13 @@ static val ffi_instantiate(val set_fun)
   return nil;
 }
 
-static val doloop_set_entries(val dlt, val fun)
+static val doloop_set_entries(val fun)
 {
   val name[] = {
     lit("doloop"), lit("doloop*"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -673,9 +699,9 @@ static val doloop_instantiate(val set_fun)
   return nil;
 }
 
-static val stream_wrap_set_entries(val dlt, val fun)
+static val stream_wrap_set_entries(val fun)
 {
-  val name[] = {
+  val sname[] = {
     lit("stream-wrap"),
     nil
   };
@@ -683,8 +709,7 @@ static val stream_wrap_set_entries(val dlt, val fun)
     lit("close"), lit("flush"), lit("seek"), lit("truncate"),
     lit("get-prop"), lit("set-prop"), lit("get-fd"), nil
   };
-
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_struct, sname, fun);
   intern_only(name_noload);
   return nil;
 }
@@ -696,16 +721,9 @@ static val stream_wrap_instantiate(val set_fun)
   return nil;
 }
 
-static val asm_instantiate(val set_fun)
+static val asm_set_entries(val fun)
 {
-  funcall1(set_fun, nil);
-  load(scat2(stdlib_path, lit("asm")));
-  return nil;
-}
-
-static val asm_set_entries(val dlt, val fun)
-{
-  val sys_name[] = {
+  val sys_sname[] = {
     lit("assembler"),
     nil
   };
@@ -713,9 +731,37 @@ static val asm_set_entries(val dlt, val fun)
     lit("disassemble"),
     nil
   };
+  autoload_sys_set(al_struct, sys_sname, fun);
+  autoload_set(al_fun, name, fun);
+  return nil;
+}
 
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+static val asm_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(scat2(stdlib_path, lit("asm")));
+  return nil;
+}
+
+static val compiler_set_entries(val fun)
+{
+  val sys_name[] = {
+    lit("compiler"), lit("*in-compilation-unit*"),
+    nil
+  };
+  val name[] = {
+    lit("compile-toplevel"), lit("compile"), lit("compile-file"),
+    lit("compile-update-file"),
+    lit("with-compilation-unit"), lit("dump-compiled-objects"),
+    nil
+  };
+  val vname[] = {
+    lit("*opt-level*"),
+    nil
+  };
+  autoload_sys_set(al_struct, sys_name, fun);
+  autoload_set(al_fun, name, fun);
+  autoload_set(al_var, vname, fun);
   return nil;
 }
 
@@ -726,22 +772,13 @@ static val compiler_instantiate(val set_fun)
   return nil;
 }
 
-static val compiler_set_entries(val dlt, val fun)
+static val debugger_set_entries(val fun)
 {
   val sys_name[] = {
-    lit("compiler"), lit("*in-compilation-unit*"),
+    lit("debugger"), lit("print-backtrace"),
     nil
   };
-  val name[] = {
-    lit("compile-toplevel"), lit("compile"), lit("compile-file"),
-    lit("compile-update-file"),
-    lit("with-compilation-unit"), lit("dump-compiled-objects"),
-    lit("*opt-level*"),
-    nil
-  };
-
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  set_dlt_entries(dlt, name, fun);
+  autoload_sys_set(al_fun, sys_name, fun);
   return nil;
 }
 
@@ -752,19 +789,7 @@ static val debugger_instantiate(val set_fun)
   return nil;
 }
 
-static val debugger_set_entries(val dlt, val fun)
-{
-  val sys_name[] = {
-    lit("debugger"), lit("print-backtrace"),
-    nil
-  };
-
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  return nil;
-}
-
-
-static val op_set_entries(val dlt, val fun)
+static val op_set_entries(val fun)
 {
   val name[] = {
     lit("op"), lit("do"), lit("lop"), lit("ldo"), lit("ap"), lit("ip"),
@@ -772,7 +797,7 @@ static val op_set_entries(val dlt, val fun)
     lit("opip"), lit("oand"), lit("flow"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -783,6 +808,17 @@ static val op_instantiate(val set_fun)
   return nil;
 }
 
+static val save_exe_set_entries(val fun)
+{
+  val name[] = {
+    lit("save-exe"),
+    nil
+  };
+
+  autoload_set(al_fun, name, fun);
+  return nil;
+}
+
 static val save_exe_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
@@ -790,14 +826,15 @@ static val save_exe_instantiate(val set_fun)
   return nil;
 }
 
-static val save_exe_set_entries(val dlt, val fun)
+static val defset_set_entries(val fun)
 {
   val name[] = {
-    lit("save-exe"),
+    lit("defset"), lit("sub-list"), lit("sub-vec"), lit("sub-str"),
+    lit("left"), lit("right"), lit("key"),
+    lit("set-mask"), lit("clear-mask"),
     nil
   };
-
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -808,18 +845,24 @@ static val defset_instantiate(val set_fun)
   return nil;
 }
 
-static val defset_set_entries(val dlt, val fun)
+static val copy_file_set_entries(val fun)
 {
-  val name[] = {
-    lit("defset"), lit("sub-list"), lit("sub-vec"), lit("sub-str"),
-    lit("left"), lit("right"), lit("key"),
-    lit("set-mask"), lit("clear-mask"),
+  val sname[] = {
+    lit("copy-path-opts"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  val name[] = {
+    lit("copy-file"), lit("copy-files"), lit("cat-files"),
+    lit("copy-path-rec"), lit("remove-path-rec"),
+    lit("chown-rec"), lit("chmod-rec"), lit("touch"), lit("rel-path"),
+    lit("path-equal"),
+    nil
+  };
+  autoload_set(al_struct, sname, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
- 
+
 static val copy_file_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
@@ -827,16 +870,14 @@ static val copy_file_instantiate(val set_fun)
   return nil;
 }
 
-static val copy_file_set_entries(val dlt, val fun)
+static val arith_each_set_entries(val fun)
 {
   val name[] = {
-    lit("copy-path-opts"), lit("copy-file"), lit("copy-files"), lit("cat-files"),
-    lit("copy-path-rec"), lit("remove-path-rec"),
-    lit("chown-rec"), lit("chmod-rec"), lit("touch"), lit("rel-path"),
-    lit("path-equal"),
+    lit("sum-each"), lit("mul-each"), lit("sum-each*"), lit("mul-each*"),
+    lit("each-true"), lit("some-true"), lit("each-false"), lit("some-false"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -847,14 +888,16 @@ static val arith_each_instantiate(val set_fun)
   return nil;
 }
 
-static val arith_each_set_entries(val dlt, val fun)
+static val each_prod_set_entries(val fun)
 {
   val name[] = {
-    lit("sum-each"), lit("mul-each"), lit("sum-each*"), lit("mul-each*"),
-    lit("each-true"), lit("some-true"), lit("each-false"), lit("some-false"),
+    lit("each-prod"), lit("collect-each-prod"), lit("append-each-prod"),
+    lit("sum-each-prod"), lit("mul-each-prod"),
+    lit("each-prod*"), lit("collect-each-prod*"), lit("append-each-prod*"),
+    lit("sum-each-prod*"), lit("mul-each-prod*"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -865,16 +908,12 @@ static val each_prod_instantiate(val set_fun)
   return nil;
 }
 
-static val each_prod_set_entries(val dlt, val fun)
+static val quips_set_entries(val fun)
 {
   val name[] = {
-    lit("each-prod"), lit("collect-each-prod"), lit("append-each-prod"),
-    lit("sum-each-prod"), lit("mul-each-prod"),
-    lit("each-prod*"), lit("collect-each-prod*"), lit("append-each-prod*"),
-    lit("sum-each-prod*"), lit("mul-each-prod*"),
-    nil
+    lit("quip"), nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -885,24 +924,7 @@ static val quips_instantiate(val set_fun)
   return nil;
 }
 
-static val quips_set_entries(val dlt, val fun)
-{
-  val name[] = {
-    lit("quip"),
-    nil
-  };
-  set_dlt_entries(dlt, name, fun);
-  return nil;
-}
-
-static val match_instantiate(val set_fun)
-{
-  funcall1(set_fun, nil);
-  load(scat2(stdlib_path, lit("match")));
-  return nil;
-}
-
-static val match_set_entries(val dlt, val fun)
+static val match_set_entries(val fun)
 {
   val name_noload[] = {
     lit("all*"), lit("as"), lit("with"), lit("scan"), lit("sme"), lit("match-error"),
@@ -916,18 +938,41 @@ static val match_set_entries(val dlt, val fun)
     lit("each-match"), lit("append-matches"),
     lit("keep-matches"), lit("each-match-product"),
     lit("append-match-products"), lit("keep-match-products"),
+    nil
+  };
+  val vname[] = {
     lit("*match-macro*"),
     nil
   };
-  val match_k = intern(lit("match"), keyword_package);
+  val kname[] = {
+    lit("match"),
+    nil
+  };
 
-  if (fun)
-    sethash(dlt, match_k, fun);
-  else
-    remhash(dlt, match_k);
-
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
+  autoload_set(al_var, vname, fun);
+  autoload_key_set(al_key, kname, fun);
   intern_only(name_noload);
+  return nil;
+}
+
+static val match_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(scat2(stdlib_path, lit("match")));
+  return nil;
+}
+
+static val doc_set_entries(val fun)
+{
+  val name[] = {
+    lit("doc"), nil
+  };
+  val vname[] = {
+    lit("*doc-url*"), nil
+  };
+  autoload_set(al_fun, name, fun);
+  autoload_set(al_var, vname, fun);
   return nil;
 }
 
@@ -938,13 +983,13 @@ static val doc_instantiate(val set_fun)
   return nil;
 }
 
-static val doc_set_entries(val dlt, val fun)
+static val pic_set_entries(val fun)
 {
   val name[] = {
-    lit("doc"), lit("*doc-url*"),
+    lit("pic"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
@@ -955,13 +1000,13 @@ static val pic_instantiate(val set_fun)
   return nil;
 }
 
-static val pic_set_entries(val dlt, val fun)
+static val constfun_set_entries(val fun)
 {
-  val name[] = {
-    lit("pic"),
+  val sys_vname[] = {
+    lit("%const-foldable%"),
     nil
   };
-  set_dlt_entries(dlt, name, fun);
+  autoload_sys_set(al_var, sys_vname, fun);
   return nil;
 }
 
@@ -972,82 +1017,79 @@ static val constfun_instantiate(val set_fun)
   return nil;
 }
 
-static val constfun_set_entries(val dlt, val fun)
+val autoload_reg(val (*instantiate)(val),
+                 val (*set_entries)(val))
 {
-  val sys_name[] = {
-    lit("%const-foldable%"),
-    nil
-  };
-  set_dlt_entries_sys(dlt, sys_name, fun);
-  return nil;
+  return set_entries(func_f0(func_n1(set_entries), instantiate));
 }
 
-val dlt_register(val dlt,
-                 val (*instantiate)(val),
-                 val (*set_entries)(val, val))
+static void lisplib_init_tables(void)
 {
-  return set_entries(dl_table, func_f0(func_f1(dlt, set_entries), instantiate));
+  int i;
+  for (i = 0; i <= al_max; i++) {
+    autoload_hash[i] = make_hash(hash_weak_none, nil);
+    prot1(&autoload_hash[i]);
+  }
 }
 
 void lisplib_init(void)
 {
-  prot1(&dl_table);
-  dl_table = make_hash(hash_weak_none, nil);
-  dlt_register(dl_table, place_instantiate, place_set_entries);
-  dlt_register(dl_table, ver_instantiate, ver_set_entries);
-  dlt_register(dl_table, ifa_instantiate, ifa_set_entries);
-  dlt_register(dl_table, txr_case_instantiate, txr_case_set_entries);
-  dlt_register(dl_table, with_resources_instantiate, with_resources_set_entries);
-  dlt_register(dl_table, path_test_instantiate, path_test_set_entries);
-  dlt_register(dl_table, struct_instantiate, struct_set_entries);
-  dlt_register(dl_table, with_stream_instantiate, with_stream_set_entries);
-  dlt_register(dl_table, hash_instantiate, hash_set_entries);
-  dlt_register(dl_table, except_instantiate, except_set_entries);
-  dlt_register(dl_table, type_instantiate, type_set_entries);
-  dlt_register(dl_table, yield_instantiate, yield_set_entries);
+  lisplib_init_tables();
+  autoload_reg(place_instantiate, place_set_entries);
+  autoload_reg(ver_instantiate, ver_set_entries);
+  autoload_reg(ifa_instantiate, ifa_set_entries);
+  autoload_reg(txr_case_instantiate, txr_case_set_entries);
+  autoload_reg(with_resources_instantiate, with_resources_set_entries);
+  autoload_reg(path_test_instantiate, path_test_set_entries);
+  autoload_reg(struct_instantiate, struct_set_entries);
+  autoload_reg(with_stream_instantiate, with_stream_set_entries);
+  autoload_reg(hash_instantiate, hash_set_entries);
+  autoload_reg(except_instantiate, except_set_entries);
+  autoload_reg(type_instantiate, type_set_entries);
+  autoload_reg(yield_instantiate, yield_set_entries);
 #if HAVE_SOCKETS
-  dlt_register(dl_table, sock_instantiate, sock_set_entries);
+  autoload_reg(sock_instantiate, sock_set_entries);
 #endif
 #if HAVE_TERMIOS
-  dlt_register(dl_table, termios_instantiate, termios_set_entries);
+  autoload_reg(termios_instantiate, termios_set_entries);
 #endif
-  dlt_register(dl_table, awk_instantiate, awk_set_entries);
-  dlt_register(dl_table, build_instantiate, build_set_entries);
-  dlt_register(dl_table, trace_instantiate, trace_set_entries);
-  dlt_register(dl_table, getopts_instantiate, getopts_set_entries);
-  dlt_register(dl_table, package_instantiate, package_set_entries);
-  dlt_register(dl_table, getput_instantiate, getput_set_entries);
-  dlt_register(dl_table, tagbody_instantiate, tagbody_set_entries);
-  dlt_register(dl_table, pmac_instantiate, pmac_set_entries);
-  dlt_register(dl_table, error_instantiate, error_set_entries);
-  dlt_register(dl_table, keyparams_instantiate, keyparams_set_entries);
-  dlt_register(dl_table, ffi_instantiate, ffi_set_entries);
-  dlt_register(dl_table, doloop_instantiate, doloop_set_entries);
-  dlt_register(dl_table, stream_wrap_instantiate, stream_wrap_set_entries);
-  dlt_register(dl_table, asm_instantiate, asm_set_entries);
-  dlt_register(dl_table, compiler_instantiate, compiler_set_entries);
-  dlt_register(dl_table, debugger_instantiate, debugger_set_entries);
+  autoload_reg(awk_instantiate, awk_set_entries);
+  autoload_reg(build_instantiate, build_set_entries);
+  autoload_reg(trace_instantiate, trace_set_entries);
+  autoload_reg(getopts_instantiate, getopts_set_entries);
+  autoload_reg(package_instantiate, package_set_entries);
+  autoload_reg(getput_instantiate, getput_set_entries);
+  autoload_reg(tagbody_instantiate, tagbody_set_entries);
+  autoload_reg(pmac_instantiate, pmac_set_entries);
+  autoload_reg(error_instantiate, error_set_entries);
+  autoload_reg(keyparams_instantiate, keyparams_set_entries);
+  autoload_reg(ffi_instantiate, ffi_set_entries);
+  autoload_reg(doloop_instantiate, doloop_set_entries);
+  autoload_reg(stream_wrap_instantiate, stream_wrap_set_entries);
+  autoload_reg(asm_instantiate, asm_set_entries);
+  autoload_reg(compiler_instantiate, compiler_set_entries);
+  autoload_reg(debugger_instantiate, debugger_set_entries);
 
   if (!opt_compat || opt_compat >= 185)
-    dlt_register(dl_table, op_instantiate, op_set_entries);
+    autoload_reg(op_instantiate, op_set_entries);
 
-  dlt_register(dl_table, save_exe_instantiate, save_exe_set_entries);
-  dlt_register(dl_table, defset_instantiate, defset_set_entries);
-  dlt_register(dl_table, copy_file_instantiate, copy_file_set_entries);
-  dlt_register(dl_table, arith_each_instantiate, arith_each_set_entries);
-  dlt_register(dl_table, each_prod_instantiate, each_prod_set_entries);
-  dlt_register(dl_table, quips_instantiate, quips_set_entries);
-  dlt_register(dl_table, match_instantiate, match_set_entries);
-  dlt_register(dl_table, doc_instantiate, doc_set_entries);
-  dlt_register(dl_table, pic_instantiate, pic_set_entries);
-  dlt_register(dl_table, constfun_instantiate, constfun_set_entries);
+  autoload_reg(save_exe_instantiate, save_exe_set_entries);
+  autoload_reg(defset_instantiate, defset_set_entries);
+  autoload_reg(copy_file_instantiate, copy_file_set_entries);
+  autoload_reg(arith_each_instantiate, arith_each_set_entries);
+  autoload_reg(each_prod_instantiate, each_prod_set_entries);
+  autoload_reg(quips_instantiate, quips_set_entries);
+  autoload_reg(match_instantiate, match_set_entries);
+  autoload_reg(doc_instantiate, doc_set_entries);
+  autoload_reg(pic_instantiate, pic_set_entries);
+  autoload_reg(constfun_instantiate, constfun_set_entries);
 
   reg_fun(intern(lit("try-load-fun"), system_package), func_n1(lisplib_try_load_fun));
 }
 
-static val lisplib_try_load(val sym)
+static val lisplib_try_load(al_ns_t ns, val sym)
 {
-  val fun = gethash(dl_table, sym);
+  val fun = gethash(autoload_hash[ns], sym);
 
   if (fun) {
      unsigned ds = debug_clear(opt_dbg_autoload ? 0 : DBG_ENABLE);
@@ -1065,30 +1107,32 @@ static val lisplib_try_load(val sym)
 
 val lisplib_try_load_fun(val sym)
 {
-  return lisplib_try_load(sym);
+  return lisplib_try_load(al_fun, sym);
 }
 
 val lisplib_try_load_var(val sym)
 {
-  return lisplib_try_load(sym);
+  return lisplib_try_load(al_var, sym);
 }
 
 val lisplib_try_load_fun_var(val sym)
 {
-  return lisplib_try_load(sym);
+  uses_or2;
+  return or2(lisplib_try_load_fun(sym),
+             lisplib_try_load_var(sym));
 }
 
 val lisplib_try_load_slot(val sym)
 {
-  return lisplib_try_load(sym);
+  return lisplib_try_load(al_slot, sym);
 }
 
 val lisplib_try_load_struct(val sym)
 {
-  return lisplib_try_load(sym);
+  return lisplib_try_load(al_struct, sym);
 }
 
 val lisplib_try_load_keyword(val sym)
 {
-  return lisplib_try_load(sym);
+  return lisplib_try_load(al_key, sym);
 }

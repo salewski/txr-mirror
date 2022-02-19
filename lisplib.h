@@ -26,7 +26,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val dl_table;
+typedef enum autoload_ns {
+  al_var, al_fun, al_slot, al_struct, al_key, al_max = al_key
+} al_ns_t;
+
 extern val trace_loaded;
 void lisplib_init(void);
 val lisplib_try_load_fun(val sym);
@@ -35,7 +38,6 @@ val lisplib_try_load_fun_var(val sym);
 val lisplib_try_load_slot(val sym);
 val lisplib_try_load_struct(val sym);
 val lisplib_try_load_keyword(val sym);
-void set_dlt_entries(val dlt, val *name, val fun);
-val dlt_register(val dlt,
-                 val (*instantiate)(val),
-                 val (*set_entries)(val, val));
+void autoload_set(al_ns_t ns, val *name, val fun);
+val autoload_reg(val (*instantiate)(val),
+                 val (*set_entries)(val));

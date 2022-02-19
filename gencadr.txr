@@ -50,7 +50,7 @@ static val cadr_register(val set_fun)
   return nil;
 }
 
-static val cadr_set_entries(val dlt, val fun)
+static val cadr_set_entries(val fun)
 {
   val name[] = {
 @  (repeat)
@@ -59,13 +59,13 @@ static val cadr_set_entries(val dlt, val fun)
     nil
   };
 
-  set_dlt_entries(dlt, name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
 void cadr_init(void)
 {
-  dlt_register(dl_table, cadr_register, cadr_set_entries);
+  autoload_reg(cadr_register, cadr_set_entries);
 }
 @(end)
 @(output "cadr.h")
