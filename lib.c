@@ -10940,9 +10940,39 @@ val find_max(val seq, val testfun, val keyfun)
   }
 }
 
+val find_max_key(val seq, val testfun_in, val keyfun_in)
+{
+  val self = lit("find-max-key");
+  val testfun = default_arg(testfun_in, greater_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
+  seq_iter_t iter;
+  val elem;
+
+  seq_iter_init(self, &iter, seq);
+
+  if (seq_get(&iter, &elem)) {
+    val maxkey = funcall1(keyfun, elem);
+
+    while (seq_get(&iter, &elem)) {
+      val key = funcall1(keyfun, elem);
+      if (funcall2(testfun, key, maxkey))
+        maxkey = key;
+    }
+
+    return maxkey;
+  }
+
+  return nil;
+}
+
 val find_min(val seq, val testfun, val keyfun)
 {
   return find_max(seq, default_arg(testfun, less_f), keyfun);
+}
+
+val find_min_key(val seq, val testfun, val keyfun)
+{
+  return find_max_key(seq, default_arg(testfun, less_f), keyfun);
 }
 
 val find_true(val pred, val seq, val key)

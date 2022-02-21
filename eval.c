@@ -7340,7 +7340,9 @@ void eval_init(void)
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));
   reg_fun(intern(lit("rfind-if"), user_package), func_n3o(rfind_if, 2));
   reg_fun(intern(lit("find-max"), user_package), func_n3o(find_max, 1));
+  reg_fun(intern(lit("find-max-key"), user_package), func_n3o(find_max_key, 1));
   reg_fun(intern(lit("find-min"), user_package), func_n3o(find_min, 1));
+  reg_fun(intern(lit("find-min-key"), user_package), func_n3o(find_min_key, 1));
   reg_fun(intern(lit("find-true"), user_package), func_n3o(find_true, 2));
   reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
   reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));

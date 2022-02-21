@@ -35409,6 +35409,46 @@ the leftmost one is reported. See the notes under
 .code pos-max
 regarding duplicate maxima.
 
+.coNP Functions @ find-max-key and @ find-min-key
+.synb
+.mets (find-max-key < iterable [ testfun <> [ keyfun ]])
+.mets (find-min-key < iterable [ testfun <> [ keyfun ]])
+.syne
+.desc
+The
+.code find-min-key
+and
+.code find-max-key
+functions have the same argument conventions as, respectively,
+.code find-max
+and
+.code find-min
+and agree with those functions in regard to which element of the
+input sequence is identified: all these functions identify the
+element which maximizes or minimizes the value of
+.metn keyfun .
+
+Whereas
+.code find-max
+and
+.code find-min
+return the maximizing or minimizing element itself, the
+.code find-max-key
+and
+.code find-min-key
+functions return the value of
+.meta keyfun
+applied to the element.
+
+Under the default
+.meta keyfun
+value, that being the
+.code identity
+function, these functions behave the same as
+.code find-max
+and
+.codn find-min .
+
 .coNP Functions @, uni @, isec @ diff and @ symdiff
 .synb
 .mets (uni < iter1 < iter1 >> [ testfun <> [ keyfun ]])
