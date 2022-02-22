@@ -445,3 +445,16 @@
   (pairlis "" #(1 2 3)) nil
   (pairlis "abcd" #()) nil
   (pairlis '(1 2 3) '(a b c) '(4 5 6)) ((1 . a) (2 . b) (3 . c) 4 5 6))
+
+(mtest
+  (find-max nil) nil
+  [find-max '("alpha" "charlie" "aardvark" "bravo") less] "aardvark"
+  [find-max '("alpha" "charlie" "aardvark" "bravo") less reverse] "alpha"
+  [find-max '("alpha" "charlie" "aardvark" "bravo") : reverse] "bravo"
+  (find-max 1..10) 9
+  [find-max #H(() (a 1) (b 2) (c 3)) : cdr] (c . 3))
+
+(mtest
+  (find-max-key nil) nil
+  [find-max-key '("alpha" "charlie" "aardvark" "bravo") less upcase-str] "AARDVARK"
+  [find-max-key #H(() (a 1) (b 2) (c 3)) : cdr] 3)

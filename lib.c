@@ -10865,79 +10865,32 @@ val rfind(val item, val seq, val testfun_in, val keyfun_in)
   }
 }
 
-val find_max(val seq, val testfun, val keyfun)
+val find_max(val seq, val testfun_in, val keyfun_in)
 {
   val self = lit("find-max");
-  seq_info_t si = seq_info(seq);
-  testfun = default_arg(testfun, greater_f);
-  keyfun = default_arg(keyfun, identity_f);
+  val testfun = default_arg(testfun_in, greater_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
+  seq_iter_t iter;
+  val elem;
 
-  switch (si.kind) {
-  case SEQ_NIL:
-    return nil;
-  case SEQ_HASHLIKE:
-    {
-      struct hash_iter hi;
-      val cell = (hash_iter_init(&hi, si.obj, self), hash_iter_next(&hi));
-      val maxelt = cell;
-      val maxkey = if2(cell, funcall1(keyfun, cell));
+  seq_iter_init(self, &iter, seq);
 
-      while (cell && (cell = hash_iter_next(&hi))) {
-        val key = funcall1(keyfun, cell);
-        if (funcall2(testfun, key, maxkey)) {
-          maxkey = key;
-          maxelt = cell;
-        }
+  if (seq_get(&iter, &elem)) {
+    val maxkey = funcall1(keyfun, elem);
+    val maxelem = elem;
+
+    while (seq_get(&iter, &elem)) {
+      val key = funcall1(keyfun, elem);
+      if (funcall2(testfun, key, maxkey)) {
+        maxkey = key;
+        maxelem = elem;
       }
-
-      return maxelt;
     }
-  case SEQ_LISTLIKE:
-    {
-      val maxelt = car(z(si.obj));
-      val maxkey = funcall1(keyfun, maxelt);
 
-      gc_hint(seq);
-
-      for (seq = cdr(seq); seq; seq = cdr(seq)) {
-        val elt = car(seq);
-        val key = funcall1(keyfun, elt);
-        if (funcall2(testfun, key, maxkey)) {
-          maxkey = key;
-          maxelt = elt;
-        }
-      }
-
-      return maxelt;
-    }
-  case SEQ_VECLIKE:
-    {
-      val vec = si.obj;
-      cnum len = c_fixnum(length(vec), self);
-
-      if (len > 0) {
-        val maxelt = ref(vec, zero);
-        val maxkey = funcall1(keyfun, maxelt);
-        cnum i;
-
-        for (i = 1; i < len; i++) {
-          val elt = ref(vec, num_fast(i));
-          val key = funcall1(keyfun, elt);
-          if (funcall2(testfun, key, maxkey)) {
-            maxkey = key;
-            maxelt = elt;
-          }
-        }
-
-        return maxelt;
-      }
-
-      return nil;
-    }
-  case SEQ_NOTSEQ:
-  default:
-    unsup_obj(self, seq);
+    return maxelem;
   }
+
+  return nil;
 }
 
 val find_max_key(val seq, val testfun_in, val keyfun_in)
