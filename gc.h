@@ -66,8 +66,8 @@ extern val break_obj;
 #endif
 
 #define gc_hint(var) gc_hint_func(&var)
-#define REACHABLE 0x100
-#define FREE      0x200
+#define REACHABLE 0x100U
+#define FREE      0x200U
 
 INLINE val zap(volatile val *loc) { val ret = *loc; *loc = nil; return ret; }
 

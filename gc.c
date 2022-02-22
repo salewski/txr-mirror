@@ -606,7 +606,7 @@ static int sweep_one(obj_t *block)
 #if CONFIG_GEN_GC
     block->t.gen = 1;
 #endif
-    block->t.type &= convert(type_t, ~REACHABLE);
+    block->t.type = convert(type_t, block->t.type & ~REACHABLE);
     return 0;
   }
 
