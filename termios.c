@@ -552,10 +552,10 @@ void termios_init(void)
   reg_varl(intern(lit("cbaudex"), user_package), num_fast(CBAUDEX));
 #endif
 #ifdef CMSPAR
-  reg_varl(intern(lit("cmspar"), user_package), num_fast(CMSPAR));
+  reg_varl(intern(lit("cmspar"), user_package), num(CMSPAR));
 #endif
 #ifdef CRTSCTS
-  reg_varl(intern(lit("crtscts"), user_package), num_fast(CRTSCTS));
+  reg_varl(intern(lit("crtscts"), user_package), num(CRTSCTS));
 #endif
   /* lflag bits */
   reg_varl(intern(lit("isig"), user_package), num_fast(ISIG));
