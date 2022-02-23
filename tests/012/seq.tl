@@ -13,6 +13,11 @@
 (test (build (add 1) (add 2) (pend (get) (get))) (1 2 1 2 1 2))
 (test (build (add 1) (add 2) (pend* (get) (get))) (1 2 1 2 1 2))
 
+(mtest
+  (build (add 1 2) (oust)) nil
+  (build (add 1 2) (oust '(3 4)) (add 5)) (3 4 5)
+  (build (add 1 2) (oust '(3 4) '(5)) (add 6)) (3 4 5 6))
+
 (set *print-circle* t)
 
 (stest (build (add 1) (add 2) (ncon (get))) "#1=(1 2 . #1#)")

@@ -38037,7 +38037,7 @@ methods extend the list being constructed by a
 object by adding lists to it. The
 .code pend
 method catenates the
-.code list
+.meta list
 arguments together as if by the
 .code append
 function, then appends the resulting list to
@@ -38146,6 +38146,56 @@ object.
   -> (1 2 3 4 . 5)
 .brev
 
+.coNP Method @ oust
+.synb
+.mets << list-builder .(oust << list *)
+.syne
+.desc
+The
+.code oust
+method discards the list constructed so far, optionally
+replacing it with new material.
+
+The
+.code oust
+method catenates the
+.meta list
+arguments together as if by the
+.code append
+function. The resulting list, which is empty
+if there are no
+.meta list
+arguments, then replaces the object's
+list constructed so far.
+
+The
+.code oust
+method returns the
+.meta list-builder
+object.
+
+.TP* Examples:
+
+.verb
+  ;; Build the list (3 4) by first building (1 2),
+  ;; then discarding that and adding 3 and 4:
+
+  (let ((lb (build-list)))
+    lb.(add 1 2)
+    lb.(oust)
+    lb.(add 3 4)
+    lb.(get))
+  -> (3 4)
+
+  ;; Build the list (3 4 5 6) by first building (1 2),
+  ;; then replacing with catenation of (3 4) and (5 6):
+  (let ((lb (build-list)))
+    lb.(pend '(1 2))
+    lb.(oust '(3 4) '(5 6))
+    lb.(get))
+  -> (3 4 5 6)
+.brev
+
 .coNP Method @ get
 .synb
 .mets << list-builder .(get)
@@ -38238,6 +38288,7 @@ This lexical environment also provides local functions named
 .codn pend* ,
 .codn ncon ,
 .codn ncon* ,
+.codn oust ,
 .codn get ,
 .code del
 and

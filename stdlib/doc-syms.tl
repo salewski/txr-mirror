@@ -1391,6 +1391,7 @@
       ("orec" "N-0003ED2C")
       ("orf" "N-01E7D2AD")
       ("ors" "N-02D33A3D")
+      ("oust" "N-0126D3FF")
       ("output" "N-0159EBE7")
       ("package-alist" "N-017F684C")
       ("package-fallback-list" "N-027A535C")

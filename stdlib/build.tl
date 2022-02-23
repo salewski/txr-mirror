@@ -28,9 +28,16 @@
 (defstruct list-builder ()
   head tail
 
-  (:postinit (bc)
-    (set bc.head (cons nil bc.head)
-         bc.tail bc.head))
+  (:postinit (self)
+    (set self.head (cons nil self.head)
+         self.tail self.head))
+
+  (:method oust (self . lists)
+    (if lists
+      (let ((nl [apply append lists]))
+        (set self.tail (usr:rplacd self.head nl)))
+      (set self.tail (usr:rplacd self.head nil)))
+    self)
 
   (:method add (self . items)
     (let ((st self.tail))
@@ -112,7 +119,7 @@
 
 (defun sys:list-builder-flets (lb-form)
   (nconc
-    (collect-each ((op '(add add* pend pend* ncon ncon*)))
+    (collect-each ((op '(add add* pend pend* ncon ncon* oust)))
       ^(,op (. args)
          (qref ,lb-form (,op . args))
          nil))

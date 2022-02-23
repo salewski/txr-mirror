@@ -373,7 +373,7 @@ static val build_set_entries(val fun)
   val name_noload[] = {
     lit("head"), lit("tail"), lit("add"), lit("add*"), lit("pend"),
     lit("pend*"), lit("ncon"), lit("ncon*"), lit("get"),
-    lit("del"), lit("del*"),
+    lit("del"), lit("del*"), lit("oust"),
     nil
   };
   autoload_set(al_struct, sname, fun);
