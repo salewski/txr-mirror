@@ -458,3 +458,29 @@
   (find-max-key nil) nil
   [find-max-key '("alpha" "charlie" "aardvark" "bravo") less upcase-str] "AARDVARK"
   [find-max-key #H(() (a 1) (b 2) (c 3)) : cdr] 3)
+
+(defvarl fn (do and
+              (chr-isdigit @1)
+              (not (chr-isdigit @2))))
+
+(mtest
+  [partition-if tf nil] nil
+  [partition-if tf "abc"] ("a" "b" "c")
+  [partition-if nilf "abc"] ("abc")
+  [partition-if neql "aaaabbcdee"] ("aaaa" "bb" "c" "d" "ee")
+  (partition-if fn "a13cd9foo42z") ("a13" "cd9" "foo42" "z"))
+
+(mtest
+  (partition-if (op /= (- @2 @1) 1)
+                '(1 3 4 5 7 8 9 10 9 8 6 5 3 2))
+  ((1) (3 4 5) (7 8 9 10) (9) (8) (6) (5) (3) (2))
+  (partition-if (op > (abs (- @2 @1)) 1)
+                              '(1 3 4 5 7 8 9 10 9 8 6 5 3 2))
+  ((1) (3 4 5) (7 8 9 10 9 8) (6 5) (3 2)))
+
+(mtest
+  [partition-if neql "aaaabbcdee" 2] ("aaaa" "bb" "cdee")
+  [partition-if neql "aaaabbcdee" 1] ("aaaa" "bbcdee")
+  [partition-if fn "a13cd9foo42z" 2] ("a13" "cd9" "foo42z")
+  [partition-if fn "a13cd9foo42z" 1] ("a13" "cd9foo42z")
+  [partition-if fn "a13cd9foo42z" 0] ("a13cd9foo42z"))

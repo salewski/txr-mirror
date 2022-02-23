@@ -37158,6 +37158,119 @@ function.
                                                #(4 5 6 7))
 .brev
 
+.coNP Function @ partition-if
+.synb
+.mets (partition-if < function < iterable <> [ count ])
+.syne
+.desc
+If
+.meta sequence
+is empty, then
+.code partition-if
+returns an empty list,
+and
+.meta function
+is never called.
+
+Otherwise,
+.code partition-if
+returns a lazy list of partitions of
+.metn iterable .
+Partitions are consecutive, nonempty substrings of
+.metn iterable ,
+of the same kind as
+.metn iterable .
+
+The partitioning begins with the first element of
+.meta iterable
+being placed into a partition.
+
+The subsequent partitioning is done according to a Boolean
+.metn function ,
+which must accept two arguments. Whenever the function yields true, it
+indicates that a partition is to be terminated and a new partition to begin.
+
+The
+.meta count
+argument, if present, must be a nonnegative integer. It indicates
+a limit on how many partitions will be delimited; after this limit
+is reached, the remainder of the
+.meta iterable
+sequence is placed into a single partition.
+
+After the first element is placed into a partition, the following
+process is repeated until the partition is terminated.
+.RS
+.IP 1.
+If
+.meta iterable
+contains no more elements, then the partition terminates.
+.IP 2.
+Otherwise, if the
+.meta count
+is present, and has a value of zero, then the next available
+element is unconditionally deposited into the current partition.
+.IP 3.
+Otherwise,
+.meta function
+is invoked on two values: the previous element which has most
+recently been deposited into the partition, and its successor from
+.metn iterable .
+.IP 4.
+If
+.meta function
+returns
+.codn nil ,
+then the partition continues: the next element is
+added to the partition, and the process repeats from step 1.
+.IP 5.
+Otherwise,
+.meta function
+has returned true and the partition is terminated. In this case, if
+.meta count
+is present, it is decremented.
+.RE
+.IP
+When the current partition is terminated, it is converted to a sequence of the
+same kind as
+.meta iterable
+as if by using the
+.code make-like
+function, and appended to the lazy list of partitions. If a next element is
+available, it is place into a new partition, and the above process takes place
+from step 1.
+
+.TP* Examples:
+
+.verb
+  ;; Start new partition for unequal characters.
+  [partition-if neql "aaaabbcdee"] -> ("aaaa" "bb" "c" "d" "ee")
+
+  ;; As above, but partition only twice
+  [partition-if neql "aaaabbcdee" 2] -> ("aaaa" "bb" "cdee")
+
+  ;; Start new partition when non-digit follows digit:
+  [partition-if (do and
+                  (chr-isdigit @1)
+                  (not (chr-isdigit @2)))
+                "a13cd9foo42z"]
+  -> ("a13" "cd9" "foo42" "z")
+
+  ;; Place ascending runs of consecutive integers
+  ;; into partitions. I.e. start a partition whenever the
+  ;; difference from the previous element isn't 1:
+  (partition-if (op /= (- @2 @1) 1)
+                '(1 3 4 5 7 8 9 10 9 8 6 5 3 2))
+  -> ((1) (3 4 5) (7 8 9 10) (9) (8) (6) (5) (3) (2))
+
+  ;; Place runs of adjacent integers into partitions.
+  ;; I.e. start a new partition if the the absolute value of
+  ;; the difference from the previous exceeds 1:
+  (partition-if (op > (abs (- @2 @1)) 1)
+                '(1 3 4 5 7 8 9 10 9 8 6 5 3 2))
+  -> ((1) (3 4 5) (7 8 9 10 9 8) (6 5) (3 2))
+.brev
+
 .SS* Open Sequence Traversal
 
 Functions in this category perform efficient traversal of sequences.

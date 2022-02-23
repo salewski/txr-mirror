@@ -1408,6 +1408,7 @@
       ("partition" "N-0142889E")
       ("partition*" "N-03951D7A")
       ("partition-by" "N-000167DF")
+      ("partition-if" "N-017167C1")
       ("passwd" "N-036B0636")
       ("path-blkdev-p" "N-00198FC7")
       ("path-cat" "N-0033B27E")

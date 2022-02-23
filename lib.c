@@ -3696,6 +3696,63 @@ val partition_by(val func, val seq)
                                 funcall1(func, car(seq)), seq);
 }
 
+static val partition_if_countdown_funv(val envcons, struct args *args)
+{
+  cons_bind(count, targetfun, envcons);
+  val ret;
+  if (zerop(count))
+    return nil;
+  if ((ret = generic_funcall(targetfun, args)))
+    rplaca(envcons, pred(count));
+  return ret;
+}
+
+static val partition_if_func(val func, val lcons)
+{
+  list_collect_decl (out, ptail);
+  us_cons_bind (prev_item, iter, lcons);
+
+  ptail = list_collect(ptail, prev_item);
+
+  while (iter_more(iter)) {
+    val next_item = iter_item(iter);
+    val different = funcall2(func, prev_item, next_item);
+    prev_item = next_item;
+    if (different)
+      break;
+    ptail = list_collect(ptail, next_item);
+    iter = iter_step(iter);
+  }
+
+  us_rplacd(lcons, if2(iter_more(iter),
+                       make_lazy_cons_car_cdr(us_lcons_fun(lcons),
+                                              prev_item, iter_step(iter))));
+  us_rplaca(lcons, make_like(out, iter));
+  return nil;
+}
+
+val partition_if(val func, val seq, val count_in)
+{
+  val self = lit("partition-if");
+  val iter = iter_begin(seq);
+
+  if (count_in == zero) {
+    return cons(seq, nil);
+  } else if (iter_more(iter)) {
+    val item = iter_item(iter);
+    if (!missingp(count_in)) {
+      if (!integerp(count_in) && !plusp(count_in))
+        uw_throwf(type_error_s, lit("~a: count ~s isn't a nonnegative integer"),
+                  self, count_in, nao);
+      func = func_f0v(cons(count_in, func), partition_if_countdown_funv);
+    }
+    return make_lazy_cons_car_cdr(func_f1(func, partition_if_func),
+                                  item, iter_step(iter));
+  } else {
+    return nil;
+  }
+}
+
 static val partition_func(val base, val lcons)
 {
   us_cons_bind (seq, indices, lcons);

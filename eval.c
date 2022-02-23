@@ -6980,6 +6980,7 @@ void eval_init(void)
   reg_fun(intern(lit("tuples"), user_package), func_n3o(tuples, 2));
   reg_fun(intern(lit("tuples*"), user_package), func_n3o(tuples_star, 2));
   reg_fun(intern(lit("partition-by"), user_package), func_n2(partition_by));
+  reg_fun(intern(lit("partition-if"), user_package), func_n3o(partition_if, 2));
   reg_fun(intern(lit("partition"), user_package), func_n2(partition));
   reg_fun(intern(lit("split"), user_package), func_n2(split));
   reg_fun(intern(lit("split*"), user_package), func_n2(split_star));
