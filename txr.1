@@ -32532,6 +32532,16 @@ indicating that the resulting
 .code carray
 is not to be null terminated.
 
+The
+.meta object
+may be an iterator returned by
+.codn iter-begin .
+In this situation, if that object makes the original sequence
+available, then
+.code make-like
+takes that sequence in place of
+.metn object ,
+
 Note: the
 .code make-like
 function is a helper which supports the development of
