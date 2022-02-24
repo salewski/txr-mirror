@@ -37173,7 +37173,23 @@ function.
 .mets (partition-if < function < iterable <> [ count ])
 .syne
 .desc
-If
+The
+.code partition-if
+function separates the
+.meta iterable
+sequence into partitions which are identified by the two-argument
+.metn function .
+The principal idea is that successive overlapping pairs from
+.meta iterable
+are passed as arguments to
+.metn function ,
+and whenever
+.meta function
+yields true, those elements are identified as belonging to separate partitions:
+a partitioning division shall take place between them.  The detailed semantics
+is given below, as a procedure.
+
+Firstly, if
 .meta sequence
 is empty, then
 .code partition-if
@@ -37193,7 +37209,7 @@ of the same kind as
 
 The partitioning begins with the first element of
 .meta iterable
-being placed into a partition.
+being placed into the first partition.
 
 The subsequent partitioning is done according to a Boolean
 .metn function ,
@@ -37209,7 +37225,7 @@ is reached, the remainder of the
 sequence is placed into a single partition.
 
 After the first element is placed into a partition, the following
-process is repeated until the partition is terminated.
+partition-building process is repeated until the partition is terminated.
 .RS
 .IP 1.
 If
@@ -37219,7 +37235,8 @@ contains no more elements, then the partition terminates.
 Otherwise, if the
 .meta count
 is present, and has a value of zero, then the next available
-element is unconditionally deposited into the current partition.
+element is unconditionally deposited into the current partition,
+and the process repeats from step 1.
 .IP 3.
 Otherwise,
 .meta function
@@ -37246,9 +37263,11 @@ same kind as
 .meta iterable
 as if by using the
 .code make-like
-function, and appended to the lazy list of partitions. If a next element is
-available, it is place into a new partition, and the above process takes place
-from step 1.
+function, and incorporated as the next element of the lazy list of partitions.
+
+If, after a partition is thus produced, a next element is available, it is
+placed into a new partition, and the above partition-building process takes
+place from step 1. Otherwise, the lazy list terminates.
 
 .TP* Examples:
 
