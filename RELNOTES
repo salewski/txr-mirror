@@ -1,3 +1,137 @@
+                                    TXR 274
+                                   2022-02-24
+
+
+  Features
+
+  - Configure/Build:
+    - 'make clean-c" now cleans the C object files without removing .tlo files.
+      - complementary to "make clean-tlo".
+    - experimental, not tested support for configuring 64 bit time_t on
+      32 bit Glibc.
+    - CPPFLAGS (C preprocessor flags) variable noticed and used now.
+    - TXR now supports building with -fsanitize=undefined option.
+      - you must specify it yourself via platform-flags, etc.
+      - configure detects it and puts #define HAVE_UBSAN 1 into config.h
+
+  - FFI:
+    - new feature: enumed bitfield type combination now works.
+
+  - Doc:
+    - numerous documentation fixes.
+
+  - Lib:
+    - cptr-int: allow full unsigned range, so pointers can be specified
+      as unsigned integers, or using negative signed values also.
+    - New copy-cptr function; copy copies cptr objects.
+    - New nandf and norf functions.
+    - New function random-sample for one-pass reservoir sampling of a sequence.
+    - load: supports catenated .tlo files now
+    - cat-files: new function for catenating files, like POSIX cat.
+    - find-max uses generic iteration.
+    - new find-max-key function.
+    - new partition-if function.
+    - new list-builder method oust
+      - also local function in build macro
+
+  - Getopts:
+    - various improvements.
+    - opt-help function/method split up into several.
+
+  - Macros:
+    - New etypecase macro.
+    - New nand and nor macros and functions.
+    - opip now allows embedded (ap ...) and so on.
+
+  - Compiler:
+    - new optimizations.
+
+  - TXR Pattern Language:
+    - new function match-fboundp for testing whether a symbol has a binding
+      as a pattern function.
+
+  - Expander:
+    - new @,expr hack: quasiquote generates (sys:var ...) or (sys:expr ...)
+      based on type of substituted value.
+    - macro-time is no longer a special operator, but a macro.
+
+  - Listener:
+    - Hack: Ctrl-V Ctrl-J now inserts CR (i.e. new line in multiline mode) rather than a LF.
+      - Good for people used to inserting line breaks in GNU Readline.
+    - Improvement in method completion.
+
+  - getopts:
+    - Numerous improvements, mainly in area of help generation.
+
+  - Autoloading:
+    - More nuanced implementation with multiple symbol namespaces, reduces spurious
+      loading of modules not actually used.
+
+  Bugs
+
+  - TXR Pattern Language:
+    - bug fixed in @(freeform)
+    - involves bugfix in lazy-str-get-trailing-list function.
+    - filtering now throws when there is an invalid filter,
+      due to a fix in the filter-string-tree function.
+
+  - Parser:
+    - bug: carriage returns in JSON not tolerated.
+
+  - Configure/Build
+    - fixed broken file offset bits detection, resulting in no large
+      file support on 32 bit Glibc platforms (regression since 244).
+    - fixed broken syntax in unwind.h causing build to break if
+      CONFIG_DEBUG_SUPPORT disabled.
+
+  - Macros:
+    - sum-each, mul-each: handle no vars case.
+    - typecase: return nil from formless clauses.
+    - fix broken :key parameters.
+
+  - Lib:
+    - carray: allow t and floating 0 in sub and replace.
+    - carray-replace: two overrun bugs.
+    - separate: wrong return value when seq is nil.
+    - time structure: added missing wday and yday slots.
+
+  - Listener:
+    - bug handling comments in plain mode.
+    - issue handling Ctrl-C in plain mode.
+
+  - Structural Pattern Matching:
+    - quasiliteral match wrongly allowing loose prefix matching.
+    - `@{nil #/regex/}` wrongly throwing exception.
+
+  - Command Line:
+    - -Dvar now binds var to empty string rather than t.
+      - this t was some thing inadvertently introduced in 2014.
+    - -Dvar=foo=bar (value containing equal sign) works.
+    - -Dx,y,z now diagnosed.
+
+  - Vim Syntax Files:
+    - improvement in handling multi-line string literals.
+
+  - Search trees:
+    - fixed two array underruns found by ubsan.
+    - both situations work reliably by fluke in unfixed code due the memory
+      cell below the array reliably being zero bits.
+
+  - PRNG:
+    - undefined behavior (32 bit shift of 32 bit value) in random function.
+
+  - termios:
+    - variables cmspar and crtscts had wrong values on 32 bits due to
+      overflow in initialization.
+
+  - General:
+    - numerous numeric conversion issues identified by ubsan were
+      addressed in various places in the code base.
+    - Missing autoload for *in-compilation-unit* caused loading problem for
+      compiled code making use of with-compilation-unit.
+
+
+
                                     TXR 273
                                    2021-12-28
 

@@ -148,11 +148,12 @@ extern val unique_s, unquote_s, until_s, until_star_s, upcase_k;
 extern val uref_s, user_package_s, userdata_k, ushort_s, usr_var_s;
 extern val uw_protect_s, val_s, var_k, var_s, vars_k;
 extern val vec_list_s, vec_s, vecref_s, vector_lit_s, vm_closure_s;
-extern val vm_desc_s, void_s, warning_s, wchar_s, weak_and_k;
-extern val weak_keys_k, weak_or_k, weak_vals_k, when_s, while_s;
-extern val while_star_s, whole_k, width_s, wild_s, word_char_k;
-extern val wrap_k, wstr_d_s, wstr_s, year_s, zarray_s;
-extern val zchar_s, zerop_s, zeroplus_s, zone_s;
+extern val vm_desc_s, void_s, warning_s, wchar_s, wday_s;
+extern val weak_and_k, weak_keys_k, weak_or_k, weak_vals_k, when_s;
+extern val while_s, while_star_s, whole_k, width_s, wild_s;
+extern val word_char_k, wrap_k, wstr_d_s, wstr_s, yday_s;
+extern val year_s, zarray_s, zchar_s, zerop_s, zeroplus_s;
+extern val zone_s;
 
 #if HAVE_DLOPEN
 extern val dlhandle_s, dlsym_s;
@@ -304,11 +305,12 @@ val *protected_sym[] = {
   &uref_s, &user_package_s, &userdata_k, &ushort_s, &usr_var_s,
   &uw_protect_s, &val_s, &var_k, &var_s, &vars_k,
   &vec_list_s, &vec_s, &vecref_s, &vector_lit_s, &vm_closure_s,
-  &vm_desc_s, &void_s, &warning_s, &wchar_s, &weak_and_k,
-  &weak_keys_k, &weak_or_k, &weak_vals_k, &when_s, &while_s,
-  &while_star_s, &whole_k, &width_s, &wild_s, &word_char_k,
-  &wrap_k, &wstr_d_s, &wstr_s, &year_s, &zarray_s,
-  &zchar_s, &zerop_s, &zeroplus_s, &zone_s,
+  &vm_desc_s, &void_s, &warning_s, &wchar_s, &wday_s,
+  &weak_and_k, &weak_keys_k, &weak_or_k, &weak_vals_k, &when_s,
+  &while_s, &while_star_s, &whole_k, &width_s, &wild_s,
+  &word_char_k, &wrap_k, &wstr_d_s, &wstr_s, &yday_s,
+  &year_s, &zarray_s, &zchar_s, &zerop_s, &zeroplus_s,
+  &zone_s,
 
 #if HAVE_DLOPEN
   &dlhandle_s, &dlsym_s,
