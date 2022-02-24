@@ -221,7 +221,7 @@
     (if (atom c)
       c
       (let ((sym (car c)))
-        (if (member sym '(dwim uref qref))
+        (if (member sym '(dwim uref qref op do lop ldo ap ip ado ido ret aret))
           c
           (let ((opdo (if (or (special-operator-p (car c))
                               (macro-form-p c e)) 'do 'op)))

@@ -56777,16 +56777,31 @@ where the above
 notation denotes the following transformation applied to each argument:
 
 .verb
-  (function ...) -> (op function ...)
-  (operator ...) -> (do operator ...)
-  (macro ...)    -> (do macro ...)
+  ;; these specific form patterns are left untransformed:
+
   (dwim ...)     -> (dwim ...)
   [...]          -> [...]
   (qref ...)     -> (qref ...)
   (uref ...)     -> (uref ...)
+  (op ...)       -> (op ...)
+  (do ...)       -> (do ...)
+  (lop ...)      -> (lop ...)
+  (ldo ...)      -> (ldo ...)
+  (ap ...)       -> (ap ...)
+  (ip ...)       -> (ip ...)
+  (ado ...)      -> (ado ...)
+  (ido ...)      -> (ido ...)
+  (ret ...)      -> (ret ...)
+  (aret ...)     -> (aret ...)
   .slot          -> .slot
   .(method ...)  -> .(method ...)
   atom           -> atom
+
+  ;; other compound forms are transformed like this:
+
+  (function ...) -> (op function ...)
+  (operator ...) -> (do operator ...)
+  (macro ...)    -> (do macro ...)
 .brev
 
 In other words, compound forms whose leftmost symbol is a macro or operator
@@ -56802,7 +56817,9 @@ denoting struct slot access, either explicitly using
 .code uref
 or
 .code qref
-or the respective dot notations, as well as any atom forms.
+or the respective dot notations, forms which invoke any of the
+.code do
+family of operators, as well as any atom forms.
 
 Note: the
 .code opip

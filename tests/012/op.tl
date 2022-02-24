@@ -93,3 +93,9 @@
   [[[[(do do do op list) 1] 2] 3] 4] (1 2 3 4)
   [[[[(do do do op list @1 @@1 @@@1 @@@@1) 1] 2] 3] 4] (4 3 2 1)
   [[[[(do do do op list @@@@1 @@@1 @@1 @1) 1] 2] 3] 4] (1 2 3 4))
+
+(test (flow (range 1000 9999)
+        (keep-if (opip digits (ap > (+ @2 @3) (+ @1 @4))))
+        (partition-if (op neq 1 (- @2 @1)))
+        (find-max-key @1 : len))
+      80)
