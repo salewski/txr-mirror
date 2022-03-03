@@ -1701,14 +1701,8 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
     }
   }
 
-  if (!null_or_missing_p(filter_fun)) {
-    struct hash_iter hi;
-    val cell;
-    hash_iter_init(&hi, hash, self);
-
-    while ((cell = hash_iter_next(&hi)) != nil)
-      us_rplacd(cell, funcall1(filter_fun, us_cdr(cell)));
-  }
+  if (!null_or_missing_p(filter_fun))
+    hash_update(hash, filter_fun);
 
   return hash;
 }
@@ -1943,7 +1937,7 @@ val hash_proper_subset(val hash1, val hash2)
 
 val hash_update(val hash, val fun)
 {
-  val self = lit("hash-subset");
+  val self = lit("hash-update");
   val cell;
   struct hash_iter hi;
 
