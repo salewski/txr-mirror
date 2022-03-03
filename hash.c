@@ -1667,6 +1667,12 @@ val group_by(val func, val seq, struct args *hashv_args)
   }
 }
 
+val group_map(val by_fun, val filter_fun, val seq, struct args *hashv_args)
+{
+  val hash = group_by(by_fun, seq, hashv_args);
+  return hash_update(hash, filter_fun);
+}
+
 val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
                  val initval, val filter_fun)
 {
@@ -2135,6 +2141,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-subset"), user_package), func_n2(hash_subset));
   reg_fun(intern(lit("hash-proper-subset"), user_package), func_n2(hash_proper_subset));
   reg_fun(intern(lit("group-by"), user_package), func_n2v(group_by));
+  reg_fun(intern(lit("group-map"), user_package), func_n3v(group_map));
   reg_fun(intern(lit("group-reduce"), user_package),
           func_n6o(group_reduce, 4));
   reg_fun(intern(lit("hash-update"), user_package), func_n2(hash_update));

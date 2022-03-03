@@ -9,8 +9,8 @@
   [group-by identity '(1 1 2 2 3 3 3)] #H(() (1 (1 1)) (2 (2 2)) (3 (3 3 3)))
   (group-by (op mod @1 3) (range 0 10)) #H(() (0 (0 3 6 9))
                                               (1 (1 4 7 10))
-                                              (2 (2 5 8))))
-
+                                              (2 (2 5 8)))
+  [group-map (op mod @1 3) sum (range 0 10)] #H(() (0 18) (1 22) (2 15)))
 
 (mtest
   [group-reduce (hash) identity (do inc @1)
