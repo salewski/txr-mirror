@@ -100,6 +100,7 @@
     "In programming, you want rigor, but also to recognize and avoid rigor mortis."
     "TXR Labs engaged in gain-of-function experiments as far back as 2009."
     "TXR Lisp has dark mode now: global *dark-mode* and lexical with-dark-mode."
+    "Merry GNUsmas, dear FSF friends! ... Crap, wait. That's 'Samsung' backwards!"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
