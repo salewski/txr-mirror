@@ -1571,6 +1571,25 @@ then
   printf "typedef superulong_t double_uintptr_t;\n" >> config.h
 fi
 
+printf "Checking for intmax_t  ... "
+cat > conftest.c <<!
+#include <inttypes.h>
+
+int main(void)
+{
+  intmax_t i = 0;
+  untmax_t u = 0;
+  return (uintmax_t) i + u;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_INTMAX_T 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 #
 # Endianness.
 #

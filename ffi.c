@@ -38,6 +38,9 @@
 #include <wchar.h>
 #include <time.h>
 #include "config.h"
+#if HAVE_INTMAX_T
+#include <stdint.h>
+#endif
 #if HAVE_LIBFFI
 #include <ffi.h>
 #endif
@@ -4701,6 +4704,21 @@ static void ffi_init_extra_types(void)
               type_by_size[convert(ptrdiff_t, -1) > 0][sizeof (ptrdiff_t)]);
   ffi_typedef(intern(lit("wint-t"), user_package),
               type_by_size[convert(wint_t, -1) > 0][sizeof (wint_t)]);
+
+  {
+#if HAVE_INTMAX_T
+    typedef intmax_t imax_t;
+#else
+    typedef long long imax_t;
+#endif
+
+    if (sizeof(imax_t) <= 8) {
+      ffi_typedef(intern(lit("intmax-t"), user_package),
+                  type_by_size[0][sizeof (imax_t)]);
+      ffi_typedef(intern(lit("uintmax-t"), user_package),
+                  type_by_size[1][sizeof (imax_t)]);
+    }
+  }
 
 #if HAVE_SYS_TYPES_H
   ffi_typedef(intern(lit("blkcnt-t"), user_package),

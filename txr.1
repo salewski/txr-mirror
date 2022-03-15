@@ -80783,10 +80783,24 @@ the most strictly alignment member of the structure.  The alignment of all
 other bitfields is ignored.
 
 .SS* Additional Types
-.coNP FFI types @, size-t @, ptrdiff-t @, int-ptr-t @, uint-ptr-t @, wint-t @, sig-atomic-t @ time-t and @ clock-t
+.coNP FFI types @, size-t @, ptrdiff-t @, int-ptr-t @, uint-ptr-t @, intmax-t @, uintmax-t @ wint-t @, sig-atomic-t @ time-t and @ clock-t
+.desc
 These additional FFI types for common C language types are provided as
 .code typedef
 aliases.
+The
+.code intmax-t
+and
+.code uintmax-t
+types are provided only if the host platform's
+.code intmax_t
+is no wider than 64 bits. If the host platform lacks
+.code intmax_t
+then the above two FFI types are defined as aliases for
+.code longlong
+and
+.codn ulonglong ,
+respectively.
 
 .coNP FFI type @ qref
 .synb
