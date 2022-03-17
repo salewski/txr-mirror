@@ -4948,7 +4948,7 @@ val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
   ret = ifbe2(rtft->rget, rtft->get)(rtft, convert(mem_t *, rc), self);
 
   if (in_pass_needed) {
-    for (i = 0; i < n; i++) {
+    for (i = n - 1; i >= 0; i--) {
       struct txr_ffi_type *mtft = type[i];
       if (mtft->by_value_in)
         mtft->in(mtft, 0, convert(mem_t *, values[i]), args->arg[i], self);
@@ -4977,14 +4977,15 @@ static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
   val retval = nil;
   int out_pass_needed = 0;
+  val *type = convert(val *, alloca(nargs * sizeof *type));
   args_decl(args, nargs);
   args_decl(args_cp, nargs);
+
 
   (void) cif;
 
   for (i = 0; i < nargs; i++) {
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
+    struct txr_ffi_type *mtft = ffi_type_struct((type[i] = pop(&types)));
     val arg = mtft->get(mtft, convert(mem_t *, cargs[i]), self);
     args_add(args, arg);
     if (mtft->out != 0)
@@ -4996,10 +4997,9 @@ static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
   retval = generic_funcall(tfcl->fun, args);
 
   if (out_pass_needed) {
-    for (types = tfcd->argtypes, i = 0; i < nargs; i++) {
-      val type = pop(&types);
+    for (types = tfcd->argtypes, i = nargs - 1; i >= 0; i--) {
       val arg = args_at(args_cp, i);
-      struct txr_ffi_type *mtft = ffi_type_struct(type);
+      struct txr_ffi_type *mtft = ffi_type_struct(type[i]);
       if (mtft->out != 0)
         mtft->out(mtft, 0, arg, convert(mem_t *, cargs[i]), self);
     }
@@ -5038,10 +5038,10 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
   {
     args_decl(args, nargs);
     args_decl(args_cp, nargs);
+    val *type = convert(val *, alloca(nargs * sizeof *type));
 
     for (i = 0; i < nargs; i++) {
-      val type = pop(&types);
-      struct txr_ffi_type *mtft = ffi_type_struct(type);
+      struct txr_ffi_type *mtft = ffi_type_struct((type[i] = pop(&types)));
       val arg = mtft->get(mtft, convert(mem_t *, cargs[i]), self);
       args_add(args, arg);
       if (mtft->out != 0)
@@ -5053,10 +5053,9 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
     retval = generic_funcall(tfcl->fun, args);
 
     if (out_pass_needed) {
-      for (types = tfcd->argtypes, i = 0; i < nargs; i++) {
-        val type = pop(&types);
+      for (types = tfcd->argtypes, i = nargs - 1; i >= 0; i--) {
         val arg = args_at(args_cp, i);
-        struct txr_ffi_type *mtft = ffi_type_struct(type);
+        struct txr_ffi_type *mtft = ffi_type_struct(type[i]);
         if (mtft->out != 0)
           mtft->out(mtft, 0, arg, convert(mem_t *, cargs[i]), self);
       }
