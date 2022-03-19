@@ -92,7 +92,7 @@ for arg in "$0" ${@+"$@"} ; do
   case $arg in
   *"'"* )
     case $arg in
-    *'"'* | *'$'* )
+    *[\"\$\\]* )
       cmdline="$cmdline'$(printf "%s" "$arg" | sed -e "s/'/'\\\\''/g")'"
       ;;
     * )
