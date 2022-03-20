@@ -4580,10 +4580,6 @@ static void ffi_init_types(void)
     ffi_typedef(bstr_s, type);
   }
 
-  ffi_typedef(str_d_s, make_ffi_type_builtin(str_d_s, str_s, FFI_KIND_PTR,
-                                             sizeof (mem_t *), alignof (mem_t *),
-                                             &ffi_type_pointer,
-                                             ffi_str_put, ffi_str_d_get, 0, 0));
   {
     val type = ffi_typedef(wstr_s, make_ffi_type_builtin(wstr_s, str_s,
                                                          FFI_KIND_PTR,
@@ -4598,6 +4594,12 @@ static void ffi_init_types(void)
     tft->by_value_in = 1;
     ffi_typedef(wstr_s, type);
   }
+
+  ffi_typedef(str_d_s, make_ffi_type_builtin(str_d_s, str_s, FFI_KIND_PTR,
+                                             sizeof (mem_t *),
+                                             alignof (mem_t *),
+                                             &ffi_type_pointer,
+                                             ffi_str_put, ffi_str_d_get, 0, 0));
 
   ffi_typedef(wstr_d_s, make_ffi_type_builtin(wstr_d_s, str_s, FFI_KIND_PTR,
                                               sizeof (mem_t *),
