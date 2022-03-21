@@ -79078,26 +79078,21 @@ object can be passed as the argument of
 .code fclose
 to close the stream.
 
-.coNP FFI types @, str @, bstr @ str-d and @ bstr-d
+.coNP FFI types @, str @ str-d @ and @ str-s
 These FFI types correspond to the C pointer type
 .codn "char *" ,
 providing automatic conversion between Lisp strings and null-terminated
-C strings. The
-.code str
+C strings.
+
+The related types
+.codn bstr ,
+.codn bstr-d ,
+.codn bstr-s ,
+.codn wstr ,
+.code wstr-d
 and
-.code str-d
-types use UTF-8 encoding. The
-.code bstr
-and
-.code bstr-d
-types do not use UTF-8: only Lisp strings which contain strictly
-code points in the range U+0000 to U+00FF may convert to these types;
-out-of-range characters trigger an error exception.
-The
-.code -d
-suffixed types differ from the unsuffixed variants
-in that they denote the transfer of ownership of dynamically allocated memory,
-and thus the responsibility for freeing that memory.
+.code wstr-s
+are also provided; these are described in the following sections.
 
 The
 .code str
@@ -79131,17 +79126,19 @@ it deallocates that C string by invoking the C library function
 .code free
 on it.
 
-The type
-.code bstr-d
-behaves like
-.code str-d
-with regard to memory management; it differs from
-.code str-d
-in the same way that
-.code str
-differs from
-.codn bstr :
-it doesn't perform UTF-8 encoding or decoding.
+Type type
+.code str-
+is similar to
+.codn str-d ;
+it also has no in-operation, and doesn't deallocate the buffer
+allocated in the put operation.
+Under the get operation, the
+.code str-s
+type does not assume ownership of memory, and therefore does not
+free the pointer received from the foreign function. The
+.code str-s
+type is intended for receiving strings via a pointer-to-pointer
+argument, in situations when the string must not be freed.
 
 Like other types, the string types combine with the
 .code ptr
@@ -79151,7 +79148,7 @@ family has memory management semantics, as does the string family,
 it is important to understand the memory management implications
 of the combination of the two.
 
-The types
+The derived pointer types
 .code "(ptr str-d)"
 and
 .code "(ptr str)"
@@ -79172,20 +79169,19 @@ pointer, and then pass that pointer to the C
 .code free
 function.
 
-To receive a string pointer by pointer from a foreign
-function, one of the types
-.code "(ptr-out str)"
-or
-.code "(ptr-out str-d)"
-should be used, which have different semantics. In either situation, FFI will
-prepare a pointer-sized uninitialized buffer, which the called function fills
-with a
-.code "char *"
-pointer. In the
-.code str
-case, FFI will duplicate that string to a Lisp string. In the
-.code str-d
-case, FFI will also free the string received from the foreign function.
+Receiving a string by pointer from a foreign function is achieved
+by treating the situation as a pointer to an array of one element.
+So that is to say, an argument like
+.code "char **pstr"
+can be treated as either
+.code "(ptr-out (array 1 str-d))"
+if the foreign function passes ownership of the string, or else
+.code "(ptr-out (array 1 str-s))"
+if the foreign function retains ownership of the string.
+In either case, the argument is a vector of one element, which
+will be updated to the returned string, or else
+.code nil
+if the function passes back a null pointer.
 
 The type combination
 .code "(ptr-in str-d)"
@@ -79197,18 +79193,74 @@ passes the string pointer in the same way, but the foreign module mustn't
 use the pointer after returning. FFI will free the pointer that had been
 passed.
 
-.coNP FFI types @ wstr and @ wstr-d
+.coNP FFI types @, bstr @ bstr-d @ and @ bstr-s
+The
+.code bstr
+family corresponds to null-terminated
+.code "char *"
+C strings, like the
+.code str
+family, and the family members have memory management semantics
+similar to their
+.code str
+counterparts.
+
+The
+.code b
+prefix in the naming denotes "byte". It indicates that unlike the
+.code str
+family, the
+.code bstr
+family does not use UTF-8 encoding; only Lisp strings which contain strictly
+code points in the range U+0000 to U+00FF may convert to these types;
+out-of-range characters trigger an error exception.
+
+Likewise, in the reverse direction, no UTF-8 decoding is performed: every byte value
+turns into the corresponding character code. The byte 0 is interpreted as the
+string terminator.
+
+Note: the
+.code bstr
+type may be advantageous in situations when character handling is known
+to be confined to the ASCII range, since UTF-8 conversion is then
+unnecessary overhead. Because \*(TX strings use wide characters internally,
+converting to and from the
+.code bstr
+type still requires memory management overhead, just like in the case of the
+.code str
+type. The
+.code wstr
+type described in the next section avoids memory management and conversion
+overhead. Thus, even in situations in which characters are confined to the
+ASCII range, if wide functions are available in the foreign API, it may
+be more efficient to use them, particularly if the foreign component
+uses that representation internally.
+
+.coNP FFI types @, wstr @ wstr-d and @ wstr-s
 The FFI type
 .code wstr
 corresponds to the C type
 .code "wchar_t *"
 pointing to the first character of a null terminated wide string.
 It converts between Lisp strings and symbols, and C strings.
-The memory management is similar to the
+The family members of
+.code wstr
+have memory management semantics similar to their
 .code str
-and
-.code str-d
-types, except that no UTF-8 conversion takes place.
+counterparts,
+
+Note: because wide characters do not require UTF-8 conversion, the
+.code wstr
+family is more efficient. A
+.code wstr
+string passes into foreign code directly: the Lisp object already contains
+a null-terminated wide character string, and so the pointer to that is
+given directly to the foreign code. Similarly, ownership transfer in
+either direction is a pointer passage with no memory management or conversion
+overheads.
+Whenever some foreign API offers a choice between UTF-8 strings, and wide
+strings, the wide version should be targeted by FFI, particularly if the
+API is known to works with wide strings internally also.
 
 .coNP FFI types @ buf and @ buf-d
 The

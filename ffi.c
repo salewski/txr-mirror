@@ -135,7 +135,7 @@ val array_s, zarray_s, carray_s;
 
 val union_s;
 
-val str_d_s, wstr_s, wstr_d_s, bstr_s, bstr_d_s;
+val str_d_s, str_s_s, wstr_s, wstr_d_s, wstr_s_s, bstr_s, bstr_d_s, bstr_s_s;
 
 val buf_d_s;
 
@@ -4614,6 +4614,26 @@ static void ffi_init_types(void)
                                               ffi_bstr_put, ffi_bstr_d_get,
                                               0, 0));
 
+  ffi_typedef(str_s_s, make_ffi_type_builtin(str_s_s, str_s, FFI_KIND_PTR,
+                                             sizeof (mem_t *),
+                                             alignof (mem_t *),
+                                             &ffi_type_pointer,
+                                             ffi_ptr_out_null_put, ffi_str_get,
+                                             0, 0));
+
+  ffi_typedef(wstr_s_s, make_ffi_type_builtin(wstr_s_s, str_s, FFI_KIND_PTR,
+                                              sizeof (mem_t *),
+                                              alignof (mem_t *),
+                                              &ffi_type_pointer,
+                                              ffi_ptr_out_null_put, ffi_wstr_get,
+                                              0, 0));
+
+  ffi_typedef(bstr_s_s, make_ffi_type_builtin(bstr_s_s, str_s, FFI_KIND_PTR,
+                                              sizeof (mem_t *),
+                                              alignof (mem_t *),
+                                              &ffi_type_pointer,
+                                              ffi_ptr_out_null_put, ffi_bstr_get,
+                                              0, 0));
   {
     val iter;
 
@@ -6772,10 +6792,13 @@ void ffi_init(void)
   carray_s = intern(lit("carray"), user_package);
   union_s = intern(lit("union"), user_package);
   str_d_s = intern(lit("str-d"), user_package);
+  str_s_s = intern(lit("str-s"), user_package);
   wstr_s = intern(lit("wstr"), user_package);
   wstr_d_s = intern(lit("wstr-d"), user_package);
+  wstr_s_s = intern(lit("wstr-s"), user_package);
   bstr_s = intern(lit("bstr"), user_package);
   bstr_d_s = intern(lit("bstr-d"), user_package);
+  bstr_s_s = intern(lit("bstr-s"), user_package);
   buf_d_s = intern(lit("buf-d"), user_package);
   ptr_in_s = intern(lit("ptr-in"), user_package);
   ptr_out_s = intern(lit("ptr-out"), user_package);
