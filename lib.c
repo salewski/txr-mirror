@@ -12186,6 +12186,38 @@ val isec(val seq1, val seq2, val testfun, val keyfun)
   return make_like(out, seq1);
 }
 
+val isecp(val seq1, val seq2, val testfun, val keyfun)
+{
+  val self = lit("isecp");
+  val out = nil;
+  seq_iter_t si1, si2;
+  val el1;
+
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  seq_iter_init(self, &si1, seq1);
+  seq_iter_init_with_rewind(self, &si2, seq2);
+
+  while (seq_get(&si1, &el1)) {
+    val el1_key = funcall1(keyfun, el1);
+    val el2;
+
+    seq_iter_rewind(&si2, self);
+
+    while (seq_get(&si2, &el2)) {
+      val el2_key = funcall1(keyfun, el2);
+
+      if (funcall2(testfun, el1_key, el2_key)) {
+        out = t;
+        break;
+      }
+    }
+  }
+
+  return out;
+}
+
 val uni(val seq1, val seq2, val testfun, val keyfun)
 {
   val self = lit("uni");

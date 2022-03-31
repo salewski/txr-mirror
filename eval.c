@@ -7350,6 +7350,7 @@ void eval_init(void)
   reg_fun(intern(lit("diff"), user_package), func_n4o(diff, 2));
   reg_fun(intern(lit("symdiff"), user_package), func_n4o(symdiff, 2));
   reg_fun(intern(lit("isec"), user_package), func_n4o(isec, 2));
+  reg_fun(intern(lit("isecp"), user_package), func_n4o(isecp, 2));
   reg_fun(intern(lit("uni"), user_package), func_n4o(uni, 2));
 
   reg_fun(intern(lit("seqp"), user_package), func_n1(seqp));

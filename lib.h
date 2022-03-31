@@ -1233,6 +1233,7 @@ val set_diff(val list1, val list2, val testfun, val keyfun);
 val diff(val seq1, val seq2, val testfun, val keyfun);
 val symdiff(val seq1, val seq2, val testfun, val keyfun);
 val isec(val list1, val list2, val testfun, val keyfun);
+val isecp(val list1, val list2, val testfun, val keyfun);
 val uni(val list1, val list2, val testfun, val keyfun);
 val copy(val seq);
 val length(val seq);

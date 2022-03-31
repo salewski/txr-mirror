@@ -35442,10 +35442,11 @@ function, these functions behave the same as
 and
 .codn find-min .
 
-.coNP Functions @, uni @, isec @ diff and @ symdiff
+.coNP Functions @, uni @, isec @, isecp @ diff and @ symdiff
 .synb
 .mets (uni < iter1 < iter1 >> [ testfun <> [ keyfun ]])
 .mets (isec < iter1 < iter1 >> [ testfun <> [ keyfun ]])
+.mets (isecp < iter1 < iter1 >> [ testfun <> [ keyfun ]])
 .mets (diff < iter1 < iter1 >> [ testfun <> [ keyfun ]])
 .mets (symdiff < iter1 < iter2 >> [ testfun <> [ keyfun ]])
 .syne
@@ -35468,6 +35469,15 @@ set difference and symmetric difference of
 and
 .metn iter2 ,
 returning a new sequence.
+
+The
+.code isecp
+is Boolean: it returns
+.code t
+for those arguments for which
+.code isec
+returns a non-empty list, otherwise
+.codn nil .
 
 The arguments
 .meta iter1

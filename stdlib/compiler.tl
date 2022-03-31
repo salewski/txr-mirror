@@ -2037,7 +2037,7 @@
              (al-val (gensym))
              (shadow-p (let ((all-vars (append pars.req pars.(opt-syms)
                                                (if pars.rest (list pars.rest)))))
-                         (or (isec all-vars fix-arg-iter)
+                         (or (isecp all-vars fix-arg-iter)
                              (member apply-list-expr all-vars)))))
         ^(,(if shadow-p 'let 'alet) ,(zip fix-vals fix-arg-iter)
            (let* ,(build
@@ -2406,7 +2406,7 @@
                                         self obj)))))
                  (symvec (sys:vm-desc-symvec vm-desc)))
             out.(add (list-from-vm-desc vm-desc))
-            (when (isec symvec %package-manip%)
+            (when (isecp symvec %package-manip%)
               out.(add :fence)))))
       (dump-to-tlo out-stream out))))
 
