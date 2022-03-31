@@ -2361,7 +2361,8 @@
                                        (not (constantp form)))
                               (let* ((vm-desc (compile-toplevel form))
                                      (flat-vd (list-from-vm-desc vm-desc))
-                                     (fence (member sym %package-manip%)))
+                                     (symvec (sys:vm-desc-symvec vm-desc))
+                                     (fence (isecp symvec %package-manip%)))
                                 (when *eval*
                                   (let ((pa *package-alist*))
                                     (sys:vm-execute-toplevel vm-desc)
