@@ -942,33 +942,41 @@ syntax.
 .coIP --lisp
 .coIP --compiled
 These options influence the treatment of query files which do not have
-a suffix indicating their type. The
+a recognized suffix indicating their type. The
 .code --lisp
-option causes an unsuffixed file to be treated as Lisp source;
+option causes a file with an unrecognized suffix, or no suffix, to be treated
+as Lisp source;
 .code --compiled
-causes it to be treated as a compiled file.
-
-Moreover, if
+causes it to be treated as a compiled \*(TL file.
+Moreover,
 .code --lisp
-is specified, and an unsuffixed file does not exist, then \*(TX
-will add the
-.str .tl
-suffix and try the file again; and
+and
 .code --compiled
-will similarly add the
-.str .tlo
-suffix and try opening the file again.
-In the same situation, if neither
-.code --lisp
-nor
-.code --compiled
-has been specified, \*(TX will first try adding the
+influence the suffix search.  By default, when a query file name does not have
+a recognizable suffix, and the file does not exist, \*(TX adds the
 .str .txr
-suffix. If that fails,
-then the
+suffix to the name and tries opening that name, and in a similar way
+tries
 .str .tlo
-suffix will be tried and finally
+and then
 .strn .tl .
+In this situation, if either of these two options is specified, \*(TX
+tries only the
+.str .tlo
+and
+.str .tl
+suffixes, in that order, avoiding the
+.str .txr
+suffix. The search order is always
+.str .tlo
+first, then
+.str .tl
+regardless of whether
+.code --lisp
+or
+.code --compiled
+is specified.
+
 Note that
 .code --lisp
 and
@@ -976,6 +984,16 @@ and
 influence how the argument of the
 .code -f
 option is treated, but only if they precede that option.
+
+If the file has a recognized suffix:
+.strn .tl ,
+.strn .tlo ,
+.str  .txr
+or
+.strn .txr_profile ,
+then these options have no effect. The suffix determines the
+interpretation of the content. Moreover, no suffix search takes
+place: only the given path name is tried.
 
 .coIP --reexec
 On platforms which support the POSIX
@@ -1122,20 +1140,31 @@ the
 .str .tl
 suffix, then it is assumed to be \*(TL.  The
 .code --lisp
-option changes the treatment of unsuffixed script file names, causing them
-to be interpreted as \*(TL.
+and
+.code --compiled
+options change the treatment of unsuffixed script file names, causing them
+to be interpreted as \*(TL source or compiled \*(TL, respectively.
 
-If an unsuffixed script file name is specified, and cannot be opened, then
-\*(TX will add the
+If a file name is specified which does not have a recognized suffix,
+and names a file which doesn't exist, then
+\*(TX adds the
 .str .txr
-suffix and try again. If that fails, it will be tried with the
+suffix and tries again. If that doesn't exist, another attempt is made with the
+.str .tlo
+suffix, which will be treated as as a \*(TL compiled file.
+Finally, if that doesn't exist, the
 .str .tl
-suffix, and treated as \*(TL.
-If the
+suffix is tried, which will be treated as containing \*(TL source.
+If either the
 .code --lisp
-option has been specified, then \*(TX tries only the
-.str .tl
-suffix.
+or
+.code --compiled
+option has been specified, then \*(TX skips trying the
+.str .txr
+suffix, and tries only
+.str .tlo
+followed by
+.strn .tl .
 
 A \*(TL file is processed as if by the
 .code load
@@ -11526,8 +11555,10 @@ and
 
 \*(TL code can be placed into files. On the command
 line, \*(TX treats files with a
-.str ".tl"
-suffix as \*(TL code, and the
+.str .tl
+or
+.str .tlo
+suffix as \*(TL source or compiled code, and the
 .code @(load)
 directive does also.
 
@@ -77513,7 +77544,8 @@ ends in any of these four suffixes:
 or
 .codn .txr_profile .
 
-Depending on whether the tentative pathname is suffixed,
+Depending on whether the tentative pathname exists, and whether
+or not it is suffixed,
 .code load
 tries to make one or more attempts to open several variations of that name.
 These variations are called
@@ -77524,18 +77556,18 @@ error exception propagates to
 .codn load 's
 caller.
 
-If the tentative pathname is suffixed, then
+Regardless of whether the tentative pathname is suffixed,
 .code load
-tries to open a file by that actual pathname. If that attempt
-fails, no other names are tried.
+tries to open a file by that actual pathname first. If that attempt
+fails for a suffixed pathname, or fails due to a reason other than
+non-existence, no other names are tried.
 
-If the tentative pathname is unsuffixed, then first the suffix
+If an unsuffixed tentative pathname refers to a nonexistent file,
 .code .tlo
 is appended to the name, and an attempt is made to open a file
-with this actual path. If that file is not found, then the suffix
+with the resulting path. If that file is not found, then the suffix
 .code .tl
-is similarly tried. If that file is not found, then the unsuffixed
-name is tried.
+is similarly tried.
 
 If an unsuffixed file is opened, its contents are treated as interpreted Lisp.
 Files ending in

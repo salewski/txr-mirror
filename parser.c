@@ -534,6 +534,33 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
     val spec_file_try = nil;
     FILE *in = 0;
 
+    {
+      spec_file_try = spec_file;
+      errno = 0;
+      in = w_fopen(c_str(spec_file_try, self), L"r");
+      if (in != 0) {
+        switch (suffix) {
+        case tl:
+          *txr_lisp_p = t;
+          break;
+        case tlo:
+          *txr_lisp_p = chr('o');
+          break;
+        case txr:
+          *txr_lisp_p = nil;
+          break;
+        default:
+          break;
+        }
+        goto found;
+       } else {
+#ifdef ENOENT
+        if (errno != ENOENT)
+          goto except;
+#endif
+       }
+    }
+
     if (suffix == none && !*txr_lisp_p) {
       spec_file_try = scat(lit("."), spec_file, lit("txr"), nao);
       if ((in = w_fopen(c_str(spec_file_try, nil), L"r")) != 0)
@@ -568,27 +595,6 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
         if (in == 0 && errno != ENOENT)
           goto except;
 #endif
-      }
-    }
-
-    {
-      spec_file_try = spec_file;
-      errno = 0;
-      in = w_fopen(c_str(spec_file_try, self), L"r");
-      if (in != 0) {
-        switch (suffix) {
-        case tl:
-          *txr_lisp_p = t;
-          break;
-        case tlo:
-          *txr_lisp_p = chr('o');
-          break;
-        case txr:
-          *txr_lisp_p = nil;
-          break;
-        default:
-          break;
-        }
       }
     }
 
