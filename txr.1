@@ -18827,7 +18827,10 @@ This expansion and evaluation order is important because the semantics of
 .code eval
 forms the reference model for how the
 .code load
-function processes top-level forms.
+function processes top-level forms. Moreover, file compilation perform
+a similar treatment of top-level forms and incremental macro compilation.
+The result is that the behavior is consistent between source files and
+compiled files. See the sections Top-Level Forms and File Compilation Model.
 
 Note that, according to these rules, the constituent body forms of a
 .code macrolet
@@ -84301,7 +84304,7 @@ Rules 2\(en6 are applied recursively.
 .IP 8.
 No other forms are top-level forms.
 .RE
-
+.IP
 A top-level form is a
 .I primary
 top-level form if it doesn't contain any other top-level forms.
@@ -84319,6 +84322,22 @@ top-level form are not individual top-level forms, even if the
 expansion of the construct combines the expanded versions of those
 forms with
 .codn progn .
+
+Note: the
+.code eval
+function implements a similar concept, specially recognizing
+.codn progn ,
+.code compile-only
+and
+.code eval-only
+top-level forms, taking care to macro-expand and evaluate their constituents
+separately. In turn, the
+.code load
+function, when processing Lisp source, evaluates each primary top-level form as
+if by using the
+.code eval
+function. The result is that the behavior of loaded source and compiled
+files is consistent in this regard.
 
 .SS* File Compilation Model
 
@@ -84368,6 +84387,18 @@ recursively as if it were a separate expression.
 Otherwise, if the expanded form isn't one of the above three kinds of
 expressions, it is subject to a full expansion and compilation.
 .RE
+.IP
+Note: the structure of these three processing rules above closely resembles
+that of the three rules given in the description of the
+.code eval
+function, which is the basis for handling source files in
+.codn load .
+Consequently, macro expansion behaves consistently between
+.code compile-file
+and
+.code load
+of a source file.
+
 .SS* Treatment of Literals
 
 Programs specify not only code, but also data. Data embedded in a program is
