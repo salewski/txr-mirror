@@ -4432,6 +4432,8 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   if (!name && !fun)
     uw_throwf(error_s, lit("~a: program name and/or function required"), self, nao);
 
+  flush_stream(std_output);
+
   fds_init(&sfds);
 
   fds_prepare(&sfds, fds_flags, self);
@@ -4599,6 +4601,8 @@ val open_command(val path, val mode_str)
   FILE *f = 0;
   int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
 
+  flush_stream(std_output);
+
   fds_init(&sfds);
 
   uw_simple_catch_begin;
@@ -4756,6 +4760,8 @@ static val run(val command, val args)
   args = default_null_arg(args);
   nargs = c_num(length(args), self) + 1;
 
+  flush_stream(std_output);
+
   fds_init(&sfds);
 
   uw_simple_catch_begin;
@@ -4831,6 +4837,8 @@ static val run(val name, val args)
     argv[i] = utf8_dup_to(c_str(arg, self));
   }
   argv[i] = 0;
+
+  flush_stream(std_output);
 
   fds_init(&sfds);
 
