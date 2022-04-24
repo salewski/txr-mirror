@@ -4432,7 +4432,8 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   if (!name && !fun)
     uw_throwf(error_s, lit("~a: program name and/or function required"), self, nao);
 
-  flush_stream(std_output);
+  if (!input)
+    flush_stream(std_output);
 
   fds_init(&sfds);
 
@@ -4601,7 +4602,8 @@ val open_command(val path, val mode_str)
   FILE *f = 0;
   int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
 
-  flush_stream(std_output);
+  if (!input)
+    flush_stream(std_output);
 
   fds_init(&sfds);
 
