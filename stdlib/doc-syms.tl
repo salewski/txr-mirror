@@ -19,6 +19,7 @@
       ("*listener-sel-inclusive-p*" "N-02E4924F")
       ("*load-hooks*" "N-02D09712")
       ("*load-path*" "N-01D1DB58")
+      ("*load-search-dirs*" "N-004CCBF6")
       ("*match-macro*" "N-012A473F")
       ("*opt-level*" "N-03FDEBBC")
       ("*package*" "N-000CBBA0")

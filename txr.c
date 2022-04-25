@@ -345,6 +345,14 @@ static void sysroot_init(void)
                             lit("share/txr/stdlib/"),
                             lit("stdlib/")));
 
+  {
+    loc lsd = lookup_var_l(nil, load_search_dirs_s);
+    set(lsd, cons(sysroot(if3(share_txr_stdlib,
+                            lit("share/txr/lib/"),
+                            lit("lib/"))),
+                  nil));
+  }
+
   reg_varl(intern(lit("stdlib"), user_package), stdlib_path);
   reg_varl(intern(lit("*txr-version*"), user_package),
            toint(lit(TXR_VER), nil));
@@ -599,7 +607,7 @@ int txr_main(int argc, char **argv)
     if (car(arg) != chr('-')) {
       if (!parse_stream) {
         spec_file_str = arg;
-        open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream, self);
+        open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream, t, self);
         simulate_setuid_setgid(parse_stream);
         dyn_env = make_env(nil, nil, dyn_env);
         env_vbind(dyn_env, load_path_s, spec_file_str);
@@ -968,8 +976,9 @@ int txr_main(int argc, char **argv)
           return EXIT_FAILURE;
         }
         if (wcscmp(c_str(spec_file, self), L"-") != 0) {
+          spec_file_str = spec_file;
           open_txr_file(spec_file, &txr_lisp_p, &spec_file_str,
-                        &parse_stream, self);
+                        &parse_stream, t, self);
           simulate_setuid_setgid(parse_stream);
           dyn_env = make_env(nil, nil, dyn_env);
           env_vbind(dyn_env, load_path_s, spec_file_str);

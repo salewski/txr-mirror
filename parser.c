@@ -513,7 +513,8 @@ val parser_circ_ref(parser_t *p, val num)
 }
 
 void open_txr_file(val first_try_path, val *txr_lisp_p,
-                   val *orig_in_resolved_out, val *stream, val self)
+                   val *orig_in_resolved_out, val *stream,
+                   val search_dirs, val self)
 {
   enum { none, tl, tlo, txr } suffix;
 
@@ -599,11 +600,26 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
     }
 
     if (in == 0) {
+      val try_next;
 #ifdef ENOENT
 except:
 #endif
-      uw_ethrowf(errno_to_file_error(errno),
-                 lit("unable to open ~a"), try_path, nao);
+      if (abs_path_p(*orig_in_resolved_out))
+        search_dirs = nil;
+      else if (search_dirs == t)
+        search_dirs = load_search_dirs;
+
+#ifdef  ENOENT
+      if (errno != ENOENT || search_dirs == nil)
+#else
+      if (search_dirs == nil)
+#endif
+        uw_ethrowf(errno_to_file_error(errno),
+                   lit("~a: ~a not found"), self, *orig_in_resolved_out, nao);
+      try_next = path_cat(pop(&search_dirs), *orig_in_resolved_out);
+      open_txr_file(try_next, txr_lisp_p, orig_in_resolved_out, stream,
+                    search_dirs, self);
+      return;
     }
 
 found:
@@ -899,14 +915,14 @@ static void report_security_problem(val name)
 static void load_rcfile(val name)
 {
   val self = lit("listener");
-  val resolved_name;
+  val resolved_name = name;
   val lisp_p = t;
   val stream = nil;
   val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
 
   uw_catch_begin (catch_error, sy, va);
 
-  open_txr_file(name, &lisp_p, &resolved_name, &stream, self);
+  open_txr_file(name, &lisp_p, &resolved_name, &stream, nil, self);
 
   if (stream) {
     if (!funcall1(path_private_to_me_p, stream)) {

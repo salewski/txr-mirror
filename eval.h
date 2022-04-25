@@ -34,12 +34,13 @@ extern val eval_error_s, if_s, call_s, identity_s;
 extern val eq_s, eql_s, equal_s, less_s;
 extern val car_s, cdr_s;
 extern val last_form_evaled;
-extern val load_path_s, load_hooks_s, load_recursive_s;
+extern val load_path_s, load_hooks_s, load_recursive_s, load_search_dirs_s;
 extern val special_s, struct_s;
 
 extern val dyn_env;
 
 #define load_path (deref(lookup_var_l(nil, load_path_s)))
+#define load_search_dirs (deref(lookup_var_l(nil, load_search_dirs_s)))
 
 NORETURN val eval_error(val ctx, val fmt, ...);
 val ctx_form(val obj);

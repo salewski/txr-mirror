@@ -102,7 +102,7 @@ val vector_lit_s, vec_list_s, tree_lit_s, tree_construct_s;
 val macro_time_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s, struct_s;
 val fbind_s, lbind_s, flet_s, labels_s;
-val load_path_s, load_hooks_s, load_recursive_s;
+val load_path_s, load_hooks_s, load_recursive_s, load_search_dirs_s;
 val load_time_s, load_time_lit_s;
 val eval_only_s, compile_only_s;
 val const_foldable_s;
@@ -4669,13 +4669,13 @@ val load(val target)
                  cat_str(nappend2(sub_list(split_str(parent, lit("/")),
                                            zero, negone),
                                   cons(target, nil)), lit("/")));
-  val name, stream;
+  val name = target, stream;
   val txr_lisp_p = t;
   val saved_dyn_env = dyn_env;
   val load_dyn_env = make_env(nil, nil, dyn_env);
   val rec = cdr(lookup_var(nil, load_recursive_s));
 
-  open_txr_file(path, &txr_lisp_p, &name, &stream, self);
+  open_txr_file(path, &txr_lisp_p, &name, &stream, t, self);
 
   if (match_str(or2(get_line(stream), null_string), lit("#!"), nil))
     parser_set_lineno(self, stream, two);
@@ -6751,6 +6751,7 @@ void eval_init(void)
   load_path_s = intern(lit("*load-path*"), user_package);
   load_hooks_s = intern(lit("*load-hooks*"), user_package);
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
+  load_search_dirs_s = intern(lit("*load-search-dirs*"), user_package);
   load_time_s = intern(lit("load-time"), user_package);
   load_time_lit_s  = intern(lit("load-time-lit"), system_package);
   eval_only_s  = intern(lit("eval-only"), user_package);
@@ -7081,6 +7082,7 @@ void eval_init(void)
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
   reg_var(load_recursive_s, nil);
+  reg_var(load_search_dirs_s, nil);
   reg_var(load_hooks_s, nil);
   reg_fun(intern(lit("expand"), user_package), func_n2o(no_warn_expand, 1));
   reg_fun(intern(lit("expand*"), user_package), func_n2o(expand, 1));

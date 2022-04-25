@@ -4609,14 +4609,14 @@ static val v_load(match_files_ctx *c)
                    cat_str(nappend2(sub_list(split_str(parent, lit("/")),
                                          zero, negone),
                                     cons(target, nil)), lit("/")));
-    val stream, name;
+    val stream, name = target;
     val txr_lisp_p = nil;
     val ret = nil;
     val saved_dyn_env = dyn_env;
     val load_dyn_env = make_env(nil, nil, dyn_env);
     val rec = cdr(lookup_var(nil, load_recursive_s));
 
-    open_txr_file(path, &txr_lisp_p, &name, &stream, self);
+    open_txr_file(path, &txr_lisp_p, &name, &stream, t, self);
 
     uw_simple_catch_begin;
 

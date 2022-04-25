@@ -9098,6 +9098,19 @@ is tried, and so forth, as described for the
 .code load
 function.
 
+If these initial attempts to find the file fail, and the failure
+is due to the file not being found rather than some other problem such as a
+permission error, and
+.meta expr
+isn't an absolute path according to
+.codn abs-path-p ,
+then additional attempts are made by searching for the file in the
+list of directories given in the
+.code *load-search-dirs*
+variable. Details are given in the description of the \*(TL
+.code load
+function.
+
 Both the
 .code load
 and
@@ -77572,8 +77585,33 @@ with the resulting path. If that file is not found, then the suffix
 .code .tl
 is similarly tried.
 
-If an unsuffixed file is opened, its contents are treated as interpreted Lisp.
-Files ending in
+If the above
+.I "initial attempts"
+to find the file fail, and the failure
+is due to the file not being found rather than some other problem such as a
+permission error, and
+.meta target
+isn't an absolute path according to
+.codn abs-path-p ,
+then additional attempts are made by searching for the file in the
+list of directories given in the
+.code *load-search-dirs*
+variable. For each directory taken from this variable, the directory
+is combined with the relative
+.meta target
+as if using the
+.code path-cat
+function, and the resulting path is tried, with all the same suffix probing
+that is performed by the initial attempts. If any such a path is pure relative,
+it is interpreted relative to the current working directory, and not relative
+.codn *load-path* :
+only the initial attempts have that special behavior.
+
+An exception is thrown if a file is not found, or if any attempt to open
+a file results in an error other than non-existence.
+
+If an unsuffixed file is successfully opened, its contents are treated as
+interpreted Lisp.  Files ending in
 .code .txr_profile
 are also treated as interpreted Lisp. Files ending in
 .code .tlo
@@ -77728,6 +77766,40 @@ parsing and processing of a loaded \*(TX source file.
 
 Also, during the processing of the profile file (see Interactive Profile File),
 the variable is bound to the name of that file.
+
+.coNP Special variable @ *load-search-dirs*
+.desc
+The
+.code *load-search-dirs*
+variable holds a list of directories which are searched for a file to be
+loaded by the
+.code load
+function, the
+.code @(load)
+and
+.code @(include)
+directives, as well as by \*(TX's command line processing.
+
+Each of these situations first searches for a file in its characteristic
+way. If that fails due to the file not being found, and the name is
+a relative path, then the directories in
+.code *load-search-dirs*
+are probed, in order.
+
+The variable is initialized to a list which contains exactly one directory: a
+.code lib/
+directory dynamically calculated relative to \*(TX the executable location.
+Then intent is that third-party library modules may be installed there,
+and easily found by
+.codn load .
+For more information, see the section Deployment Directory Structure.
+
+The
+.code *load-search-dirs*
+isn't influenced by any environment variables, which is deliberate.
+If a system has multiple installations of different versions of \*(TX
+in different locations, an environment variable intended for one installation
+could be mistakenly used by the others, resulting in chaos.
 
 .coNP Special variable @ *load-hooks*
 .desc
@@ -87610,6 +87682,8 @@ The executable may be renamed, it need not be called
                          .../stdlib/cadr.tlo
                          .../stdlib/except.tl
                                     ...
+               .../share/txr/lib/...
+
 .brev
 
 The above structure is assumed if the executable finds itself
@@ -87626,11 +87700,19 @@ the following structure is expected:
                     .../stdlib/cadr.tl
                     .../stdlib/cadr.tlo
                     .../stdlib/except.tl
-                                         ...
+                               ...
+                    .../lib/...
 .brev
 
-Note that this has changed starting in \*(TX 264. Older versions
-of \*(TX, when the executable is not in a directory named
+The
+.strn lib/
+directory shown above is for third-party libraries.
+This is the directory indicated in the default value of the
+.code *load-search-dirs*
+special variable. The directory is not required to exist.
+
+Note that this structure had changed starting in \*(TX 264. Older versions of
+\*(TX, when the executable is not in a directory named
 .strn bin ,
 expect the following structure:
 
