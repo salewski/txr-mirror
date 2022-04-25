@@ -5,6 +5,10 @@
 (defun txr (. args)
   (command-get-string `@{txr-exe-path} @{args " "}`))
 
+(defun lod (x)
+  (with-out-string-stream (*stdout*)
+    (load x)))
+
 (mtest
   (txr `@cur/data/a`)     "a\n"
   (txr `@cur/data/a.txr`) "a.txr\n"
@@ -34,3 +38,32 @@
 (mtest
   (txr "--lisp" `@cur/data/c`)      "c.tl\n"
   (txr "--compiled" `@cur/data/c`)  "c.tl\n")
+
+(mtest
+  (length *load-search-dirs*) 1
+  (base-name (car *load-search-dirs*)) "lib")
+
+(set *load-search-dirs* (list `@cur/data`))
+
+(mtest
+  (lod "a")     :error
+  (lod "a.tl")  "a.tl\n"
+  (lod "c")     "c.tl\n")
+
+(push `@cur/nonexistent` *load-search-dirs*)
+
+(mtest
+  (lod "a")     :error
+  (lod "a.tl")  "a.tl\n"
+  (lod "c")     "c.tl\n")
+
+(push `@cur/unreadable` *load-search-dirs*)
+
+(push-after-load (rmdir `@cur/unreadable`))
+
+(ensure-dir `@cur/unreadable` 0)
+
+(mtest
+  (lod "a")     :error
+  (lod "a.tl")  :error
+  (lod "c")     :error)
