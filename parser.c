@@ -512,18 +512,18 @@ val parser_circ_ref(parser_t *p, val num)
   return obj;
 }
 
-void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
-                   val self)
+void open_txr_file(val first_try_path, val *txr_lisp_p,
+                   val *orig_in_resolved_out, val *stream, val self)
 {
   enum { none, tl, tlo, txr } suffix;
 
-  if (match_str(spec_file, lit(".txr"), negone))
+  if (match_str(first_try_path, lit(".txr"), negone))
     suffix = txr;
-  else if (match_str(spec_file, lit(".tl"), negone))
+  else if (match_str(first_try_path, lit(".tl"), negone))
     suffix = tl;
-  else if (match_str(spec_file, lit(".tlo"), negone))
+  else if (match_str(first_try_path, lit(".tlo"), negone))
     suffix = tlo;
-  else if (match_str(spec_file, lit(".txr_profile"), negone))
+  else if (match_str(first_try_path, lit(".txr_profile"), negone))
     suffix = tl;
   else
     suffix = none;
@@ -531,13 +531,13 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
   errno = 0;
 
   {
-    val spec_file_try = nil;
+    val try_path = nil;
     FILE *in = 0;
 
     {
-      spec_file_try = spec_file;
+      try_path = first_try_path;
       errno = 0;
-      in = w_fopen(c_str(spec_file_try, self), L"r");
+      in = w_fopen(c_str(try_path, self), L"r");
       if (in != 0) {
         switch (suffix) {
         case tl:
@@ -562,8 +562,8 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
     }
 
     if (suffix == none && !*txr_lisp_p) {
-      spec_file_try = scat(lit("."), spec_file, lit("txr"), nao);
-      if ((in = w_fopen(c_str(spec_file_try, nil), L"r")) != 0)
+      try_path = scat(lit("."), first_try_path, lit("txr"), nao);
+      if ((in = w_fopen(c_str(try_path, nil), L"r")) != 0)
         goto found;
 #ifdef ENOENT
       if (in == 0 && errno != ENOENT)
@@ -573,9 +573,9 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
 
     if (suffix == none) {
       {
-        spec_file_try = scat(lit("."), spec_file, lit("tlo"), nao);
+        try_path = scat(lit("."), first_try_path, lit("tlo"), nao);
         errno = 0;
-        if ((in = w_fopen(c_str(spec_file_try, nil), L"r")) != 0) {
+        if ((in = w_fopen(c_str(try_path, nil), L"r")) != 0) {
           *txr_lisp_p = chr('o');
           goto found;
         }
@@ -585,9 +585,9 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
 #endif
       }
       {
-        spec_file_try = scat(lit("."), spec_file, lit("tl"), nao);
+        try_path = scat(lit("."), first_try_path, lit("tl"), nao);
         errno = 0;
-        if ((in = w_fopen(c_str(spec_file_try, nil), L"r")) != 0) {
+        if ((in = w_fopen(c_str(try_path, nil), L"r")) != 0) {
           *txr_lisp_p = t;
           goto found;
         }
@@ -603,12 +603,12 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
 except:
 #endif
       uw_ethrowf(errno_to_file_error(errno),
-                 lit("unable to open ~a"), spec_file_try, nao);
+                 lit("unable to open ~a"), try_path, nao);
     }
 
 found:
-    *stream = make_stdio_stream(in, spec_file_try);
-    *name = spec_file_try;
+    *stream = make_stdio_stream(in, try_path);
+    *orig_in_resolved_out = try_path;
   }
 }
 

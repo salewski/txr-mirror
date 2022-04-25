@@ -101,8 +101,8 @@ parser_t *yyget_extra(yyscan_t scanner);
 void yyset_extra(parser_t *, yyscan_t);
 void yyset_hold_char(yyscan_t, int);
 void parser_l_init(void);
-void open_txr_file(val spec_file, val *txr_lisp_p,
-                   val *name, val *stream, val self);
+void open_txr_file(val first_try_path, val *txr_lisp_p,
+                   val *orig_in_resolved_out, val *stream, val self);
 void prime_parser(parser_t *, val name, enum prime_parser);
 void prime_parser_post(parser_t *, enum prime_parser);
 #ifdef SPACE
