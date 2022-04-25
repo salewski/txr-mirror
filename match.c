@@ -4606,9 +4606,7 @@ static val v_load(match_files_ctx *c)
   {
     val path = if3(!pure_rel_path_p(target),
                    target,
-                   cat_str(nappend2(sub_list(split_str(parent, lit("/")),
-                                         zero, negone),
-                                    cons(target, nil)), lit("/")));
+                   path_cat(dir_name(parent), target));
     val stream, name = target;
     val txr_lisp_p = nil;
     val ret = nil;

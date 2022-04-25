@@ -4666,9 +4666,7 @@ val load(val target)
   val parent = or2(load_path, null_string);
   val path = if3(!pure_rel_path_p(target),
                  target,
-                 cat_str(nappend2(sub_list(split_str(parent, lit("/")),
-                                           zero, negone),
-                                  cons(target, nil)), lit("/")));
+                 path_cat(dir_name(parent), target));
   val name = target, stream;
   val txr_lisp_p = t;
   val saved_dyn_env = dyn_env;
