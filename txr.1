@@ -79199,7 +79199,9 @@ to close the stream.
 These FFI types correspond to the C pointer type
 .codn "char *" ,
 providing automatic conversion between Lisp strings and null-terminated
-C strings.
+C strings. The null pointer corresponds to the
+.B nil
+symbol.
 
 The related types
 .codn bstr ,
@@ -79320,7 +79322,8 @@ C strings, like the
 family, and the family members have memory management semantics
 similar to their
 .code str
-counterparts.
+counterparts. Likewise, under these types also, the null pointer corresponds to
+.codn nil .
 
 The
 .code b
@@ -79364,7 +79367,8 @@ The family members of
 .code wstr
 have memory management semantics similar to their
 .code str
-counterparts,
+counterparts, Likewise, under these types also, the null pointer corresponds to
+.codn nil .
 
 Note: because wide characters do not require UTF-8 conversion, the
 .code wstr
