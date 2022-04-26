@@ -81288,6 +81288,68 @@ machine.  From this it follows that on either type of machine, that field shall
 be placed at the lowest-addressed byte or bytes in which unallocated bits
 remain.
 
+.SS* Returning Scalar Objects by Pointer
+
+There are situations in which an a foreign function takes the address of a
+storage location, and writes a new value into that location. Informally,
+this referred to as an "out parameter" or "in-out parameter", in the
+case of bidirectional data transfer.  In the C language, the familiar pattern
+looks like this:
+
+.verb
+  void function(int *ptr);
+  int val = 0;
+  abc_function(&val);
+.brev
+
+In the case of an aggregate type, such as a structure, being an in-out or out
+parameter, this pattern is easily handled in FFI because the corresponding
+Lisp object is also an aggregate, and therefore has reference semantics:
+it can be updated to receive the new value. In the case of a scalar, however,
+such as
+.code int
+in the above example, this may not be not possible. A Lisp integer
+doesn't have the referential semantics required to receive a new value by
+pointer, and there is no "address-of" concept to create a reference to
+its location.
+
+To understand the following FFI trick, it helps to first rework the C into a
+different form:
+
+.verb
+  void function(int *ptr);
+  int val[1] = { 0 };
+  abc_function(val);
+.brev
+
+Instead of a scalar value, we can declare an array of 1 element of that
+same type, and pass the array (which converts into a pointer to that element).
+This approach inspires a similar trick in the FFI domain:
+
+.verb
+  (with-dyn-lib (...)
+    (deffi abc-function "abc_function" void ((ptr (array 1 int)))))
+
+  (let ((val (vec 0)))
+    (abc-function val)
+
+    ;; [vec 0] has updated value coming from function
+    )
+.brev
+
+We define the parameter of
+.code abc-function
+as being a pointer to an array of 1
+.code int
+rather than an int, and then pass a vector as the argument.
+If the parameter is in-out, then the vector must be constructed or initialized
+to contain a value that will convert to the C type. If the parameter is out
+only, then the FFI definition can use
+.code ptr-out
+and the vector can contain the
+.code nil
+value.
+
 .SS* FFI Call Descriptors
 
 The FFI mechanism makes use of a type-like representation called the "call
