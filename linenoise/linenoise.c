@@ -828,7 +828,7 @@ static int history_search(lino_t *l)
                     break;
                 case CTL('Z'):
                     disable_raw_mode(l);
-                    raise(SIGTSTP);
+                    kill(0, SIGTSTP);
                     enable_raw_mode(l);
                 }
             }
@@ -930,7 +930,7 @@ static void show_help(lino_t *l)
             continue;
         case CTL('Z'):
             disable_raw_mode(l);
-            raise(SIGTSTP);
+            kill(0, SIGTSTP);
             enable_raw_mode(l);
             i -= 1;
             continue;
@@ -2526,7 +2526,7 @@ static int edit(lino_t *l, const wchar_t *prompt)
                 if (l->need_refresh)
                     refresh_line(l);
                 disable_raw_mode(l);
-                raise(SIGTSTP);
+                kill(0, SIGTSTP);
                 enable_raw_mode(l);
                 l->maxrows = 0;
                 l->dpos = dpos;
