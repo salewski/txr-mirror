@@ -159,6 +159,39 @@ struct jmp {
   unsigned long ra; /* $31 */
 };
 
+#elif __riscv
+
+struct jmp {
+  unsigned long ra;   /*  x1 */
+  unsigned long sp;   /*  x2 */
+  unsigned long fp;   /*  x8 */
+  unsigned long s1;   /*  x9 */
+  unsigned long s2;   /* x18 */
+  unsigned long s3;   /* x19 */
+  unsigned long s4;   /* x20 */
+  unsigned long s5;   /* x21 */
+  unsigned long s6;   /* x22 */
+  unsigned long s7;   /* x23 */
+  unsigned long s8;   /* x24 */
+  unsigned long s9;   /* x25 */
+  unsigned long s10;  /* x26 */
+  unsigned long s11;  /* x27 */
+#if 0 && !__riscv_float_abi_soft
+  double fs0;         /*  f8 */
+  double fs1;         /*  f9 */
+  double fs2;         /* f18 */
+  double fs3;         /* f19 */
+  double fs4;         /* f20 */
+  double fs5;         /* f21 */
+  double fs6;         /* f22 */
+  double fs7;         /* f23 */
+  double fs8;         /* f24 */
+  double fs9;         /* f25 */
+  double fs10;        /* f26 */
+  double fs11;        /* f27 */
+#endif
+};
+
 #else
 #error port me!
 #endif
