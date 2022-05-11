@@ -13970,10 +13970,19 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
             val a = car(iter);
             val unq = nil;
 
-            if (a == sys_unquote_s)
+            if (a == sys_unquote_s) {
               unq = lit(". ,");
-            else if (a == sys_splice_s)
+            } else if (a == sys_splice_s) {
               unq = lit(". ,*");
+            } else if (a == var_s && consp(cdr(iter))) {
+              val ad = cadr(iter);
+              if (symbolp(ad) || integerp(ad))
+                unq = lit(". @");
+            } else if (a == expr_s && consp(cdr(iter))) {
+              val ad = cadr(iter);
+              if (consp(ad))
+                unq = lit(". @");
+            }
 
             if (unq) {
               val d = cdr(iter);
