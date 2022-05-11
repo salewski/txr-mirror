@@ -192,6 +192,33 @@ struct jmp {
 #endif
 };
 
+#elif __loongarch64
+
+struct jmp {
+  unsigned long ra;
+  unsigned long sp;
+  unsigned long fp;
+  unsigned long s0;
+  unsigned long s1;
+  unsigned long s2;
+  unsigned long s3;
+  unsigned long s4;
+  unsigned long s5;
+  unsigned long s6;
+  unsigned long s7;
+  unsigned long s8;
+#if 0 && !__loongarch64_soft_float
+  double fs0;
+  double fs1;
+  double fs2;
+  double fs3;
+  double fs4;
+  double fs5;
+  double fs6;
+  double fs7;
+#endif
+};
+
 #else
 #error port me!
 #endif
