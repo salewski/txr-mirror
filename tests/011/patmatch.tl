@@ -247,6 +247,20 @@
          ((@x @y) :no-match)) 1 2 3]
       :error)))
 
+(test
+  [(lambda-match
+     ((@a @b) (list a b))
+     ((@x . @y) (list x y)))
+   1 2 3]
+  (1 (2 3)))
+
+(test
+  [(lambda-match
+     ((@a @b) (list a b))
+     (@x x))
+   1 2 3]
+  (1 2 3))
+
 (defun-match fib
   ((0) 1)
   ((1) 1)

@@ -782,7 +782,7 @@
                          (when (> pc.nfixed min-args)
                            (set exp ^(when ,[present-vec (pred pc.nfixed)]
                                         ,exp)))
-                         (when (< pc.nfixed max-args)
+                         (when (and (not vp) (< pc.nfixed max-args))
                            (set exp ^(unless ,[present-vec pc.nfixed]
                                         ,exp)))
                          (when (and variadic (not vp) (= pc.nfixed max-args))
