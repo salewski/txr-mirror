@@ -1,3 +1,46 @@
+                                    TXR 275
+                                   2022-05-10
+
+
+  Features
+
+  - Architecture support: RISC-V and Loongarch (64 bit).
+
+  - Hashing: new group-map function: group-reduce with
+    built-in map pass.
+
+  - Lib: new isecp function: test whether two sequences
+    intersect without calculating intersectin.
+
+  - FFI:
+    - intmax-t and uintmax-t types.
+    - new str-s, bstr-s and wstr-s types for receiving foreign
+      string without freeing its memory.
+    - after a FFI call, the arguments are processed for
+      reverse data flows and memory clean-up in reverse order.
+    - with above two features, strtol can be wrapped in FFI,
+      including the error-reporting char **end pointer.
+
+  - Loading: new *load-search-dirs* variable.
+    - default search directory list includes sysrooted lib dir
+
+  Bugs
+
+  - configure: minor escaping corner cases in in production of
+    ./reconfigure script.
+  - compiler: package-related bug in file-compilation, reported
+    by Paul A. Patience.
+  - load: regression: do not try adding suffixes to a path
+    which exists; try the given path before anything else
+    - Reported by Paul A. Patience.
+  - sh, run, open-command and open-process now flush *stdout*
+    in situations when it makes sense, standard output is
+    ordered between the subprocesses and the parent.
+  - listener: Ctrl-Z issue when txr is one of multiple processes
+    in a job control process group.
+
+
+
                                     TXR 274
                                    2022-02-24
 
