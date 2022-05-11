@@ -57,13 +57,12 @@
   (lod "a.tl")  "a.tl\n"
   (lod "c")     "c.tl\n")
 
-(push `@cur/unreadable` *load-search-dirs*)
 
-(push-after-load (rmdir `@cur/unreadable`))
-
-(ensure-dir `@cur/unreadable` 0)
-
-(mtest
-  (lod "a")     :error
-  (lod "a.tl")  :error
-  (lod "c")     :error)
+(unless (meq (os-symbol) :cygwin :cygnal)
+  (push `@cur/unreadable` *load-search-dirs*)
+  (push-after-load (rmdir `@cur/unreadable`))
+  (ensure-dir `@cur/unreadable` 0)
+  (mtest
+    (lod "a")     :error
+    (lod "a.tl")  :error
+    (lod "c")     :error))

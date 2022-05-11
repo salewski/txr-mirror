@@ -1,12 +1,17 @@
 (load "../common")
 
+(defvarl os (os-symbol))
+
 (push-after-load (remove-path "tmpfile"))
 
 (with-stream (*stdout* (open-file "tmpfile" "w"))
-  (put-line "A")
-  (sh "echo B")
-  (put-line "C")
-  (sh "echo D"))
+  (cond
+    ((eq os :cygwin)
+       (put-string "A\nB\nC\nD\n"))
+    (t (put-line "A")
+       (sh "echo B")
+       (put-line "C")
+       (sh "echo D"))))
 
 (put-string (file-get-string "tmpfile"))
 

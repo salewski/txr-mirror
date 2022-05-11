@@ -1,6 +1,6 @@
 (load "../common")
 
-(with-dyn-lib nil
+(with-dyn-lib (libc)
   (deffi strtol "strtol" long (str (ptr-out (array 1 str-s)) int))
   (deffi bcstol "strtol" long (bstr (ptr-out (array 1 bstr-s)) int))
   (deffi wcstol "wcstol" long (wstr (ptr-out (array 1 wstr-s)) int)))
