@@ -165,6 +165,8 @@ static void help(void)
 "--backtrace            Enable backtraces.\n"
 "--noninteractive       Synonym for -n.\n"
 "--compat=N             Synonym for -C N.\n"
+"--in-package=name      Switch to specified package\n"
+"--compile=src[:target] Compile a file.\n"
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
 "--args...              Allows multiple arguments to be encoded as a single\n"
@@ -432,6 +434,36 @@ static void requires_arg(val opt)
 {
     format(std_error, lit("~a: option --~a requires an argument\n"),
            prog_string, opt, nao);
+}
+
+static void do_compile_opt(val arg)
+{
+  val compile_update_file = intern(lit("compile-update-file"), user_package);
+  val col_pos = search_str(arg, lit(":"), nil, nil);
+  val source = arg;
+  val target = nil;
+
+  if (col_pos) {
+    target = sub_str(source, succ(col_pos), t);
+    source = sub_str(source, zero, col_pos);
+  }
+
+  funcall2(compile_update_file, source, target);
+}
+
+static int do_in_package_opt(val opt, val arg)
+{
+  val pkg_binding = lookup_var(nil, package_s);
+  val package = find_package(arg);
+
+  if (!package) {
+    format(std_error, lit("~a: option --~a: ~a package not found\n"),
+           prog_string, opt, arg, nao);
+    return 0;
+  }
+
+  rplacd(pkg_binding, package);
+  return 1;
 }
 
 static int do_fixnum_opt(int (*opt_func)(val), val opt, val arg)
@@ -712,6 +744,27 @@ int txr_main(int argc, char **argv)
 
       if (equal(opt, lit("compat"))) {
         if (!do_fixnum_opt(compat, opt, org))
+          return EXIT_FAILURE;
+        continue;
+      }
+
+      if (equal(opt, lit("compile"))) {
+        if (!org) {
+          requires_arg(opt);
+          return EXIT_FAILURE;
+        }
+        reg_var(args_s, or2(orig_args, arg_list));
+        do_compile_opt(org);
+        evaled = t;
+        continue;
+      }
+
+      if (equal(opt, lit("in-package"))) {
+        if (!org) {
+          requires_arg(opt);
+          return EXIT_FAILURE;
+        }
+        if (!do_in_package_opt(opt, org))
           return EXIT_FAILURE;
         continue;
       }

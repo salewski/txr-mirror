@@ -159,8 +159,7 @@ endef
 
 define COMPILE_TL
 $(call ABBREV,TXR)
-$(call SH,$(TXR) -e \
-          "(progn (in-package sys) (compile-file \"$<\" \"$@.tmp\"))")
+$(call SH,$(TXR) --in-package=sys --compile=$<:$@.tmp)
 $(call SH,mv $@.tmp $@)
 endef
 

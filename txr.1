@@ -818,7 +818,10 @@ option is processed. If the evaluation of every
 .meta expression
 evaluated this way terminates normally, and there is no
 .meta script-file
-argument, then \*(TX terminates with a successful status.
+argument, then \*(TX terminates with a successful status,
+instead of entering the interactive listener. The
+.code -i
+option can be used to request the listener.
 
 .meIP -p < expression
 Just like
@@ -1051,6 +1054,46 @@ Normally, only regular expressions which require the intersection and
 complement operators are handled using the derivative back-end.
 This option makes it possible to test that back-end on test cases that it
 wouldn't normally receive.
+
+.meIP >> --in-package= name
+This option changes to the specified package, by finding the package of the
+specified
+.meta name
+and assigning that to the
+.code *package*
+special variable. If the package is not found, a diagnostic is issued,
+and \*(TX terminates unsuccessfully.
+The package thus specified is visible to the subsequent occurrences of the
+.code -e
+family of options as well as of the
+.code --compile
+option. It does not affect the value of
+.code *package*
+which is in effect when a
+.meta script-file
+is executed or when the interactive listener is entered.
+
+.meIP <2> --compile= source-file [: target-file ]
+This option invokes the
+.code compile-update-file
+on
+.metn source-file .
+If
+.meta target-file
+is specified, it is passed to
+.code compile-update-file
+as the target argument; otherwise, that argument is defaulted.
+The option can be used multiple times to process multiple
+files. Unsuccessful compilation throws an exception, causing
+\*(TX to terminate abnormally. Similarly to the
+.code -e
+option, if this option is used at least once,
+and all of the invocations are successful, and there is no
+.meta script-file
+argument, then \*(TX terminates with a successful status instead
+of entering the interactive listener. The
+.code -i
+option can be used request the listener.
 
 .coIP --
 Signifies the end of the option list.
