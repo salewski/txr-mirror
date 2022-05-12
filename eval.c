@@ -5255,7 +5255,12 @@ again:
         return form_ex;
       }
 
-      return rlcp(cons(insym_ex, args_ex), form);
+      form = rlcp(cons(insym_ex, args_ex), form);
+      if (macro) {
+        macro = nil;
+        goto again;
+      }
+      return form;
     }
     abort();
   }

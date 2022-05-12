@@ -38899,6 +38899,136 @@ and binds to the entire
 .code tree-bind
 form.
 
+.NP* The Macro Expansion Process
+
+The following description omits the treatment of top-level forms by
+.code eval
+and the compiler. This is described, respectively, in the description of
+.code eval
+and the section Top-Level Forms inside the LISP COMPILATION chapter.
+Certain other details are also omitted, such as the dynamic evolution of the
+macro-time environment, the expansion of macrolet forms.
+
+Macro expansion is, generally speaking, a recursive process. The expression to
+be expanded is classified into cases, and as necessary, the constituent
+expressions are recursively expanded, depending on these cases. Certain aspects
+of the process may be regarded as iterative.
+Macro expansion maintains a macro-time lexical environment which is extended
+and contracted as the expander descends into various nested binding constructs.
+
+The expander may encounter a bindable symbol. If such a symbol has a binding
+as a symbol macro, then it is replaced by its expansion, and the expander
+iterates on the resulting form. The form may be another object, including a
+symbol.  If it is the same symbol, than macro expansion terminates; the
+symbol remains unsubstituted.  Symbols are treated differently by the
+expander if they are in the Lisp-1-style context of the
+.code dwim
+operator, or the equivalent square bracket notation. The expander takes into
+consideration the semantics of the combined function and variable namespace.
+
+The expander may encounter a compound form headed by a symbol which has a macro
+binding. In this situation, the macro expander function is called, and the form
+is replaced by the resulting form. That form is considered again as a potential
+macro. In any case, the expander makes a note that it has expanded a macro,
+
+If a form isn't a macro, then it's either a function call, special from or an
+atomic form: a symbol (that has no binding as a symbol macro) or other atom.
+The interesting cases are special forms and function calls, since the atomic
+forms are simply returned as-is without expansion. Special forms and function
+call forms contain other forms, some or all of which require expansion. The
+expander recognizes the shape of each special form or function call, pulls out
+the constituent expressions and expands them recursively, combining the results
+into a new version of the special form or function call form.
+
+Because \*(TL allows the same symbol to have a macro and function binding, the
+expander allows for interplay between the two, which produces useful behaviors.
+Recall from two paragraphs ago that whenever the expander expands a macro, it
+makes a note that it has done so. Subsequently, suppose that the rounds of
+macro expansion happen to terminate in such a way that the result is a function
+call form.  The form's constituents are expanded, If the expansion of those
+constituents produces any change, then the resulting replacement function call
+form is again examined for the possibility that it may be a macro.  This
+special requirement, not typically implemented by Lisp macro expanders, greatly
+simplifies the writing of macros which provide algebraic optimizations of
+function calls.
+
+An example follows to illustrate the benefit of the rule. Note that the
+example involves some simple macros which change the number of times that
+an argument expression is evaluated. A more careful handling of this issue
+is omitted in order to keep the examples simple.
+
+Suppose a macro is written for the
+.code sqrt
+function like this:
+
+.verb
+  (defmacro sqrt (:match :form f)
+    (((* @exp @exp)) exp)
+    (@else f))
+.brev
+
+The macro uses pattern matching to recognize cases like
+.code "(sqrt (* a a))"
+when the argument is a product expression with two identical terms.  This
+pattern implements the arithmetic identity that the positive square root of a
+real term multiplied by itself is just that term.
+
+Now suppose that a similar macro is written to optimize a certain
+case of the
+.code expt
+function:
+
+.verb
+  (defmacro expt (:match :form f)
+    ((@exp 2) ^(* ,exp ,exp))
+    (@else f))
+.brev
+
+This macro recognizes when the argument is being squared, turning
+.code "(expt x 2)"
+into
+.codn "(* x x)" :
+a strength reduction from exponentiation to multiplication.
+
+What if the following expression is then written:
+
+.verb
+   (sqrt (expt x 2))
+.brev
+
+The special provision in the expander algorithm allows the above combination
+to reduce to just
+.codn x ,
+as follows. Firstly, the
+.code "(sqrt (expt x 2))"
+expression is treated as a macro call. It doesn't match the main case
+in the macro, only the fallback case which returns the form unexpanded.
+The expander notes that it has invoked a macro, and then proceeds to treat
+the form as a function call. The function call's argument expression
+.code "(expt x 2)"
+is expanded as a macro. This produces a transformation: our
+.code expt
+macro reduces this quadratic term to
+.codn "(* x x)" .
+Here is where the special rule comes into play. The expander sees that
+the function's arguments have been transformed. It knows that the original
+function call was the result of expansion. To promote more opportunities
+for expansion, it tries the transformed function call again as a macro.
+The
+.code "(sqrt (* x x))"
+form is handed to the
+.code sqrt
+macro, which this time has a match for the
+.code "(* x x)"
+argument pattern, reducing the entire form to
+.codn x .
+Effectively, the
+.code sqrt
+macro has the opportunity to work with both the unexpanded argument syntax
+.code "(expt x 2)"
+as well as its expanded version. It is first offered the one, and when it
+declines to expand, then the other.
+
 .coNP Operator @ defmacro
 .synb
 .mets (defmacro < name
