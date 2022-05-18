@@ -80,9 +80,9 @@
   (sizeof abc) 1
   (znew abc) #S(abc a fals b fals c fals))
 
-(each-match ((a b c) (rperm '(fals true) 3))
+(each-match ((@a @b @c) (rperm '(fals true) 3))
   (let ((s (new abc a a b b c c)))
-    (test (ffi-get (ffi-put s (ffi abc)) (ffi-abc)) s)))
+    (vtest (ffi-get (ffi-put s (ffi abc)) (ffi abc)) s)))
 
 (mstest
   (copy-cptr (cptr-int 3)) "#<cptr: 3>"
