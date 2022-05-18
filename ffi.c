@@ -3820,14 +3820,9 @@ val ffi_type_compile(val syntax)
       if (length(syntax) == two) {
         val eltype_syntax = cadr(syntax);
         val eltype = ffi_type_compile(eltype_syntax);
-        val type = make_ffi_type_pointer(syntax, vec_s,
-                                         ffi_varray_put, ffi_void_get,
-                                         ffi_varray_in, 0, ffi_varray_release,
-                                         eltype);
+        val type = make_ffi_type_array(syntax, vec_s, zero, eltype, self);
         struct txr_ffi_type *tft = ffi_type_struct(type);
         struct txr_ffi_type *etft = ffi_type_struct(eltype);
-
-        tft->kind = FFI_KIND_ARRAY;
 
         if (etft->incomplete || etft->bitfield)
           uw_throwf(error_s,
@@ -3836,6 +3831,13 @@ val ffi_type_compile(val syntax)
                     if3(etft->bitfield,
                         lit("bitfield"), lit("incomplete type")),
                     eltype_syntax, nao);
+
+        tft->put = ffi_varray_put;
+        tft->get = ffi_void_get;
+        tft->in = ffi_varray_in;
+        tft->out = 0;
+        tft->release = ffi_varray_release;
+
         if (sym == zarray_s) {
           tft->null_term = 1;
           tft->get = ffi_varray_null_term_get;

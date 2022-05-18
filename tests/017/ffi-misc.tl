@@ -92,5 +92,5 @@
 (ffi (struct flex (x char) (y (zarray char))))
 
 (mtest
-  (ffi-put (new flex x #\a y "bcd") (ffi (struct flex))) #b'6100000062636400'
-  (ffi-get #b'6100000062636400' (ffi (struct flex))) #S(flex x #\a y "bcd"))
+  (ffi-put (new flex x #\a y "bcd") (ffi (struct flex))) #b'6162636400'
+  (ffi-get #b'6162636400' (ffi (struct flex))) #S(flex x #\a y "bcd"))
