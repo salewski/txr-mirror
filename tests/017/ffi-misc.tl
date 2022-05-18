@@ -88,3 +88,9 @@
   (copy-cptr (cptr-int 3)) "#<cptr: 3>"
   (copy (cptr-int 3)) "#<cptr: 3>"
   (copy-cptr 3) :error)
+
+(ffi (struct flex (x char) (y (zarray char))))
+
+(mtest
+  (ffi-put (new flex x #\a y "bcd") (ffi (struct flex))) #b'6100000062636400'
+  (ffi-get #b'6100000062636400' (ffi (struct flex))) #S(flex x #\a y "bcd"))
