@@ -145,11 +145,8 @@
            (lambda (path type stat . rest)
              (while t
                (catch**
-                 (let* ((rel-path (let ((p [path (len from-dir)..:]))
-                                    (if (pure-rel-path-p p) p [p 1..:])))
+                 (let* ((rel-path (rel-path from-dir path))
                         (tgt-path (path-cat to-dir rel-path)))
-                   (unless (starts-with from-dir path)
-                     (error "~s: problem with directory traversal" 'copy-path))
                    (caseql* type
                      ((ftw-dnr ftw-ns) (error "~s: unable to access ~s"
                                               'copy-path path))
