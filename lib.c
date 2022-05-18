@@ -5735,10 +5735,18 @@ val fmt_join(struct args *args)
   return join_with(nil, args);
 }
 
-val split_str_keep(val str, val sep, val keep_sep)
+val split_str_keep(val str, val sep, val keep_sep_opt, val count_opt)
 {
   val self = lit("split-str");
-  keep_sep = default_null_arg(keep_sep);
+  val keep_sep = default_null_arg(keep_sep_opt);
+  val count = default_null_arg(count_opt);
+  cnum cnt = c_num(if3(count, count, negone), self);
+
+  if (count && cnt < 0)
+    uw_throwf(error_s, lit("~a: count must be nonnegative"), self, nao);
+
+  if (count == zero)
+    return cons(str, nil);
 
   if (regexp(sep)) {
     list_collect_decl (out, iter);
@@ -5758,6 +5766,10 @@ val split_str_keep(val str, val sep, val keep_sep)
         pos = plus(pos, len);
         if (keep_sep)
           iter = list_collect(iter, sub_str(str, new_pos, pos));
+        if (cnt > 0 && --cnt == 0) {
+          iter = list_collect(iter, sub_str(str, pos, t));
+          break;
+        }
         continue;
       }
       break;
@@ -5789,8 +5801,14 @@ val split_str_keep(val str, val sep, val keep_sep)
             val piece = mkustring(one);
             init_str(piece, cstr, self);
             iter = list_collect(iter, piece);
-            if (keep_sep && *(cstr+1))
-              iter = list_collect(iter, null_string);
+            if (*(cstr + 1)) {
+              if (keep_sep)
+                iter = list_collect(iter, null_string);
+              if (cnt > 0 && --cnt == 0) {
+                iter = list_collect(iter, string(cstr + 1));
+                break;
+              }
+            }
           }
 
           gc_hint(str);
@@ -5817,6 +5835,10 @@ val split_str_keep(val str, val sep, val keep_sep)
           cstr += len_sep;
           if (keep_sep)
             iter = list_collect(iter, sep);
+          if (cnt > 0 && --cnt == 0) {
+            iter = list_collect(iter, string(cstr));
+            break;
+          }
           continue;
         }
         break;
@@ -5833,13 +5855,13 @@ val split_str_keep(val str, val sep, val keep_sep)
 val spl(val sep, val arg1, val arg2)
 {
   return if3(missingp(arg2),
-             split_str_keep(arg1, sep, arg2),
-             split_str_keep(arg2, sep, arg1));
+             split_str_keep(arg1, sep, arg2, nil),
+             split_str_keep(arg2, sep, arg1, nil));
 }
 
 val split_str(val str, val sep)
 {
-  return split_str_keep(str, sep, nil);
+  return split_str_keep(str, sep, nil, nil);
 }
 
 val split_str_set(val str, val set)

@@ -217,3 +217,42 @@
   (join-with "a" "b") "b"
   (join-with "--" "b" "c" "d") "b--c--d"
   (join-with #\- "b" "c" "d") "b-c-d")
+
+(mtest
+  (split-str "abc" "" : 0) ("abc")
+  (split-str "abc" "" : 1) ("a" "bc")
+  (split-str "abc" "" : 2) ("a" "b" "c")
+  (split-str "abc" "" : 3) ("a" "b" "c")
+  (split-str "abc" "" : -1) :error)
+
+(mtest
+  (split-str "abc" "" t 0) ("abc")
+  (split-str "abc" "" t 1) ("a" "" "bc")
+  (split-str "abc" "" t 2) ("a" "" "b" "" "c")
+  (split-str "abc" "" t 3) ("a" "" "b" "" "c"))
+
+(mtest
+  (split-str "a,b,c" "," : 0) ("a,b,c")
+  (split-str "a,b,c" "," : 1) ("a" "b,c")
+  (split-str "a,b,c" "," : 2) ("a" "b" "c")
+  (split-str "a,b,c" "," : 3) ("a" "b" "c"))
+
+(mtest
+  (split-str "a,b,c" "," t 0) ("a,b,c")
+  (split-str "a,b,c" "," t 1) ("a" "," "b,c")
+  (split-str "a,b,c" "," t 2) ("a" "," "b" "," "c")
+  (split-str "a,b,c" "," t 3) ("a" "," "b" "," "c"))
+
+(mtest
+  (split-str "a12b34c567d" #/[0-9]+/ : 0) ("a12b34c567d")
+  (split-str "a12b34c567d" #/[0-9]+/ : 1) ("a" "b34c567d")
+  (split-str "a12b34c567d" #/[0-9]+/ : 2) ("a" "b" "c567d")
+  (split-str "a12b34c567d" #/[0-9]+/ : 3) ("a" "b" "c" "d")
+  (split-str "a12b34c567d" #/[0-9]+/ : 4) ("a" "b" "c" "d"))
+
+(mtest
+  (split-str "a12b34c567d" #/[0-9]+/ t 0) ("a12b34c567d")
+  (split-str "a12b34c567d" #/[0-9]+/ t 1) ("a" "12" "b34c567d")
+  (split-str "a12b34c567d" #/[0-9]+/ t 2) ("a" "12" "b" "34" "c567d")
+  (split-str "a12b34c567d" #/[0-9]+/ t 3) ("a" "12" "b" "34" "c" "567" "d")
+  (split-str "a12b34c567d" #/[0-9]+/ t 4) ("a" "12" "b" "34" "c" "567" "d"))

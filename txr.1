@@ -25341,7 +25341,7 @@ string, in order.
 
 .coNP Function @ split-str
 .synb
-.mets (split-str < string < sep <> [ keep-between ])
+.mets (split-str < string < sep >> [ keep-between <> [ count ]])
 .syne
 .desc
 The
@@ -25355,6 +25355,14 @@ argument must be one of three types: a string, a character
 or a regular expression. It determines the separator character
 sequences within
 .metn string .
+
+The following describes the behavior of
+.code split-str
+in the case when the integer parameter
+.meta count
+is omitted. The semantics of
+.meta count
+are then given.
 
 All non-overlapping matches for
 .meta sep
@@ -25448,6 +25456,25 @@ last character, whereas
 .code split-str
 does not recognize empty separators at these outer limits
 of the string.
+
+If the
+.meta count
+parameter is present, it must be a non-negative integer. This value
+specifies the maximum number of pieces of the input
+.meta string
+which are extracted by the splitting process. The returned list
+consists of these pieces, followed by the remainder of the string, if
+the remainder is nonempty. If
+.meta keep-sep
+is true, then separators appear between the pieces, and if the remainder
+piece is present, the separator between the last piece and the remainder
+is included.
+If
+.meta count
+is zero, then
+.code split-str
+returns a list of one element, which is
+.metn string .
 
 .coNP Function @ spl
 .synb
@@ -70512,7 +70539,7 @@ into the target directory whose path is given by
 
 The target directory must exist.
 
-For source each path in
+For each source path in
 .metn from-list ,
 the
 .code copy-files
@@ -70612,9 +70639,11 @@ Propagate the permissions of all objects under
 onto their
 .meta to-path
 counterparts. In the absence of this option, the copied objects
-receive permissions with are calculated by applying the
+receive the same permissions as a newly created files.
+On POSIX systems this means: readable and writable to the owner,
+group and others, by default, subject to the
 .code umask
-of the calling process to the maximally liberal.
+that is in effect.
 .IP :times
 Propagate the modification and access time stamps of all objects under
 .meta from-path

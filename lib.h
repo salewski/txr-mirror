@@ -925,7 +925,7 @@ val scat3(val s1, val sep, val s2);
 val join_with(val sep, struct args *args);
 val fmt_join(struct args *args);
 val split_str(val str, val sep);
-val split_str_keep(val str, val sep, val keep_sep);
+val split_str_keep(val str, val sep, val keep_sep_opt, val count_opt);
 val spl(val sep, val arg1, val arg2);
 val split_str_set(val str, val set);
 val sspl(val set, val str);

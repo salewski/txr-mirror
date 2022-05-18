@@ -7217,7 +7217,7 @@ void eval_init(void)
   reg_fun(intern(lit("sub-str"), user_package), func_n3o(sub_str, 1));
   reg_fun(intern(lit("replace-str"), user_package), func_n4o(replace_str, 2));
   reg_fun(intern(lit("cat-str"), user_package), func_n2o(cat_str, 1));
-  reg_fun(intern(lit("split-str"), user_package), func_n3o(split_str_keep, 2));
+  reg_fun(intern(lit("split-str"), user_package), func_n4o(split_str_keep, 2));
   reg_fun(intern(lit("spl"), user_package), func_n3o(spl, 2));
   reg_fun(intern(lit("split-str-set"), user_package), func_n2(split_str_set));
   reg_fun(intern(lit("sspl"), user_package), func_n2(sspl));
