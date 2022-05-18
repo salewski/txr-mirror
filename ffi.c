@@ -3604,7 +3604,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
     uw_throwf(error_s,
               lit("~a: unions cannot contain incomplete member"),
               self, nao);
-
+  tft->incomplete = (nmemb == 0);
   tft->nelem = i;
 
   tft->size = (biggest_size + most_align - 1) & ~(most_align - 1);
