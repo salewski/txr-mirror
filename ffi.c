@@ -4719,11 +4719,12 @@ static void ffi_init_extra_types(void)
   ffi_typedef(intern(lit("wint-t"), user_package),
               type_by_size[convert(wint_t, -1) > 0][sizeof (wint_t)]);
 
+#if HAVE_INTMAX_T || HAVE_LONGLONG_T
   {
 #if HAVE_INTMAX_T
     typedef intmax_t imax_t;
-#else
-    typedef long long imax_t;
+#elif HAVE_LONGLONG_T
+    typedef longlong_t imax_t;
 #endif
 
     if (sizeof(imax_t) <= 8) {
@@ -4733,6 +4734,7 @@ static void ffi_init_extra_types(void)
                   type_by_size[1][sizeof (imax_t)]);
     }
   }
+#endif
 
 #if HAVE_SYS_TYPES_H
   ffi_typedef(intern(lit("blkcnt-t"), user_package),
@@ -4775,10 +4777,12 @@ static void ffi_init_extra_types(void)
               type_by_size[convert(uid_t, -1) > 0][sizeof (uid_t)]);
 #endif
 
+#if HAVE_LONGLONG_T
   ffi_typedef(intern(lit("longlong"), user_package),
-              type_by_size[0][sizeof (long long)]);
+              type_by_size[0][sizeof (longlong_t)]);
   ffi_typedef(intern(lit("ulonglong"), user_package),
-              type_by_size[1][sizeof (long long)]);
+              type_by_size[1][sizeof (longlong_t)]);
+#endif
 }
 
 #if HAVE_LIBFFI
