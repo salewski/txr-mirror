@@ -1462,35 +1462,35 @@ static val ffi_ubit_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_generic_sbit_put(struct txr_ffi_type *tft, val n,
                                  mem_t *dst, val self)
 {
-  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
-  memcpy(tmp, dst, tft->size);
-  ffi_sbit_put(tft, n, tmp, self);
-  memcpy(dst, tmp, tft->size);
+  int tmp = 0;
+  memcpy(&tmp, dst, tft->size);
+  ffi_sbit_put(tft, n, coerce(mem_t *, &tmp), self);
+  memcpy(dst, &tmp, tft->size);
 }
 
 static val ffi_generic_sbit_get(struct txr_ffi_type *tft,
                                 mem_t *src, val self)
 {
-  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
-  memcpy(tmp, src, tft->size);
-  return ffi_sbit_get(tft, tmp, self);
+  int tmp = 0;
+  memcpy(&tmp, src, tft->size);
+  return ffi_sbit_get(tft, coerce(mem_t *, &tmp), self);
 }
 
 static void ffi_generic_ubit_put(struct txr_ffi_type *tft, val n,
                                  mem_t *dst, val self)
 {
-  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
-  memcpy(tmp, dst, tft->size);
-  ffi_ubit_put(tft, n, tmp, self);
-  memcpy(dst, tmp, tft->size);
+  int tmp = 0;
+  memcpy(&tmp, dst, tft->size);
+  ffi_ubit_put(tft, n, coerce(mem_t *, &tmp), self);
+  memcpy(dst, coerce(mem_t *, &tmp), tft->size);
 }
 
 static val ffi_generic_ubit_get(struct txr_ffi_type *tft,
                                 mem_t *src, val self)
 {
-  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
-  memcpy(tmp, src, tft->size);
-  return ffi_ubit_get(tft, tmp, self);
+  int tmp = 0;
+  memcpy(&tmp, src, tft->size);
+  return ffi_ubit_get(tft, coerce(mem_t *, &tmp), self);
 }
 
 static void ffi_bool_put(struct txr_ffi_type *tft, val truth,
