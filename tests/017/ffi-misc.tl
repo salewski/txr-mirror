@@ -94,3 +94,18 @@
 (mtest
   (ffi-put (new flex x #\a y "bcd") (ffi (struct flex))) #b'6162636400'
   (ffi-get #b'6162636400' (ffi (struct flex))) #S(flex x #\a y "bcd"))
+
+(defvarl %big-endian% (zerop [(ffi-put #x1 (ffi uint32)) 0]))
+
+(typedef foo
+  (struct foo
+    (x (bit 48 uint64))
+    (y (bit 16 uint64))))
+
+(if %big-endian%
+  (mtest
+    (ffi-put (new foo x 1 y 1) (ffi foo)) #b'0000000000010001'
+    (ffi-put (new foo x #xABCDFFFFB00B y #x1234) (ffi foo)) #b'ABCDFFFFB00B1234')
+  (mtest
+    (ffi-put (new foo x 1 y 1) (ffi foo)) #b'0100000000000100'
+    (ffi-put (new foo x #xABCDFFFFB00B y #x1234) (ffi foo)) #b'0BB0FFFFCDAB3412'))

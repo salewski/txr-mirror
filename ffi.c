@@ -201,7 +201,13 @@ struct txr_ffi_type {
   val syntax;
   val eltype;
   cnum size, align;
-  unsigned shift, mask;
+  unsigned shift;
+  union {
+    unsigned mask;
+#if HAVE_I64
+    u64_t fmask;
+#endif
+  } m;
   cnum nelem;
   struct smemb *memb;
   val tag;
@@ -1366,7 +1372,7 @@ static val ffi_wchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_sbit_put(struct txr_ffi_type *tft, val n,
                          mem_t *dst, val self)
 {
-  unsigned mask = tft->mask;
+  unsigned mask = tft->m.mask;
   unsigned sbmask = mask ^ (mask >> 1);
   int shift = tft->shift;
   cnum cn = c_num(n, self);
@@ -1403,7 +1409,7 @@ range:
 static val ffi_sbit_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   align_sw_get(unsigned int, src);
-  unsigned mask = tft->mask;
+  unsigned mask = tft->m.mask;
   unsigned sbmask = mask ^ (mask >> 1);
   int shift = tft->shift;
   unsigned uget = *coerce(unsigned *, src) & mask;
@@ -1419,7 +1425,7 @@ static val ffi_sbit_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_ubit_put(struct txr_ffi_type *tft, val n,
                          mem_t *dst, val self)
 {
-  unsigned mask = tft->mask;
+  unsigned mask = tft->m.mask;
   int shift = tft->shift;
   ucnum cn = c_unum(n, self);
   unsigned un = cn;
@@ -1451,13 +1457,97 @@ range:
 static val ffi_ubit_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   align_sw_get(unsigned, src);
-  unsigned mask = tft->mask;
+  unsigned mask = tft->m.mask;
   int shift = tft->shift;
   unsigned uget = *coerce(unsigned *, src) & mask;
   (void) self;
   return unum(uget >> shift);
   align_sw_end;
 }
+
+#if HAVE_I64
+
+static void ffi_fat_sbit_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
+{
+  u64_t mask = tft->m.fmask;
+  u64_t sbmask = mask ^ (mask >> 1);
+  int shift = tft->shift;
+  i64_t in = c_i64(n, self);
+  u64_t uput = (convert(u64_t, in) << shift) & mask;
+
+  if (uput & sbmask) {
+    i64_t icheck = -convert(i64_t, ((uput ^ mask) >> shift) + 1);
+    if (icheck != in)
+      goto range;
+  } else if (convert(i64_t, uput >> shift) != in) {
+    goto range;
+  }
+
+  {
+    u64_t field = *coerce(u64_t *, dst);
+    field &= ~mask;
+    field |= uput;
+    *coerce(u64_t *, dst) = field;
+  }
+
+  return;
+range:
+  uw_throwf(error_s, lit("~a: value ~s is out of range of "
+                         "signed ~s bit-field"),
+            self, n, num_fast(tft->nelem), nao);
+}
+
+static val ffi_fat_sbit_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  u64_t mask = tft->m.fmask;
+  u64_t sbmask = mask ^ (mask >> 1);
+  int shift = tft->shift;
+  u64_t uget = *coerce(u64_t *, src) & mask;
+
+  (void) self;
+
+  if (uget & sbmask)
+    return num(-convert(i64_t, ((uget ^ mask) >> shift) + 1));
+  return unum_64(uget >> shift);
+}
+
+static void ffi_fat_ubit_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
+{
+  u64_t mask = tft->m.fmask;
+  int shift = tft->shift;
+  u64_t un = c_u64(n, self);
+  u64_t uput = (un << shift) & mask;
+
+  if (uput >> shift != un)
+    goto range;
+
+  {
+    u64_t field = *coerce(u64_t *, dst);
+    field &= ~mask;
+    field |= uput;
+    *coerce(u64_t *, dst) = field;
+  }
+
+  return;
+
+range:
+  uw_throwf(error_s, lit("~a: value ~s is out of range of "
+                         "unsigned ~s bit-field"),
+            self, n, num_fast(tft->nelem), nao);
+}
+
+static val ffi_fat_ubit_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  u64_t mask = tft->m.fmask;
+  int shift = tft->shift;
+  u64_t uget = *coerce(u64_t *, src) & mask;
+  (void) self;
+  return unum_64(uget >> shift);
+}
+
+#endif
 
 static void ffi_generic_sbit_put(struct txr_ffi_type *tft, val n,
                                  mem_t *dst, val self)
@@ -1492,6 +1582,44 @@ static val ffi_generic_ubit_get(struct txr_ffi_type *tft,
   memcpy(&tmp, src, tft->size);
   return ffi_ubit_get(tft, coerce(mem_t *, &tmp), self);
 }
+
+#if HAVE_I64
+
+static void ffi_generic_fat_sbit_put(struct txr_ffi_type *tft, val n,
+                                     mem_t *dst, val self)
+{
+  i64_t tmp = 0;
+  memcpy(&tmp, dst, tft->size);
+  ffi_fat_sbit_put(tft, n, coerce(mem_t *, &tmp), self);
+  memcpy(dst, &tmp, tft->size);
+}
+
+static val ffi_generic_fat_sbit_get(struct txr_ffi_type *tft,
+                                    mem_t *src, val self)
+{
+  i64_t tmp = 0;
+  memcpy(&tmp, src, tft->size);
+  return ffi_fat_sbit_get(tft, coerce(mem_t *, &tmp), self);
+}
+
+static void ffi_generic_fat_ubit_put(struct txr_ffi_type *tft, val n,
+                                     mem_t *dst, val self)
+{
+  i64_t tmp = 0;
+  memcpy(&tmp, dst, tft->size);
+  ffi_fat_ubit_put(tft, n, coerce(mem_t *, &tmp), self);
+  memcpy(dst, coerce(mem_t *, &tmp), tft->size);
+}
+
+static val ffi_generic_fat_ubit_get(struct txr_ffi_type *tft,
+                                    mem_t *src, val self)
+{
+  i64_t tmp = 0;
+  memcpy(&tmp, src, tft->size);
+  return ffi_fat_ubit_get(tft, coerce(mem_t *, &tmp), self);
+}
+
+#endif
 
 static void ffi_bool_put(struct txr_ffi_type *tft, val truth,
                          mem_t *dst, val self)
@@ -3337,6 +3465,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   int need_out_handler = 0;
   int bit_offs = 0;
   const unsigned bits_int = 8 * sizeof(int);
+#if HAVE_I64
+  const unsigned bits_llint = 8 * sizeof(u64_t);
+#endif
 
   if (use_existing) {
     if (tft->nelem != 0) {
@@ -3425,10 +3556,22 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 #else
       mtft->shift = bits_int - bit_offs - bits;
 #endif
-      if (bits == bits_int)
-        mtft->mask = UINT_MAX;
-      else
-        mtft->mask = ((1U << bits) - 1) << mtft->shift;
+
+#if HAVE_I64
+      if (size > sizeof (int)) {
+        if (bits == bits_llint)
+          mtft->m.fmask = convert(u64_t, -1);
+        else if (bits > bits_int)
+          mtft->m.fmask = ((convert(u64_t, 1) << bits) - 1) << mtft->shift;
+      } else
+#endif
+      {
+        if (bits == bits_int)
+          mtft->m.mask = UINT_MAX;
+        else
+          mtft->m.mask = ((1U << bits) - 1) << mtft->shift;
+      }
+
       bit_offs += bits;
       offs += bit_offs / 8;
       bit_offs %= 8;
@@ -3502,6 +3645,9 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
   ucnum most_align = 0;
   ucnum biggest_size = 0;
   const unsigned bits_int = 8 * sizeof(int);
+#if HAVE_I64
+  const unsigned bits_llint = 8 * sizeof(u64_t);
+#endif
 
   if (use_existing) {
     if (tft->nelem != 0) {
@@ -3571,10 +3717,21 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 #else
       mtft->shift = bits_int - bits;
 #endif
-      if (bits == bits_int)
-        mtft->mask = UINT_MAX;
-      else
-        mtft->mask = ((1U << bits) - 1) << mtft->shift;
+
+#if HAVE_I64
+      if (mtft->size > (int) sizeof (int)) {
+        if (bits == bits_llint)
+          mtft->m.fmask = convert(u64_t, -1);
+        else if (bits > bits_int)
+          mtft->m.fmask = ((convert(u64_t, 1) << bits) - 1) << mtft->shift;
+      } else
+#endif
+      {
+        if (bits == bits_int)
+          mtft->m.mask = UINT_MAX;
+        else
+          mtft->m.mask = ((1U << bits) - 1) << mtft->shift;
+      }
 
       if (most_align < align)
         most_align = align;
@@ -4030,9 +4187,9 @@ val ffi_type_compile(val syntax)
       tft->nelem = c_num(nbits, self);
       tft->bitfield = 1;
       if (nb == bits_int)
-        tft->mask = UINT_MAX;
+        tft->m.mask = UINT_MAX;
       else
-        tft->mask = ((1U << nb) - 1);
+        tft->m.mask = ((1U << nb) - 1);
       return type;
     } else if (sym == bit_s && !consp(cddr(syntax))) {
       goto toofew;
@@ -4044,6 +4201,12 @@ val ffi_type_compile(val syntax)
       val type = ffi_type_compile(type_syntax);
       struct txr_ffi_type *tft = ffi_type_struct(type);
       const int bits_int = 8 * sizeof(int);
+#if HAVE_I64
+      const int bits_llint = 8 * sizeof(u64_t);
+      const int bits_lim = bits_llint;
+#else
+      const int bits_lim = bits_int;
+#endif
       val type_copy = ffi_type_copy(type);
       struct txr_ffi_type *tft_cp = ffi_type_struct(type_copy);
       val syn = tft->syntax;
@@ -4053,30 +4216,52 @@ val ffi_type_compile(val syntax)
         goto excess;
 
       if (syn == uint8_s || syn == uint16_s || syn == uint32_s ||
+          syn == uint64_s ||
           syn == uchar_s || syn == ushort_s || syn == uint_s)
       {
         unsgnd = 1;
       } else if (syn != int8_s && syn != int16_s && syn != int32_s &&
+                 syn != int64_s &&
                  syn != char_s && syn != short_s && syn != int_s)
       {
         uw_throwf(error_s, lit("~a: ~s not supported as bitfield type"),
                   self, type, nao);
       }
 
-      if (nb < 0 || nb > bits_int)
+      if (nb < 0 || nb > bits_lim)
         uw_throwf(error_s, lit("~a: invalid bitfield size ~s; "
                                "must be 0 to ~s"),
-                  self, nbits, num_fast(bits_int), nao);
+                  self, nbits, num_fast(bits_lim), nao);
+
       tft_cp->syntax = xsyntax;
       tft_cp->nelem = nb;
-      tft_cp->put = if3(unsgnd, ffi_generic_ubit_put, ffi_generic_sbit_put);
-      tft_cp->get = if3(unsgnd, ffi_generic_ubit_get, ffi_generic_sbit_get);
+#if HAVE_I64
+      if (tft->size > (int) sizeof (int)) {
+        tft_cp->put = if3(unsgnd,
+                          ffi_generic_fat_ubit_put,
+                          ffi_generic_fat_sbit_put);
+        tft_cp->get = if3(unsgnd,
+                          ffi_generic_fat_ubit_get,
+                          ffi_generic_fat_sbit_get);
+      } else
+#endif
+      {
+        tft_cp->put = if3(unsgnd, ffi_generic_ubit_put, ffi_generic_sbit_put);
+        tft_cp->get = if3(unsgnd, ffi_generic_ubit_get, ffi_generic_sbit_get);
+      }
       tft_cp->bitfield = 1;
       /* mask needed at type compilation time by (enumed (bit ...)) */
-      if (nb == bits_int)
-        tft_cp->mask = UINT_MAX;
+#if HAVE_I64
+      if (nb == bits_llint)
+        tft_cp->m.fmask = convert(u64_t, -1);
+      else if (nb > bits_int)
+        tft_cp->m.fmask = ((convert(u64_t, 1) << nb) - 1);
       else
-        tft_cp->mask = ((1U << nb) - 1);
+#endif
+      if (nb == bits_int)
+        tft_cp->m.mask = UINT_MAX;
+      else
+        tft_cp->m.mask = ((1U << nb) - 1);
       return type_copy;
     } else if (sym == enum_s) {
       val name = cadr(syntax);
@@ -5190,7 +5375,7 @@ val ffi_offsetof(val type, val memb)
     struct smemb *pmemb = tft->memb + i;
 
     if (pmemb->mname == memb) {
-      if (pmemb->mtft->mask != 0)
+      if (pmemb->mtft->bitfield)
         uw_throwf(error_s, lit("~a: ~s is a bitfield in ~s"), self,
                   memb, type, nao);
       return num(tft->memb[i].offs);
