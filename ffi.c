@@ -4181,9 +4181,9 @@ val ffi_type_compile(val syntax)
       if (cddr(syntax))
         goto excess;
       if (nb < 0 || nb > bits_int)
-        uw_throwf(error_s, lit("~a: invalid bitfield size ~s; "
+        uw_throwf(error_s, lit("~a: invalid bitfield size ~s in ~s: "
                                "must be 0 to ~s"),
-                  self, nbits, num_fast(bits_int), nao);
+                  self, nbits, syntax, num_fast(bits_int), nao);
       tft->nelem = c_num(nbits, self);
       tft->bitfield = 1;
       if (nb == bits_int)
@@ -4203,9 +4203,9 @@ val ffi_type_compile(val syntax)
       const int bits_int = 8 * sizeof(int);
 #if HAVE_I64
       const int bits_llint = 8 * sizeof(u64_t);
-      const int bits_lim = bits_llint;
+      const int bits_lim = min(8 * tft->size, bits_llint);
 #else
-      const int bits_lim = bits_int;
+      const int bits_lim = min(8 * tft->size, bits_int);
 #endif
       val type_copy = ffi_type_copy(type);
       struct txr_ffi_type *tft_cp = ffi_type_struct(type_copy);
@@ -4229,9 +4229,9 @@ val ffi_type_compile(val syntax)
       }
 
       if (nb < 0 || nb > bits_lim)
-        uw_throwf(error_s, lit("~a: invalid bitfield size ~s; "
+        uw_throwf(error_s, lit("~a: bitfield size ~s in ~s: "
                                "must be 0 to ~s"),
-                  self, nbits, num_fast(bits_lim), nao);
+                  self, nbits, syntax, num_fast(bits_lim), nao);
 
       tft_cp->syntax = xsyntax;
       tft_cp->nelem = nb;
