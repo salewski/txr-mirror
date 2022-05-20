@@ -80304,8 +80304,11 @@ element, it denotes a variable length
 array. It corresponds to the concept of an incomplete array
 in the C language, except that no implicit array-to-pointer conversion
 concept is implemented in the FFI type system. This type may not
-be used as an array element or structure member. It also may not
+be used as an array element or structure member, other than as the
+last structure member. It also may not
 be passed or returned by value, only by pointer.
+If the last member of a structure has this type, then it is a flexible
+array member; see the Flexible Structures section below.
 
 Since the type has unknown length, it has a trivial get operation which returns
 .codn nil .
@@ -80419,9 +80422,11 @@ syntax which omits the
 .meta dim
 argument specifies a null-terminated variant of the variable-length array.
 Like that type, it corresponds to the concept of an incomplete
-array in the C language. It may not be used as an array element
-or structure member, and cannot be passed as an argument or returned
-as a value.
+array in the C language. It may not be used as an array element,
+and may not be used as a structure member other than the last member.
+It cannot be passed as an argument or returned as a value.
+If the last member of a structure has this type, then it is a flexible
+array member; see the Flexible Structures section below.
 
 Unlike the ordinary variable-length
 .codn array ,
