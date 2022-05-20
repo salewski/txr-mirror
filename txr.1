@@ -81254,11 +81254,11 @@ operator has no semantics other than these behaviors.
 .IP 1.
 When
 .meta type
-is a
+is
 .code struct
 or
-.codn union ,
-then the
+.code union
+syntax which defines at least one member, then the
 .code pack
 operator performs the following syntactic transformation:
 each member of
@@ -81291,6 +81291,30 @@ An important rationale also is that the GNU C
 .code packed
 attribute works this way, and so C structures declarations using
 that attribute are easier to translate to the \*(TL FFI type system.
+
+Deriving a less strictly aligned version of a structure or union type without
+any effect on the alignment of its members may be obtained by applying the
+.code bit
+operator to either
+.code typedef
+name for a structure or union type, or else to syntax which refers
+to an existing type without defining members.
+Given the definition
+.codn "(typedef s (struct s (a int) (b char)))" ,
+the type
+.code s
+is an eight byte structure with three bytes of padding at the end, which has
+four byte alignment. The type expression
+.code "(pack s)"
+produces a version of this type which has one byte alignment.
+The expression
+.codn "(pack (struct s))" ,
+likewise. The resulting
+unaligned type is still eight bytes wide, and has three padding bytes.
+In other words, the
+.code pack
+operator does not transform the syntax of a structure which is already
+defined as an object,
 
 .IP 2.
 When

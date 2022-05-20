@@ -3925,15 +3925,16 @@ static val ffi_struct_init(val slot_init, val strct)
 
 static val ffi_transform_pack(val syntax, val align)
 {
-  val op = pop(&syntax);
+  val args = syntax;
+  val op = pop(&args);
 
   if (op == struct_s || op == union_s)
   {
-    val name = pop(&syntax);
+    val name = pop(&args);
     val iter;
     list_collect_decl (packed, ptail);
 
-    for (iter = syntax; iter; iter = cdr(iter)) {
+    for (iter = args; iter; iter = cdr(iter)) {
       val slot_spec = car(iter);
       val slot = car(slot_spec);
       val type = cadr(slot_spec);
@@ -3945,14 +3946,14 @@ static val ffi_transform_pack(val syntax, val align)
                                       list(slot, packed_type, nao)));
     }
 
-    return cons(op, cons(name, packed));
+    return if3(packed, cons(op, cons(name, packed)), syntax);
   } else if (op == align_s) {
-    if (length(syntax) == one) {
-      val type = car(syntax);
+    if (length(syntax) == two) {
+      val type = car(args);
       return list(align_s, list(pack_s, align, type, nao), nao);
-    } else if (length(syntax) == two) {
-      val align = car(syntax);
-      val type = cadr(syntax);
+    } else if (length(syntax) == three) {
+      val align = car(args);
+      val type = cadr(args);
       return list(align_s, align, list(pack_s, align, type, nao), nao);
     }
   }
