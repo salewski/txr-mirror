@@ -148,7 +148,7 @@ val sbit_s, ubit_s; /* bit_s is in arith.c */
 
 val enum_s, enumed_s, elemtype_s;
 
-val align_s;
+val align_s, pack_s;
 
 val bool_s;
 
@@ -3919,6 +3919,28 @@ static val ffi_struct_init(val slot_init, val strct)
   return nil;
 }
 
+static val ffi_pack_members(val struct_syntax, val align)
+{
+  val op = pop(&struct_syntax);
+  val name = pop(&struct_syntax);
+  val iter;
+  list_collect_decl (packed, ptail);
+
+  for (iter = struct_syntax; iter; iter = cdr(iter)) {
+    val slot_spec = car(iter);
+    val slot = car(slot_spec);
+    val type = cadr(slot_spec);
+    val init = caddr(slot_spec);
+    val packed_type = list(pack_s, align, type, nao);
+
+    ptail = list_collect(ptail, if3(init,
+                                    list(slot, packed_type, init, nao),
+                                    list(slot, packed_type, nao)));
+  }
+
+  return cons(op, cons(name, packed));
+}
+
 val ffi_type_compile(val syntax)
 {
   val self = lit("ffi-type-compile");
@@ -4292,26 +4314,37 @@ val ffi_type_compile(val syntax)
                   lit("~a: enum name ~s must be bindable symbol or nil"),
                   self, name, nao);
       return make_ffi_type_enum(xsyntax, enums, base_type, self);
-    } else if (sym == align_s && !consp(cddr(syntax))) {
-      goto toofew;
-    } else if (sym == align_s) {
-      val align = ffi_eval_expr(cadr(syntax), nil, nil);
-      ucnum al = c_num(align, self);
+    } else if (sym == align_s || sym == pack_s) {
+      int twoarg = !consp(cddr(syntax));
+      val align = if3(twoarg,
+                      if3(sym == pack_s, one, num_fast(16)),
+                      ffi_eval_expr(cadr(syntax), nil, nil));
+      cnum al = c_num(align, self);
       if (cdddr(syntax))
         goto excess;
       if (al <= 0) {
         uw_throwf(error_s, lit("~a: alignment must be positive"),
                   self, nao);
-      } else if (al != 0 && (al & (al - 1)) != 0) {
+      } else if ((al & (al - 1)) != 0) {
         uw_throwf(error_s, lit("~a: alignment must be a power of two"),
                   self, nao);
       } else {
-        val alsyntax = caddr(syntax);
-        val altype = ffi_type_compile(alsyntax);
-        val altype_copy = ffi_type_copy(altype);
-        struct txr_ffi_type *atft = ffi_type_struct(altype_copy);
-        atft->align = al;
-        return altype_copy;
+        val alsyntax = if3(twoarg, cadr(syntax), caddr(syntax));
+        val xalsyntax = if3(sym == pack_s && consp(alsyntax) &&
+                            (car(alsyntax) == struct_s ||
+                             car(alsyntax) == union_s),
+                            ffi_pack_members(alsyntax, align),
+                            alsyntax);
+        val altype = ffi_type_compile(xalsyntax);
+        if (xalsyntax != alsyntax) {
+          return altype;
+        } else {
+          val altype_copy = ffi_type_copy(altype);
+          struct txr_ffi_type *atft = ffi_type_struct(altype_copy);
+          if (al > atft->align || sym == pack_s)
+            atft->align = al;
+          return altype_copy;
+        }
       }
     } else if (sym == bool_s) {
       val type_syntax = cadr(syntax);
@@ -4405,7 +4438,8 @@ val ffi_type_operator_p(val sym)
               sym == ptr_out_s_s || sym == buf_s || sym == buf_d_s ||
               sym == cptr_s || sym == carray_s || sym == sbit_s ||
               sym == ubit_s || sym == bit_s || sym == enum_s ||
-              sym == enumed_s || sym == align_s || sym == bool_s);
+              sym == enumed_s || sym == align_s || sym == pack_s ||
+              sym == bool_s);
 }
 
 val ffi_type_p(val sym)
@@ -7002,6 +7036,7 @@ void ffi_init(void)
   enumed_s = intern(lit("enumed"), user_package);
   elemtype_s = intern(lit("elemtype"), user_package);
   align_s = intern(lit("align"), user_package);
+  pack_s = intern(lit("pack"), user_package);
   bool_s = intern(lit("bool"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);

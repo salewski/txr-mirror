@@ -81096,32 +81096,69 @@ If handles of different types are all mapped to
 types with different tags, the situation is intercepted and diagnosed
 with an error exception.
 
-.coNP FFI type @ align
+.coNP FFI types @ align and @ pack
 .synb
-.mets (align < width << type )
+.mets (align <> [ width ] << type )
+.mets (pack <> [ width ] << type )
 .syne
 .desc
-The FFI type operator
+The FFI type operators
 .code align
-defines a type which is a copy of
+and
+.code pack
+define a type which is a copy of
 .metn type ,
-but with the alignment requirement replaced by the
-.metn width .
+but with adjusted alignment requirements. In some cases,
+.code pack
+(but not
+.codn align )
+works by replacing itself with a transformed version of the
+.code type
+syntax.
 
-The
+If the
 .meta width
-argument is an expression which is evaluated in the top-level
+argument is present, it is an expression which is evaluated in the top-level
 environment. It must produce a positive integer which is a power of two.
+
+If
+.meta width
+is absent, a different default value is used depending on which type
+operator is specified. For
+.codn align ,
+it defaults to some platform-specific maximum useful alignment value,
+typically 16.
+For
+.codn pack ,
+a missing
+.meta width
+defaults to 1.
 
 The
 .code align
 operator can be used to create a version of
 .meta type
-with stricter or weaker alignment. Alignment affects the placement of
+which is aligned at least as strictly as the specified
+.metn width .
+That is to say, values of
+.meta width
+which are less than or equal to
+.metn type 's
+existing alignment have no effect.
+
+The
+.code pack
+operator can be used to create a version of
+.meta type
+which is less strictly aligned than its existing alignment.
+
+Alignment affects the placement of
 the type as a structure member, and as an array element.
 
-A type with alignment 1 can be placed at any byte offset. A type with
-alignment 2 can be placed only at even addresses and offsets.
+A type with alignment 1, like the default alignment for
+.codn pack ,
+can be placed at any byte offset, and thus is effectively unaligned. A type
+with alignment 2 can be placed only at even addresses and offsets.
 
 Alignment can be applied to all types, including arrays and structs.
 It may also be applied to bitfields, but special considerations have
@@ -81141,21 +81178,147 @@ a structure can be read or written at the misaligned offsets depends on whether
 the individual members support it. If they are integer or floating-point types,
 or aggregates thereof, the usage is supported in a machine-independent manner.
 
-A struct type declared to have a weaker alignment, such as 1, does not
-lose any of the padding at its end. That is to say, alignment has no effect
-on structure size. It affects the offset at which a structure is placed as
-a member of an array or another structure, with its padding intact. To
-eliminate the padding at the end of a structure, it is necessary to use
-.code align
-to manipulate the alignment of individual members.
+Alignment interacts with bitfields. If a bitfield's type has an alignment
+different from the previous member (whether that member is a bitfield or not),
+then the bitfield is placed into a new cell, which is aligned according to
+the alignment of its own type. The alignment of bitfields, other than
+zero width bitfields, contributes to the determination of the most
+strictly aligned member of the structure.
 
 When
+.meta type
+is one of two kinds of types, the
+.code pack
+type operator exhibits special behaviors, as follows.
+In these situations, the
+.code pack
+operator has no semantics other than these behaviors.
+.RS
+.IP 1.
+When
+.meta type
+is a
+.code struct
+or
+.codn union ,
+then the
+.code pack
+operator performs the following syntactic transformation:
+each member of
+.meta type
+is edited, by specifying a
+.code pack
+operator around its type, with the given
+.metn width .
+The surrounding
+.code pack
+operator is deleted.
+The effect is that
+.code pack
+is applied not to the struct or union type itself, but to its members.
+For example
+.code "(pack (struct s (x int) (y double))"
+is transformed into
+.codn "(struct s (pack 1 (x int)) (pack 1 (y double)))" .
+The 1 comes from the defaulting of
+.metn width .
+
+The rationale for this behavior is that alignment weakening is often
+required for all members of a structure, rather than select members. Moreover,
+specifying weak alignment for a structure type itself, while leaving members
+with strict alignments, rarely makes sense.  Weakening the alignment of a
+structure will not eliminate the padding between the members or at the end;
+it will only have any useful effect when that structure is itself used
+as the member of another structure.
+An important rationale also is that the GNU C
+.code packed
+attribute works this way, and so C structures declarations using
+that attribute are easier to translate to the \*(TL FFI type system.
+
+.IP 2.
+When
+.meta type
+is a
 .code align
-is applied to the type of a bitfield member of a structure, it has no effect on
-placement. The alignment of a non-zero bitfield which begins a new
-storage unit is taken into consideration for the purpose of determining
-the most strictly alignment member of the structure.  The alignment of all
-other bitfields is ignored.
+operation, then
+.code pack
+transforms the syntax as follows: the
+.code pack
+operator surrounding the
+.code align
+expression is removed, and introduced around the type expression
+that is
+.codn align 's
+own operand. Thus
+.code "(pack 2 (align 16 int))"
+is transformed into
+.codn "(align 16 (pack 2 int))" .
+
+The rationale for this transformation is that when both
+.code align
+and
+.code pack
+are applied to a type, the combination only makes sense when
+.code pack
+is first. For a non-structure type like
+.codn int ,
+.code "(pack x (align y int))"
+is equivalent to just
+.codn "(pack x int)" ,
+because
+.code pack
+will set the alignment to
+.code x
+regardless of the effect of
+.codn align .
+Whereas
+.code "(align y (pack x int))"
+is meaningful in that the
+.code align
+takes precedence over
+.code pack
+if
+.codn "(> y x)" .
+The main rationale is that
+.code pack
+may be applied to structure members via a code transformation.
+Those members may already have types which use
+.codn align .
+This transformation ensures that the semantics is applied
+in a useful order.
+For example
+.code "(pack (struct s (a char) (x (align 2 int))))"
+is first transformed into
+.codn "(struct s (a (pack 1 char)) (x (pack 1 (align 2 int)))))" .
+If this is left as-is, then the
+.code align
+on
+.code x
+is obliterated by the
+.codn pack ,
+rendering it useless.
+A further transformation takes place to
+.codn "(struct s (a (pack 1 char)) (x (align 2 (pack 1 int)))))" .
+Now the
+.code align
+directive is increasing the alignment of
+.code x
+to 2, so that
+.code x
+will be placed at offset 2, leaving one byte of padding after the
+.code a
+member. This is how attributes work in GNU C also: the
+.code aligned
+attribute on the member of a packed structure can take precedence
+and increase its alignment.
+
+.RE
+
+.IP
+After these transformations are applied, the nested
+.code pack
+forms which occur in the transformed syntax may perform
+more such transformations, depending on their operands.
 
 .SS* Additional Types
 .coNP FFI types @, size-t @, ptrdiff-t @, int-ptr-t @, uint-ptr-t @, intmax-t @, uintmax-t @ wint-t @, sig-atomic-t @ time-t and @ clock-t
