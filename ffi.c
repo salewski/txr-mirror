@@ -3923,26 +3923,41 @@ static val ffi_struct_init(val slot_init, val strct)
   return nil;
 }
 
-static val ffi_pack_members(val struct_syntax, val align)
+static val ffi_transform_pack(val syntax, val align)
 {
-  val op = pop(&struct_syntax);
-  val name = pop(&struct_syntax);
-  val iter;
-  list_collect_decl (packed, ptail);
+  val op = pop(&syntax);
 
-  for (iter = struct_syntax; iter; iter = cdr(iter)) {
-    val slot_spec = car(iter);
-    val slot = car(slot_spec);
-    val type = cadr(slot_spec);
-    val init = caddr(slot_spec);
-    val packed_type = list(pack_s, align, type, nao);
+  if (op == struct_s || op == union_s)
+  {
+    val name = pop(&syntax);
+    val iter;
+    list_collect_decl (packed, ptail);
 
-    ptail = list_collect(ptail, if3(init,
-                                    list(slot, packed_type, init, nao),
-                                    list(slot, packed_type, nao)));
+    for (iter = syntax; iter; iter = cdr(iter)) {
+      val slot_spec = car(iter);
+      val slot = car(slot_spec);
+      val type = cadr(slot_spec);
+      val init = caddr(slot_spec);
+      val packed_type = list(pack_s, align, type, nao);
+
+      ptail = list_collect(ptail, if3(init,
+                                      list(slot, packed_type, init, nao),
+                                      list(slot, packed_type, nao)));
+    }
+
+    return cons(op, cons(name, packed));
+  } else if (op == align_s) {
+    if (length(syntax) == one) {
+      val type = car(syntax);
+      return list(align_s, list(pack_s, align, type, nao), nao);
+    } else if (length(syntax) == two) {
+      val align = car(syntax);
+      val type = cadr(syntax);
+      return list(align_s, align, list(pack_s, align, type, nao), nao);
+    }
   }
 
-  return cons(op, cons(name, packed));
+  return syntax;
 }
 
 val ffi_type_compile(val syntax)
@@ -4334,10 +4349,8 @@ val ffi_type_compile(val syntax)
                   self, nao);
       } else {
         val alsyntax = if3(twoarg, cadr(syntax), caddr(syntax));
-        val xalsyntax = if3(sym == pack_s && consp(alsyntax) &&
-                            (car(alsyntax) == struct_s ||
-                             car(alsyntax) == union_s),
-                            ffi_pack_members(alsyntax, align),
+        val xalsyntax = if3(sym == pack_s && consp(alsyntax),
+                            ffi_transform_pack(alsyntax, align),
                             alsyntax);
         val altype = ffi_type_compile(xalsyntax);
         if (xalsyntax != alsyntax) {
