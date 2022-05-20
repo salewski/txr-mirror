@@ -3461,7 +3461,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
                 tft->self,
                 cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops));
   ucnum offs = 0;
-  ucnum most_align = 0;
+  ucnum most_align = 1;
   int need_out_handler = 0;
   int bit_offs = 0;
   const unsigned bits_int = 8 * sizeof(int);
@@ -3642,7 +3642,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
   val obj = if3(use_existing,
                 tft->self,
                 cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops));
-  ucnum most_align = 0;
+  ucnum most_align = 1;
   ucnum biggest_size = 0;
   const unsigned bits_int = 8 * sizeof(int);
 #if HAVE_I64

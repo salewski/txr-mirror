@@ -109,3 +109,7 @@
   (mtest
     (ffi-put (new foo x 1 y 1) (ffi foo)) #b'0100000000000100'
     (ffi-put (new foo x #xABCDFFFFB00B y #x1234) (ffi foo)) #b'0BB0FFFFCDAB3412'))
+
+(mtest
+  (alignof (struct empty)) 1
+  (alignof (union empty)) 1)
