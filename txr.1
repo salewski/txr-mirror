@@ -81568,7 +81568,7 @@ stored in the last slot of the Lisp structure. The length includes the
 terminating null element for
 .code zarray
 types. The conversion is consistent with the semantics of an incomplete
-arrays that is not a structure member.
+array that is not a structure member.
 
 In the reverse direction, when a foreign representation is being converted
 to a Lisp structure under the control of a flexible structure FFI type,
@@ -81578,7 +81578,7 @@ is a
 .code zarray
 from detecting null-termination of the foreign array. The conversion of
 the array itself is consistent with the semantics of an incomplete
-arrays that is not a structure member.
+array that is not a structure member.
 Before the conversion takes place, all of the members of the
 structure prior to the terminating array, are extracted and converted to
 Lisp representations.  The corresponding slots of the Lisp structure are
