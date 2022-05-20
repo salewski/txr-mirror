@@ -4358,7 +4358,8 @@ val ffi_type_compile(val syntax)
         } else {
           val altype_copy = ffi_type_copy(altype);
           struct txr_ffi_type *atft = ffi_type_struct(altype_copy);
-          if (al > atft->align || sym == pack_s)
+          if (al > atft->align || sym == pack_s ||
+              (opt_compat && opt_compat <= 275))
             atft->align = al;
           return altype_copy;
         }

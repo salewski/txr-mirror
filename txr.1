@@ -88335,6 +88335,22 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 275
+In \*(TX 275 and older versions, the FFI type operator
+.code align
+can weaken the alignment of a type. The current behavior is that it can
+only increase the strictness of alignment, which mimics the
+.code aligned
+type attribute found in GNU C. For instance
+.code "(align 2 int)"
+will not have an effect, because 2 is lower than the alignment of
+.codn int .
+The
+.code pack
+type operator must be used instead to specify any alignment, including
+lower. A compatibility value of 275 or lower restores the ability of
+.code align
+to specify weaker alignment.
 .IP 273
 In \*(TX 273 and older versions,
 .code lazy-str-get-trailing-list
