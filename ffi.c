@@ -3514,7 +3514,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     val slot = car(slot_syntax);
     val type = ffi_memb_compile(slot_syntax, i == nmemb - 1, &flexp, self);
     struct txr_ffi_type *mtft = ffi_type_struct(type);
-    cnum size = mtft->size;
+    ucnum size = mtft->size;
+    ucnum align = mtft->align;
+    ucnum almask = align - 1;
 
     tft->nelem = i + 1;
 
@@ -3526,17 +3528,15 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     setcheck(obj, type);
 
     if (mtft->bitfield) {
-      ucnum size = mtft->size;
       ucnum bits_type = 8 * size;
       ucnum bits = mtft->nelem;
-      ucnum offs_mask = size - 1;
-      ucnum align_mask = ~offs_mask;
-      ucnum unit_offs = offs & align_mask;
+      ucnum unit_offs = offs & ~almask;
       ucnum bits_alloc = 8 * (offs - unit_offs) + bit_offs;
       ucnum room = bits_type - bits_alloc;
-      ucnum align = if3(slot, mtft->align, 1);
 
       if (bits == 0) {
+        ucnum szmask = size - 1;
+        ucnum unit_offs = offs & ~szmask;
         if (offs != unit_offs || bit_offs > 0)
           offs = unit_offs + size;
         bit_offs = 0;
@@ -3545,7 +3545,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       }
 
       if (bits > room) {
-        offs = unit_offs + size;
+        offs = unit_offs + align;
         bit_offs = bits_alloc = 0;
       }
 
@@ -3576,12 +3576,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       offs += bit_offs / 8;
       bit_offs %= 8;
 
-      if (most_align < align)
+      if (slot && most_align < align)
         most_align = align;
     } else {
-      ucnum align = mtft->align;
-      ucnum almask = align - 1;
-
       if (bit_offs > 0) {
         bug_unless (bit_offs < 8);
         offs++;
