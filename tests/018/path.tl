@@ -280,3 +280,41 @@
   (pure-rel-path-p "abc/.") t
   (pure-rel-path-p "abc\\def") t
   (pure-rel-path-p "abc\\.") t)
+
+(mtest
+  (trim-path-seps "") ""
+  (trim-path-seps "/") "/"
+  (trim-path-seps "//") "/"
+  (trim-path-seps "///") "/"
+  (trim-path-seps "a///") "a"
+  (trim-path-seps "/a///") "/a")
+
+(mtest
+  (trim-path-seps "c:/") "c:/"
+  (trim-path-seps "c://") "c:/"
+  (trim-path-seps "c:///") "c:/"
+  (trim-path-seps "c:a///") "c:a"
+  (trim-path-seps "/c:/a///") "/c:/a"
+  (trim-path-seps "/c://///") "/c:")
+
+(mtest
+  (trim-path-seps "\\") "\\"
+  (trim-path-seps "\\\\") "\\"
+  (trim-path-seps "\\\\\\") "\\"
+  (trim-path-seps "a\\\\\\") "a"
+  (trim-path-seps "\\a\\\\\\") "\\a")
+
+(mtest
+  (trim-path-seps "c:\\") "c:\\"
+  (trim-path-seps "c:\\\\") "c:\\"
+  (trim-path-seps "c:\\\\\\") "c:\\"
+  (trim-path-seps "c:a\\\\\\") "c:a"
+  (trim-path-seps "\\c:\\a\\\\\\") "\\c:\\a"
+  (trim-path-seps "\\c:\\\\\\\\\\") "\\c:")
+
+(mtest
+  (trim-path-seps "/c:\\") "/c:"
+  (trim-path-seps "c:/\\/\\/") "c:/"
+  (trim-path-seps "c:a\\\\\\") "c:a"
+  (trim-path-seps "\\c:\\a/\\\\\\") "\\c:\\a"
+  (trim-path-seps "/c:\\\\\\\\\\") "/c:")

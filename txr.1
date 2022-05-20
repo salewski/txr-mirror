@@ -61248,6 +61248,58 @@ The above semantics imply that the following equivalence holds:
   (path-cat "a" "b" "" "c" "/")  -->  "a/b/c/"
 .brev
 
+.coNP Function @ trim-path-seps
+.synb
+.mets (trim-path-seps << path )
+.syne
+.desc
+The
+.code trim-path-seps
+function removes a consecutive run of one or more trailing separators from the
+end of the input string
+.metn path .
+
+The function treats the
+.mets path
+in a system-independent way: both the backslash and forward slash
+are considered a trailing separator.
+
+The function preserves any necessary trailing separators, such as that of
+the absolute path
+.str /
+or the trailing slashes in volume absolute paths such as
+.strn c:/ .
+
+.TP* Examples:
+
+.verb
+  (trim-path-seps "") -> ""
+  (trim-path-seps "/") -> "/"
+  (trim-path-seps "//") -> "/"
+  (trim-path-seps "a///") -> "a"
+  (trim-path-seps "/a///") -> "/a")
+
+  (trim-path-seps "\e\e") -> "\e\e"
+  (trim-path-seps "\e\e\e\e") -> "\e\e"
+  (trim-path-seps "\e\ea\e\e\e\e\e\e") -> "\e\ea")
+
+  (trim-path-seps "c:/") -> "c:/"
+  (trim-path-seps "c://") -> "c:/"
+  (trim-path-seps "c:///") -> "c:/"
+  (trim-path-seps "c:a///") -> "c:a"
+
+  ;; not a volume prefix:
+  (trim-path-seps "/c:/a///") -> "/c:/a"
+  (trim-path-seps "/c://///") -> "/c:")
+
+  (trim-path-seps "c:\e\e") -> "c:\e\e"
+  (trim-path-seps "c:\e\e\e\e") -> "c:\e\e"
+  (trim-path-seps "c:a\e\e\e\e\e\e") -> "c:a"
+
+  ;; mixtures
+  (trim-path-seps "c:/\e\e/\e\e/") -> "c:/"
+.brev
+
 .coNP Function @ rel-path
 .synb
 .mets (rel-path < from-path << to-path )

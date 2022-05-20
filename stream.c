@@ -5236,6 +5236,24 @@ val trim_long_suffix(val name)
   }
 }
 
+val trim_path_seps(val name)
+{
+  val self = lit("trim-path-seps");
+  const wchar_t *str = c_str(name, self);
+  const wchar_t *psc = L"/\\";
+  const wchar_t *fsl = 0;
+  cnum len = c_num(length_str(name), self);
+
+  if (portable_abs_path_p(name))
+    fsl = wcspbrk(str, psc);
+
+  while (len-- > 0)
+    if (!wcschr(psc, str[len]) || str + len == fsl)
+      break;
+
+  return string_own(chk_substrdup(str, 0, len + 1));
+}
+
 val add_suffix(val name, val suffix)
 {
   val self = lit("add-suffix");
@@ -5604,6 +5622,7 @@ void stream_init(void)
   reg_fun(intern(lit("long-suffix"), user_package), func_n2o(long_suffix, 1));
   reg_fun(intern(lit("trim-short-suffix"), user_package), func_n1(trim_short_suffix));
   reg_fun(intern(lit("trim-long-suffix"), user_package), func_n1(trim_long_suffix));
+  reg_fun(intern(lit("trim-path-seps"), user_package), func_n1(trim_path_seps));
   reg_fun(intern(lit("path-cat"), user_package), func_n0v(path_vcat));
   reg_fun(intern(lit("add-suffix"), user_package), func_n2(add_suffix));
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
