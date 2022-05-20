@@ -3217,14 +3217,18 @@ static val ffi_type_copy(val orig)
 {
   struct txr_ffi_type *otft = ffi_type_struct(orig);
   struct txr_ffi_type *ctft = otft->clone(otft);
-  return cobj(coerce(mem_t *, ctft), orig->co.cls, orig->co.ops);
+  val obj = cobj(coerce(mem_t *, ctft), orig->co.cls, orig->co.ops);
+  ctft->self = obj;
+  return obj;
 }
 
 static val ffi_type_copy_new_ops(val orig, struct cobj_ops *ops)
 {
   struct txr_ffi_type *otft = ffi_type_struct(orig);
   struct txr_ffi_type *ctft = otft->clone(otft);
-  return cobj(coerce(mem_t *, ctft), orig->co.cls, ops);
+  val obj = cobj(coerce(mem_t *, ctft), orig->co.cls, ops);
+  ctft->self = obj;
+  return obj;
 }
 
 static struct txr_ffi_type *ffi_simple_clone(struct txr_ffi_type *orig)
