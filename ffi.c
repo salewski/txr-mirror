@@ -3462,6 +3462,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
                 cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops));
   ucnum offs = 0;
   ucnum most_align = 1;
+  ucnum prev_align = 1;
   int need_out_handler = 0;
   int bit_offs = 0;
   const unsigned bits_int = 8 * sizeof(int);
@@ -3526,6 +3527,13 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
     setcheck(obj, slot);
     setcheck(obj, type);
+
+    if (mtft->bitfield && align != prev_align) {
+      if (bit_offs)
+        offs++;
+      offs = (offs + almask) & ~almask;
+      bit_offs = 0;
+    }
 
     if (mtft->bitfield) {
       ucnum bits_type = 8 * size;
@@ -3592,6 +3600,8 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       if (align > most_align)
         most_align = align;
     }
+
+    prev_align = align;
 
     need_out_handler = need_out_handler || mtft->out != 0;
 
