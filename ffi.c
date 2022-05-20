@@ -3561,7 +3561,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       if (size > sizeof (int)) {
         if (bits == bits_llint)
           mtft->m.fmask = convert(u64_t, -1);
-        else if (bits > bits_int)
+        else
           mtft->m.fmask = ((convert(u64_t, 1) << bits) - 1) << mtft->shift;
       } else
 #endif
@@ -3722,7 +3722,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
       if (mtft->size > (int) sizeof (int)) {
         if (bits == bits_llint)
           mtft->m.fmask = convert(u64_t, -1);
-        else if (bits > bits_int)
+        else
           mtft->m.fmask = ((convert(u64_t, 1) << bits) - 1) << mtft->shift;
       } else
 #endif
