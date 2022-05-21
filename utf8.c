@@ -138,8 +138,18 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
     }
   }
 
+  if (state != utf8_init) {
+    while (backtrack != src) {
+      if (wdst)
+        *wdst++ = 0xDC00 | *backtrack;
+      nchar++;
+      backtrack++;
+    }
+  }
+
   if (wdst)
     *wdst++ = 0;
+
   return nchar;
 }
 
