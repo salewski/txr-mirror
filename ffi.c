@@ -2446,17 +2446,33 @@ static void ffi_ptr_in_release(struct txr_ffi_type *tft, val obj,
 static val ffi_flex_struct_in(struct txr_ffi_type *tft, val strct, val self)
 {
   struct smemb *lastm = &tft->memb[tft->nelem - 1];
-  val length_meth = get_special_slot(strct, length_m);
-
+  struct txr_ffi_type *lmtft = lastm->mtft;
   (void) self;
 
-  if (length_meth) {
-    val len = funcall1(length_meth, strct);
-    val memb = slot(strct, lastm->mname);
-    if (vectorp(memb))
-      return vec_set_length(memb, len);
-    else
-      return slotset(strct, lastm->mname, vector(len, nil));
+  if (lmtft->kind == FFI_KIND_ARRAY && !lmtft->null_term) {
+    val length_meth = get_special_slot(strct, length_m);
+
+    if (length_meth) {
+      val len = funcall1(length_meth, strct);
+
+      switch (lmtft->ch_conv) {
+      case conv_char:
+      case conv_zchar:
+      case conv_wchar:
+      case conv_bchar:
+        slotset(strct, lastm->mname, len);
+        break;
+      case conv_none:
+        {
+          val memb = slot(strct, lastm->mname);
+          if (memb)
+            return vec_set_length(memb, len);
+          else
+            return slotset(strct, lastm->mname, vector(len, nil));
+        }
+        break;
+      }
+    }
   }
 
   return slot(strct, lastm->mname);
@@ -2978,7 +2994,14 @@ static val ffi_varray_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 {
   if (copy) {
     struct txr_ffi_type *etft = ffi_type_struct(tft->eltype);
-    cnum nelem = if3(vec, ffi_varray_dynsize(tft, vec, self) / etft->size, 0);
+    cnum nelem = 0;
+
+    if (vectorp(vec)) {
+      nelem = ffi_varray_dynsize(tft, vec, self) / etft->size;
+    } else if (numberp(vec)) {
+      nelem = c_num(vec, self);
+      vec = nil;
+    }
 
     switch (tft->ch_conv) {
     case conv_char:
