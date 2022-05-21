@@ -62,3 +62,12 @@
 
 (mtest
   (ffi-get #b'0300010002000300' (ffi fs3)) #S(fs3 a 3 b #(1 2 3)))
+
+(typedef fs4 (struct fs4
+               (c int8)
+               (s fs0)))
+
+(mtest
+  (sizeof fs4) 2
+  (ffi-put #S(fs4 c 93 s #S(fs0 a 4 b "ABCD")) (ffi fs4)) #b'5d0441424344'
+  (ffi-get #b'5d0441424344' (ffi fs4)) #S(fs4 c 93 s #S(fs0 a 4 b "ABCD")))

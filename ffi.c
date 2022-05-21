@@ -2443,9 +2443,8 @@ static void ffi_ptr_in_release(struct txr_ffi_type *tft, val obj,
   *loc = 0;
 }
 
-static val ffi_flex_struct_in(struct txr_ffi_type *tft, val strct, val self)
+static val ffi_flex_array_len(struct smemb *lastm, val strct, val self)
 {
-  struct smemb *lastm = &tft->memb[tft->nelem - 1];
   struct txr_ffi_type *lmtft = lastm->mtft;
   (void) self;
 
@@ -2499,7 +2498,7 @@ static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
     ucnum offs = memb[i].offs;
     if (slsym) {
       if (flexp && copy && i == nmemb - 1)
-        ffi_flex_struct_in(tft, strct, self);
+        ffi_flex_array_len(&memb[i], strct, self);
       if (mtft->in != 0) {
         val slval = slot(strct, slsym);
         slotset(strct, slsym, mtft->in(mtft, copy, src + offs, slval, self));
@@ -2566,7 +2565,7 @@ static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
     ucnum offs = memb[i].offs;
     if (slsym) {
       if (flexp && i == nmemb - 1) {
-        val slval = ffi_flex_struct_in(tft, strct, self);
+        val slval = ffi_flex_array_len(&memb[i], strct, self);
         if (mtft->in != 0)
           slotset(strct, slsym, mtft->in(mtft, 1, src + offs, slval, self));
       } else {
