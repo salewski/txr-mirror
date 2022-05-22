@@ -3588,7 +3588,12 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 #if HAVE_LITTLE_ENDIAN
       mtft->shift = bit_offs;
 #else
-      mtft->shift = bits_int - bit_offs - bits;
+#if HAVE_I64
+      if (size > sizeof (int))
+        mtft->shift = bits_llint - bit_offs - bits;
+      else
+#endif
+        mtft->shift = bits_int - bit_offs - bits;
 #endif
 
 #if HAVE_I64
@@ -3748,7 +3753,12 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 #if HAVE_LITTLE_ENDIAN
       mtft->shift = 0;
 #else
-      mtft->shift = bits_int - bits;
+#if HAVE_I64
+      if (size > sizeof (int))
+        mtft->shift = bits_llint - bits;
+      else
+#endif
+        mtft->shift = bits_int - bits;
 #endif
 
 #if HAVE_I64
