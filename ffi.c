@@ -99,8 +99,10 @@ typedef unsigned long ffi_arg;
 
 typedef enum {
   FFI_KIND_VOID,
-  FFI_KIND_NUM,
+  FFI_KIND_INT,
+  FFI_KIND_UINT,
   FFI_KIND_ENUM,
+  FFI_KIND_FLO,
   FFI_KIND_PTR,
   FFI_KIND_STRUCT,
   FFI_KIND_UNION,
@@ -218,6 +220,7 @@ struct txr_ffi_type {
   unsigned incomplete : 1;
   unsigned flexible : 1;
   unsigned bitfield : 1;
+  unsigned bigendian : 1;
   struct txr_ffi_type *(*clone)(struct txr_ffi_type *);
 #if HAVE_LIBFFI
   void (*calcft)(struct txr_ffi_type *);
@@ -1616,6 +1619,278 @@ static val ffi_generic_fat_ubit_get(struct txr_ffi_type *tft,
 {
   i64_t tmp = 0;
   memcpy(&tmp, src, tft->size);
+  return ffi_fat_ubit_get(tft, coerce(mem_t *, &tmp), self);
+}
+
+#endif
+
+#if HAVE_LITTLE_ENDIAN
+
+static u32_t swap_get32(const mem_t *src, cnum size)
+{
+  u32_t val = 0;
+
+  if (size-- > 0)
+    val = convert(u32_t, src[0]) << 24;
+  if (size-- > 0)
+    val |= convert(u32_t, src[1]) << 16;
+  if (size-- > 0)
+    val |= convert(u32_t, src[2]) << 8;
+  if (size > 0)
+    val |= src[3];
+
+  return val;
+}
+
+static void swap_put32(mem_t *dst, u32_t val, cnum size)
+{
+  if (size-- > 0)
+    dst[0] = val >> 24;
+  if (size-- > 0)
+    dst[1] = val >> 16;
+  if (size-- > 0)
+    dst[2] = val >> 8;
+  if (size-- > 0)
+    dst[3] = val;
+}
+
+#if HAVE_I64
+
+static u64_t swap_get64(const mem_t *src, cnum size)
+{
+  u64_t val = 0;
+
+  if (size-- > 0)
+    val = convert(u64_t, src[0]) << 56;
+  if (size-- > 0)
+    val |= convert(u64_t, src[1]) << 48;
+  if (size-- > 0)
+    val |= convert(u64_t, src[2]) << 40;
+  if (size-- > 0)
+    val |= convert(u64_t, src[3]) << 32;
+  if (size-- > 0)
+    val |= convert(u64_t, src[4]) << 24;
+  if (size-- > 0)
+    val |= convert(u64_t, src[5]) << 16;
+  if (size-- > 0)
+    val |= convert(u64_t, src[6]) << 8;
+  if (size > 0)
+    val |= src[7];
+
+  return val;
+}
+
+static void swap_put64(mem_t *dst, u64_t val, cnum size)
+{
+  if (size-- > 0)
+    dst[0] = val >> 56;
+  if (size-- > 0)
+    dst[1] = val >> 48;
+  if (size-- > 0)
+    dst[2] = val >> 40;
+  if (size-- > 0)
+    dst[3] = val >> 32;
+  if (size-- > 0)
+    dst[4] = val >> 24;
+  if (size-- > 0)
+    dst[5] = val >> 16;
+  if (size-- > 0)
+    dst[6] = val >> 8;
+  if (size > 0)
+    dst[7] = val;
+}
+
+#endif
+
+#else
+
+static u32_t swap_get32(const mem_t *src, cnum size)
+{
+  u32_t val = 0;
+
+  switch (size) {
+  case 4:
+    val = *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 3:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 2:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 1:
+    val |= *src;
+    break;
+  }
+  return val;
+}
+
+static void swap_put32(mem_t *dst, u32_t val, cnum size) {
+  switch (size) {
+  case 4:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 3:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 2:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 1:
+    *dst = val;
+    break;
+  }
+}
+
+#if HAVE_I64
+
+static u64_t swap_get64(const mem_t *src, cnum lim)
+{
+  u64_t val = 0;
+
+  switch (lim) {
+  case 8:
+    val = *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 7:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 6:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 5:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 4:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 3:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 2:
+    val |= *src++;
+    val <<= 8;
+    /* fallthrough */
+  case 1:
+    val |= *src;
+    break;
+  }
+  return val;
+}
+
+static void swap_put64(mem_t *dst, u64_t val, cnum size)
+{
+  switch (size) {
+  case 8:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 7:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 6:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 5:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 4:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 3:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 2:
+    *dst++ = val;
+    val >>= 8;
+    /* fallthrough */
+  case 1:
+    *dst = val;
+    break;
+  }
+}
+
+#endif
+
+#endif
+
+static void ffi_generic_swap_sbit_put(struct txr_ffi_type *tft, val n,
+                                      mem_t *dst, val self)
+{
+  u32_t tmp = swap_get32(dst, tft->size);
+  ffi_sbit_put(tft, n, coerce(mem_t *, &tmp), self);
+  swap_put32(dst, tmp, tft->size);
+}
+
+static val ffi_generic_swap_sbit_get(struct txr_ffi_type *tft,
+                                     mem_t *src, val self)
+{
+  u32_t tmp = swap_get32(src, tft->size);
+  return ffi_sbit_get(tft, coerce(mem_t *, &tmp), self);
+}
+
+static void ffi_generic_swap_ubit_put(struct txr_ffi_type *tft, val n,
+                                      mem_t *dst, val self)
+{
+  u32_t tmp = swap_get32(dst, tft->size);
+  ffi_ubit_put(tft, n, coerce(mem_t *, &tmp), self);
+  memcpy(dst, coerce(mem_t *, &tmp), tft->size);
+  swap_put32(dst, tmp, tft->size);
+}
+
+static val ffi_generic_swap_ubit_get(struct txr_ffi_type *tft,
+                                     mem_t *src, val self)
+{
+  u32_t tmp = swap_get32(src, tft->size);
+  return ffi_ubit_get(tft, coerce(mem_t *, &tmp), self);
+}
+
+#if HAVE_I64
+
+static void ffi_generic_swap_fat_sbit_put(struct txr_ffi_type *tft, val n,
+                                          mem_t *dst, val self)
+{
+  u64_t tmp = swap_get64(dst, tft->size);
+  ffi_fat_sbit_put(tft, n, coerce(mem_t *, &tmp), self);
+  swap_put64(dst, tmp, tft->size);
+}
+
+static val ffi_generic_swap_fat_sbit_get(struct txr_ffi_type *tft,
+                                         mem_t *src, val self)
+{
+  u64_t tmp = swap_get64(src, tft->size);
+  return ffi_fat_sbit_get(tft, coerce(mem_t *, &tmp), self);
+}
+
+static void ffi_generic_swap_fat_ubit_put(struct txr_ffi_type *tft, val n,
+                                          mem_t *dst, val self)
+{
+  u64_t tmp = swap_get64(dst, tft->size);
+  ffi_fat_ubit_put(tft, n, coerce(mem_t *, &tmp), self);
+  swap_put64(dst, tmp, tft->size);
+}
+
+static val ffi_generic_swap_fat_ubit_get(struct txr_ffi_type *tft,
+                                         mem_t *src, val self)
+{
+  u64_t tmp = swap_get64(src, tft->size);
   return ffi_fat_ubit_get(tft, coerce(mem_t *, &tmp), self);
 }
 
@@ -3291,12 +3566,32 @@ static val make_ffi_type_builtin(val syntax, val lisp_type, ffi_kind_t kind,
 #if !HAVE_LITTLE_ENDIAN
   tft->rput = (rput ? rput : put);
   tft->rget = (rget ? rget : get);
+  tft->bigendian = 1;
 #else
   (void) rput;
   (void) rget;
 #endif
 
   return obj;
+}
+
+static val make_ffi_type_endian(val syntax, val lisp_type, ffi_kind_t kind,
+                                cnum size, cnum align, ffi_type *ft,
+                                void (*put)(struct txr_ffi_type *,
+                                            val obj, mem_t *dst, val self),
+                                val (*get)(struct txr_ffi_type *,
+                                           mem_t *src, val self),
+                                void (*rput)(struct txr_ffi_type *,
+                                            val obj, mem_t *dst, val self),
+                                val (*rget)(struct txr_ffi_type *,
+                                            mem_t *src, val self),
+                                int bigendian)
+{
+  val type = make_ffi_type_builtin(syntax, lisp_type, kind, size, align, ft,
+                                   put, get, rput, rget);
+  struct txr_ffi_type *tft = ffi_type_struct(type);
+  tft->bigendian = bigendian;
+  return type;
 }
 
 static val make_ffi_type_pointer(val syntax, val lisp_type,
@@ -3489,6 +3784,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ucnum offs = 0;
   ucnum most_align = 1;
   ucnum prev_align = 1;
+  uint prev_bigendian = 0;
   int need_out_handler = 0;
   int bit_offs = 0;
   const unsigned bits_int = 8 * sizeof(int);
@@ -3554,7 +3850,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     setcheck(obj, slot);
     setcheck(obj, type);
 
-    if (mtft->bitfield && align != prev_align) {
+    if (mtft->bitfield && (align != prev_align ||
+                           mtft->bigendian != prev_bigendian))
+    {
       if (bit_offs)
         offs++;
       offs = (offs + almask) & ~almask;
@@ -3585,16 +3883,14 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
       memb[i].offs = offs;
 
-#if HAVE_LITTLE_ENDIAN
-      mtft->shift = bit_offs;
-#else
+      if (!mtft->bigendian)
+        mtft->shift = bit_offs;
 #if HAVE_I64
-      if (size > sizeof (int))
+      else if (size > (sizeof (int)))
         mtft->shift = bits_llint - bit_offs - bits;
+#endif
       else
-#endif
         mtft->shift = bits_int - bit_offs - bits;
-#endif
 
 #if HAVE_I64
       if (size > sizeof (int)) {
@@ -3633,6 +3929,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     }
 
     prev_align = align;
+    prev_bigendian = mtft->bigendian;
 
     need_out_handler = need_out_handler || mtft->out != 0;
 
@@ -3750,16 +4047,14 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
         continue;
       }
 
-#if HAVE_LITTLE_ENDIAN
-      mtft->shift = 0;
-#else
+      if (!mtft->bigendian)
+        mtft->shift = 0;
 #if HAVE_I64
-      if (size > sizeof (int))
+      else if (size > (sizeof (int)))
         mtft->shift = bits_llint - bits;
+#endif
       else
-#endif
         mtft->shift = bits_int - bits;
-#endif
 
 #if HAVE_I64
       if (mtft->size > (int) sizeof (int)) {
@@ -3864,7 +4159,7 @@ static val make_ffi_type_enum(val syntax, val enums,
   val enum_env = make_env(nil, nil, nil);
   val shadow_menv = make_env(nil, nil, nil);
 
-  if (btft->kind != FFI_KIND_NUM)
+  if (btft->kind != FFI_KIND_INT && btft->kind != FFI_KIND_UINT)
     uw_throwf(error_s, lit("~a: type ~s can't be basis for enum"),
               self, btft->syntax, nao);
 
@@ -4249,7 +4544,8 @@ val ffi_type_compile(val syntax)
       cnum nb = c_num(nbits, self);
       val xsyntax = list(sym, nbits, nao);
       val type = make_ffi_type_builtin(xsyntax, integer_s,
-                                       FFI_KIND_NUM,
+                                       if3(sym == sbit_s,
+                                           FFI_KIND_INT, FFI_KIND_UINT),
                                        sizeof (int), alignof (int),
                                        &ffi_type_void,
                                        if3(sym == sbit_s,
@@ -4290,24 +4586,16 @@ val ffi_type_compile(val syntax)
 #endif
       val type_copy = ffi_type_copy(type);
       struct txr_ffi_type *tft_cp = ffi_type_struct(type_copy);
-      val syn = tft->syntax;
       int unsgnd = 0;
 
       if (cdddr(syntax))
         goto excess;
 
-      if (syn == uint8_s || syn == uint16_s || syn == uint32_s ||
-          syn == uint64_s ||
-          syn == uchar_s || syn == ushort_s || syn == uint_s)
-      {
+      if (tft_cp->kind == FFI_KIND_UINT)
         unsgnd = 1;
-      } else if (syn != int8_s && syn != int16_s && syn != int32_s &&
-                 syn != int64_s &&
-                 syn != char_s && syn != short_s && syn != int_s)
-      {
+      else if (tft_cp->kind != FFI_KIND_INT)
         uw_throwf(error_s, lit("~a: ~s not supported as bitfield type"),
                   self, type, nao);
-      }
 
       if (nb < 0 || nb > bits_lim)
         uw_throwf(error_s, lit("~a: bitfield size ~s in ~s: "
@@ -4316,19 +4604,42 @@ val ffi_type_compile(val syntax)
 
       tft_cp->syntax = xsyntax;
       tft_cp->nelem = nb;
-#if HAVE_I64
-      if (tft->size > (int) sizeof (int)) {
-        tft_cp->put = if3(unsgnd,
-                          ffi_generic_fat_ubit_put,
-                          ffi_generic_fat_sbit_put);
-        tft_cp->get = if3(unsgnd,
-                          ffi_generic_fat_ubit_get,
-                          ffi_generic_fat_sbit_get);
-      } else
-#endif
+      if ((!tft_cp->bigendian && HAVE_LITTLE_ENDIAN) ||
+          (tft_cp->bigendian && !HAVE_LITTLE_ENDIAN))
       {
-        tft_cp->put = if3(unsgnd, ffi_generic_ubit_put, ffi_generic_sbit_put);
-        tft_cp->get = if3(unsgnd, ffi_generic_ubit_get, ffi_generic_sbit_get);
+#if HAVE_I64
+        if (tft->size > (int) sizeof (int)) {
+          tft_cp->put = if3(unsgnd,
+                            ffi_generic_fat_ubit_put,
+                            ffi_generic_fat_sbit_put);
+          tft_cp->get = if3(unsgnd,
+                            ffi_generic_fat_ubit_get,
+                            ffi_generic_fat_sbit_get);
+        } else
+#endif
+        {
+          tft_cp->put = if3(unsgnd, ffi_generic_ubit_put, ffi_generic_sbit_put);
+          tft_cp->get = if3(unsgnd, ffi_generic_ubit_get, ffi_generic_sbit_get);
+        }
+      } else {
+#if HAVE_I64
+        if (tft->size > (int) sizeof (int)) {
+          tft_cp->put = if3(unsgnd,
+                            ffi_generic_swap_fat_ubit_put,
+                            ffi_generic_swap_fat_sbit_put);
+          tft_cp->get = if3(unsgnd,
+                            ffi_generic_swap_fat_ubit_get,
+                            ffi_generic_swap_fat_sbit_get);
+        } else
+#endif
+        {
+          tft_cp->put = if3(unsgnd,
+                            ffi_generic_swap_ubit_put,
+                            ffi_generic_swap_sbit_put);
+          tft_cp->get = if3(unsgnd,
+                            ffi_generic_swap_ubit_get,
+                            ffi_generic_swap_sbit_get);
+        }
       }
       tft_cp->bitfield = 1;
       /* mask needed at type compilation time by (enumed (bit ...)) */
@@ -4508,14 +4819,14 @@ static void ffi_init_types(void)
 
 #if HAVE_I8
   ffi_typedef(uint8_s, make_ffi_type_builtin(uint8_s, integer_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_UINT,
                                              sizeof (i8_t), alignof (i8_t),
                                              &ffi_type_uint8,
                                              ffi_u8_put, ffi_u8_get,
                                              ifbe(ffi_u8_rput),
                                              ifbe(ffi_u8_rget)));
   ffi_typedef(int8_s, make_ffi_type_builtin(int8_s, integer_s,
-                                            FFI_KIND_NUM,
+                                            FFI_KIND_INT,
                                             sizeof (i8_t), alignof (i8_t),
                                             &ffi_type_sint8,
                                             ffi_i8_put, ffi_i8_get,
@@ -4524,14 +4835,14 @@ static void ffi_init_types(void)
 #endif
 #if HAVE_I16
   ffi_typedef(uint16_s, make_ffi_type_builtin(uint16_s, integer_s,
-                                              FFI_KIND_NUM,
+                                              FFI_KIND_UINT,
                                               sizeof (i16_t), alignof (i16_t),
                                               &ffi_type_uint16,
                                               ffi_u16_put, ffi_u16_get,
                                               ifbe(ffi_u16_rput),
                                               ifbe(ffi_u16_rget)));
   ffi_typedef(int16_s, make_ffi_type_builtin(int16_s, integer_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_INT,
                                              sizeof (i16_t), alignof (i16_t),
                                              &ffi_type_sint16,
                                              ffi_i16_put, ffi_i16_get,
@@ -4540,14 +4851,14 @@ static void ffi_init_types(void)
 #endif
 #if HAVE_I32
   ffi_typedef(uint32_s, make_ffi_type_builtin(uint32_s, integer_s,
-                                              FFI_KIND_NUM,
+                                              FFI_KIND_UINT,
                                               sizeof (i32_t), alignof (i32_t),
                                               &ffi_type_uint32,
                                               ffi_u32_put, ffi_u32_get,
                                               ifbe(ffi_u32_rput),
                                               ifbe(ffi_u32_rget)));
   ffi_typedef(int32_s, make_ffi_type_builtin(int32_s, integer_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_INT,
                                              sizeof (i32_t), alignof (i32_t),
                                              &ffi_type_sint32,
                                              ffi_i32_put, ffi_i32_get,
@@ -4556,46 +4867,49 @@ static void ffi_init_types(void)
 #endif
 #if HAVE_I64
   ffi_typedef(uint64_s, make_ffi_type_builtin(uint64_s, integer_s,
-                                              FFI_KIND_NUM,
+                                              FFI_KIND_UINT,
                                               sizeof (i64_t), alignof (i64_t),
                                               &ffi_type_uint64,
                                               ffi_u64_put, ffi_u64_get, 0, 0));
   ffi_typedef(int64_s, make_ffi_type_builtin(int64_s, integer_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_INT,
                                              sizeof (i64_t), alignof (i64_t),
                                              &ffi_type_sint64,
                                              ffi_i64_put, ffi_i64_get, 0, 0));
 #endif
   ffi_typedef(uchar_s, make_ffi_type_builtin(uchar_s, integer_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_UINT,
                                              1, 1,
                                              &ffi_type_uchar,
                                              ffi_uchar_put, ffi_uchar_get,
                                              ifbe(ffi_uchar_rput),
                                              ifbe(ffi_uchar_rget)));
   ffi_typedef(char_s, make_ffi_type_builtin(char_s, integer_s,
-                                            FFI_KIND_NUM,
+                                            if3(CHAR_MAX == UCHAR_MAX,
+                                                FFI_KIND_UINT, FFI_KIND_INT),
                                             1, 1,
                                             ffi_char, ffi_char_put,
                                             ffi_char_get,
                                             ifbe(ffi_char_rput),
                                             ifbe(ffi_char_rget)));
   ffi_typedef(zchar_s, make_ffi_type_builtin(zchar_s, integer_s,
-                                             FFI_KIND_NUM,
+                                            if3(CHAR_MAX == UCHAR_MAX,
+                                                FFI_KIND_UINT, FFI_KIND_INT),
                                              1, 1,
                                              ffi_char, ffi_char_put,
                                              ffi_char_get,
                                              ifbe(ffi_char_rput),
                                              ifbe(ffi_char_rget)));
   ffi_typedef(bchar_s, make_ffi_type_builtin(bchar_s, char_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_UINT,
                                              1, 1,
                                              &ffi_type_uchar,
                                              ffi_uchar_put, ffi_bchar_get,
                                              ifbe(ffi_uchar_rput),
                                              ifbe(ffi_bchar_rget)));
   ffi_typedef(wchar_s, make_ffi_type_builtin(wchar_s, char_s,
-                                             FFI_KIND_NUM,
+                                             if3(convert(wchar_t, -1) < 0,
+                                                 FFI_KIND_INT, FFI_KIND_UINT),
                                              sizeof (wchar_t),
                                              alignof (wchar_t),
                                              &ffi_type_wchar,
@@ -4603,55 +4917,55 @@ static void ffi_init_types(void)
                                              ifbe(ffi_wchar_rput),
                                              ifbe(ffi_wchar_rget)));
   ffi_typedef(ushort_s, make_ffi_type_builtin(ushort_s, integer_s,
-                                              FFI_KIND_NUM,
+                                              FFI_KIND_UINT,
                                               sizeof (short), alignof (short),
                                               &ffi_type_ushort,
                                               ffi_ushort_put, ffi_ushort_get,
                                               ifbe(ffi_ushort_rput),
                                               ifbe(ffi_ushort_rget)));
   ffi_typedef(short_s, make_ffi_type_builtin(short_s, integer_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_INT,
                                              sizeof (short), alignof (short),
                                              &ffi_type_sshort,
                                              ffi_short_put, ffi_short_get,
                                              ifbe(ffi_short_rput),
                                              ifbe(ffi_short_rget)));
   ffi_typedef(int_s, make_ffi_type_builtin(int_s, integer_s,
-                                           FFI_KIND_NUM,
+                                           FFI_KIND_INT,
                                            sizeof (int), alignof (int),
                                            &ffi_type_sint,
                                            ffi_int_put, ffi_int_get,
                                            ifbe(ffi_int_rput),
                                            ifbe(ffi_int_rget)));
   ffi_typedef(uint_s, make_ffi_type_builtin(uint_s, integer_s,
-                                            FFI_KIND_NUM,
+                                            FFI_KIND_UINT,
                                             sizeof (int), alignof (int),
                                             &ffi_type_uint,
                                             ffi_uint_put, ffi_uint_get,
                                             ifbe(ffi_uint_rput),
                                             ifbe(ffi_uint_rget)));
   ffi_typedef(ulong_s, make_ffi_type_builtin(ulong_s, integer_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_UINT,
                                              sizeof (long), alignof (long),
                                              &ffi_type_ulong,
                                              ffi_ulong_put, ffi_ulong_get,
                                              ifbe(ffi_ulong_rput),
                                              ifbe(ffi_ulong_rget)));
   ffi_typedef(long_s, make_ffi_type_builtin(long_s, integer_s,
-                                            FFI_KIND_NUM,
+                                            FFI_KIND_INT,
                                             sizeof (long), alignof (long),
                                             &ffi_type_slong,
                                             ffi_long_put, ffi_long_get,
                                             ifbe(ffi_long_rput),
                                             ifbe(ffi_long_rget)));
   ffi_typedef(float_s, make_ffi_type_builtin(float_s, float_s,
-                                             FFI_KIND_NUM,
+                                             FFI_KIND_FLO,
                                              sizeof (float), alignof (float),
                                              &ffi_type_float,
                                              ffi_float_put, ffi_float_get,
                                              0, 0));
   ffi_typedef(double_s, make_ffi_type_builtin(double_s, float_s,
-                                              FFI_KIND_NUM,
+                                              FFI_KIND_FLO,
                                               sizeof (double),
                                               alignof (double),
                                               &ffi_type_double,
@@ -4666,152 +4980,168 @@ static void ffi_init_types(void)
                                            0, 0));
 
 #if HAVE_I16
-  ffi_typedef(be_uint16_s, make_ffi_type_builtin(be_uint16_s, integer_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (u16_t),
-                                                 alignof (u16_t),
-                                                 &ffi_type_uint16,
-                                                 ffi_be_u16_put,
-                                                 ffi_be_u16_get,
-                                                 ifbe(ffi_be_u16_rput),
-                                                 ifbe(ffi_be_u16_rget)));
-  ffi_typedef(be_int16_s, make_ffi_type_builtin(be_int16_s, integer_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (i16_t),
-                                                alignof (i16_t),
-                                                &ffi_type_sint16,
-                                                ffi_be_i16_put,
-                                                ffi_be_i16_get,
-                                                ifbe(ffi_be_i16_rput),
-                                                ifbe(ffi_be_i16_rget)));
+  ffi_typedef(be_uint16_s, make_ffi_type_endian(be_uint16_s, integer_s,
+                                                FFI_KIND_UINT,
+                                                sizeof (u16_t),
+                                                alignof (u16_t),
+                                                &ffi_type_uint16,
+                                                ffi_be_u16_put,
+                                                ffi_be_u16_get,
+                                                ifbe(ffi_be_u16_rput),
+                                                ifbe(ffi_be_u16_rget),
+                                                1));
+  ffi_typedef(be_int16_s, make_ffi_type_endian(be_int16_s, integer_s,
+                                               FFI_KIND_INT,
+                                               sizeof (i16_t),
+                                               alignof (i16_t),
+                                               &ffi_type_sint16,
+                                               ffi_be_i16_put,
+                                               ffi_be_i16_get,
+                                               ifbe(ffi_be_i16_rput),
+                                               ifbe(ffi_be_i16_rget),
+                                               1));
 #endif
 
 #if HAVE_I32
-  ffi_typedef(be_uint32_s, make_ffi_type_builtin(be_uint32_s, integer_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (u32_t),
-                                                 alignof (u32_t),
-                                                 &ffi_type_uint32,
-                                                 ffi_be_u32_put,
-                                                 ffi_be_u32_get,
-                                                 ifbe(ffi_be_u32_rput),
-                                                 ifbe(ffi_be_u32_rget)));
-  ffi_typedef(be_int32_s, make_ffi_type_builtin(be_int32_s, integer_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (i32_t),
-                                                alignof (i32_t),
-                                                &ffi_type_sint32,
-                                                ffi_be_i32_put,
-                                                ffi_be_i32_get,
-                                                ifbe(ffi_be_i32_rput),
-                                                ifbe(ffi_be_i32_rget)));
+  ffi_typedef(be_uint32_s, make_ffi_type_endian(be_uint32_s, integer_s,
+                                                FFI_KIND_UINT,
+                                                sizeof (u32_t),
+                                                alignof (u32_t),
+                                                &ffi_type_uint32,
+                                                ffi_be_u32_put,
+                                                ffi_be_u32_get,
+                                                ifbe(ffi_be_u32_rput),
+                                                ifbe(ffi_be_u32_rget),
+                                                1));
+  ffi_typedef(be_int32_s, make_ffi_type_endian(be_int32_s, integer_s,
+                                               FFI_KIND_INT,
+                                               sizeof (i32_t),
+                                               alignof (i32_t),
+                                               &ffi_type_sint32,
+                                               ffi_be_i32_put,
+                                               ffi_be_i32_get,
+                                               ifbe(ffi_be_i32_rput),
+                                               ifbe(ffi_be_i32_rget),
+                                               1));
 #endif
 
 #if HAVE_I64
-  ffi_typedef(be_uint64_s, make_ffi_type_builtin(be_uint64_s, integer_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (u64_t),
-                                                 alignof (u64_t),
-                                                 &ffi_type_uint64,
-                                                 ffi_be_u64_put,
-                                                 ffi_be_u64_get, 0, 0));
-  ffi_typedef(be_int64_s, make_ffi_type_builtin(be_int64_s, integer_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (i64_t),
-                                                alignof (i64_t),
-                                                &ffi_type_sint64,
-                                                ffi_be_i64_put,
-                                                ffi_be_i64_get, 0, 0));
+  ffi_typedef(be_uint64_s, make_ffi_type_endian(be_uint64_s, integer_s,
+                                                FFI_KIND_UINT,
+                                                sizeof (u64_t),
+                                                alignof (u64_t),
+                                                &ffi_type_uint64,
+                                                ffi_be_u64_put,
+                                                ffi_be_u64_get,
+                                                0, 0, 1));
+  ffi_typedef(be_int64_s, make_ffi_type_endian(be_int64_s, integer_s,
+                                               FFI_KIND_INT,
+                                               sizeof (i64_t),
+                                               alignof (i64_t),
+                                               &ffi_type_sint64,
+                                               ffi_be_i64_put,
+                                               ffi_be_i64_get,
+                                               0, 0, 1));
 #endif
 
-  ffi_typedef(be_float_s, make_ffi_type_builtin(be_float_s, float_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (float),
-                                                alignof (float),
-                                                &ffi_type_float,
-                                                ffi_be_float_put,
-                                                ffi_be_float_get, 0, 0));
-  ffi_typedef(be_double_s, make_ffi_type_builtin(be_double_s, float_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (double),
-                                                 alignof (double),
-                                                 &ffi_type_double,
-                                                 ffi_be_double_put,
-                                                 ffi_be_double_get, 0, 0));
+  ffi_typedef(be_float_s, make_ffi_type_endian(be_float_s, float_s,
+                                               FFI_KIND_FLO,
+                                               sizeof (float),
+                                               alignof (float),
+                                               &ffi_type_float,
+                                               ffi_be_float_put,
+                                               ffi_be_float_get,
+                                               0, 0, 1));
+  ffi_typedef(be_double_s, make_ffi_type_endian(be_double_s, float_s,
+                                                FFI_KIND_FLO,
+                                                sizeof (double),
+                                                alignof (double),
+                                                &ffi_type_double,
+                                                ffi_be_double_put,
+                                                ffi_be_double_get,
+                                                0, 0, 1));
 
 #if HAVE_I16
-  ffi_typedef(le_uint16_s, make_ffi_type_builtin(le_uint16_s, integer_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (u16_t),
-                                                 alignof (u16_t),
-                                                 &ffi_type_uint16,
-                                                 ffi_le_u16_put,
-                                                 ffi_le_u16_get,
-                                                 ifbe(ffi_le_u16_rput),
-                                                 ifbe(ffi_le_u16_rget)));
-  ffi_typedef(le_int16_s, make_ffi_type_builtin(le_int16_s, integer_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (i16_t),
-                                                alignof (i16_t),
-                                                &ffi_type_sint16,
-                                                ffi_le_i16_put,
-                                                ffi_le_i16_get,
-                                                ifbe(ffi_le_i16_rput),
-                                                ifbe(ffi_le_i16_rget)));
+  ffi_typedef(le_uint16_s, make_ffi_type_endian(le_uint16_s, integer_s,
+                                                FFI_KIND_UINT,
+                                                sizeof (u16_t),
+                                                alignof (u16_t),
+                                                &ffi_type_uint16,
+                                                ffi_le_u16_put,
+                                                ffi_le_u16_get,
+                                                ifbe(ffi_le_u16_rput),
+                                                ifbe(ffi_le_u16_rget),
+                                                0));
+  ffi_typedef(le_int16_s, make_ffi_type_endian(le_int16_s, integer_s,
+                                               FFI_KIND_INT,
+                                               sizeof (i16_t),
+                                               alignof (i16_t),
+                                               &ffi_type_sint16,
+                                               ffi_le_i16_put,
+                                               ffi_le_i16_get,
+                                               ifbe(ffi_le_i16_rput),
+                                               ifbe(ffi_le_i16_rget),
+                                               0));
 #endif
 
 #if HAVE_I32
-  ffi_typedef(le_uint32_s, make_ffi_type_builtin(le_uint32_s, integer_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (u32_t),
-                                                 alignof (u32_t),
-                                                 &ffi_type_uint32,
-                                                 ffi_le_u32_put,
-                                                 ffi_le_u32_get,
-                                                 ifbe(ffi_le_u32_rput),
-                                                 ifbe(ffi_le_u32_rget)));
-  ffi_typedef(le_int32_s, make_ffi_type_builtin(le_int32_s, integer_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (i32_t),
-                                                alignof (i32_t),
-                                                &ffi_type_sint32,
-                                                ffi_le_i32_put,
-                                                ffi_le_i32_get,
-                                                ifbe(ffi_le_i32_rput),
-                                                ifbe(ffi_le_i32_rget)));
+  ffi_typedef(le_uint32_s, make_ffi_type_endian(le_uint32_s, integer_s,
+                                                FFI_KIND_UINT,
+                                                sizeof (u32_t),
+                                                alignof (u32_t),
+                                                &ffi_type_uint32,
+                                                ffi_le_u32_put,
+                                                ffi_le_u32_get,
+                                                ifbe(ffi_le_u32_rput),
+                                                ifbe(ffi_le_u32_rget),
+                                                0));
+  ffi_typedef(le_int32_s, make_ffi_type_endian(le_int32_s, integer_s,
+                                               FFI_KIND_INT,
+                                               sizeof (i32_t),
+                                               alignof (i32_t),
+                                               &ffi_type_sint32,
+                                               ffi_le_i32_put,
+                                               ffi_le_i32_get,
+                                               ifbe(ffi_le_i32_rput),
+                                               ifbe(ffi_le_i32_rget),
+                                               0));
 #endif
 
 #if HAVE_I64
-  ffi_typedef(le_uint64_s, make_ffi_type_builtin(le_uint64_s, integer_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (u64_t),
-                                                 alignof (u64_t),
-                                                 &ffi_type_uint64,
-                                                 ffi_le_u64_put,
-                                                 ffi_le_u64_get, 0, 0));
-  ffi_typedef(le_int64_s, make_ffi_type_builtin(le_int64_s, integer_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (i64_t),
-                                                alignof (i64_t),
-                                                &ffi_type_sint64,
-                                                ffi_le_i64_put,
-                                                ffi_le_i64_get, 0, 0));
+  ffi_typedef(le_uint64_s, make_ffi_type_endian(le_uint64_s, integer_s,
+                                                FFI_KIND_UINT,
+                                                sizeof (u64_t),
+                                                alignof (u64_t),
+                                                &ffi_type_uint64,
+                                                ffi_le_u64_put,
+                                                ffi_le_u64_get,
+                                                0, 0, 0));
+  ffi_typedef(le_int64_s, make_ffi_type_endian(le_int64_s, integer_s,
+                                               FFI_KIND_INT,
+                                               sizeof (i64_t),
+                                               alignof (i64_t),
+                                               &ffi_type_sint64,
+                                               ffi_le_i64_put,
+                                               ffi_le_i64_get,
+                                               0, 0, 0));
 #endif
 
-  ffi_typedef(le_float_s, make_ffi_type_builtin(le_float_s, float_s,
-                                                FFI_KIND_NUM,
-                                                sizeof (float),
-                                                alignof (float),
-                                                &ffi_type_float,
-                                                ffi_le_float_put,
-                                                ffi_le_float_get, 0, 0));
-  ffi_typedef(le_double_s, make_ffi_type_builtin(le_double_s, float_s,
-                                                 FFI_KIND_NUM,
-                                                 sizeof (double),
-                                                 alignof (double),
-                                                 &ffi_type_double,
-                                                 ffi_le_double_put,
-                                                 ffi_le_double_get, 0, 0));
+  ffi_typedef(le_float_s, make_ffi_type_endian(le_float_s, float_s,
+                                               FFI_KIND_FLO,
+                                               sizeof (float),
+                                               alignof (float),
+                                               &ffi_type_float,
+                                               ffi_le_float_put,
+                                               ffi_le_float_get,
+                                               0, 0, 0));
+  ffi_typedef(le_double_s, make_ffi_type_endian(le_double_s, float_s,
+                                                FFI_KIND_FLO,
+                                                sizeof (double),
+                                                alignof (double),
+                                                &ffi_type_double,
+                                                ffi_le_double_put,
+                                                ffi_le_double_get,
+                                                0, 0, 0));
   {
     val type = make_ffi_type_builtin(cptr_s, cptr_s, FFI_KIND_PTR,
                                      sizeof (mem_t *), alignof (mem_t *),

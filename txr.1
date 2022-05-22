@@ -80867,25 +80867,7 @@ operator is more general than
 .code ubit
 and
 .codn sbit .
-It allows for bitfields based on integer units smaller than or equal to 
-.codn uint .
-
-The
-.meta type
-argument may be any of the types
-.codn char ,
-.codn short ,
-.codn int ,
-.codn uchar ,
-.codn ushort ,
-.codn uint ,
-.codn int8 ,
-.codn int16 ,
-.codn int32 ,
-.codn uint8 ,
-.code uint16
-and 
-.codn uint32 .
+It allows for bitfields based on on any integer type up to 64 bits wide.
 
 When the character types
 .code char
@@ -80895,7 +80877,7 @@ are used as the basis of bitfields, they convert integer values, not
 characters.
 In the case of
 .codn char ,
-the bitfield is signed. 
+the bitfield is signed.
 
 All remarks about
 .code ubit
@@ -80908,6 +80890,82 @@ also.
 Details about the algorithm by which bitfields are allocated within a structure
 are given in the paragraph below entitled
 .BR "Bitfield Allocation Rules" .
+
+Under the
+.code bit
+operator, the endian types such as
+.code be-int32
+or
+.code le-int16
+may also be used as the basis for bitfields.
+If
+.meta type
+is an endian type, the bitfield is then allocated in the same way that a
+bitfield of the corresponding ordinary type would be allocated on a target
+machine which has the byte order of that endian type.
+
+When a bitfield member follows a member which has a different byte order,
+the bitfield is placed into a new allocation cell. This is true even if
+the previous member has the same alignment.
+
+Note: the allocation of bits within a bitfield based on a byte storage
+cells also differs between different endian systems. However, the FFI
+type system does not offer one byte endian types such as
+.codn be-uint8 .
+The workaround is to switch to a wider type.
+
+Note: endian bitfields may be used to match the image of a C structure which
+contains bitfields, without having to conditionally define the FFI struct type
+differently based on whether the current machine is big or little endian.
+Conditionally defining a structure for two different byte orders adds
+verbiage to the program and is highly error-prone, since the bitfields
+change order within an allocation unit.
+
+For instance, on a big endian system, the definition of a  structure
+representing an IPv4 packet might begin like this:
+
+.verb
+  (struct ipv4-header
+    (ver (bit 4 uint16))
+    (ihl (bit 4 uint16))
+    (dscp (bit 6 uint16))
+    (ecn (bit 2 uint16))
+    (len uint16)
+    ...)
+.brev
+
+to port this to a little endian system, the programmer has to recognize
+that the first pair of fields is packed into one byte, and the next pair
+of fields into a second byte. The bytes stay in the same order, but
+the pairs are reversed:
+
+.verb
+  (struct ipv4-header
+    (ihl (bit 4 uint16)) ;; reversed pair
+    (ver (bit 4 uint16))
+    (ecn (bit 2 uint16)) ;; reversed pair
+    (dscp (bit 6 uint16))
+    (len be-uint16)
+    ...)
+.brev
+
+Endian bitfields allow this to be defined naturally. The IPv4 header
+is based on network byte order, which is big-endian, so big endian types
+are used. The little endian version above already uses
+.code be-uint16
+for the
+.meta len
+field. This just has to be done for the bitfields also:
+
+.verb
+  (struct ipv4-header
+    (ver (bit 4 be-uint16))
+    (ihl (bit 4 be-uint16))
+    (dscp (bit 6 be-uint16))
+    (ecn (bit 2 be-uint16))
+    (len be-uint16)
+    ...)
+.brev
 
 .coNP FFI types @ buf and @ buf-d
 .synb
