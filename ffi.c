@@ -4714,14 +4714,14 @@ static void ffi_init_types(void)
                                                 ffi_be_i64_get, 0, 0));
 #endif
 
-  ffi_typedef(be_float_s, make_ffi_type_builtin(be_float_s, integer_s,
+  ffi_typedef(be_float_s, make_ffi_type_builtin(be_float_s, float_s,
                                                 FFI_KIND_NUM,
                                                 sizeof (float),
                                                 alignof (float),
                                                 &ffi_type_float,
                                                 ffi_be_float_put,
                                                 ffi_be_float_get, 0, 0));
-  ffi_typedef(be_double_s, make_ffi_type_builtin(be_double_s, integer_s,
+  ffi_typedef(be_double_s, make_ffi_type_builtin(be_double_s, float_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (double),
                                                  alignof (double),
@@ -4788,14 +4788,14 @@ static void ffi_init_types(void)
                                                 ffi_le_i64_get, 0, 0));
 #endif
 
-  ffi_typedef(le_float_s, make_ffi_type_builtin(le_float_s, integer_s,
+  ffi_typedef(le_float_s, make_ffi_type_builtin(le_float_s, float_s,
                                                 FFI_KIND_NUM,
                                                 sizeof (float),
                                                 alignof (float),
                                                 &ffi_type_float,
                                                 ffi_le_float_put,
                                                 ffi_le_float_get, 0, 0));
-  ffi_typedef(le_double_s, make_ffi_type_builtin(le_double_s, integer_s,
+  ffi_typedef(le_double_s, make_ffi_type_builtin(le_double_s, float_s,
                                                  FFI_KIND_NUM,
                                                  sizeof (double),
                                                  alignof (double),
