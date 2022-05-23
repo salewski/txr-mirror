@@ -81293,12 +81293,29 @@ a structure can be read or written at the misaligned offsets depends on whether
 the individual members support it. If they are integer or floating-point types,
 or aggregates thereof, the usage is supported in a machine-independent manner.
 
-Alignment interacts with bitfields. If a bitfield's type has an alignment
-different from the previous member (whether that member is a bitfield or not),
-then the bitfield is placed into a new cell, which is aligned according to
-the alignment of its own type. The alignment of bitfields, other than
-zero width bitfields, contributes to the determination of the most
-strictly aligned member of the structure.
+Alignment interacts with the allocation of bitfields in special ways.  If
+.meta width
+is greater than 1, or regardless of
+.meta width
+if the operator is
+.codn align ,
+the type is marked with a Boolean attribute indicating that it has
+altered alignment. Then, when a bitfield is based on a type which has altered
+alignment, then that bitfield isn't packed together with the previous
+field, even if the allocation rules otherwise call for it.  Due to the
+alignment request, the byte offset is first adjusted according to the requested
+alignment and the bit offset is reset to zero.  The bit field is then allocated
+at the new alignment. This requirement applies even if the requested alignment
+is 1, which is possible via a combination of both
+.code pack
+and
+.codn align ,
+both specified with a
+.meta width
+of 1. If the requested alignment for the type of a bitfield is 1, and
+the previous member is a bitfield which has left a byte partially filled,
+then the new bitfield starts on a fresh byte, even if it would otherwise
+be packed with the previous bitfield.
 
 When
 .meta type

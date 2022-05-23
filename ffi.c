@@ -220,6 +220,7 @@ struct txr_ffi_type {
   unsigned incomplete : 1;
   unsigned flexible : 1;
   unsigned bitfield : 1;
+  unsigned aligned : 1;
   unsigned bigendian : 1;
   struct txr_ffi_type *(*clone)(struct txr_ffi_type *);
 #if HAVE_LIBFFI
@@ -3783,7 +3784,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
                 cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops));
   ucnum offs = 0;
   ucnum most_align = 1;
-  ucnum prev_align = 1;
   uint prev_bigendian = 0;
   int need_out_handler = 0;
   int bit_offs = 0;
@@ -3850,9 +3850,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     setcheck(obj, slot);
     setcheck(obj, type);
 
-    if (mtft->bitfield && (align != prev_align ||
-                           mtft->bigendian != prev_bigendian))
+    if (!mtft->bitfield || mtft->aligned || mtft->bigendian != prev_bigendian)
     {
+      bug_unless (bit_offs < 8);
       if (bit_offs)
         offs++;
       offs = (offs + almask) & ~almask;
@@ -3914,13 +3914,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       if (slot && most_align < align)
         most_align = align;
     } else {
-      if (bit_offs > 0) {
-        bug_unless (bit_offs < 8);
-        offs++;
-        bit_offs = 0;
-      }
-
-      offs = (offs + almask) & ~almask;
       memb[i].offs = offs;
       offs += size;
 
@@ -3928,7 +3921,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
         most_align = align;
     }
 
-    prev_align = align;
     prev_bigendian = mtft->bigendian;
 
     need_out_handler = need_out_handler || mtft->out != 0;
@@ -4705,6 +4697,8 @@ val ffi_type_compile(val syntax)
           if (al > atft->align || sym == pack_s ||
               (opt_compat && opt_compat <= 275))
             atft->align = al;
+          if (al != 1 || sym != pack_s)
+            atft->aligned = 1;
           return altype_copy;
         }
       }
