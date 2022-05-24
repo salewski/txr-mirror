@@ -202,7 +202,7 @@ struct txr_ffi_type {
   val lt;
   val syntax;
   val eltype;
-  cnum size, align;
+  cnum size, align, oalign;
   unsigned shift;
   union {
     unsigned mask;
@@ -3864,8 +3864,12 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       offs += bit_offs / 8;
       bit_offs %= 8;
 
-      if (slot && most_align < align)
-        most_align = align;
+      if (slot) {
+        if (align > most_align)
+          most_align = align;
+        if ((ucnum) mtft->oalign > most_align)
+          most_align = mtft->oalign;
+      }
     } else {
       memb[i].offs = offs;
       offs += size;
@@ -4647,11 +4651,15 @@ val ffi_type_compile(val syntax)
         } else {
           val altype_copy = ffi_type_copy(altype);
           struct txr_ffi_type *atft = ffi_type_struct(altype_copy);
-          if (al > atft->align || sym == pack_s ||
+          cnum oalign = atft->align;
+          if (al > atft->align || sym == pack_s || atft->bitfield ||
               (opt_compat && opt_compat <= 275))
             atft->align = al;
-          if (al != 1 || sym != pack_s)
+          if (al != 1 || sym != pack_s) {
+            if (!atft->oalign)
+              atft->oalign = oalign;
             atft->aligned = 1;
+          }
           return altype_copy;
         }
       }

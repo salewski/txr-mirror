@@ -81259,7 +81259,8 @@ That is to say, values of
 .meta width
 which are less than or equal to
 .metn type 's
-existing alignment have no effect.
+existing alignment have no effect on alignment, except when the
+type is used as a bitfield.
 
 The
 .code pack
@@ -81315,7 +81316,11 @@ both specified with a
 of 1. If the requested alignment for the type of a bitfield is 1, and
 the previous member is a bitfield which has left a byte partially filled,
 then the new bitfield starts on a fresh byte, even if it would otherwise
-be packed with the previous bitfield.
+be packed with the previous bitfield. If a named bitfield has weakened
+alignment, other than one byte alignment produced by
+.codn pack ,
+the bitfield's original type's alignment is used for the purposes of
+determining its contribution to the alignment of the structure.
 
 When
 .meta type

@@ -598,3 +598,10 @@
                      (b (bit 7 le-uint32)))))
 
 (conv-test #S(s15 x 0 a #x1ff b #x7f) #b'00ffff')
+
+(typedef s16 (struct s16
+               (x uint8)
+               (a (align 2 (bit 9 le-uint32)))
+               (b (align 2 (bit 7 le-uint32)))))
+
+(conv-test #S(s16 x 0 a #x1ff b #x7f) #b'0000ff017f000000')
