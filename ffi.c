@@ -3817,6 +3817,8 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       ucnum bits_alloc = 8 * (offs - unit_offs) + bit_offs;
       ucnum room = bits_type - bits_alloc;
 
+      bug_unless (bits_type >= bits_alloc);
+
       if (bits == 0) {
         ucnum szmask = size - 1;
         ucnum unit_offs = offs & ~szmask;

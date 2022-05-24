@@ -585,3 +585,16 @@
                (b0 (bit 8 (pack 1 (align 1 (bit 8 le-uint32)))))))
 
 (conv-test #S(s13 x #x7f b0 #xff) #b'7fff0000')
+
+(typedef s14 (pack (struct s14
+               (a (bit 9 le-uint32))
+               (b (bit 7 le-uint32)))))
+
+(conv-test #S(s14 a #x1ff b #x7f) #b'ffff')
+
+(typedef s15 (pack (struct s15
+               (x uint8)
+               (a (bit 9 le-uint32))
+               (b (bit 7 le-uint32)))))
+
+(conv-test #S(s15 x 0 a #x1ff b #x7f) #b'00ffff')
