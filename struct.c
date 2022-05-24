@@ -769,7 +769,8 @@ val allocate_struct(val type)
 
 #define alloc_seen(name, size_name)                                     \
   const int bits_ucnum = sizeof (ucnum) * CHAR_BIT;                     \
-  size_t size_name = (st->ndsupers + bits_ucnum - 1) / bits_ucnum;      \
+  size_t nelem_name = (st->ndsupers + bits_ucnum - 1) / bits_ucnum;     \
+  size_t size_name = nelem_name * sizeof (ucnum);                       \
   ucnum *name ## tmp = coerce(ucnum *, alloca(size_name));              \
   ucnum *name = (memset(name ## tmp, 0, size_name), name ## tmp)
 
