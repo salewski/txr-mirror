@@ -1,3 +1,87 @@
+                                    TXR 276
+                                   2022-05-24
+
+
+  Features
+
+  - Syntax:
+    - printer: now nicely prints (a . @b) rather than (a sys:var b)
+      and (a . @(e)) rather than (a sys:expr (e)).
+
+  - Macros:
+    - Subtle new expansion rule allows for more thorough expansion
+      in situations when a macro and function are defined for the
+      same symbol:
+      - When a macro expands into the same-named function call,
+        and that function call's arguments undergo expansion,
+        the result is tried again as the original macro.
+
+  - Command line:
+    - New command line option --compile allows compile-update-file
+      to be invoked more directly, without having to encode a Lisp
+      expression as a command argument.
+    - New command line option --in-package allows a package switch
+      to take place within the command line. This is used by the
+      compilation of stdlib, which takes place in the sys package.
+    - In relation to command line: the message during the handling
+      of an error exception encouraging the --backtrace option to
+      be used is removed. This was a nuisance, and appeared in
+      deployed programs that don't offer such an option.
+
+  - Lib:
+    - split-str now has a count parameter, to limit how many
+      pieces are produced. When the split doesn't use the entire
+      string, the remainder appears as a piece. This improvement
+      was suggested by Paul. A. Patience in January 2022.
+      - The spl function as well as tok-str could use this too;
+        that is postponed to another release.
+   - New trim-path-seps function for removing trailing path
+     separators from a path.
+
+  - FFI:
+    - 64 bit bitfields are now supported. this means integer types which
+      are 64 bits wide can now be be used as the basis of a bitfield,
+      which can therefore be specified as 0 to 64 bits wide.
+    - align operator now only increases alignment.
+    - New pack operator for packing.
+      - (pack (struct s ...)) syntax allows for all members of
+        a struct to be packed.
+    - The endian types like be-uint32 or le-uint16 can now be used as bit
+      fields.
+      - The layout takes place like on the machine of that endian;
+        e.g. be-uint32 bitfields are filled most-significant-bit
+        first.
+      - If a bitfield follows a member of opposite endian, it starts a
+        new storage cell in a fresh byte.
+
+  Bugs
+
+  - lambda-match: issue with variadic pattern.
+  - FFI: bug: all unions were marked as incomplete types.
+  - FFI: bug: empty structs/unions had an alignment of 0; should be 1.
+  - FFI: bug: null terminated strings didn't work as flexible arrays.
+  - copy-path-rec: didn't like trailing slash on source path.
+  - FFI: alignment bug: arrays without a dimension were all treated
+    as having pointer alignment, 4 or 8 byte, rather than inheriting
+    alignment from the element type.
+  - FFI: support for bitfields in the face of alignment and packing.
+  - FFI: bug in internal type cloning function, leaving the type
+    descriptor structure pointing to the original type as its "self",
+    manifesting itself as a wrong result from something like
+    (alignof foo.bar) when foo.bar has a cloned type (e.g. by
+    the align operator).
+  - UTF8: Incredibly, a bug was found: the UTF-8 decoder was silently
+    eating an incomplete character at the end of the input, instead
+    of treating the incomplete sequence as bad bytes, to be mapped
+    into the U+DCxx range. Thus there were binary strings which
+    were not preserved in the decode -> encode round trip.
+  - OOP: Fixed an out-of-bounds stack access in the struct type
+    initialization code which deals with suppressing redundant
+    initializations of repeated multiple-inheritance bases.
+    This more readily affects big-endian systems: showed upon PPC64.
+
+
+
                                     TXR 275
                                    2022-05-10
 
