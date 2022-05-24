@@ -1709,123 +1709,74 @@ static u32_t swap_get32(const mem_t *src, cnum size)
 {
   u32_t val = 0;
 
-  switch (size) {
-  case 4:
-    val = *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 3:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 2:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 1:
-    val |= *src;
-    break;
-  }
+  if (size > 0)
+    val = src[0];
+  if (size-- > 0)
+    val |= convert(u32_t, src[1]) << 8;
+  if (size-- > 0)
+    val |= convert(u32_t, src[2]) << 16;
+  if (size-- > 0)
+    val |= convert(u32_t, src[3]) << 24;
+
   return val;
 }
 
-static void swap_put32(mem_t *dst, u32_t val, cnum size) {
-  switch (size) {
-  case 4:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 3:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 2:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 1:
-    *dst = val;
-    break;
-  }
+static void swap_put32(mem_t *dst, u32_t val, cnum size)
+{
+  if (size-- > 0)
+    dst[0] = val;
+  if (size-- > 0)
+    dst[1] = val >> 8;
+  if (size-- > 0)
+    dst[2] = val >> 16;
+  if (size-- > 0)
+    dst[3] = val >> 24;
 }
 
 #if HAVE_I64
 
-static u64_t swap_get64(const mem_t *src, cnum lim)
+static u64_t swap_get64(const mem_t *src, cnum size)
 {
   u64_t val = 0;
 
-  switch (lim) {
-  case 8:
-    val = *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 7:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 6:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 5:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 4:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 3:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 2:
-    val |= *src++;
-    val <<= 8;
-    /* fallthrough */
-  case 1:
-    val |= *src;
-    break;
-  }
+  if (size > 0)
+    val = src[0];
+  if (size-- > 0)
+    val |= convert(u64_t, src[1]) << 8;
+  if (size-- > 0)
+    val |= convert(u64_t, src[2]) << 16;
+  if (size-- > 0)
+    val |= convert(u64_t, src[3]) << 24;
+  if (size-- > 0)
+    val |= convert(u64_t, src[4]) << 32;
+  if (size-- > 0)
+    val |= convert(u64_t, src[5]) << 40;
+  if (size-- > 0)
+    val |= convert(u64_t, src[6]) << 48;
+  if (size-- > 0)
+    val |= convert(u64_t, src[7]) << 56;
+
   return val;
 }
 
 static void swap_put64(mem_t *dst, u64_t val, cnum size)
 {
-  switch (size) {
-  case 8:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 7:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 6:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 5:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 4:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 3:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 2:
-    *dst++ = val;
-    val >>= 8;
-    /* fallthrough */
-  case 1:
-    *dst = val;
-    break;
-  }
+  if (size > 0)
+    dst[0] = val;
+  if (size-- > 0)
+    dst[1] = val >> 8;
+  if (size-- > 0)
+    dst[2] = val >> 16;
+  if (size-- > 0)
+    dst[3] = val >> 24;
+  if (size-- > 0)
+    dst[4] = val >> 32;
+  if (size-- > 0)
+    dst[5] = val >> 40;
+  if (size-- > 0)
+    dst[6] = val >> 48;
+  if (size-- > 0)
+    dst[7] = val >> 56;
 }
 
 #endif
