@@ -81476,6 +81476,40 @@ After these transformations are applied, the nested
 forms which occur in the transformed syntax may perform
 more such transformations, depending on their operands.
 
+Note that the two-argument form of
+.code pack
+with a
+.meta width
+value greater than 1 doesn't directly correspond to any
+single attribute specifier in GNU C. The GNU C
+.code packed
+attribute is Boolean, implicitly reducing alignment to 1.
+A combination of the GNU C attributes
+.code aligned
+and
+.code packed
+is used to produce the effect of
+.mono
+.meti (pack < n << type )
+.onom
+for values of
+.meta n
+> 1.
+In GNU C, the
+.code packed
+attribute, when applied to a structure, distributes to its members,
+but isn't capable of distributing an alignment exceeding 1. So the
+.mono
+.meti (pack < n (struct ...))
+.onom
+expression, for values of
+.meta n
+> 1, doesn't correspond to anything in GNU C; its effect
+can be simulated by attributing the structure type with
+.codn packed ,
+and then individually applying the required alignment to
+the member declarations.
+
 .SS* Additional Types
 .coNP FFI types @, size-t @, ptrdiff-t @, int-ptr-t @, uint-ptr-t @, intmax-t @, uintmax-t @ wint-t @, sig-atomic-t @ time-t and @ clock-t
 .desc
