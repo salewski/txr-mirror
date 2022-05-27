@@ -58,7 +58,8 @@
   (lod "c")     "c.tl\n")
 
 
-(unless (meq (os-symbol) :cygwin :cygnal)
+(unless (or (meq (os-symbol) :cygwin :cygnal)
+            (zerop (geteuid)))
   (push `@cur/unreadable` *load-search-dirs*)
   (push-after-load (rmdir `@cur/unreadable`))
   (ensure-dir `@cur/unreadable` 0)
