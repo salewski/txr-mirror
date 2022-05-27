@@ -960,12 +960,14 @@ a recognizable suffix, and the file does not exist, \*(TX adds the
 .str .txr
 suffix to the name and tries opening that name, and in a similar way
 tries
-.str .tlo
-and then
+.strn .tlo ,
+.str .tlo.gz
+and finally
 .strn .tl .
 In this situation, if either of these two options is specified, \*(TX
 tries only the
-.str .tlo
+.strn .tlo ,
+.str .tlo.gz
 and
 .str .tl
 suffixes, in that order, avoiding the
@@ -991,6 +993,7 @@ option is treated, but only if they precede that option.
 If the file has a recognized suffix:
 .strn .tl ,
 .strn .tlo ,
+.strn .tlo.gz ,
 .str  .txr
 or
 .strn .txr_profile ,
@@ -1195,7 +1198,11 @@ and names a file which doesn't exist, then
 suffix and tries again. If that doesn't exist, another attempt is made with the
 .str .tlo
 suffix, which will be treated as as a \*(TL compiled file.
-Finally, if that doesn't exist, the
+If that doesn't exist, then
+.str .tlo.gz
+is tried, expected to be a file compressed in
+.code gzip
+format. Finally, if that doesn't exist, the
 .str .tl
 suffix is tried, which will be treated as containing \*(TL source.
 If either the
@@ -1207,6 +1214,8 @@ option has been specified, then \*(TX skips trying the
 suffix, and tries only
 .str .tlo
 followed by
+.str .tlo.gz
+and
 .strn .tl .
 
 A \*(TL file is processed as if by the
@@ -11611,9 +11620,10 @@ and
 
 \*(TL code can be placed into files. On the command
 line, \*(TX treats files with a
-.str .tl
-or
+.strn .tl ,
 .str .tlo
+or
+.str .tlo.gz
 suffix as \*(TL source or compiled code, and the
 .code @(load)
 directive does also.
@@ -77919,6 +77929,7 @@ Once the tentative pathname is determined,
 determines whether the name is suffixed. The name is suffixed if it
 ends in any of these four suffixes:
 .codn .tlo ,
+.codn .tlo.gz ,
 .codn .tl ,
 .code .txr
 or
@@ -77945,9 +77956,11 @@ non-existence, no other names are tried.
 If an unsuffixed tentative pathname refers to a nonexistent file,
 .code .tlo
 is appended to the name, and an attempt is made to open a file
-with the resulting path. If that file is not found, then the suffix
+with the resulting path. If that file is not found, then the suffixes
+.code .tlo.gz
+and
 .code .tl
-is similarly tried.
+are similarly tried.
 
 If the above
 .I "initial attempts"
@@ -77982,6 +77995,12 @@ are also treated as interpreted Lisp. Files ending in
 are treated as compiled Lisp, and those ending in
 .code .txr
 are treated as the \*(TX Pattern Language.
+
+The
+.code .tlo.gz
+suffix denotes a file which is expected to be compressed in the
+.code gzip
+format, and to contain compiled Lisp.
 
 If the file is treated as \*(TL, then Lisp forms are read from it in
 succession. Each form is evaluated as if by the
@@ -78068,7 +78087,15 @@ function) to produce a single
 .code .tlo
 file. Such a combined file can be loaded with the
 .code load
-function.
+function. The same is true of
+.code .tlo.gz
+files, because the
+.code gzip
+format supports catenation. Mixing is not possible:
+.code .tlo
+and
+.code .tlo.gz
+files cannot be catenated together.
 
 Note: this is a single
 .code load
