@@ -57,7 +57,6 @@ struct gzio_handle {
   val err, errstr;
   char *buf;
   int fd;
-  unsigned is_real_time : 8;
   unsigned is_byte_oriented : 8;
   unsigned is_output : 8;
 };
@@ -539,7 +538,6 @@ val make_gzio_stream(gzFile f, int fd, val descr, int is_output)
   h->err = nil;
   h->errstr = lit("no error");
   h->buf = 0;
-  h->is_real_time = 0;
   h->is_byte_oriented = 0;
   h->is_output = is_output;
   return stream;
