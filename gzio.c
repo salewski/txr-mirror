@@ -386,7 +386,7 @@ static val gzio_get_prop(val stream, val ind)
   if (ind == name_k) {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
     val name = static_str(ops->name);
-    return format(nil, lit("~a ~a"), name, h->descr, nao);
+    return h->descr;
   } else if (ind == byte_oriented_k) {
     return h->is_byte_oriented ? t : nil;
   }
