@@ -59354,7 +59354,8 @@ Note that it permits no whitespace characters:
 .mets < mode-string := [ < mode ] [ < options ]
 .mets < mode := { < selector [ + ] | + }
 .mets < selector := { r | w | a | m }
-.mets < options := { b | x | l | u | i | n | < digit | < redirection }
+.mets < options := { b | x | l | u | i | n | < digit |
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \   <> z[ digit ] | < redirection }
 .mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
 .onom
 
@@ -59466,6 +59467,48 @@ specifying 524288 bytes. If no such digit is specified, then the
 stream uses a default buffer size. It is erroneous for the
 size order digit to be present together with the option
 .codn u .
+.coIP z
+This option specifies
+.code gzip
+compression. A
+.code gzip-stream
+is opened for the file rather than an ordinary
+.codn stdio-stream ,
+which performs compression when writing and decompression when reading.
+The compression uses the Deflate algorithm, and a file format compatible
+with the
+.code gzip
+utility. If
+.code z
+is immediately followed by a digit, then that specifies the compression level.
+The default level is 6. A value of zero is an invalid level, silently accepted
+and treated as the default.
+When
+.code z
+is specified, special restrictions apply to the
+.modn mode-string .
+If these are violated, an exception is thrown.
+A
+.code gzip-stream
+does not support an update mode; it may not be open simultaneously for
+reading and writing as, for example, requested by the
+.str r+
+mode. The options
+.codn l ,
+.code u
+and
+.code i
+are inapplicable. The digit option specifying the buffer size
+order also may not be used with
+.codn z .
+The
+.code seek-stream
+function may only be used in the forward direction on
+.code gzip
+streams open for writing, and has the semantics of writing a region
+of zero bytes. Arbitrary seeking is supported in read mode, but
+via a costly emulation which decompresses data from the beginning
+of the file to the desired seek point.
 .meIP redirection
 This option refers to a special syntax that only has an effect
 in mode strings that are passed to the
