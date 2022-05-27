@@ -1634,7 +1634,8 @@ val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl,
   *m = do_parse_mode(mode_str, m_dfl, self);
 
   if (m->malformed)
-    uw_throwf(file_error_s, lit("invalid file open mode ~s"), mode_str, nao);
+    uw_throwf(file_error_s, lit("~a: invalid file open mode ~s"),
+              self, mode_str, nao);
 
   return format_mode(*m);
 }
