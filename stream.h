@@ -167,6 +167,7 @@ void fill_stream_ops(struct strm_ops *ops);
 void stream_print_op(val stream, val out, val pretty, struct strm_ctx *);
 void stream_mark_op(val stream);
 void stream_destroy_op(val stream);
+int w_open_mode(const wchar_t *wname, const struct stdio_mode m);
 struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl, val self);
 val normalize_mode(struct stdio_mode *m, val mode_str,
                    struct stdio_mode m_dfl, val self);

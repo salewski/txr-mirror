@@ -479,6 +479,13 @@ gzFile w_gzopen_mode(const wchar_t *wname, const wchar_t *wmode,
     uw_throwf(file_error_s,
               lit("~a: gzip stream cannot both read and write"), self, nao);
   }
+
+#if HAVE_FCNTL
+  {
+    int fd = w_open_mode(wname, m);
+    return (fd < 0) ? NULL : w_gzdopen_mode(fd, wmode, m, self);
+  }
+#else
   {
     char *name = utf8_dup_to(wname);
     char *mode = utf8_dup_to(wmode);
@@ -487,6 +494,34 @@ gzFile w_gzopen_mode(const wchar_t *wname, const wchar_t *wmode,
     free(mode);
     return f;
   }
+#endif
+}
+
+gzFile w_gzdopen_mode(int fd, const wchar_t *wmode,
+                      const struct stdio_mode m, val self)
+{
+  if (m.buforder >= 0 || m.nonblock || m.notrunc || m.unbuf ||
+      m.linebuf || m.interactive)
+  {
+    goto badmode;
+  }
+
+  if (m.read && m.write) {
+    uw_throwf(file_error_s,
+              lit("~a: gzip stream cannot both read and write"), self, nao);
+  }
+
+  {
+    char *mode = utf8_dup_to(wmode);
+    gzFile f = gzdopen(fd, mode);
+    free(mode);
+    if (f)
+      return f;
+  }
+
+badmode:
+  uw_throwf(file_error_s,
+            lit("~a: invalid modes for gzip stream"), self, nao);
 }
 
 val make_gzio_stream(gzFile f, int fd, val descr, int is_output)

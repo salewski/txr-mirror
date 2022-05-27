@@ -1127,10 +1127,9 @@ static struct strm_ops stdio_ops =
 static struct strm_ops stdio_sock_ops;
 #endif
 
-static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
-                          const struct stdio_mode m)
-{
 #if HAVE_FCNTL
+int w_open_mode(const wchar_t *wname, const struct stdio_mode m)
+{
   char *name = utf8_dup_to(wname);
   size_t nsiz = strlen(name) + 1;
   int flags = (if3(m.read && m.write, O_RDWR, 0) |
@@ -1150,6 +1149,15 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
   fd = open(stkname, flags, 0666);
   sig_restore_enable;
 
+  return fd;
+}
+#endif
+
+static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
+                          const struct stdio_mode m)
+{
+#if HAVE_FCNTL
+  int fd = w_open_mode(wname, m);
   return (fd < 0) ? NULL : w_fdopen(fd, mode);
 #else
   /* TODO: detect if fopen supports "x" in mode */

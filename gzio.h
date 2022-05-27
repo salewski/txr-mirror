@@ -30,4 +30,6 @@ val gzio_stream_s;
 void gzio_init(void);
 gzFile w_gzopen_mode(const wchar_t *wname, const wchar_t *wmode,
                      const struct stdio_mode m, val self);
+gzFile w_gzdopen_mode(int fd, const wchar_t *wmode,
+                      const struct stdio_mode m, val self);
 val make_gzio_stream(gzFile f, int fd, val descr, int is_output);
