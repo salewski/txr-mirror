@@ -3954,8 +3954,6 @@ if conftest ; then
   printf "#define HAVE_MMAP 1\n" >> config.h
 else
   printf "no\n"
-  cat conftest.err
-  exit 1
 fi
 
 
