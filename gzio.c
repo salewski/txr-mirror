@@ -381,22 +381,30 @@ static ucnum gzio_put_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 
 static val gzio_get_prop(val stream, val ind)
 {
+  struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
+
   if (ind == name_k) {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
     val name = static_str(ops->name);
-    struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
     return format(nil, lit("~a ~a"), name, h->descr, nao);
+  } else if (ind == byte_oriented_k) {
+    return h->is_byte_oriented ? t : nil;
   }
   return nil;
 }
 
 static val gzio_set_prop(val stream, val ind, val prop)
 {
+  struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
+
   if (ind == name_k) {
-    struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
     h->descr = prop;
     return t;
+  } else if (ind == byte_oriented_k) {
+    h->is_byte_oriented = prop ? 1 : 0;
+    return t;
   }
+
   return nil;
 }
 
