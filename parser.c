@@ -44,6 +44,9 @@
 #if HAVE_SYS_STAT
 #include <sys/stat.h>
 #endif
+#if HAVE_ZLIB
+#include <zlib.h>
+#endif
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
@@ -53,6 +56,9 @@
 #include "hash.h"
 #include "eval.h"
 #include "stream.h"
+#if HAVE_ZLIB
+#include "gzio.h"
+#endif
 #include "y.tab.h"
 #include "sysif.h"
 #include "cadr.h"
@@ -516,7 +522,8 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
                    val *orig_in_resolved_out, val *stream,
                    val search_dirs, val self)
 {
-  enum { none, tl, tlo, txr } suffix;
+  enum { none, tl, tlo, tlz, txr } suffix;
+  struct stdio_mode m_r = stdio_mode_init_r;
 
   if (match_str(first_try_path, lit(".txr"), negone))
     suffix = txr;
@@ -524,6 +531,8 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
     suffix = tl;
   else if (match_str(first_try_path, lit(".tlo"), negone))
     suffix = tlo;
+  else if (match_str(first_try_path, lit(".tlo.gz"), negone))
+    suffix = tlz;
   else if (match_str(first_try_path, lit(".txr_profile"), negone))
     suffix = tl;
   else
@@ -534,17 +543,22 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
   {
     val try_path = nil;
     FILE *in = 0;
+    gzFile zin = 0;
 
     {
       try_path = first_try_path;
       errno = 0;
-      in = w_fopen(c_str(try_path, self), L"r");
-      if (in != 0) {
+      if (suffix == tlz)
+        zin = w_gzopen_mode(c_str(try_path, self), L"r", m_r, self);
+      else
+        in = w_fopen(c_str(try_path, self), L"r");
+
+      if (in != 0 || zin != 0) {
         switch (suffix) {
         case tl:
           *txr_lisp_p = t;
           break;
-        case tlo:
+        case tlo: case tlz:
           *txr_lisp_p = chr('o');
           break;
         case txr:
@@ -567,7 +581,7 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
       if ((in = w_fopen(c_str(try_path, nil), L"r")) != 0)
         goto found;
 #ifdef ENOENT
-      if (in == 0 && errno != ENOENT)
+      if (errno != ENOENT)
         goto except;
 #endif
     }
@@ -581,7 +595,19 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
           goto found;
         }
 #ifdef ENOENT
-        if (in == 0 && errno != ENOENT)
+        if (errno != ENOENT)
+          goto except;
+#endif
+      }
+      {
+        try_path = scat(lit("."), first_try_path, lit("tlo.gz"), nao);
+        errno = 0;
+        if ((zin = w_gzopen_mode(c_str(try_path, nil), L"r", m_r, self)) != 0) {
+          *txr_lisp_p = chr('o');
+          goto found;
+        }
+#ifdef ENOENT
+        if (errno != ENOENT)
           goto except;
 #endif
       }
@@ -593,13 +619,13 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
           goto found;
         }
 #ifdef ENOENT
-        if (in == 0 && errno != ENOENT)
+        if (errno != ENOENT)
           goto except;
 #endif
       }
     }
 
-    if (in == 0) {
+    if (in == 0 && zin == 0) {
       val try_next;
 #ifdef ENOENT
 except:
@@ -623,7 +649,10 @@ except:
     }
 
 found:
-    *stream = make_stdio_stream(in, try_path);
+    if (in != 0)
+      *stream = make_stdio_stream(in, try_path);
+    else
+      *stream = make_gzio_stream(zin, -1, try_path, 0);
     *orig_in_resolved_out = try_path;
   }
 }
