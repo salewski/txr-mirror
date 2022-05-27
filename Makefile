@@ -64,6 +64,7 @@ OBJS-$(have_ftw) += ftw.o
 OBJS-$(have_posix_sigs) += signal.o
 OBJS-$(have_sockets) += socket.o
 OBJS-$(have_termios) += termios.o
+OBJS-$(have_zlib) += gzio.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 
 STDLIB_SRCS := $(wildcard stdlib/*.tl)

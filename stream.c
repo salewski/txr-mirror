@@ -58,6 +58,9 @@
 #if HAVE_WSPAWN || HAVE_SPAWN
 #include <process.h>
 #endif
+#if HAVE_ZLIB
+#include <zlib.h>
+#endif
 #include "alloca.h"
 #include "lib.h"
 #include "gc.h"
@@ -71,6 +74,9 @@
 #include "regex.h"
 #include "txr.h"
 #include "buf.h"
+#if HAVE_ZLIB
+#include "gzio.h"
+#endif
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -1574,6 +1580,13 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
         nredir++;
         break;
       }
+    case 'z':
+      m.gzip = 1;
+      if (isdigit(convert(unsigned char, ms[1]))) {
+        m.gzlevel = *++ms - '0';
+        break;
+      }
+      break;
     default:
       m.malformed = 1;
       return m;
@@ -1616,11 +1629,14 @@ static val format_mode(const struct stdio_mode m)
       *ptr++ = '+';
   }
 
-  if (m.binary)
+  if (m.binary && !m.gzip)
     *ptr++ = 'b';
 
+  if (m.gzip && m.gzlevel)
+    *ptr++ = '0' + m.gzlevel;
+
 #ifdef __CYGWIN__
-  if (!m.binary && (opt_compat == 144 || opt_compat == 145))
+  if (!m.gzip && !m.binary && (opt_compat == 144 || opt_compat == 145))
     *ptr++ = 't';
 #endif
 
@@ -4219,15 +4235,42 @@ val open_file(val path, val mode_str)
   val self = lit("open-file");
   struct stdio_mode m, m_r = stdio_mode_init_r;
   val norm_mode = normalize_mode(&m, mode_str, m_r, self);
-  FILE *f = w_fopen_mode(c_str(path, self), c_str(norm_mode, self), m);
 
-  if (!f) {
+again:
+  if (!m.gzip) {
+    FILE *f = w_fopen_mode(c_str(path, self), c_str(norm_mode, self), m);
+
+    if (!f)
+      goto error;
+
+    return set_mode_props(m, make_stdio_stream(f, path));
+  } else {
+#if HAVE_ZLIB
+    gzFile f = w_gzopen_mode(c_str(path, self), c_str(norm_mode, self),
+                             m, self);
+
+    if (!f)
+      goto error;
+
+    if (m.read && gzdirect(f)) {
+      gzclose(f);
+      m.gzip = 0;
+      goto again;
+    }
+
+    return make_gzio_stream(f, -1, path, m.write);
+#else
+    uw_ethrowf(file_error_s, lit("~s: not built with zlib support"),
+               self, nao);
+#endif
+  }
+
+error:
+  {
     int eno = errno;
     uw_ethrowf(errno_to_file_error(eno), lit("error opening ~s: ~d/~s"),
                path, num(eno), errno_to_str(eno), nao);
   }
-
-  return set_mode_props(m, make_stdio_stream(f, path));
 }
 
 val open_fileno(val fd, val mode_str)
@@ -5697,6 +5740,10 @@ void stream_init(void)
       shell_arg = lit("/c");
     }
   }
+#endif
+
+#if HAVE_ZLIB
+  gzio_init();
 #endif
 }
 

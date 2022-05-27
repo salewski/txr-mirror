@@ -185,6 +185,7 @@ txr_dbg_opts=--gc-debug
 valgrind=
 extra_debugging=
 debug_support=y
+have_zlib=
 big_time=
 big_time_given=
 gen_gc=y
@@ -948,6 +949,9 @@ termios_define := $termios_define
 
 # do we compile in debug support?
 debug_support := $debug_support
+
+# do we compile in zlib?
+have_zlib := $have_zlib
 
 # allow parallel make?
 parallelmake := $parallelmake
@@ -3956,6 +3960,30 @@ else
   printf "no\n"
 fi
 
+printf "Checking for zlib ... "
+cat > conftest.c <<!
+#include <zlib.h>
+
+int main(void)
+{
+  gzFile gf = gzopen("foo.gz", "r");
+  gzclose(gf);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_ZLIB 1\n" >> config.h
+  have_zlib=y
+elif conftest EXTRA_LDLIBS="-lz" ; then
+  printf "yes\n"
+  printf "#define HAVE_ZLIB 1\n" >> config.h
+  conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}-lz"
+  have_zlib=y
+else
+  printf "no\n"
+fi
 
 #
 # Dependent variables
