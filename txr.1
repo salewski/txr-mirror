@@ -28099,8 +28099,9 @@ The stream is required to support byte input.
 
 .coNP Functions @ file-get-buf and @ command-get-buf
 .synb
-.mets (file-get-buf < name >> [ max-bytes <> [ skip-bytes ]])
-.mets (command-get-buf < cmd >> [ max-bytes <> [ skip-bytes ]])
+.mets (file-get-buf < name >> [ max-bytes
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \   >> [ skip-bytes <> [ mode-opts ]]])
+.mets (command-get-buf < cmd >> [ max-byte> <> [ skip-bytes ]])
 .syne
 .desc
 The
@@ -28145,11 +28146,27 @@ is specified, then the stream is opened in unbuffered mode, so that bytes
 beyond the specified range shall not be requested from the underlying file,
 device or process.
 
+The
+.code file-get-buf
+function opens the file as if using the
+.code open-file
+function, using a
+.meta mode-string
+of
+.strn r .
+If the
+.meta mode-opts
+is present, it specifies
+.meta options
+to be added to the string. These must be compatible with the implicit
+.str r
+mode.
+
 .coNP Functions @, file-put-buf @ file-append-buf and @ command-put-buf
 .synb
-.mets (file-put-buf < name < buf << skip-bytes )
-.mets (file-place-buf < name < buf << skip-bytes )
-.mets (file-append-buf < name << buf )
+.mets (file-put-buf < name < buf < skip-bytes <> [ mode-opts ])
+.mets (file-place-buf < name < buf < skip-bytes <> [ mode-opts ])
+.mets (file-append-buf < name < buf <> [ mode-opts ])
 .mets (command-put-buf < cmd << buf )
 .syne
 .desc
@@ -28194,6 +28211,27 @@ function.
 It then writes the contents of buffer
 .meta buf
 into the stream and closes the stream.
+
+The
+.codn file-put-buf ,
+.code file-place-buf
+and
+.code file-append-buf
+functions open a file as if using the
+.code open-file
+function using, respectively,
+.meta mode-string
+values of
+.strn wb ,
+.strn mb ,
+and
+.strn ab .
+
+The
+.meta mode-opts
+argument, if present, specifies additional
+.meta options
+to be added to these modes.
 
 The return value of all three functions is that of the
 .code put-buf
@@ -62443,11 +62481,40 @@ Several other functions in this category exist, which operate with buffers.
 They are documented in the Buffer Functions subsection under the
 FOREIGN FUNCTION INTERFACE section.
 
+Many of the functions described in this section take an optional
+.meta mode-opts
+argument. If this is specified, it must be a string which follows the
+.meta options
+portion of the
+.meta mode-string
+syntax described for the
+.code open-file
+function. This string must not specify the
+.code mode
+part. If specified, the
+.meta mode-opts
+must be compatible with the implied
+.metn mode .
+Functions that write a file have an implied mode of
+.strn "w" ,
+those which append have an implied mode of
+.strn "a" ,
+and those which read have an implied mode of
+.strn "r" .
+For instance, a
+.meta mode-opts
+value of
+.str "x"
+is useful with
+.code file-put-string
+but not
+.codn file-get-string ,
+
 .coNP Functions @, file-get @ file-get-string and @ file-get-lines
 .synb
-.mets (file-get << name )
-.mets (file-get-string << name )
-.mets (file-get-lines << name )
+.mets (file-get < name <> [ mode-opts ])
+.mets (file-get-string < name <> [ mode-opts ])
+.mets (file-get-lines < name <> [ mode-opts ])
 .syne
 .desc
 The
@@ -62477,9 +62544,9 @@ list is consumed to the end, as indicated in the description of
 
 .coNP Functions @, file-put @ file-put-string and @ file-put-lines
 .synb
-.mets (file-put < name << obj )
-.mets (file-put-string < name << string )
-.mets (file-put-lines < name << list )
+.mets (file-put < name < obj <> [ mode-opts ])
+.mets (file-put-string < name < string <> [ mode-opts ])
+.mets (file-put-lines < name < list <> [ mode-opts ])
 .syne
 .desc
 The
@@ -62524,9 +62591,9 @@ function. The return value is that of
 
 .coNP Functions @, file-append @ file-append-string and @ file-append-lines
 .synb
-.mets (file-append < name << obj )
-.mets (file-append-string < name << string )
-.mets (file-append-lines < name << list )
+.mets (file-append < name < obj <> [ mode-opts ])
+.mets (file-append-string < name < string <> [ mode-opts ])
+.mets (file-append-lines < name < list <> [ mode-opts ])
 .syne
 .desc
 The
@@ -78731,6 +78798,19 @@ and
 functions return
 .metn t .
 
+Some of the JSON-related functions carry a
+.meta mode-opts
+optional parameter. These functions open a file as if using the
+.code open-file
+function, using a
+.meta mode-string
+appropriate to their direction of data transfer. If an argument is given to
+.metn mode-opts ,
+it specifies the
+.meta options
+part to be added to the
+.metn mode-string .
+
 .coNP Function @ tojson
 .synb
 .mets (tojson < obj <> [ flat-p ])
@@ -78862,8 +78942,8 @@ is returned.
 
 .coNP Functions @ file-get-json and @ file-get-jsons
 .synb
-.mets (file-get-json << name )
-.mets (file-get-jsons << name )
+.mets (file-get-json < name <> [ mode-opts ])
+.mets (file-get-jsons < name <> [ mode-opts ])
 .syne
 .desc
 The
@@ -78891,8 +78971,8 @@ if that function returns normally.
 
 .coNP Functions @ file-put-json and @ file-put-jsons
 .synb
-.mets (file-put-json < name < obj <> [ flat-p ])
-.mets (file-put-jsons < name < seq <> [ flat-p ])
+.mets (file-put-json < name < obj >> [ flat-p <> [ mode-opts ]])
+.mets (file-put-jsons < name < seq >> [ flat-p <> [ mode-opts ]])
 .syne
 .desc
 The
@@ -78938,8 +79018,8 @@ The value returned is that of
 
 .coNP Functions @ file-put-json and @ file-put-jsons
 .synb
-.mets (file-append-json < name < obj <> [ flat-p ])
-.mets (file-append-jsons < name < seq <> [ flat-p ])
+.mets (file-append-json < name < obj >> [ flat-p <> [ mode-opts ]])
+.mets (file-append-jsons < name < seq >> [ flat-p <> [ mode-opts ]])
 .syne
 .desc
 The
