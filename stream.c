@@ -593,10 +593,11 @@ static val stdio_maybe_read_error(val stream)
   if (h->f == 0)
     uw_throwf(file_error_s, lit("error reading ~s: file closed"), stream, nao);
   if (ferror(h->f)) {
-    val err = num(errno);
+    int eno = errno;
+    val err = num(eno);
     h->err = err;
 #ifdef EAGAIN
-    if (errno == EAGAIN)
+    if (eno == EAGAIN)
       uw_ethrowf(timeout_error_s, lit("timed out reading ~s"), stream, nao);
 #endif
     uw_ethrowf(file_error_s, lit("error reading ~s: ~d/~s"),
