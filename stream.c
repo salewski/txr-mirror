@@ -4285,20 +4285,35 @@ val open_fileno(val fd, val mode_str)
 {
   val self = lit("open-fileno");
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  FILE *f = (errno = 0, w_fdopen(c_num(fd, self),
-                                 c_str(normalize_mode(&m, mode_str, m_r, self),
-                                       self)));
+  val norm_mode = normalize_mode(&m, mode_str, m_r, self);
 
-  if (!f) {
-    int eno = errno;
-    close(c_num(fd, self));
-    uw_ethrowf(errno_to_file_error(eno), lit("error opening descriptor ~a: ~d/~s"),
-               fd, num(eno), errno_to_str(eno), nao);
+  if (!m.gzip) {
+    FILE *f = (errno = 0, w_fdopen(c_num(fd, self),
+                                   c_str(norm_mode, self)));
+
+    if (!f)
+    {
+      int eno = errno;
+      close(c_num(fd, self));
+      uw_ethrowf(errno_to_file_error(eno),
+                 lit("error opening descriptor ~a: ~d/~s"),
+                 fd, num(eno), errno_to_str(eno), nao);
+    }
+
+    return set_mode_props(m, make_stdio_stream(f, format(nil,
+                                                         lit("fd ~d"),
+                                                         fd, nao)));
+  } else {
+#if HAVE_ZLIB
+    cnum fdn = c_num(fd, self);
+    gzFile f = w_gzdopen_mode(fdn, c_str(norm_mode, self), m, self);
+    return make_gzio_stream(f, fdn, format(nil, lit("fd ~d"), fd, nao),
+                            m.write);
+#else
+    uw_ethrowf(file_error_s, lit("~s: not built with zlib support"),
+               self, nao);
+#endif
   }
-
-  return set_mode_props(m, make_stdio_stream(f, format(nil,
-                                                       lit("fd ~d"),
-                                                       fd, nao)));
 }
 
 val open_tail(val path, val mode_str, val seek_end_p)
