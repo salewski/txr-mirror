@@ -517,11 +517,12 @@ static void mark_obj_maybe(val maybe_obj)
   VALGRIND_MAKE_MEM_DEFINED(&maybe_obj, sizeof maybe_obj);
 #endif
   if (in_heap(maybe_obj)) {
+    type_t t;
 #if HAVE_VALGRIND
     if (opt_vg_debug)
       VALGRIND_MAKE_MEM_DEFINED(maybe_obj, SIZEOF_PTR);
 #endif
-    type_t t = maybe_obj->t.type;
+    t = maybe_obj->t.type;
     if ((t & FREE) == 0) {
       mark_obj(maybe_obj);
     } else {
