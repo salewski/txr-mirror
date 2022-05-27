@@ -791,6 +791,7 @@ static val stdio_set_prop(val stream, val ind, val prop)
     return t;
   } else if (ind == name_k) {
     h->descr = prop;
+    return t;
   }
   return nil;
 }
