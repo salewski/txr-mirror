@@ -63,6 +63,20 @@ struct gzio_handle {
 
 struct cobj_class *gzio_stream_cls;
 
+static void gzio_stream_print(val stream, val out, val pretty,
+                              struct strm_ctx *ctx)
+{
+  struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
+  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  val name = static_str(ops->name);
+  val descr = ops->get_prop(stream, name_k);
+
+  (void) pretty;
+  (void) ctx;
+
+  format(out, lit("#<~a ~a ~p>"), name, descr, stream, nao);
+}
+
 static void gzio_stream_destroy(val stream)
 {
   struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
@@ -410,7 +424,7 @@ static val gzio_set_prop(val stream, val ind, val prop)
 
 static struct strm_ops gzio_ops_rd =
   strm_ops_init(cobj_ops_init(eq,
-                              stream_print_op,
+                              gzio_stream_print,
                               gzio_stream_destroy,
                               gzio_stream_mark,
                               cobj_eq_hash_op),
@@ -438,7 +452,7 @@ static struct strm_ops gzio_ops_rd =
 
 static struct strm_ops gzio_ops_wr =
   strm_ops_init(cobj_ops_init(eq,
-                              stream_print_op,
+                              gzio_stream_print,
                               gzio_stream_destroy,
                               gzio_stream_mark,
                               cobj_eq_hash_op),
