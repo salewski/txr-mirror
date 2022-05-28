@@ -66,7 +66,6 @@ struct cobj_class *gzio_stream_cls;
 static void gzio_stream_print(val stream, val out, val pretty,
                               struct strm_ctx *ctx)
 {
-  struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
   val descr = ops->get_prop(stream, name_k);
@@ -399,7 +398,6 @@ static val gzio_get_prop(val stream, val ind)
 
   if (ind == name_k) {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    val name = static_str(ops->name);
     return h->descr;
   } else if (ind == byte_oriented_k) {
     return h->is_byte_oriented ? t : nil;
