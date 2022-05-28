@@ -28392,6 +28392,52 @@ is of integer type and, in the case of
 .codn buf-uint ,
 nonnegative.
 
+.coNP Functions @ buf-compress and @ buf-decompress
+.synb
+.mets (buf-compress < buf <> [ level ])
+.mets (buf-decompress << buf )
+.syne
+.desc
+The
+.code buf-compress
+and
+.code buf-decompress
+functions perform compression using the Deflate algorithm, via Zlib.
+These functions are only available if \*(TX is built with Zlib support.
+More specifically,
+.code buf-compress
+uses Zlib's
+.code compress2
+function; therefore it can be expected to interoperate with other software
+which uses the same function.
+
+The
+.code buf-compress
+function compresses the entire contents of
+.meta buf
+and returns new buffer with the compressed contents. The optional
+.meta level
+argument specifies the compression level as an integer, which defaults to 6.
+Valid values range from 0 to 9: no compression, to maximum.
+
+The
+.code buf-decompress
+function reverses the
+.code buf-compress
+operation: it takes a compressed
+.meta buf
+and returns a buffer containing the original uncompressed data.
+
+The
+.code buf-compress
+function throws an error exception if the
+.meta level
+value is unacceptable to Zlib. The
+.code buf-decompress
+function throws an error exception if
+.meta buf
+doesn't contain a compressed image.
+
 .SS* Structures
 
 \*(TX supports user-defined types in the form of structures. Structures

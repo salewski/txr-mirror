@@ -35,6 +35,9 @@
 #include <signal.h>
 #include <stdio.h>
 #include "config.h"
+#if HAVE_ZLIB
+#include <zlib.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "itypes.h"
@@ -1223,6 +1226,69 @@ static val uint_buf(val buf)
   return normalize(ubn);
 }
 
+#if HAVE_ZLIB
+
+static val buf_compress(val buf, val level_opt)
+{
+  val self = lit("buf-compress");
+  val level = default_arg(level_opt, num_fast(6));
+  int lev = c_int(level, self);
+  struct buf *b = buf_handle(buf, self);
+  ucnum size = c_unum(b->len, self);
+  uLong bound = compressBound(size), zsize = bound;
+  mem_t *zdata = chk_malloc(bound);
+
+  if (convert(uLong, size) != size) {
+    free(zdata);
+    uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
+  }
+
+  if (compress2(zdata, &zsize, b->data, size, lev) != Z_OK) {
+    free(zdata);
+    uw_throwf(error_s, lit("~a: compression failed"), self, nao);
+  }
+
+  zdata = chk_realloc(zdata, zsize);
+  return make_owned_buf(unum(zsize), zdata);
+}
+
+static val buf_decompress(val buf)
+{
+  val self = lit("buf-decompress");
+  struct buf *b = buf_handle(buf, self);
+  ucnum zsize = c_unum(b->len, self);
+  uLong zsz10 = 10 * zsize;
+  uLong size = if3(zsz10 > zsize, zsz10, convert(uLong, -1));
+  mem_t *data = chk_malloc(size);
+
+  for (;;) {
+    switch (uncompress(data, &size, b->data, zsize)) {
+    case Z_OK:
+      data = chk_realloc(data, size);
+      return make_owned_buf(unum(size), data);
+    case Z_BUF_ERROR:
+      if (size == convert(uLong, -1))
+        break;
+      if (size * 2 > size)
+        size = size * 2;
+      else if (size == convert(uLong, -1))
+        break;
+      else
+        size  = convert(uLong, -1);
+      data = chk_realloc(data, size);
+      continue;
+    default:
+      break;
+    }
+    break;
+  }
+
+  free(data);
+  uw_throwf(error_s, lit("~a: decompression failed"), self, nao);
+}
+
+#endif
+
 void buf_init(void)
 {
   reg_fun(intern(lit("make-buf"), user_package), func_n3o(make_buf, 1));
@@ -1310,6 +1376,11 @@ void buf_init(void)
   reg_fun(intern(lit("buf-uint"), user_package), func_n1(buf_uint));
   reg_fun(intern(lit("int-buf"), user_package), func_n1(int_buf));
   reg_fun(intern(lit("uint-buf"), user_package), func_n1(uint_buf));
+
+#if HAVE_ZLIB
+  reg_fun(intern(lit("buf-compress"), user_package), func_n2o(buf_compress, 1));
+  reg_fun(intern(lit("buf-decompress"), user_package), func_n1(buf_decompress));
+#endif
 
   fill_stream_ops(&buf_strm_ops);
 }
