@@ -1223,8 +1223,6 @@ static val uint_buf(val buf)
   return normalize(ubn);
 }
 
-unsigned char *utf8_dup_to_buf(const wchar_t *, size_t *pnbytes,
-                               int null_term);
 void buf_init(void)
 {
   reg_fun(intern(lit("make-buf"), user_package), func_n3o(make_buf, 1));
