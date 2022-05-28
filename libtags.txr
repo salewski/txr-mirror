@@ -56,7 +56,7 @@
   (defvar *tags-lib*)
 
   (let ((*tags-lib* t))
-    (load "tags"))
+    (load "txrtags"))
 
   (define-option-struct libtags-opts tags-opts
     (v verbose :bool "Print diagnostic messages during processing."))
