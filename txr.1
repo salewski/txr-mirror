@@ -25563,7 +25563,7 @@ is argument order.
 
 .coNP Functions @ tok-str and @ tok-where
 .synb
-.mets (tok-str < string < regex <> [ keep-between ])
+.mets (tok-str < string < regex >> [ keep-between <> [ count ]])
 .mets (tok-where < string << regex )
 .syne
 .desc
@@ -25619,9 +25619,7 @@ character and is extracted.
 
 If the
 .meta keep-between
-argument is specified, and is not
-.codn nil ,
-then the behavior
+argument is true, then the behavior
 of
 .code tok-str
 changes in the following way. The pieces of
@@ -25639,6 +25637,15 @@ element is the next skipped substring and so on. The last element is the
 substring of
 .meta string
 between the last token and the end.
+
+If
+.meta count
+is specified, it must be a nonnegative integer. The value limits the
+number of tokens which are extracted. The returned list then includes
+one more item: the remainder of the string after the last extracted token.
+This item is omitted if the rest of the string is empty, unless
+.meta keep-between
+is true.
 
 The
 .code tok-where

@@ -5895,15 +5895,23 @@ val sspl(val set, val str)
   return split_str_set(str, set);
 }
 
-val tok_str(val str, val tok_regex, val keep_sep)
+val tok_str(val str, val tok_regex, val keep_sep_opt, val count_opt)
 {
+  val self = lit("tok-str");
   list_collect_decl (out, iter);
   val pos = zero;
   val last_end = zero;
   val slen = length(str);
   int prev_empty = 1;
+  val keep_sep = default_null_arg(keep_sep_opt);
+  val count = default_null_arg(count_opt);
+  cnum cnt = c_num(if3(count, count, negone), self);
 
-  keep_sep = default_null_arg(keep_sep);
+  if (count && cnt < 0)
+    uw_throwf(error_s, lit("~a: count must be nonnegative"), self, nao);
+
+  if (count == zero)
+    return if2(keep_sep || slen != zero, cons(str, nil));
 
   if (opt_compat && opt_compat <= 155) for (;;) {
     cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
@@ -5922,6 +5930,12 @@ val tok_str(val str, val tok_regex, val keep_sep)
 
     pos = plus(new_pos, len);
     iter = list_collect(iter, sub_str(str, new_pos, pos));
+
+    if (cnt > 0 && --cnt == 0) {
+      if (pos != slen || keep_sep)
+        iter = list_collect(iter, sub_str(str, pos, t));
+      break;
+    }
   } else for (;;) {
     cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
 
@@ -5945,6 +5959,12 @@ val tok_str(val str, val tok_regex, val keep_sep)
 
     if (len == zero)
       pos = succ(pos);
+
+    if (cnt > 0 && --cnt == 0) {
+      if (pos != slen || keep_sep)
+        iter = list_collect(iter, sub_str(str, pos, t));
+      break;
+    }
   }
 
   return out;
@@ -5953,8 +5973,8 @@ val tok_str(val str, val tok_regex, val keep_sep)
 val tok(val tok_regex, val arg1, val arg2)
 {
   return if3(missingp(arg2),
-             tok_str(arg1, tok_regex, arg2),
-             tok_str(arg2, tok_regex, arg1));
+             tok_str(arg1, tok_regex, arg2, nil),
+             tok_str(arg2, tok_regex, arg1, nil));
 }
 
 val tok_where(val str, val tok_regex)

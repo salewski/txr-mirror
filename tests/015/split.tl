@@ -196,6 +196,21 @@
   (tok-str "abcacabcac" #/ab?/ t) ("" "ab" "c" "a" "c" "ab" "c" "a" "c"))
 
 (mtest
+  (tok-str "" #/[^,]/ : 0) ()
+  (tok-str "a,b,c" #/[^,]/ : 0) ("a,b,c")
+  (tok-str "a,b,c" #/[^,]/ : 1) ("a" ",b,c")
+  (tok-str "a,b,c" #/[^,]/ : 2) ("a" "b" ",c")
+  (tok-str "a,b,c" #/[^,]/ : 3) #"a b c"
+  (tok-str "a,b,c" #/[^,]/ : 4) #"a b c")
+
+(mtest
+  (tok-str "a,b,c" #/[^,]/ t 0) ("a,b,c")
+  (tok-str "a,b,c" #/[^,]/ t 1) ("" "a" ",b,c")
+  (tok-str "a,b,c" #/[^,]/ t 2) ("" "a" "," "b" ",c")
+  (tok-str "a,b,c" #/[^,]/ t 3) ("" "a" "," "b" "," "c" "")
+  (tok-str "a,b,c" #/[^,]/ t 4) ("" "a" "," "b" "," "c" ""))
+
+(mtest
   (join) ""
   (join "") ""
   (join "" "") ""

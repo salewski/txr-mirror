@@ -7217,7 +7217,7 @@ void eval_init(void)
   reg_fun(intern(lit("spl"), user_package), func_n3o(spl, 2));
   reg_fun(intern(lit("split-str-set"), user_package), func_n2(split_str_set));
   reg_fun(intern(lit("sspl"), user_package), func_n2(sspl));
-  reg_fun(intern(lit("tok-str"), user_package), func_n3o(tok_str, 2));
+  reg_fun(intern(lit("tok-str"), user_package), func_n4o(tok_str, 2));
   reg_fun(intern(lit("tok"), user_package), func_n3o(tok, 2));
   reg_fun(intern(lit("tok-where"), user_package), func_n2(tok_where));
   reg_fun(intern(lit("list-str"), user_package), func_n1(list_str));
