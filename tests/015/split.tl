@@ -211,6 +211,23 @@
   (tok-str "a,b,c" #/[^,]/ t 4) ("" "a" "," "b" "," "c" ""))
 
 (mtest
+  (tok #/[^,]/ "a,b,c") #"a b c"
+  (tokn : #/[^,]/ "a,b,c") :error
+  (tokn nil #/[^,]/ "a,b,c") :error
+  (tokn 0 #/[^,]/ "a,b,c") ("a,b,c")
+  (tokn 1 #/[^,]/ "a,b,c") ("a" ",b,c")
+  (tokn 2 #/[^,]/ "a,b,c") ("a" "b" ",c")
+  (tokn 3 #/[^,]/ "a,b,c") ("a" "b" "c")
+  (tokn 4 #/[^,]/ "a,b,c") ("a" "b" "c"))
+
+(mtest
+  (tokn 0 #/[^,]/ t "a,b,c") ("a,b,c")
+  (tokn 1 #/[^,]/ t "a,b,c") ("" "a" ",b,c")
+  (tokn 2 #/[^,]/ t "a,b,c") ("" "a" "," "b" ",c")
+  (tokn 3 #/[^,]/ t "a,b,c") ("" "a" "," "b" "," "c" "")
+  (tokn 4 #/[^,]/ t "a,b,c") ("" "a" "," "b" "," "c" ""))
+
+(mtest
   (join) ""
   (join "") ""
   (join "" "") ""
@@ -271,3 +288,13 @@
   (split-str "a12b34c567d" #/[0-9]+/ t 2) ("a" "12" "b" "34" "c567d")
   (split-str "a12b34c567d" #/[0-9]+/ t 3) ("a" "12" "b" "34" "c" "567" "d")
   (split-str "a12b34c567d" #/[0-9]+/ t 4) ("a" "12" "b" "34" "c" "567" "d"))
+
+(mtest
+  (spl "," "a,b,c") #"a b c"
+  (spln : "," "a,b,c") :error
+  (spln nil "," "a,b,c") :error
+  (spln 0 "," "a,b,c") ("a,b,c")
+  (spln 1 "," "a,b,c") ("a" "b,c")
+  (spln 2 "," "a,b,c") ("a" "b" "c")
+  (spln 3 "," "a,b,c") ("a" "b" "c")
+  (spln 4 "," "a,b,c") ("a" "b" "c"))

@@ -25486,9 +25486,10 @@ is zero, then
 returns a list of one element, which is
 .metn string .
 
-.coNP Function @ spl
+.coNP Functions @ spl and @ spln
 .synb
 .mets (spl < sep <> [ keep-between ] << string )
+.mets (spln < count < sep <> [ keep-between ] << string )
 .syne
 .desc
 The
@@ -25519,6 +25520,15 @@ facilitate less verbose partial application, such as with macros in the
 family, in the common situation when
 .meta string
 is the unbound argument.
+
+The
+.code spln
+function is similar to
+.codn spl ,
+taking a required argument
+.metn count ,
+which behaves exactly like the same-named argument of
+.codn spl-str .
 
 .coNP Functions @ split-str-set and @ sspl
 .synb
@@ -25672,6 +25682,7 @@ parameter.
 .coNP Function @ tok
 .synb
 .mets (tok < regex <> [ keep-between ] << string )
+.mets (tokn < count < regex <> [ keep-between ] << string )
 .syne
 .desc
 The
@@ -25702,6 +25713,15 @@ facilitate less verbose partial application, such as  with macros in the
 family, in the common situation when
 .meta string
 is the unbound argument.
+
+The
+.code tokn
+function is similar to
+.codn tok ,
+taking a required argument
+.metn count ,
+which behaves exactly like the same-named argument of
+.codn tok-str .
 
 .coNP Function @ list-str
 .synb

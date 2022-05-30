@@ -5859,6 +5859,18 @@ val spl(val sep, val arg1, val arg2)
              split_str_keep(arg2, sep, arg1, nil));
 }
 
+val spln(val count, val sep, val arg1, val arg2)
+{
+  val self = lit("spln");
+
+  if (null_or_missing_p(count))
+    uw_throwf(error_s, lit("~a: count ~s isn't an integer"), self, count, nao);
+
+  return if3(missingp(arg2),
+             split_str_keep(arg1, sep, arg2, count),
+             split_str_keep(arg2, sep, arg1, count));
+}
+
 val split_str(val str, val sep)
 {
   return split_str_keep(str, sep, nil, nil);
@@ -5975,6 +5987,18 @@ val tok(val tok_regex, val arg1, val arg2)
   return if3(missingp(arg2),
              tok_str(arg1, tok_regex, arg2, nil),
              tok_str(arg2, tok_regex, arg1, nil));
+}
+
+val tokn(val count, val tok_regex, val arg1, val arg2)
+{
+  val self = lit("tokn");
+
+  if (null_or_missing_p(count))
+    uw_throwf(error_s, lit("~a: count ~s isn't an integer"), self, count, nao);
+
+  return if3(missingp(arg2),
+             tok_str(arg1, tok_regex, arg2, count),
+             tok_str(arg2, tok_regex, arg1, count));
 }
 
 val tok_where(val str, val tok_regex)
