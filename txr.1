@@ -28444,8 +28444,9 @@ function compresses the entire contents of
 .meta buf
 and returns new buffer with the compressed contents. The optional
 .meta level
-argument specifies the compression level as an integer, which defaults to 6.
-Valid values range from 0 to 9: no compression, to maximum.
+argument specifies the compression level as an integer.
+Valid values range from 0 (no compression) to 9 (maximum compression).
+The value -1 selects a default compression determined internally by Zlib.
 
 The
 .code buf-decompress

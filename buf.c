@@ -1231,7 +1231,7 @@ static val uint_buf(val buf)
 static val buf_compress(val buf, val level_opt)
 {
   val self = lit("buf-compress");
-  val level = default_arg(level_opt, num_fast(6));
+  val level = default_arg(level_opt, negone);
   int lev = c_int(level, self);
   struct buf *b = buf_handle(buf, self);
   ucnum size = c_unum(b->len, self);
