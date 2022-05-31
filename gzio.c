@@ -61,6 +61,8 @@ struct gzio_handle {
   unsigned is_output : 8;
 };
 
+val gzio_stream_s;
+
 struct cobj_class *gzio_stream_cls;
 
 static void gzio_stream_print(val stream, val out, val pretty,

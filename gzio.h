@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-val gzio_stream_s;
+extern val gzio_stream_s;
 void gzio_init(void);
 gzFile w_gzopen_mode(const wchar_t *wname, const wchar_t *wmode,
                      const struct stdio_mode m, val self);
