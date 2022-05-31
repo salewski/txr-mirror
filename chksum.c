@@ -314,9 +314,9 @@ static val crc32_str(val str, val init)
 }
 
 
-val crc32(val obj, val init)
+static val crc32(val obj, val init)
 {
-  val self = lit("sha256");
+  val self = lit("crc32");
 
   switch (type(obj)) {
   case STR:

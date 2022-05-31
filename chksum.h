@@ -32,7 +32,6 @@ val sha256_begin(void);
 val sha256_hash(val ctx, val obj);
 val sha256_end(val ctx, val buf);
 val crc32_stream(val stream, val nbytes, val init);
-val crc32(val obj, val init);
 val md5_stream(val stream, val nbytes, val buf);
 val md5(val obj, val buf_in);
 val md5_begin(void);
