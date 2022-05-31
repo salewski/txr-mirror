@@ -1,3 +1,36 @@
+                                    TXR LZ77  :-)
+                                   2022-05-31
+
+
+  Features
+
+  - Zlib integration:
+    - New "z" mode option in open-file and open-fileno
+      for Deflate compression (reading and writing): reads and writes
+      gzip-compatible files.
+    - Supported in convenience functions like file-put-string,
+      file-get-buf and all those.
+    - buf-compress and buf-decompress functions.
+    - .tlo.gz files recognized by load as compressed.
+    - .tlo.gz files may be catenated just like .tlo files.
+
+  - Lib:
+    - tok-str function takes count argument.
+    - new spln and tokn functions: like spl and tok, but take
+      a count argument limiting pieces returned.
+
+  Bugs
+
+  - tests: load-search test when run as superuser.
+  - configure: don't exit when mmap isn't detected.
+  - stream-set-prop: return t when :name prop set on file stream.
+  - compilation bug in gc.c if HAVE_VALGRIND is on (maintainer mode only).
+  - removed workaround for old Cygwin bug in I/O streams.
+  - tags.tl renamed to txr-tags.tl to avoid name clash with tags file.
+  - cygwin: sh function was wrongly using cmd.exe /c.
+
+
+
                                     TXR 276
                                    2022-05-24
 
