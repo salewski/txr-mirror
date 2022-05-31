@@ -4871,11 +4871,6 @@ static val run(val command, val args)
   return (status < 0) ? nil : num(status);
 }
 
-static val sh(val command)
-{
-  return run(lit("cmd.exe"), list(lit("/C"), command, nao));
-}
-
 #elif HAVE_FORK_STUFF
 
 static val run(val name, val args)
@@ -4948,14 +4943,14 @@ out:
   return ret;
 }
 
+#else
+#error port me!
+#endif
+
 static val sh(val command)
 {
   return run(shell, list(shell_arg, command, nao));
 }
-
-#else
-#error port me!
-#endif
 
 val remove_path(val path, val throw_on_error)
 {
