@@ -4237,7 +4237,9 @@ val open_file(val path, val mode_str)
   struct stdio_mode m, m_r = stdio_mode_init_r;
   val norm_mode = normalize_mode(&m, mode_str, m_r, self);
 
+#if HAVE_ZLIB
 again:
+#endif
   if (!m.gzip) {
     FILE *f = w_fopen_mode(c_str(path, self), c_str(norm_mode, self), m);
 

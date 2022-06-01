@@ -523,7 +523,9 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
                    val search_dirs, val self)
 {
   enum { none, tl, tlo, tlz, txr } suffix;
+#if HAVE_ZLIB
   struct stdio_mode m_r = stdio_mode_init_r;
+#endif
 
   if (match_str(first_try_path, lit(".txr"), negone))
     suffix = txr;
@@ -538,19 +540,32 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
   else
     suffix = none;
 
+#if !HAVE_ZLIB
+  if (suffix == tlz)
+    uw_ethrowf(file_error_s, lit("~s: cannot open ~s files: "
+                                 "not built with zlib support"),
+               self, nao);
+#endif
+
   errno = 0;
 
   {
     val try_path = nil;
     FILE *in = 0;
+#if HAVE_ZLIB
     gzFile zin = 0;
+#else
+    const int zin = 0;
+#endif
 
     {
       try_path = first_try_path;
       errno = 0;
+#if HAVE_ZLIB
       if (suffix == tlz)
         zin = w_gzopen_mode(c_str(try_path, self), L"r", m_r, self);
       else
+#endif
         in = w_fopen(c_str(try_path, self), L"r");
 
       if (in != 0 || zin != 0) {
@@ -599,6 +614,7 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
           goto except;
 #endif
       }
+#if HAVE_ZLIB
       {
         try_path = scat(lit("."), first_try_path, lit("tlo.gz"), nao);
         errno = 0;
@@ -611,6 +627,7 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
           goto except;
 #endif
       }
+#endif
       {
         try_path = scat(lit("."), first_try_path, lit("tl"), nao);
         errno = 0;
@@ -651,8 +668,10 @@ except:
 found:
     if (in != 0)
       *stream = make_stdio_stream(in, try_path);
+#if HAVE_ZLIB
     else
       *stream = make_gzio_stream(zin, -1, try_path, 0);
+#endif
     *orig_in_resolved_out = try_path;
   }
 }
