@@ -1604,7 +1604,7 @@ struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl, val self)
 {
   struct stdio_mode m = do_parse_mode(mode_str, m_dfl, self);
   if (m.malformed)
-    uw_throwf(file_error_s, lit("~s: invalid mode string ~s"), self,
+    uw_throwf(file_error_s, lit("~a: invalid mode string ~s"), self,
               mode_str, nao);
   return m;
 }
@@ -4261,7 +4261,7 @@ again:
 
     return make_gzio_stream(f, -1, path, m.write);
 #else
-    uw_ethrowf(file_error_s, lit("~s: not built with zlib support"),
+    uw_ethrowf(file_error_s, lit("~a: not built with zlib support"),
                self, nao);
 #endif
   }
@@ -4303,7 +4303,7 @@ val open_fileno(val fd, val mode_str)
     return make_gzio_stream(f, fdn, format(nil, lit("fd ~d"), fd, nao),
                             m.write);
 #else
-    uw_ethrowf(file_error_s, lit("~s: not built with zlib support"),
+    uw_ethrowf(file_error_s, lit("~a: not built with zlib support"),
                self, nao);
 #endif
   }
