@@ -2411,6 +2411,7 @@ val get_string_from_stream(val stream)
 
   if (stream->co.ops == &string_out_ops.cobj_ops) {
     val out = nil;
+    wchar_t *buf;
 
     if (!so->buf)
       return out;
@@ -2419,10 +2420,10 @@ val get_string_from_stream(val stream)
       out = string_out_byte_flush(so, stream);
 
     /* Trim to actual size */
-    so->buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, so->buf),
-                                            (so->fill + 1) * sizeof *so->buf));
-    out = string_own(so->buf);
+    buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, so->buf),
+                                        (so->fill + 1) * sizeof *so->buf));
     so->buf = 0;
+    out = string_own(buf);
     return out;
   } else {
     type_assert (stream->co.ops == &string_in_ops.cobj_ops,
