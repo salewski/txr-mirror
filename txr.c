@@ -80,6 +80,7 @@ int opt_noninteractive = if_full_repl(0, 1);
 int opt_noprofile;
 int opt_compat;
 int opt_dbg_expansion;
+int opt_free_all;
 val stdlib_path;
 
 #if HAVE_FORK_STUFF
@@ -415,6 +416,16 @@ static int license(void)
   return retval;
 }
 
+static void free_all(void)
+{
+  if (opt_free_all) {
+    regex_free_all();
+    gc_free_all();
+    arith_free_all();
+    free(progname);
+  }
+}
+
 int txr_main(int argc, char **argv);
 
 int main(int argc, char **argv)
@@ -423,6 +434,7 @@ int main(int argc, char **argv)
   repress_privilege();
   progname = utf8_dup_from(argv[0] ? argv[0]: "txr");
   progname_u8 = argv[0];
+  atexit(free_all);
   init(&stack_bottom);
   match_init();
   debug_init();
@@ -516,19 +528,6 @@ static int gc_delta(val optval)
 {
   opt_gc_delta = c_num(mul(optval, num_fast(1048576)), lit("gc"));
   return 1;
-}
-
-static void free_all(void)
-{
-  static int called;
-
-  if (!called) {
-    called = 1;
-    regex_free_all();
-    gc_free_all();
-    arith_free_all();
-    free(progname);
-  }
 }
 
 #ifndef CONFIG_DEBUG_SUPPORT
@@ -932,7 +931,7 @@ int txr_main(int argc, char **argv)
       } else if (equal(opt, lit("free-all"))) {
         if (org)
           goto noarg;
-        atexit(free_all);
+        opt_free_all = 1;
         continue;
       } else if (equal(opt, lit("noprofile"))) {
         if (org)

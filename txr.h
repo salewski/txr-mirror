@@ -41,6 +41,7 @@ extern int opt_debugger;
 extern int opt_dbg_autoload;
 extern int opt_dbg_expansion;
 extern int opt_noprofile;
+extern int opt_free_all;
 extern alloc_bytes_t opt_gc_delta;
 extern const wchli_t *version;
 extern wchar_t *progname;

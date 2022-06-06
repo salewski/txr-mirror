@@ -440,6 +440,7 @@ tst/tests/016/%: TXR_DBG_OPTS :=
 tst/tests/017/%: TXR_DBG_OPTS :=
 tst/tests/018/%: TXR_DBG_OPTS :=
 tst/tests/019/%: TXR_DBG_OPTS :=
+tst/tests/019/load-hook.ok: TXR_DBG_OPTS := --free-all
 
 tst/tests/014/dgram-stream.ok: | tst/tests/014/socket-basic.ok
 
