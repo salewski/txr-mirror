@@ -53,7 +53,6 @@
     insns
     lt-dregs
     symvec
-    root
     (hash (hash))
     (li-hash (hash :eq-based))
     list
@@ -120,7 +119,6 @@
             ,list))
 
 (defmeth basic-blocks link-graph (bb)
-  (set bb.root (car bb.list))
   (each* ((bl bb.list)
           (nxbl (append (cdr bl) '(nil))))
     (let* ((code bl.insns)
@@ -275,7 +273,7 @@
                            (set-mask bl.used live-in))
                          (set changed t))))))
           (set changed nil)
-          (visit bb.root))))))
+          (visit (car bb.list)))))))
 
 (defmeth basic-blocks thread-jumps-block (bb code)
   (let* ((tail (last code))
@@ -549,9 +547,8 @@
                  (when bl.next
                    (visit bl.next))
                  [mapcar visit bl.links])))
-      (for ((bl bb.root)) (bl) ((set bl bl.next))
-        (visit bl))
-      (visit bb.root))
+      (for ((bl (car bb.list))) (bl) ((set bl bl.next))
+        (visit bl)))
     (upd bb.list (keep-if visited))
     (let (flg)
       (each ((bl bb.list)
