@@ -1647,7 +1647,11 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 
     uw_catch_begin (catch_all, exsym, exvals);
 
+    uw_push_handler(&uw_handler, cons(warning_s, nil), rw_f);
+
     line_w = linenoise(ls, c_str(prompt, self));
+
+    uw_pop_frame(&uw_handler);
 
 #if CONFIG_FULL_REPL
     rplacd(multi_line_var, tnil(lino_get_multiline(ls)));
