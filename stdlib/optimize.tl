@@ -32,7 +32,7 @@
     def)
 
   (defstruct basic-block (live-info)
-    live
+    (live 0)
     label
     next
     links
@@ -155,7 +155,7 @@
         (pushnew bl nx.rlinks)))))
 
 (defmeth basic-blocks local-liveness (bb bl)
-  (set bl.live nil)
+  (set bl.live 0)
   (labels ((regnum (reg)
              (when-match (t @num) reg num))
            (regnums (regs)
