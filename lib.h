@@ -900,6 +900,7 @@ val string_8bit_size(const unsigned char *str, size_t sz);
 val mkstring(val len, val ch);
 val mkustring(val len); /* must initialize immediately with init_str! */
 val init_str(val str, const wchar_t *, val self);
+val str(val len, val pattern);
 val copy_str(val str);
 val upcase_str(val str);
 val downcase_str(val str);

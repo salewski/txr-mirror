@@ -24892,9 +24892,10 @@ The following equivalences hold:
                               (less x (to r)))
 .brev
 .SS* Characters and Strings
-.coNP Function @ mkstring
+.coNP Functions @ mkstring and @ str
 .synb
 .mets (mkstring < length <> [ char ])
+.mets (str < length >> [ char | << string ])
 .syne
 .desc
 The
@@ -24902,7 +24903,10 @@ The
 function constructs a string object of a length specified
 by the
 .meta length
-parameter.  Every position in the string is initialized
+parameter. The
+.meta length
+parameter must be non-negative.
+Every position in the string is initialized
 with
 .metn char ,
 which must be a character value.
@@ -24910,6 +24914,35 @@ which must be a character value.
 If the optional argument
 .meta char
 is not specified, it defaults to the space character.
+
+The
+.code str
+function resembles
+.codn mkstring ,
+and behaves the same way when the second argument
+is omitted, and when it is a character value.
+The second argument of
+.code str
+may be a
+.metn string ,
+in which case the newly created string is filled by
+taking successive characters from
+.metn string .
+If
+.meta string
+is longer than
+.metn length ,
+its excess characters are ignored. If
+.meta string
+is shorter, then characters are taken from the beginning again;
+.meta string
+is effectively taken as a fill pattern to be repeated as many times as
+necessary to provide the required number of characters.
+If
+.meta string
+is empty,
+.code str
+fills the new string with spaces.
 
 .coNP Function @ copy-str
 .synb

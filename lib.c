@@ -4885,6 +4885,39 @@ val init_str(val str, const wchar_t *data, val self)
   return str;
 }
 
+val str(val len, val pattern)
+{
+  if (chrp(pattern) || null_or_missing_p(pattern)) {
+    return mkstring(len, pattern);
+  } else {
+    val self = lit("str");
+    const wchar_t *pat = c_str(pattern, self);
+    ucnum pl = c_unum(length(pattern), self);
+
+    if (pl <= 1) {
+      val ch = if3(pl == 0, chr(' '), chr(pat[0]));
+      return mkstring(len, ch);
+    } else {
+      ucnum l = c_unum(len, self);
+      val str = mkustring(len);
+      ucnum offs = 0;
+
+      str->st.str[l] = 0;
+
+      for (;;) {
+        wmemcpy(str->st.str + offs, pat, min(l, pl));
+        if (pl < l) {
+          l -= pl;
+          offs += pl;
+          continue;
+        }
+        break;
+      }
+      return str;
+    }
+  }
+}
+
 static val copy_lazy_str(val lstr);
 
 val copy_str(val str)
