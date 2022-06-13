@@ -17615,19 +17615,24 @@ and
  10 is "even"
 .onom
 
-.coNP Operators @ for and @ for*
+.coNP Macros @ for and @ for*
 .synb
 .mets ({for | for*} >> ({ sym | >> ( sym << init-form )}*)
 .mets \ \ \ \ \ \ \ \ \ \ \ \ \  >> ([ test-form << result-form *])
-.mets \ \ \ \ \ \ \ \ \ \ \ \ \  <> ( inc-form *)
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \  <> [( inc-form *)]
 .mets \ \  << body-form *)
+.mets ""
+.mets ({for | for*} >> ({ sym | >> ( sym << init-form )}*)
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \  >> ([ test-form << result-form *]))
+.mets ""
+.mets ({for | for*} >> ({ sym | >> ( sym << init-form )}*))
 .syne
 .desc
-The
+The macros
 .code for
 and
 .code for*
-operators combine variable binding with loop iteration.
+combine variable binding with loop iteration.
 The first argument is a list of variables with optional initializers,
 exactly the same as in the
 .code let
@@ -17644,11 +17649,17 @@ and
 .code let*
 with regard to this list of variables.
 
+The second variant in the above syntax synopsis shows that when
+.metn body-form s
+are absent, then a list of
+.metn inc-form s
+which is empty may be omitted from the syntax.
+
 The
 .code for
 and
 .code for*
-operators execute these steps:
+macros execute these steps:
 .RS
 .IP 1.
 Establish an anonymous block over the entire form, allowing
@@ -17696,16 +17707,6 @@ is evaluated in turn. Then, each
 .code inc-form
 is evaluated in turn and processing resumes at step 2.
 .RE
-
-.IP
-Furthermore, the
-.code for
-and
-.code for*
-operators establish an anonymous block,
-allowing the
-.code return
-operator to be used to terminate at any point.
 
 .coNP Macros @ doloop and @ doloop*
 .synb

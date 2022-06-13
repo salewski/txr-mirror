@@ -3215,7 +3215,7 @@ static val me_each(val form, val menv)
 static val me_for(val form, val menv)
 {
   val forsym = first(form);
-  val args = (syn_check(form, forsym, cdr, 0), rest(form));
+  val args = (syn_check(form, forsym, cddr, 0), rest(form));
   val vars = first(args);
   val body = rest(args);
   int oldscope = opt_compat && opt_compat <= 123;
