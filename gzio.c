@@ -35,6 +35,9 @@
 #include <errno.h>
 #include <zlib.h>
 #include "config.h"
+#if HAVE_SYS_WAIT
+#include <sys/wait.h>
+#endif
 #include "alloca.h"
 #include "lib.h"
 #include "stream.h"
@@ -57,6 +60,9 @@ struct gzio_handle {
   val err, errstr;
   char *buf;
   int fd;
+#if HAVE_FORK_STUFF
+  pid_t pid;
+#endif
   unsigned is_byte_oriented : 8;
   unsigned is_output : 8;
 };
@@ -283,7 +289,18 @@ static val gzio_close(val stream, val throw_on_error)
         gzio_maybe_error(stream, lit("closing"));
       return nil;
     }
-    return t;
+#if HAVE_FORK_STUFF
+    if (h->pid != 0)
+    {
+      int status = 0;
+      val self = lit("close-stream");
+      sig_save_enable;
+      while (waitpid(h->pid, &status, 0) == -1 && errno == EINTR)
+        ;
+      sig_restore_enable;
+      return pipe_close_status_helper(stream, throw_on_error, status, self);
+    }
+#endif
   }
   return nil;
 }
@@ -561,5 +578,20 @@ val make_gzio_stream(gzFile f, int fd, val descr, int is_output)
   h->buf = 0;
   h->is_byte_oriented = 0;
   h->is_output = is_output;
+#if HAVE_FORK_STUFF
+  h->pid = 0;
+#endif
   return stream;
 }
+
+#if HAVE_FORK_STUFF
+
+val make_gzio_pipe_stream(gzFile f, int fd, val descr, int is_output, pid_t pid)
+{
+  val stream = make_gzio_stream(f, fd, descr, is_output);
+  struct gzio_handle *h = coerce(struct gzio_handle *, stream->co.handle);
+  h->pid = pid;
+  return stream;
+}
+
+#endif

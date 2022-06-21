@@ -182,6 +182,8 @@ val make_tail_stream(FILE *, val descr);
 #if !HAVE_FORK_STUFF
 val make_pipe_stream(FILE *, val descr);
 #endif
+val pipe_close_status_helper(val stream, val throw_on_error,
+                             int status, val self);
 val stream_fd(val stream);
 #if HAVE_SOCKETS
 val make_sock_stream(FILE *f, val family, val type);
@@ -246,7 +248,7 @@ struct strm_ctx *get_ctx(val stream);
 val get_string(val stream, val nchars, val close_after_p);
 val open_directory(val path);
 val open_file(val path, val mode_str);
-val open_fileno(val fd, val mode_str);
+val open_fileno(val fd, val mode_str, val pid_opt);
 val open_tail(val path, val mode_str, val seek_end_p);
 val open_command(val path, val mode_str);
 val path_search(val name, val path_in);

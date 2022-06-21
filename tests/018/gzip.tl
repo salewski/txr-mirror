@@ -51,3 +51,7 @@
     (with-out-string-stream (*stdout*)
       (load "./test-file-combined.tlo.gz"))
     "a\nb\n"))
+
+(when %have-gzip%
+  (with-stream (s (open-command "echo abc | gzip -c" "z"))
+    (test (get-line s) "abc")))
