@@ -521,8 +521,6 @@ struct stdio_handle {
   char *buf;
 #if HAVE_FORK_STUFF
   pid_t pid;
-#else
-  int pid;
 #endif
   val mode; /* used by tail */
   unsigned is_rotated : 8; /* used by tail */
@@ -1362,15 +1360,6 @@ static int pipevp_close(FILE *f, pid_t pid)
   sig_restore_enable;
   return status;
 }
-#else
-static int se_pclose(FILE *f)
-{
-  int ret;
-  sig_save_enable;
-  ret = pclose(f);
-  sig_restore_enable;
-  return ret;
-}
 #endif
 
 val pipe_close_status_helper(val stream, val throw_on_error,
@@ -1419,8 +1408,6 @@ static val pipe_close(val stream, val throw_on_error)
   if (h->f != 0) {
 #if HAVE_FORK_STUFF
     int status = pipevp_close(h->f, h->pid);
-#else
-    int status = se_pclose(h->f);
 #endif
     h->f = 0;
 
@@ -1759,13 +1746,6 @@ val make_tail_stream(FILE *f, val descr)
   stream_set_prop(stream, real_time_k, t);
   return stream;
 }
-
-#if !HAVE_FORK_STUFF
-val make_pipe_stream(FILE *f, val descr)
-{
-  return make_stdio_stream_common(f, descr, &pipe_ops.cobj_ops);
-}
-#endif
 
 #if HAVE_SOCKETS
 val make_sock_stream(FILE *f, val family, val type)
@@ -4387,7 +4367,7 @@ static int fds_getfd(val stream, val self)
   return fd_sub;
 }
 
-#if !HAVE_FORK_STUFF || HAVE_WSPAWN || HAVE_SPAWN
+#if HAVE_WSPAWN || HAVE_SPAWN
 static int fds_subst(int fd_sub, int fd_std, val self)
 {
   if (fd_sub == fd_std)
@@ -4426,7 +4406,7 @@ static void fds_prepare(struct save_fds *fds, int flags, val self)
     fds->suberr = fds_getfd(std_error, self);
 }
 
-#if !HAVE_FORK_STUFF || HAVE_WSPAWN || HAVE_SPAWN
+#if HAVE_WSPAWN || HAVE_SPAWN
 static void fds_swizzle(struct save_fds *fds, int flags, val self)
 {
   if ((flags & FDS_IN) != 0)
@@ -4677,138 +4657,6 @@ val open_command(val command, val mode_str)
   return open_process(interp, mode_str, list(opt, command, nao));
 }
 
-#else
-
-val open_command(val path, val mode_str)
-{
-  val self = lit("open-command");
-  struct stdio_mode m, m_r = stdio_mode_init_r;
-  val mode = normalize_mode_no_bin(&m, mode_str, m_r);
-  int input = m.read != 0;
-  struct save_fds sfds;
-  FILE *f = 0;
-  int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
-
-  if (!input)
-    flush_stream(std_output);
-
-  fds_init(&sfds);
-
-  uw_simple_catch_begin;
-
-  fds_prepare(&sfds, fds_flags, self);
-
-  fds_swizzle(&sfds, fds_flags, self);
-
-  f = w_popen(c_str(path, self), c_str(mode, self));
-
-  if (!f) {
-    int eno = errno;
-    uw_ethrowf(errno_to_file_error(eno), lit("~a: error opening pipe ~s: ~d/~s"),
-               self, path, num(eno), errno_to_str(eno), nao);
-  }
-
-  uw_unwind {
-    fds_restore(&sfds);
-  }
-
-  uw_catch_end;
-
-  return set_mode_props(m, make_pipe_stream(f, path));
-}
-
-
-static void string_extend_count(int count, val out, val tail)
-{
-  int i;
-  for (i = 0; i < count; i++)
-    string_extend(out, tail);
-}
-
-static val win_escape_cmd(val str)
-{
-  const wchar_t *s;
-  val out = string(L"");
-
-  for (s = c_str(str, nil); *s; s++) {
-    switch (*s) {
-    case ' ': case '\t':
-      string_extend(out, lit("\""));
-      string_extend(out, chr(*s));
-      string_extend(out, lit("\""));
-      break;
-    default:
-      string_extend(out, chr(*s));
-    }
-  }
-
-  return out;
-}
-
-static val win_escape_arg(val str)
-{
-  int bscount = 0, i;
-  const wchar_t *s;
-  val out = string(L"");
-
-  for (s = c_str(str, nil); *s; s++) {
-    switch (*s) {
-    case '"':
-      string_extend_count(bscount, out, lit("\\\\"));
-      string_extend(out, lit("\\^\""));
-      bscount = 0;
-      break;
-    case '\\':
-      bscount++;
-      break;
-    case '^': case '%': case '!':
-    case '\n': case '&': case '|':
-    case '<': case '>':
-    case '(': case ')':
-      for (i = 0; i < bscount; i++)
-        string_extend_count(bscount, out, lit("\\"));
-      string_extend(out, chr('^'));
-      string_extend(out, chr(*s));
-      break;
-    default:
-      for (i = 0; i < bscount; i++)
-        string_extend_count(bscount, out, lit("\\"));
-      string_extend(out, chr(*s));
-      bscount = 0;
-      break;
-    }
-  }
-
-  for (i = 0; i < bscount; i++)
-    string_extend(out, lit("\\"));
-
-  return out;
-}
-
-static val win_make_cmdline(val args)
-{
-  val out = string(L"");
-
-  string_extend(out, win_escape_cmd(pop(&args)));
-  string_extend(out, chr(' '));
-
-  while (args) {
-    string_extend(out, lit("^\""));
-    string_extend(out, win_escape_arg(pop(&args)));
-    if (args)
-      string_extend(out, lit("^\" "));
-    else
-      string_extend(out, lit("^\""));
-  }
-
-  return out;
-}
-
-val open_process(val name, val mode_str, val args)
-{
-  val win_cmdline = win_make_cmdline(cons(name, default_null_arg(args)));
-  return open_command(win_cmdline, mode_str);
-}
 #endif
 
 #if HAVE_WSPAWN || HAVE_SPAWN
@@ -4968,14 +4816,16 @@ out:
   return ret;
 }
 
-#else
-#error port me!
 #endif
+
+#if HAVE_WSPAWN || HAVE_SPAWN || HAVE_FORK_STUFF
 
 static val sh(val command)
 {
   return run(shell, list(shell_arg, command, nao));
 }
+
+#endif
 
 val remove_path(val path, val throw_on_error)
 {
@@ -5689,8 +5539,10 @@ void stream_init(void)
 #if HAVE_FORK_STUFF
   reg_fun(intern(lit("open-subprocess"), user_package), func_n4o(open_subprocess, 2));
 #endif
+#if HAVE_WSPAWN || HAVE_SPAWN || HAVE_FORK_STUFF
   reg_fun(intern(lit("sh"), user_package), func_n1(sh));
   reg_fun(intern(lit("run"), user_package), func_n2o(run, 1));
+#endif
   reg_fun(intern(lit("remove-path"), user_package), func_n2o(remove_path, 1));
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
   reg_fun(intern(lit("open-files"), user_package), func_n3o(open_files, 1));

@@ -385,18 +385,6 @@ FILE *w_fopen(const wchar_t *wname, const wchar_t *wmode)
   return f;
 }
 
-#if !HAVE_FORK_STUFF
-FILE *w_popen(const wchar_t *wcmd, const wchar_t *wmode)
-{
-  char *cmd = utf8_dup_to(wcmd);
-  char *mode = utf8_dup_to(wmode);
-  FILE *f = popen(cmd, mode);
-  free(cmd);
-  free(mode);
-  return f;
-}
-#endif
-
 FILE *w_fdopen(int fd, const wchar_t *wmode)
 {
   char *mode = utf8_dup_to(wmode);

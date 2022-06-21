@@ -179,9 +179,6 @@ val errno_to_string(val err);
 val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);
-#if !HAVE_FORK_STUFF
-val make_pipe_stream(FILE *, val descr);
-#endif
 val pipe_close_status_helper(val stream, val throw_on_error,
                              int status, val self);
 val stream_fd(val stream);
