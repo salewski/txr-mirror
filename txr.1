@@ -60078,6 +60078,31 @@ These additional calls ignore the
 .meta throw-on-error-p
 argument.
 
+The
+.meta stream
+may be associated with a process, in one of several ways: implicitly,
+by the functions
+.code open-process
+and
+.code open-command
+and related functions, or explicitly by the
+.code open-fileno
+function, if a
+.meta pid
+argument is specified.
+In this situation,
+.code close-stream
+waits for the termination of that process, after closing the underlying file descriptor.
+If the process terminates normally, then
+.code close-stream
+returns its termination status, which is zero if the termination is successful.
+If the status of the process cannot be obtained, or is an abnormal termination, then
+the return value is
+.codn nil .
+In that situation, if
+.meta throw-on-error-p
+is true, an exception is thrown instead.
+
 .coNP Macro @ with-stream
 .synb
 .mets (with-stream >> ( stream-var << init-form )
@@ -72410,12 +72435,12 @@ arguments are Boolean, rather than integer values.
 
 .coNP Function @ open-fileno
 .synb
-.mets (open-fileno < file-descriptor <> [ mode-string ])
+.mets (open-fileno < file-descriptor >> [ mode-string <> [ pid ]])
 .syne
 .desc
 The
 .code open-fileno
-function creates a \*(TX stream over a file descriptor. The
+function creates and returns a \*(TX stream over a file descriptor. The
 .meta file-descriptor
 argument must be an integer denoting a valid file descriptor.
 
@@ -72424,6 +72449,16 @@ For a description of
 see the
 .code open-file
 function.
+
+If the
+.meta pid
+argument is present, it must be a positive integer corresponding
+to a process ID. The
+.code open-fileno
+function will associate the process ID with the returned stream.
+When the stream is closed with
+.codn close-stream ,
+special handling takes place, as documented for that function.
 
 .coNP Function @ fileno
 .synb
