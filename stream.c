@@ -1367,33 +1367,21 @@ val pipe_close_status_helper(val stream, val throw_on_error,
   if (status < 0) {
     if (throw_on_error)
       uw_ethrowf(process_error_s,
-                 lit("~a: unable to obtain status of command ~s: ~d/~s"),
+                 lit("~a: stream ~s: unable to obtain status of process: ~d/~s"),
                  self, stream, num(errno), errno_to_str(errno), nao);
     return nil;
   } else {
 #if HAVE_SYS_WAIT
-    if (default_null_arg(throw_on_error)) {
-      if (WIFSIGNALED(status)) {
-        int termsig = WTERMSIG(status);
-        uw_throwf(process_error_s, lit("~a: pipe ~s terminated by signal ~a"),
-                  self, stream, num(termsig), nao);
-#ifndef WIFCONTINUED
-#define WIFCONTINUED(X) 0
-#endif
-      } else if (WIFSTOPPED(status) || WIFCONTINUED(status)) {
-        uw_throwf(process_error_s,
-                  lit("~s, processes of closed pipe ~s still running"),
-                  self, stream, nao);
-      }
-    }
     if (WIFEXITED(status)) {
       int exitstatus = WEXITSTATUS(status);
       return num(exitstatus);
+    } else if (default_null_arg(throw_on_error)) {
+      if (WIFSIGNALED(status)) {
+        int termsig = WTERMSIG(status);
+        uw_throwf(process_error_s, lit("~a: stream ~s: process terminated by signal ~a"),
+                  self, stream, num(termsig), nao);
+      }
     }
-#else
-    if (status != 0 && default_null_arg(throw_on_error))
-      uw_throwf(process_error_s, lit("~a: closing pipe ~s failed"),
-                self, stream, nao);
 #endif
     return status == 0 ? zero : nil;
   }
