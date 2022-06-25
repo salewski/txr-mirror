@@ -1360,7 +1360,6 @@ static int pipevp_close(FILE *f, pid_t pid)
   sig_restore_enable;
   return status;
 }
-#endif
 
 val pipe_close_status_helper(val stream, val throw_on_error,
                              int status, val self)
@@ -1406,9 +1405,7 @@ static val pipe_close(val stream, val throw_on_error)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
   if (h->f != 0) {
-#if HAVE_FORK_STUFF
     int status = pipevp_close(h->f, h->pid);
-#endif
     h->f = 0;
 
     return pipe_close_status_helper(stream, throw_on_error, status, self);
@@ -1444,6 +1441,7 @@ static struct strm_ops pipe_ops =
                 stdio_get_error_str,
                 stdio_clear_error,
                 stdio_get_fd);
+#endif
 
 static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
                                        val self)
@@ -5590,7 +5588,9 @@ void stream_init(void)
   fill_stream_ops(&null_ops);
   fill_stream_ops(&stdio_ops);
   fill_stream_ops(&tail_ops);
+#if HAVE_FORK_STUFF
   fill_stream_ops(&pipe_ops);
+#endif
   fill_stream_ops(&string_in_ops);
   fill_stream_ops(&byte_in_ops);
   fill_stream_ops(&strlist_in_ops);
