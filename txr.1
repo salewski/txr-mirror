@@ -62805,9 +62805,9 @@ the file is extended by appending the new data to its end.
 
 .coNP Functions @, command-get @ command-get-string and @ command-get-lines
 .synb
-.mets (command-get << cmd )
-.mets (command-get-string << cmd )
-.mets (command-get-lines << cmd )
+.mets (command-get < cmd <> [ mode-opts ])
+.mets (command-get-string < cmd <> [ mode-opts ])
+.mets (command-get-lines < cmd <> [ mode-opts ])
 .syne
 .desc
 The
@@ -62841,9 +62841,9 @@ list is consumed to the end, as indicated in the description of
 
 .coNP Functions @, command-put @ command-put-string and @ command-put-lines
 .synb
-.mets (command-put < cmd << obj )
-.mets (command-put-string < cmd << string )
-.mets (command-put-lines < cmd << list )
+.mets (command-put < cmd < obj <> [ mode-opts ])
+.mets (command-put-string < cmd < string <> [ mode-opts ])
+.mets (command-put-lines < cmd < list <> [ mode-opts ])
 .syne
 .desc
 The
@@ -62887,7 +62887,7 @@ to the stream using the
 function. The return value is that of
 .codn put-lines .
 
-.SS* Buffer streams
+.<SS* Buffer streams
 A stream type exists which allows
 .code buf
 objects to be manipulated through the stream interface.
@@ -79258,8 +79258,8 @@ in order to append data to the target file rather than overwrite it.
 
 .coNP Functions @ command-get-json and @ command-get-jsons
 .synb
-.mets (command-get-json << cmd )
-.mets (command-get-jsons << cmd )
+.mets (command-get-json < cmd <> [ mode-opts ])
+.mets (command-get-jsons < cmd <> [ mode-opts ])
 .syne
 .desc
 The
@@ -79287,8 +79287,8 @@ on the stream, and returns the value returned by that function.
 
 .coNP Functions @ command-put-json and @ command-put-jsons
 .synb
-.mets (command-put-json < cmd < obj <> [ flat-p ])
-.mets (command-put-jsons < cmd < seq <> [ flat-p ])
+.mets (command-put-json < cmd < obj >> [ flat-p <> [ mode-opts ]])
+.mets (command-put-jsons < cmd < seq >> [ flat-p <> [ mode-opts ]])
 .syne
 .desc
 The
