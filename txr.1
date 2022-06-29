@@ -62534,9 +62534,7 @@ situation also.
 
 If a coprocess terminates abnormally or unsuccessfully, an exception is raised.
 
-On platforms which have the
-.code fork
-function, the
+The
 .meta mode-string
 argument of
 .code open-process
@@ -62619,22 +62617,11 @@ output of the process. In that process, standard error is redirected
 to standard output, standard input is connected to the null device,
 and descriptor 27 is redirected to descriptor 31.
 
-Note: on platforms which don't have a
-.code fork
-function, the implementation of
-.code open-process
-is simulated via
-.code open-command
-and therefore does not support the redirection syntax; it is parsed
-and ignored.
-
 The
 .code open-subprocess
 function is a variant of
-.code open-process
-that is available on platforms which have a
-.code fork
-function. This function has all the same argument conventions and semantics as
+.codn open-process .
+This function has all the same argument conventions and semantics as
 .codn open-process ,
 adding the
 .meta function
