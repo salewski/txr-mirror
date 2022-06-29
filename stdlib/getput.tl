@@ -86,8 +86,8 @@
   (with-stream (s (open-file name `a@mopt`))
     (put-string string s)))
 
-(defun file-get-lines (name)
-  (get-lines (open-file name)))
+(defun file-get-lines (name : mopt)
+  (get-lines (open-file name `r@mopt`)))
 
 (defun file-put-lines (name lines : mopt)
   (with-stream (s (open-file name `w@mopt`))
