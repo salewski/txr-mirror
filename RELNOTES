@@ -1,3 +1,36 @@
+                                    TXR 278
+                                   2022-06-01
+
+
+  Features
+
+  - New str function for making a string filled with
+    repeating pattern.
+  - Syntax: stricter check in for/for* loop syntax.
+  - I/O:
+    - open-fileno (TXR's "fdopen") now takes pid argument, to associate
+      the resulting stream with a process.
+      - close-stream will subsequently wait on that process, and convert
+        the status to a return value or exception.
+    - all I/O convenience functions like command-get-linews
+      now have a mode-opt argument.
+      - For instance "z" can be used for compressed I/O.
+
+  Bugs
+
+  - Build: broken when no HAVE_ZLIB.
+  - Command line: broken --free-all option.
+  - String output streams: GC issue, occuring in some builds.
+  - Listener: properly handle warnings coming out of code that is
+    autoloaded during Tab completion.
+    - Issue seen when working on TXR, with library .tlo files removed,
+      so .tl files are used.
+  - Compiler: failure in optimizer.
+  - Compression: missing "z" support in open-command.
+  - Missing: mode-opt argument of file-get-lines now implemented.
+
+
+
                                     TXR LZ77  :-)
                                    2022-05-31
 

@@ -188,6 +188,9 @@ extern val oflag_s, ospeed_s, termios_s;
 extern val domainname_s, machine_s, nodename_s, release_s, sysname_s;
 extern val utsname_s, version_s;
 #endif
+#if HAVE_ZLIB
+extern val gzio_stream_s;
+#endif
 
 val *protected_sym[] = {
   &abs_s, &accept_s, &acos_s, &acosh_s, &addr_k,
@@ -345,6 +348,9 @@ val *protected_sym[] = {
 #if HAVE_UNAME
   &domainname_s, &machine_s, &nodename_s, &release_s, &sysname_s,
   &utsname_s, &version_s,
+#endif
+#if HAVE_ZLIB
+  &gzio_stream_s,
 #endif
   convert(val *, 0)
 };
