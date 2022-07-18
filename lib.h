@@ -724,6 +724,7 @@ val countqual(val obj, val list);
 val countql(val obj, val list);
 val countq(val obj, val list);
 val count_if(val pred, val list, val key);
+val count(val item, val seq, val testfun_in, val keyfun_in);
 val some_satisfy(val list, val pred, val key);
 val all_satisfy(val list, val pred, val key);
 val none_satisfy(val list, val pred, val key);

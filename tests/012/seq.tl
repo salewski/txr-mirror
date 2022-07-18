@@ -489,3 +489,13 @@
   [partition-if fn "a13cd9foo42z" 2] ("a13" "cd9" "foo42z")
   [partition-if fn "a13cd9foo42z" 1] ("a13" "cd9foo42z")
   [partition-if fn "a13cd9foo42z" 0] ("a13cd9foo42z"))
+
+(mtest
+  [count 1 nil] 0
+  [count 1 '(1 2 3 4 1 5)] 2
+  [count "abc" '("foo" "bar" "ABC" "abc" "def" "abc")] 2
+  [count "ABC" '("foo" "bar" "ABC" "abc" "def" "abc") : upcase-str] 3)
+
+(compile-only
+  (test
+    [count #1="abc" '("abc" "abc" "abc" #1# "abc" #1#" abc") eq] 2))

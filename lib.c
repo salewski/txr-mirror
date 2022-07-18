@@ -3373,6 +3373,31 @@ val count_if(val pred, val seq, val key_in)
              plus(unum(count), ash(ocount, num_fast(CHAR_BIT * sizeof count))));
 }
 
+val count(val item, val seq, val testfun_in, val keyfun_in)
+{
+  val self = lit("count");
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
+  seq_iter_t iter;
+  ucnum count = 0;
+  val ocount = zero;
+  val elem;
+
+  seq_iter_init(self, &iter, z(seq));
+
+  while (seq_get(&iter, &elem)) {
+    val subj = funcall1(keyfun, elem);
+    if (funcall2(testfun, item, subj))
+      if (++count == 0)
+        ocount = plus(ocount, one);
+  }
+
+  return if3(ocount == zero,
+             unum(count),
+             plus(unum(count), ash(ocount, num_fast(CHAR_BIT * sizeof count))));
+
+}
+
 val some_satisfy(val seq, val pred_in, val key_in)
 {
   val pred = default_arg(pred_in, identity_f);

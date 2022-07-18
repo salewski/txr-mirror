@@ -34433,31 +34433,67 @@ to
 .metn object ,
 and return the count.
 
-.coNP Function @ count-if
+.coNP Functions @ count and @ count-if
 .synb
-.mets (count-if < predicate-function < iterable <> [ key-function ])
+.mets (count < key < sequence >> [ testfun <> [ keyfun ]])
+.mets (count-if < predfun < iterable <> [ keyfun ])
 .syne
 .desc
 The
+.code count
+and
 .code count-if
-function counts the number of elements of
-.meta iterable
-which satisfy
-.meta predicate-function
-and returns the count.
+functions search through
+.meta sequence
+for items which match
+.metn key ,
+or satisfy the predicate function
+.metn predfun ,
+respectively. They return the number of matching or predicate-satisfying items.
 
-The optional
-.meta key-function
-specifies how each element from
-.meta iterable
-is transformed to an argument to
-.metn predicate-function .
-If this argument is omitted
-then the predicate function is applied to the elements directly, a behavior
-which is identical to
-.meta key-function
-being
-.codn "(fun identity)" .
+The
+.meta keyfun
+argument specifies a function which is applied to the elements
+of
+.meta sequence
+to produce the comparison key. If this argument is omitted,
+then the untransformed elements of
+.meta sequence
+are examined.
+
+The
+.code count
+function's
+.meta testfun
+argument specifies the test function which
+is used to compare the comparison keys from
+.meta sequence
+to
+.metn key .
+If this argument is omitted, then the
+.code equal
+function is used.
+The
+.code count
+function returns the number of elements of
+.meta sequence
+whose comparison key (as retrieved by
+.metn keyfun )
+matches the
+.meta key
+object, as compared by
+.metn testfun .
+
+The
+.code count-if
+function's
+.meta predfun
+argument specifies a predicate function
+which is applied to the successive comparison keys taken from
+.metn sequence .
+The function returns the count of the number keys for which
+.meta predfun
+returns true.
 
 .coNP Functions @, posq @ posql and @ posqual
 .synb
