@@ -34559,15 +34559,19 @@ to
 If this argument is omitted, then the
 .code equal
 function is used.
-The position of the first element
+The
+.code pos
+function returns the position of the first element of
 .meta sequence
 whose comparison key (as
 retrieved by
 .metn keyfun )
-matches the search (under
-.metn testfun )
-is
-returned. If no such element is found,
+matches
+.metn key ,
+as compared by the
+.meta testfun
+function.
+If no such element is found,
 .code nil
 is returned.
 
