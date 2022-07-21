@@ -164,6 +164,8 @@ $(call SH,$(TXR) --in-package=sys --compile=$<:$@.tmp)
 $(call SH,mv $@.tmp $@)
 endef
 
+LN := ln
+
 ifneq ($(top_srcdir),)
 dbg/%.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,$(DBG_ONLY_FLAGS))
@@ -514,12 +516,23 @@ define INSTALL
 	  done)
 endef
 
+define HARDLINK
+  $(call ABBREV3,HARDLINK,$(1),$(2))
+  $(call SH,$(LN) -f $(1) $(2))
+endef
+
 PREINSTALL := :
 
 .PHONY: install
 install: $(PROG)
 	$(V)$(PREINSTALL)
 	$(call INSTALL,0755,txr$(EXE),$(DESTDIR)$(bindir))
+	$(call HARDLINK,\
+	   $(DESTDIR)$(bindir)/txr$(EXE),\
+	   $(DESTDIR)$(bindir)/txrlisp$(EXE))
+	$(call HARDLINK,\
+	   $(DESTDIR)$(bindir)/txr$(EXE),\
+	   $(DESTDIR)$(bindir)/txrvm$(EXE))
 	$(call INSTALL,0444,$(top_srcdir)LICENSE,$(DESTDIR)$(datadir))
 	$(call INSTALL,0444,$(top_srcdir)METALICENSE,$(DESTDIR)$(datadir))
 	$(call INSTALL,0444,$(top_srcdir)txr.1,$(DESTDIR)$(mandir)/man1)

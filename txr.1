@@ -501,6 +501,17 @@ description of this mode.  When \*(TX enters interactive mode this
 way, it prints a one-line banner announcing the program name and version,
 and one line of help text instructing the user how to exit.
 
+If \*(TX is invoked under the name
+.codn txrlisp ,
+it behaves as if the
+.code --lisp
+option had been specified before any other option.
+Similarly, if \*(TX is invoked under the name
+.codn txrvm ,
+it behaves as if the
+.code --compiled
+option had been given.
+
 Unless the
 .code -c
 or
@@ -88684,6 +88695,22 @@ directory, or else the second structure in which the
 directory is a direct subdirectory of the executable directory.
 If one of these structures is not observed, the application
 may fail due to the failure of a library file to load.
+
+If the executable discovers that its name ends in the suffix
+.str lisp
+(or else
+.str lisp.exe
+on the MS Windows platform) then the behavior is as if the
+.code --lisp
+command line option had been given.
+Similarly, if the executable finds that its name ends in
+.str vm
+(or
+.str vm.exe
+on MS Windows)
+it behaves as if the
+.code --compiled
+option had been given.
 
 .coSS Function @ save-exe
 .synb

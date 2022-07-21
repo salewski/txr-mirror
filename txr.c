@@ -587,6 +587,11 @@ int txr_main(int argc, char **argv)
 
   static char alt_args_buf[128 + 7] = "@(txr):", *alt_args = alt_args_buf + 7;
 
+  if (ends_with(lit("lisp" EXE_SUFF), prog_path, nil, nil))
+    txr_lisp_p = t;
+  else if (ends_with(lit("vm" EXE_SUFF), prog_path, nil, nil))
+    txr_lisp_p = chr('o');
+
   setvbuf(stderr, 0, _IOLBF, 0);
 
   if (compat_val && length(compat_val) != zero) {
