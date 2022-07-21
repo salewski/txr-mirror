@@ -2316,6 +2316,14 @@
                               (if (eql sti.gid sto.gid) sgid)))))
         (chmod out-stream mode)))))
 
+(defun translate-hash-bang (hbline)
+  (flow hbline
+    (spl " ")
+    (subst "--lisp" "--compiled")
+    (mapcar [iffi (op ends-with "txrlisp")
+                  (opip (trim-right "lisp") (join @1 "vm"))])
+    (ap join-with " ")))
+
 (defun compile-file-conditionally (in-path out-path test-fn)
   (whenlet ((success nil)
             (perms nil)
@@ -2338,11 +2346,9 @@
         (with-compilation-unit
           (iflet ((line (get-line in-stream))
                   ((starts-with "#!" line)))
-            (progn
-              (set line `@line `)
-              (upd line (regsub #/--lisp[^\-]/ (ret `--compiled@[@1 -1]`)))
-              (put-line (butlast line) out-stream)
-              (set perms t))
+            (let ((cline (translate-hash-bang line)))
+              (set perms t)
+              (put-line cline out-stream))
             (seek-stream in-stream 0 :from-start))
           (labels ((compile-form (unex-form)
                      (let* ((form (macroexpand unex-form))

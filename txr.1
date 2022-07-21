@@ -85486,10 +85486,24 @@ When a source file begins with the
 .code #!
 (hash bang) character sequence, the file compiler propagates that
 line (all characters up to and including the terminating newline) to the
-compiled file, subject to the following transformation: occurrences of
+compiled file, subject to the following transformation steps:
+.IP 1
+The line is divided into arguments, on the assumption that they are separated
+by exactly one space.
+.IP 2
+Then, all occurrences of the argument
 .str --lisp
-which are not followed by a dash are replaced with
+are replaced by
 .strn --compiled .
+.IP 3
+Next, all arguments which end in the suffix
+.str "txrlisp"
+have that suffix replaced by
+.strn "txrvm" .
+.IP 4
+The hash bang line is then reconstituted by joining the arguments
+with a single space.
+.PP
 
 Furthermore, certain permissions are propagated from a hash-bang source
 file to the target file. If the source file is executable to its owner,
