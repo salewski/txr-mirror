@@ -335,10 +335,8 @@ static void sysroot_init(void)
     prog_dir = scat3(prog_dir, chr(psc[0]), null_string);
 
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
-        maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
         maybe_sysroot(substitute_basename(lit(TXR_REL_PATH), prog_path)) ||
         (share_txr_stdlib = 0) ||
-        maybe_sysroot(lit(PROG_NAME)) ||
         maybe_sysroot(lit(PROG_NAME EXE_SUFF))))
   {
     sysroot_path = prog_dir;
