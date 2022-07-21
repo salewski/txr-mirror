@@ -2255,8 +2255,8 @@
       (".txr" (error "~s: cannot compile TXR files" 'compile-file))
       (".tl" (set in-stream (ignerr (open-file in-path))
                   out-path (or out-path `@{ip-nosuff}.tlo`)))
-      (t (set in-stream (or (ignerr (open-file `@{in-path}.tl`))
-                            (ignerr (open-file in-path)))
+      (t (set in-stream (or (ignerr (open-file in-path))
+                            (ignerr (open-file `@{in-path}.tl`)))
               out-path (or out-path `@{in-path}.tlo`))))
 
     (unless in-stream

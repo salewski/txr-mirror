@@ -86002,12 +86002,12 @@ or
 .code .txr
 then it is considered suffixed, otherwise it is considered unsuffixed.
 If it is suffixed, then the actual pathname is the same as the tentative pathname.
-In the unsuffixed case, two possible actual input pathnames are formed. First,
+In the unsuffixed case, two possible actual input pathnames are considered.
+First, if the unsuffixed path refers to a file that can be opened, then that
+unsuffixed path is taken as actual path. Otherwise,
 the suffix
 .code .tl
-is added to the tentative pathname. If that path exists, it is taken
-taken as the actual path. Otherwise, the unmodified tentative path
-is taken as the actual input path.
+is added to the tentative pathname, and that becomes the actual path.
 
 If the actual path ends in the suffix
 .code .txr
