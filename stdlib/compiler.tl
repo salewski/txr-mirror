@@ -2240,6 +2240,9 @@
                            intern unintern rehome-sym
                            use-sym unuse-sym))
 
+(defmacro ign-notfound (form)
+  ^(usr:catch ,form (path-not-found (. rest))))
+
 (defun open-compile-streams (in-path out-path test-fn)
   (if (and (nullify in-path)
            (find [in-path -1] path-sep-chars))
@@ -2253,10 +2256,10 @@
          in-stream out-stream)
     (casequal suff
       (".txr" (error "~s: cannot compile TXR files" 'compile-file))
-      (".tl" (set in-stream (ignerr (open-file in-path))
+      (".tl" (set in-stream (ign-notfound (open-file in-path))
                   out-path (or out-path `@{ip-nosuff}.tlo`)))
-      (t (set in-stream (or (ignerr (open-file in-path))
-                            (ignerr (open-file `@{in-path}.tl`)))
+      (t (set in-stream (or (ign-notfound (open-file in-path))
+                            (ign-notfound (open-file `@{in-path}.tl`)))
               out-path (or out-path `@{in-path}.tlo`))))
 
     (unless in-stream
@@ -2266,11 +2269,10 @@
       (close-stream in-stream)
       (return-from open-compile-streams nil))
 
-    (set out-stream (ignerr (open-file out-path "w")))
-
-    (unless out-stream
-      (close-stream in-stream)
-      (error "~s: unable to open output file ~s" 'compile-file out-path))
+    (unwind-protect
+      (set out-stream (open-file out-path "w"))
+      (unless out-stream
+        (close-stream in-stream)))
 
     (list in-stream out-stream out-path)))
 
