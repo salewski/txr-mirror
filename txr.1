@@ -71358,10 +71358,22 @@ and file system specific extended attributes (for example, file immutability
 connected to a "secure level" and such) and special process capabilities
 not reflected in the basic credentials.
 
-The accessibility tests use the real credentials of the caller, rather than the
-effective credentials. Thus, in a setuid process, where the real and effective
-privileges are different, the access tests inquire about whether the real user
-has the given access, not the effective user.
+With the exception of two functions, the accessibility tests use the real
+credentials of the caller, rather than the effective credentials. Thus, in a
+setuid process, where the real and effective privileges are different, the
+access tests inquire about whether the real user has the given access, not the
+effective user. In this aspect, the functions are similar to the POSIX
+.code access
+function which also uses real credentials.
+The functions
+.code path-private-to-me-p
+and
+.code path-strictly-private-to-me-p
+use effective credentials, because they answer a different question:
+can the given filesystem object be trusted? The trust has to be determined
+from the point of view of the effective user, because security-sensitive
+actions are being performed in their context; and the effective user
+does not trust the real user.
 
 .coNP Function @ path-exists-p
 .synb
@@ -71561,21 +71573,21 @@ functions report whether the calling process can rely on the
 object indicated by
 .code path
 to be, respectively, private or strictly private to the security context
-implied by its real user ID.
+implied by its effective user ID.
 
-"Private" means that beside the real user ID of the calling process and
+"Private" means that beside the effective user ID of the calling process and
 the superuser, no other user ID has write access to the object, and thus its
 contents may be trusted to be be free from tampering by any other user.
 
 "Strictly private" means that not only is the object private, as above,
-but users other than the real user ID of the calling process
+but users other than the effective user ID of the calling process
 and superuser also not not have read access.
 
 The rules which the function applies are as follows:
 
 A file to be examined is initially assumed to be strictly private.
 
-If the file is not owned by the real user ID of the caller, or
+If the file is not owned by the effective user ID of the caller, or
 else by the superuser, then it is not private.
 
 If the file grants write permission to "others", then it is not private.
