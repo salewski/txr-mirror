@@ -71624,7 +71624,7 @@ function is provided to perform a security check on an entire path.
 .mets (path-components-safe << path )
 .syne
 .desc
-The
+On Unix platforms, the
 .code path-components-safe
 performs a security check on an entire relative or absolute
 .metn path ,
@@ -71633,6 +71633,7 @@ returning
 if the entire path is examined without encountering an error, and
 the check passes, otherwise
 .codn nil .
+On native Microsoft Windows, the function unconditionally returns true.
 
 An exception may be thrown if an an inaccessible or nonexistent path
 component is encountered, too many symbolic links have to be resolved
