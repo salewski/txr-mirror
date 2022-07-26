@@ -1423,6 +1423,7 @@
       ("path-blkdev-p" "N-00198FC7")
       ("path-cat" "N-0033B27E")
       ("path-chrdev-p" "N-00198FC7")
+      ("path-components-safe" "N-02451630")
       ("path-dir-empty" "N-01EFC15D")
       ("path-dir-p" "N-00198FC7")
       ("path-equal" "N-02365F9E")

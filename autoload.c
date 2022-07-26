@@ -192,6 +192,7 @@ static val path_test_set_entries(val fun)
     lit("path-mine-p"), lit("path-my-group-p"), lit("path-executable-to-me-p"),
     lit("path-writable-to-me-p"), lit("path-readable-to-me-p"),
     lit("path-read-writable-to-me-p"),
+    lit("path-safe-sticky-dir"), lit("path-components-safe"),
     lit("path-newer"), lit("path-older"),
     lit("path-same-object"), lit("path-private-to-me-p"),
     lit("path-strictly-private-to-me-p"),

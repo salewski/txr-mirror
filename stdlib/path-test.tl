@@ -152,6 +152,78 @@
                  (and (all g.mem (orf (op equal name)
                                       (op equal suname))))))))))
 
+(eval-only
+  (defmacro if-windows (then : else)
+    (if (eql 2 (sizeof wchar))
+      then
+      else))
+
+  (defmacro if-native-windows (then : else)
+    (if-windows
+      ^(if (find #\\ path-sep-chars) ,then ,else)
+      else)))
+
+(defun path-safe-sticky-dir (st)
+  (let ((sdir (logior s-ifdir s-isvtx)))
+    (and (eql (logand st.mode sdir) sdir)
+         (zerop st.uid))))
+
+(defun path-components-safe (path)
+  (let* ((comps (spl path-sep-chars path))
+         (start "/"))
+    (iflet ((head (car comps)))
+      (and
+        (if-native-windows
+          (match-case head
+            (@(or "" `@{vol #/[A-Za-z]+:/}`)
+              (set start `@head`
+                   comps (cdr comps))
+              (path-private-to-me-p start))
+            (`@{vol #/A-Za-z]+:/}@name`
+              (set start `@vol@name`
+                   comps (cdr comps))
+              (and (path-private-to-me-p `@vol`)
+                   (path-private-to-me-p start)))
+            (@else
+              (set start ".")
+              (let ((st (stat start)))
+                (or (path-private-to-me-p st)
+                    (path-safe-sticky-dir st)))))
+          (cond
+            ((empty head)
+              (set start "/"
+                   comps (cdr comps))
+              (path-private-to-me-p "/"))
+            (t
+              (set start ".")
+              (let ((st (stat start)))
+                (or (path-private-to-me-p st)
+                    (path-safe-sticky-dir st))))))
+      (for ((ok t) (count 0) next (orig-start start))
+           ((and ok (set next (pop comps))) ok)
+           ()
+        (let* ((nxpath (path-cat start next))
+               (st (lstat nxpath)))
+          (cond
+            ((eql (logand st.mode s-ifmt) s-iflnk)
+             (if (> (inc count) 16)
+               (throwf 'file-error "~a: too many symbolic links"
+                       'path-components-safe))
+             (if (or (zerop st.uid)
+                     (eql st.uid (geteuid)))
+               (let* ((target (readlink nxpath))
+                      (tcomps (spl path-sep-chars target)))
+                 (set comps (nconc tcomps comps))
+                 (when (abs-path-p target)
+                   (set start "/")
+                   (if (nequal orig-start "/")
+                     (set ok (path-private-to-me-p "/")
+                          orig-start nil))))
+               (set ok nil)))
+            ((or (path-private-to-me-p st)
+                 (path-safe-sticky-dir st))
+             (set start nxpath))
+            (t (zap ok)))))))))
 
 (defmacro sys:path-examine ((sym statfun path) . body)
   ^[sys:do-path-test ,statfun ,path

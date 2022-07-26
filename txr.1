@@ -71610,28 +71610,48 @@ only the caller as a member. But by the time the file is subsequently accessed,
 the group might have been innocently extended by the system administrator to
 include additional users, who can maliciously modify the file.
 
-Also note that the function is vulnerable to a time-of-check to time-of-use
-race if
+Another issue is that if any components of
 .meta path
-is a string rather than a
-.code stat
-structure. If any components of the
-.meta path
-are symbolic links or directories that can be manipulated by other
-users, then the object named by
-.meta path
-file can pass the check, but can later
-.meta path
-can be subverted to refer to a different object.
+can be subverted by another user, test may not be trusted. It becomes
+vulnerable to a time-of-check to time-of-use race condition.
 
-One way to guard against this race is to open the file, then use
-.code fstat
-on the stream to obtain a
-.code stat
-structure which is then used as an argument to
-.code path-private-to-me-p
-or
-.codn path-strictly-private-to-me-p .
+The function
+.code path-components-safe
+function is provided to perform a security check on an entire path.
+
+.coNP Function @ path-components-safe
+.synb
+.mets (path-components-safe << path )
+.syne
+.desc
+The
+.code path-components-safe
+performs a security check on an entire relative or absolute
+.metn path ,
+returning
+.code t
+if the entire path is examined without encountering an error, and
+the check passes, otherwise
+.codn nil .
+
+An exception may be thrown if an an inaccessible or nonexistent path
+component is encountered, too many symbolic links have to be resolved
+or there is some other problem preventing the traversal of
+.metn path .
+
+The objective of this function is to determine that every portion of
+.code path
+is writable only to the effective user: that if the path is used for
+filesystem access, its meaning cannot be altered by an adversarial
+user who is able to control a symbolic link or a directory component.
+
+The function expands symbolic links on its own, one level at a time,
+and walks the components coming from a link target.
+
+Note: directories which are owned by root, and have the sticky bit, as
+is the usual configuration of
+.code tmp
+are considered safe, even though multiple users have write permissions.
 
 .coNP Functions @ path-newer and @ path-older
 .synb
