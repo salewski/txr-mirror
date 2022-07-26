@@ -939,42 +939,39 @@ val txr_parse(val source_in, val error_stream,
   return pi->syntax_tree;
 }
 
-static void report_security_problem(val name)
+static void report_file_perm_problem(val name)
 {
-  val self = lit("listener");
-  static int umask_warned;
-
   format(std_output,
-         lit("** possible security problem: ~a is writable to others\n"),
+         lit("** security problem: ~a is readable by others\n"),
          name, nao);
-#if HAVE_SYS_STAT
-  if (!umask_warned++)
-  {
-    val um = umask_wrap(colon_k);
-    if ((c_num(um, self) & 022) != 022) {
-      format(std_output,
-             lit("** possible reason: your umask has an insecure value: ~,03o\n"),
-             um, nao);
-    }
-  }
-#endif
 }
 
-static void load_rcfile(val name)
+static void report_path_perm_problem(val name)
+{
+  format(std_output,
+         lit("** security problem: a component of ~a is writable to others\n"),
+         name, nao);
+}
+
+static void load_rcfile(val name, val psafe_s, val ppriv_s)
 {
   val self = lit("listener");
   val resolved_name = name;
   val lisp_p = t;
   val stream = nil;
-  val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
+
+  if (!funcall1(psafe_s, name)) {
+    report_path_perm_problem(name);
+    return;
+  }
 
   uw_catch_begin (catch_error, sy, va);
 
   open_txr_file(name, &lisp_p, &resolved_name, &stream, nil, self);
 
   if (stream) {
-    if (!funcall1(path_private_to_me_p, stream)) {
-      report_security_problem(name);
+    if (!funcall1(ppriv_s, stream)) {
+      report_file_perm_problem(name);
     } else {
       val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
       env_vbind(dyn_env, load_path_s, resolved_name);
@@ -1563,7 +1560,9 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val counter_sym = intern(lit("*n"), user_package);
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
-  val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
+  val pexist_s =  intern(lit("path-exists-p"), user_package);
+  val ppriv_s =  intern(lit("path-strictly-private-to-me-p"), user_package);
+  val psafe_s = intern(lit("path-components-safe"), user_package);
   val result_hash = make_hash(hash_weak_none, nil);
   val done = nil;
   val counter = one;
@@ -1612,17 +1611,19 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   lino_set_enter_cb(ls, is_balanced_line, 0);
   lino_set_tempfile_suffix(ls, ".tl");
 
-  if (rcfile)
-    load_rcfile(rcfile);
+  if (rcfile && funcall1(pexist_s, rcfile))
+    load_rcfile(rcfile, psafe_s, ppriv_s);
 
   lino_hist_set_max_len(ls, c_num(cdr(hist_len_var), self));
 
-  if (histfile_w) {
-    if (lino_hist_load(ls, histfile_w) == 0 &&
-        !funcall1(path_private_to_me_p, histfile))
-    {
-      report_security_problem(histfile);
+  if (histfile_w && funcall1(pexist_s, rcfile)) {
+    if (!funcall1(psafe_s, home)) {
+      report_path_perm_problem(home);
+    } else if (!funcall1(ppriv_s, histfile)) {
+      report_file_perm_problem(histfile);
     }
+
+    lino_hist_load(ls, histfile_w);
   }
 
 #if CONFIG_FULL_REPL

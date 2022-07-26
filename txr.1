@@ -88156,12 +88156,16 @@ environment variable in POSIX environments or the
 environment variable on MS Windows. If that variable doesn't exist, no further
 attempt is made to locate this file.
 
-If the file exists, it is subject to a security check.
-The function
-.code path-private-to-me-p
-is applied to the file. If it returns
-.code nil
-then an error message is displayed and the file is not loaded.
+If the file exists, it is subject to security checks. First, the
+.code path-components-safe
+is applied to its path name. The function validates that no component
+of the path name is a directory that is writable to another user, or
+a symbolic link that could be rewritten by another user.
+If that check passes, the file is then checked with the function
+.code path-strictly-private-to-me-p
+which requires that other users have no read or write permission.
+If the checks fail, then an error message is displayed and the file is not
+loaded.
 
 If the file passes the security check, it is expected to be readable and
 to contain
@@ -88229,6 +88233,20 @@ Each invocation of
 only adds to the history file new input since the most recent
 .code :save
 command.
+
+When the history file is loaded, security checks take place, in exactly
+the same way that the
+.str .txr_profile
+file is validated. First the path of the history file is checked using
+the function
+.codn path-components-safe ,
+which determines that no component of the path name can be subverted
+by another user, other than the superuser.  If that check passes, then
+the file is checked using
+.code path-strictly-private-to-me-p
+which requires that other users have no read or write permission.
+If the checks fail, then an error message is displayed and the history
+file is not loaded.
 
 .SS* Parenthesis Matching
 
