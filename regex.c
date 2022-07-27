@@ -2898,9 +2898,20 @@ val regsub(val regex, val repl, val str)
   } else {
     val pos = zero;
     val out = mkustring(zero);
+    val slen = if2(stringp(regex), length(regex));
 
     do {
-      cons_bind (find, len, search_regex(str, regex, pos, nil));
+      val find, len;
+
+      if (slen) {
+        len = slen;
+        find = search_str(str, regex, pos, nil);
+      } else {
+        cons_bind (a, d, search_regex(str, regex, pos, nil));
+        find = a;
+        len = d;
+      }
+
       if (!find) {
         if (pos == zero)
           return str;

@@ -53100,7 +53100,9 @@ and
 
 .coNP Function @ regsub
 .synb
-.mets (regsub >> { regex | << function } < replacement << string )
+.mets (regsub < regex < replacement << string )
+.mets (regsub < substring < replacement << string )
+.mets (regsub < function < replacement << string )
 .syne
 .desc
 The
@@ -53109,10 +53111,14 @@ function operates in two modes, depending on whether
 the first argument is a regular expression,
 or function.
 
-If the first argument is a regular expression it searches
+If the first argument is a regular expression or string, then
+.code regsub
+searches
 .meta string
 for multiple occurrences of non-overlapping matches for that
-.metn regex .
+.meta regex
+or
+.metn substring .
 A new string is constructed
 similar to
 .meta string
@@ -53155,6 +53161,9 @@ which indicates that no replacement is to take place.
 
   ;; Replace Hello with Goodbye:
   (regsub #/Hello/ "Goodbye" "Hello world!") -> "Goodbye world!"
+
+  ;; Same, as a simple substring match, rather than regex:
+  (regsub "Hello" "Goodbye" "Hello world!") -> "Goodbye world!"
 
   ;; Left-anchored replacement with r^ function:
   (regsub (fr^ #/H/) "J" "Hello, hello!") -> "Jello, hello!"
