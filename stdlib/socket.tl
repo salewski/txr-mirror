@@ -252,7 +252,6 @@
            (set addr.prefix prefix)
            addr)))
       ((r^$ #/[\da-fA-F]*(:[\da-fA-F]*)*/ str)
-       (upd str (regsub "::" "@"))
        (let* ((str-splat (regsub "::" "@" str))
               (maj-pieces (spl #\@ str-splat)))
          (caseql (len maj-pieces)
