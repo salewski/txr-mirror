@@ -2896,25 +2896,25 @@ val regsub(val regex, val repl, val str)
                          rf, rt);
     }
   } else {
-    list_collect_decl (out, ptail);
     val pos = zero;
+    val out = mkustring(zero);
 
     do {
       cons_bind (find, len, search_regex(str, regex, pos, nil));
       if (!find) {
         if (pos == zero)
           return str;
-        ptail = list_collect(ptail, sub_str(str, pos, nil));
-        break;
+        return string_extend(out, sub_str(str, pos, nil), t);
       }
-      ptail = list_collect(ptail, sub_str(str, pos, find));
-      ptail = list_collect(ptail, if3(isfunc,
-                                      funcall1(repl, sub_str(str, find,
-                                                             plus(find, len))),
-                                      repl));
+      string_extend(out, sub_str(str, pos, find), nil);
+      string_extend(out, if3(isfunc,
+                             funcall1(repl, sub_str(str, find,
+                                                    plus(find, len))),
+                             repl),
+                    nil);
       if (len == zero && eql(find, pos)) {
         if (lt(pos, length_str(str))) {
-          ptail = list_collect(ptail, chr_str(str, pos));
+          string_extend(out, chr_str(str, pos), nil);
           pos = plus(pos, one);
         }
       } else {
@@ -2922,7 +2922,7 @@ val regsub(val regex, val repl, val str)
       }
     } while (lt(pos, length_str(str)));
 
-    return cat_str(out, nil);
+    return string_finish(out);
   }
 }
 
