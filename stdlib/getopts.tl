@@ -130,7 +130,7 @@
       (:cint (set me.arg
                   (cond
                     ((r^$ #/[+\-]?0x[\da-fA-F]+/ me.arg)
-                     (int-str (regsub #/0x/ "" me.arg) 16))
+                     (int-str (regsub "0x" "" me.arg) 16))
                     ((r^$ #/[+\-]?0[0-7]+/ me.arg)
                      (int-str me.arg 8))
                     ((r^$ #/[+\-]?0[\da-fA-F]+/ me.arg)

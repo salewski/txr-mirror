@@ -114,7 +114,7 @@
   ^(fmt ,`~@(if chr chr)@(len fmt)a` ,val))
 
 (defun pic-join-opt (join-form)
-  (labels ((et (str) (regsub #/\~/ "~~" str)))
+  (labels ((et (str) (regsub "~" "~~" str)))
     (match-case join-form
       ((join @(stringp @s) (fmt `@fmt` . @args) . @rest)
        (pic-join-opt ^(join (fmt ,`@(et s)@fmt` ,*args) ,*rest)))

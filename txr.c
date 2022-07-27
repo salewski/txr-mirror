@@ -321,13 +321,10 @@ static void sysroot_init(void)
   const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
   int share_txr_stdlib = 1;
 
-#if HAVE_WINDOWS_H
-  val slash = regex_compile(lit("\\\\"), nil);
-#endif
   protect(&prog_path, &sysroot_path, &stdlib_path, convert(val *, 0));
   prog_path = get_self_path();
 #if HAVE_WINDOWS_H
-  prog_path = regsub(slash, lit("/"), prog_path);
+  prog_path = regsub(lit("\\"), lit("/"), prog_path);
 #endif
   prog_dir = dir_name(prog_path);
 
