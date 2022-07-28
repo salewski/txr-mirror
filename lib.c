@@ -5093,14 +5093,22 @@ val string_get_code(val str)
 
 val stringp(val str)
 {
-  switch (type(str)) {
-  case LIT:
-  case STR:
-  case LSTR:
+  if (str) switch (tag(str)) {
+  case TAG_LIT:
     return t;
+  case TAG_PTR:
+    switch (str->t.type) {
+    case STR:
+    case LSTR:
+      return t;
+    default:
+      break;
+    }
+    /* fallthrough */
   default:
-    return nil;
+    break;
   }
+  return nil;
 }
 
 val lazy_stringp(val str)
