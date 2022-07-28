@@ -2603,33 +2603,84 @@ val square(val anum)
 
 val gcd(val anum, val bnum)
 {
-  val n;
+  val self = lit("gcd");
+  ucnum ua, ub;
 
-  if (!integerp(anum) || !integerp(bnum))
-    goto inval;
+  switch (TYPE_PAIR(type(anum), type(bnum))) {
+  case TYPE_PAIR(BGNUM, BGNUM):
+    if (mp_in_uintptr_range(mp(anum)) && mp_in_uintptr_range(mp(bnum))) {
+      ua = c_unum(anum, self);
+      ub = c_unum(bnum, self);
+      goto both_ucnum;
+    } else {
+      val n = make_bignum();
+      if (mp_gcd(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
+        break;
+      return normalize(n);
+    }
+  case TYPE_PAIR(NUM, NUM):
+    if (anum == zero)
+      return bnum;
+    if (bnum == zero)
+      return anum;
+    ua = c_u(anum);
+    ub = c_u(bnum);
+  both_ucnum:
+    {
+      int k = 0;
+      while ((ua & 1) == 0 && (ub & 1) == 0) {
+        ua >>= 1;
+        ub >>= 1;
+        k++;
+      }
+      while ((ub & 1) == 0)
+        ub >>= 1;
+      while ((ua & 1) == 0)
+        ua >>= 1;
+      for (;;) {
+        if (ua > ub) {
+          ucnum tmp = ua;
+          ua = ub;
+          ub = tmp;
+        }
+        ub -= ua;
+        if (ub == 0)
+          break;
+        while ((ub & 1) == 0)
+          ub >>= 1;
+      }
+      return unum(ua << k);
+    }
+  case TYPE_PAIR(NUM, BGNUM):
+    {
+      val tmp = anum;
+      anum = bnum;
+      bnum = tmp;
+    }
+    /* fallthrough */
+  case TYPE_PAIR(BGNUM, NUM):
+    if (mp_in_uintptr_range(mp(anum))) {
+      ua = c_unum(anum, self);
+      ub = c_u(bnum);
+      goto both_ucnum;
+    } else {
+      mp_int bn;
+      val n = make_bignum();
 
-  if (anum == zero)
-    return bnum;
+      mp_init(&bn);
+      mp_set_intptr(&bn, c_u(bnum));
+      if (mp_gcd(mp(anum), &bn, mp(n)) != MP_OKAY) {
+        mp_clear(&bn);
+        break;
+      }
+      mp_clear(&bn);
+      return normalize(n);
+    }
+  default:
+    uw_throwf(error_s, lit("gcd: non-integral operands ~s ~s"),
+              anum, bnum, nao);
+  }
 
-  if (bnum == zero)
-    return anum;
-
-  if (fixnump(anum))
-    anum = bignum(c_n(anum));
-
-  if (fixnump(bnum))
-    bnum = bignum(c_n(bnum));
-
-  n = make_bignum();
-
-  if (mp_gcd(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
-    goto bad;
-
-  return normalize(n);
-inval:
-  uw_throwf(error_s, lit("gcd: non-integral operands ~s ~s"),
-            anum, bnum, nao);
-bad:
   uw_throwf(error_s, lit("gcd: operation failed on ~s ~s"),
             anum, bnum, nao);
 }

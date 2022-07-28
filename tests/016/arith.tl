@@ -372,3 +372,32 @@
   (some-false ((a '(1 2 3)) (b '(4 5 6))) (> a b)) t
   (some-false ((a '(1 2 3)) (b '(4 0 6))) (> a b)) t
   (some-false ((a '(1 2 3)) (b '(0 1 2))) (> a b)) nil)
+
+
+(mvtest
+  (gcd 0 0) 0
+  (gcd 0 1) 1
+  (gcd 1 0) 1
+  (gcd 100 0) 100
+  (gcd 0 100) 100
+  (gcd 0 (expt 10 60)) (expt 10 60)
+  (gcd (expt 10 60) 0) (expt 10 60))
+
+(defun power-set (s)
+  (mappend* (op comb s) (range 0 (len s))))
+
+(defun gcd-grind (primes)
+  (each-prod ((lp (cdr (power-set primes)))
+              (rp (cdr (power-set primes))))
+    (let ((ip (isec lp rp)))
+      (vtest (gcd (* . lp) (* . rp)) (* . ip)))))
+
+(each ((x 0..64)
+       (y 0..64))
+  (vtest (gcd (ash 1 x) (ash 1 y)) (ash 1 (min x y)))
+  (vtest (gcd (ash 3 x) (ash 5 y)) (ash 1 (min x y)))
+  (vtest (gcd (ash 6 x) (ash 15 y)) (ash 3 (min x y))))
+
+(gcd-grind '(2 3 5 7 11 13 17 19 23))
+
+(gcd-grind '(2 3 5 4294967291 4294967311 4294967357 4294967371))
