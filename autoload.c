@@ -197,6 +197,7 @@ static val path_test_set_entries(val fun)
     lit("path-same-object"), lit("path-private-to-me-p"),
     lit("path-strictly-private-to-me-p"),
     lit("path-dir-empty"),
+    lit("rel-path"), lit("path-equal"),
     nil
   };
   autoload_set(al_fun, name, fun);
@@ -747,8 +748,7 @@ static val copy_file_set_entries(val fun)
   val name[] = {
     lit("copy-file"), lit("copy-files"), lit("cat-files"),
     lit("copy-path-rec"), lit("remove-path-rec"),
-    lit("chown-rec"), lit("chmod-rec"), lit("touch"), lit("rel-path"),
-    lit("path-equal"),
+    lit("chown-rec"), lit("chmod-rec"), lit("touch"),
     nil
   };
   autoload_set(al_struct, sname, fun);
