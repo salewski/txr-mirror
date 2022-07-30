@@ -204,8 +204,7 @@
   (if-native-windows
     t
     (let* ((abs-p (abs-path-p path))
-           (comps (sspl path-sep-chars path))
-           (comps (if abs-p (cdr comps) comps))
+           (comps (remqual "" (sspl path-sep-chars path)))
            (start (if abs-p "/" ".")))
       (if (and
             (nullify path)
@@ -228,8 +227,7 @@
                        (eql st.uid (geteuid)))
                  (let* ((target (readlink nxpath))
                         (abs-p (abs-path-p target))
-                        (tcomps (sspl path-sep-chars target))
-                        (tcomps (if abs-p (cdr tcomps) tcomps)))
+                        (tcomps (remqual "" (sspl path-sep-chars target))))
                    (when abs-p
                      (set start "/"
                           ok (and (safe-abs-path comps)
