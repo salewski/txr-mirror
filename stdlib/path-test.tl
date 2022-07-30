@@ -222,8 +222,9 @@
                (if (> (inc count) 16)
                  (throwf 'file-error "~a: too many symbolic links"
                          'path-components-safe))
-               (if (or (zerop st.uid)
-                       (eql st.uid (geteuid)))
+               (if (and (eql 1 st.nlink)
+                        (or (zerop st.uid)
+                            (eql st.uid (geteuid))))
                  (let* ((target (readlink nxpath))
                         (abs-p (abs-path-p target))
                         (tcomps (remqual "" (sspl path-sep-chars target))))
