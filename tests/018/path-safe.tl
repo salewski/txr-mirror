@@ -81,34 +81,25 @@
 
 (seteuid 0)
 (rename-path "z" "b/c")
-(seteuid 10000)
 
-(test
-  (path-components-safe "a") nil)
-
-(mtest
-  (path-components-safe "/proc/1") t
-  (path-components-safe "/proc/1/cwd") :error
-  (path-components-safe "/proc/self/cwd") t)
-
-(seteuid 0)
-
-(mtest
-  (path-components-safe "/proc/1") t
-  (path-components-safe "/proc/1/fd") t
-  (path-components-safe "/proc/sys/../1") t
-  (path-components-safe "/proc/1/cwd") nil
-  (path-components-safe "/proc/1/cwd/foo") nil
-  (path-components-safe "/proc/self/cwd") nil
-  (path-components-safe "/proc/self/cwd/foo") nil
-  (path-components-safe "/proc/1/root") nil
-  (path-components-safe "/proc/1/root/foo") nil
-  (path-components-safe "/proc/1/fd/0") nil
-  (path-components-safe "/proc/1/fd/0/bar") nil
-  (path-components-safe "/proc/1/map_files") nil
-  (path-components-safe "/proc/1/map_files/bar") nil
-  (path-components-safe "/proc/sys/../1/cwd") nil
-  (path-components-safe "/proc/1/task/1") t
-  (path-components-safe "/proc/1/task/1/fd/0") nil
-  (path-components-safe "/proc/1/task/1/cwd") nil
-  (path-components-safe "/proc/1/task/1/root") nil)
+(each ((uid '(10000 0)))
+  (mtest
+    (path-components-safe "a") nil
+    (path-components-safe "/proc/1") t
+    (path-components-safe "/proc/1/fd") t
+    (path-components-safe "/proc/sys/../1") t
+    (path-components-safe "/proc/1/cwd") nil
+    (path-components-safe "/proc/1/cwd/foo") nil
+    (path-components-safe "/proc/self/cwd") nil
+    (path-components-safe "/proc/self/cwd/foo") nil
+    (path-components-safe "/proc/1/root") nil
+    (path-components-safe "/proc/1/root/foo") nil
+    (path-components-safe "/proc/1/fd/0") nil
+    (path-components-safe "/proc/1/fd/0/bar") nil
+    (path-components-safe "/proc/1/map_files") nil
+    (path-components-safe "/proc/1/map_files/bar") nil
+    (path-components-safe "/proc/sys/../1/cwd") nil
+    (path-components-safe "/proc/1/task/1") t
+    (path-components-safe "/proc/1/task/1/fd/0") nil
+    (path-components-safe "/proc/1/task/1/cwd") nil
+    (path-components-safe "/proc/1/task/1/root") nil))1
