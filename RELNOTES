@@ -1,3 +1,45 @@
+                                    TXR 279
+                                   2022-08-08
+
+
+  Features
+
+  - Lib
+    - missing count function added.
+    - regsub
+      - now accepts a string in place of the regex,
+      - avoids consing a list of pieces to be catenated; works using string-extend.
+    - gcd function rewritten for efficiency
+      - when arguments fit into a machine word, bignum math is avoided
+
+  - Build/Deployment
+    - make install now creates hard links to the txr executable
+      called txrlisp and txrvm, useful in scripting with unsuffixed files.
+    - txrlisp behaves much like txr --lisp
+    - txrvm behaves much like txr --compiled
+    - compile-file translates txrlisp to txrvm in hash bang line.
+
+  - Path test functions:
+    - All path test functions now use effective UID not real.
+    - New function path-components-safe for validating permissions
+      along an entire path.
+      - Useful for testing whether a path that is supposed to be private
+        is actually properly secured.
+
+  - Listener:
+    - Security checks on .txr_history and .txr_profile have been revised.
+    - Now done with help of path-components-safe in additition to
+      path-private-to-me-p.
+
+  Bugs
+
+  - compile-file:
+    - tries unsuffixed path before adding .tl, like load.
+    - only tries different names on nonexistence error.
+    - other exceptios now propagate out of the function.
+
+
+
                                     TXR 278
                                    2022-07-01
 
