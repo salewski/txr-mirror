@@ -1616,7 +1616,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 
   lino_hist_set_max_len(ls, c_num(cdr(hist_len_var), self));
 
-  if (histfile_w && funcall1(pexist_s, rcfile)) {
+  if (histfile_w && funcall1(pexist_s, histfile)) {
     if (!funcall1(psafe_s, home)) {
       report_path_perm_problem(home);
     } else if (!funcall1(ppriv_s, histfile)) {
