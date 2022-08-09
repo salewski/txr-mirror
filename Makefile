@@ -518,7 +518,7 @@ endef
 
 define HARDLINK
   $(call ABBREV3,HARDLINK,$(1),$(2))
-  $(call SH,$(LN) -f $(1) $(2))
+  $(call SH,$(LN) -f $(1) $(2) || printf "(HARDLINK failed)\n")
 endef
 
 PREINSTALL := :
