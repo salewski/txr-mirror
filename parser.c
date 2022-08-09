@@ -658,7 +658,7 @@ except:
       if (search_dirs == nil)
 #endif
         uw_ethrowf(errno_to_file_error(errno),
-                   lit("~a: ~a not found"), self, *orig_in_resolved_out, nao);
+                   lit("~a: unable to open ~a"), self, *orig_in_resolved_out, nao);
       try_next = path_cat(pop(&search_dirs), *orig_in_resolved_out);
       open_txr_file(try_next, txr_lisp_p, orig_in_resolved_out, stream,
                     search_dirs, self);
