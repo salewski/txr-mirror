@@ -1,3 +1,18 @@
+                                    TXR 280
+                                   2022-08-09
+
+
+  Bugs
+
+  - Listener:
+    - Fix regression: ~/.txr_history not loading unless ~/.txr_profile exists.
+
+  - Build:
+    - Handle failing hard link operation in "make install" so things
+      work on Android again.
+
+
+
                                     TXR 279
                                    2022-08-08
 
