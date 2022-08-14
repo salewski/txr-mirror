@@ -1369,6 +1369,9 @@ static val ffi_wchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
   wchar_t c = *coerce(wchar_t *, src);
   (void) tft;
   (void) self;
+  if (c < 0 || c > 0x10FFFF)
+    uw_throwf(error_s, lit("~a: wchar_t value #x~X is out of character range"),
+              self, num(c), nao);
   return chr(c);
   align_sw_end;
 }
