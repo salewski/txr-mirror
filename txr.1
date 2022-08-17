@@ -34004,6 +34004,60 @@ thereby effectively declaring that the rightmost match for an empty
 key occurs at the imaginary position past the element of
 .metn haystack .
 
+.coNP Function @ search-all
+.synb
+.mets (search-all < haystack < needle >> [ testfun <> [ keyfun ])
+.syne
+.desc
+The
+.code search-all
+function is closely related to the
+.code search
+and
+.code rsearch
+functions. Whereas those two functions return the leftmost or rightmost
+position, respectively, of
+.meta needle
+within
+.metn haystack ,
+the
+.code search-all
+function returns a list of all the positions where
+.meta needle
+occurs. The positions of overlapping matches are included in the list.
+
+If
+.meta needle
+is not found in
+.metn haystack ,
+.code search-all
+returns the empty list
+.codn nil .
+
+If
+.meta needle
+is empty, then
+.code search-all
+returns a list of all positions in
+.meta haystack
+including the one position past the last element. In this situation, if
+.meta haystack
+is empty, the list
+.code "(0)"
+is returned. If
+.meta haystack
+contains one item, then the list
+.code "(0 1)"
+is returned and so forth.
+
+In all situations in which
+.code search-all
+returns a non-empty list, the first element of that list is what
+.code search
+would return for the same arguments, and the last element is what
+.code rsearch
+would return.
+
 .coNP Functions @ ref and @ refset
 .synb
 .mets (ref < sequence << index )

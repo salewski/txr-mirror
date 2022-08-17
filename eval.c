@@ -7377,6 +7377,7 @@ void eval_init(void)
   reg_fun(intern(lit("search"), user_package), func_n4o(search, 2));
   reg_fun(intern(lit("rsearch"), user_package), func_n4o(rsearch, 2));
   reg_fun(intern(lit("contains"), user_package), func_n4o(contains, 2));
+  reg_fun(intern(lit("search-all"), user_package), func_n4o(search_all, 2));
   reg_fun(intern(lit("where"), user_package), func_n2(where));
   reg_fun(intern(lit("select"), user_package), func_n2(sel));
   reg_fun(intern(lit("reject"), user_package), func_n2(reject));

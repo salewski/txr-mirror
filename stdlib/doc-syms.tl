@@ -1679,6 +1679,7 @@
       ("scan" "N-03E989D0")
       ("scan-until-match" "N-00EFD668")
       ("search" "N-015D8676")
+      ("search-all" "N-01F7174D")
       ("search-regex" "N-0250D465")
       ("search-regst" "N-0250D465")
       ("search-str" "N-0257180F")

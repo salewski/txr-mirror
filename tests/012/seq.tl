@@ -501,6 +501,7 @@
     [count #1="abc" '("abc" "abc" "abc" #1# "abc" #1#" abc") eq] 2))
 
 (mtest
+  (search "" "") 0
   (search "abcde" "ab") 0
   (search "abcde" "bc") 1
   (search "abcde" "cd") 2
@@ -510,6 +511,7 @@
   (search "abcde" "x") nil)
 
 (mtest
+  (search nil nil) 0
   (search '#"a b c d e" '#"a b") 0
   (search '#"a b c d e" '#"b c") 1
   (search '#"a b c d e" '#"c d") 2
@@ -519,6 +521,7 @@
   (search '#"a b c d e" '#"x") nil)
 
 (mtest
+  (rsearch nil nil) 0
   (rsearch "abcde" "ab") 0
   (rsearch "abcde" "bc") 1
   (rsearch "abcde" "cd") 2
@@ -535,3 +538,15 @@
   (rsearch '#"a b c d e" '#"e") 4
   (rsearch '#"a b c d e" nil) 5
   (rsearch '#"a b c d e" '#"x") nil)
+
+(mtest
+  (search-all "" "") (0)
+  (search-all "xxxxx" "y") nil
+  (search-all "xxxxx" "x") (0 1 2 3 4)
+  (search-all "xxx" "") (0 1 2 3))
+
+(mtest
+  (search-all nil nil) (0)
+  (search-all '#"x x x x x" '#"y") nil
+  (search-all '#"x x x x x" '#"x") (0 1 2 3 4)
+  (search-all '#"x x x" "") (0 1 2 3))

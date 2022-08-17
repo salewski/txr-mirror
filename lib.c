@@ -12763,7 +12763,7 @@ val update(val seq, val fun)
   return seq;
 }
 
-static val search_common(val self, int from_right,
+static val search_common(val self, int all, int from_right,
                          val seq, val key, val testfun_in, val keyfun_in)
 {
   val testfun = default_arg(testfun_in, equal_f);
@@ -12774,17 +12774,29 @@ static val search_common(val self, int from_right,
   seq_iter_init(self, &ki, key);
 
   if (si.inf.kind == SEQ_NIL) {
-    return if3(length(key) == zero, zero, nil);
+    val kelem;
+    return if2(!seq_peek(&ki, &kelem),
+               if3(all, cons(zero, nil), zero));
   } else if (ki.inf.kind == SEQ_HASHLIKE || si.inf.kind == SEQ_HASHLIKE) {
     type_mismatch(lit("~a: hashes not supported"), self, nao);
-  } else if (ki.inf.kind == SEQ_NIL) {
+  } else if (!all && ki.inf.kind == SEQ_NIL) {
     return if3(from_right, length(seq), zero);
   } else {
     val selem, kelem;
-    val pos = zero, found = nil;
+    val pos = zero;
+    list_collect_decl (found, ptail);
 
-    if (!seq_peek(&ki, &kelem))
+    if (!seq_peek(&ki, &kelem)) {
+      if (all) {
+        while (seq_get(&si, &selem)) {
+          ptail = list_collect(ptail, pos);
+          pos = plus(pos, one);
+        }
+        list_collect(ptail, pos);
+        return found;
+      }
       return if3(from_right, length(seq), zero);
+    }
 
     for (;;) {
       val did_save = nil;
@@ -12816,7 +12828,9 @@ static val search_common(val self, int from_right,
       }
 
       if (!more_key) {
-        if (from_right)
+        if (all)
+          ptail = list_collect(ptail, pos);
+        else if (from_right)
           found = pos;
         else
           return pos;
@@ -12834,17 +12848,22 @@ static val search_common(val self, int from_right,
 
 val search(val seq, val key, val testfun, val keyfun)
 {
-  return search_common(lit("search"), 0, seq, key, testfun, keyfun);
+  return search_common(lit("search"), 0, 0, seq, key, testfun, keyfun);
 }
 
 val rsearch(val seq, val key, val testfun, val keyfun)
 {
-  return search_common(lit("rsearch"), 1, seq, key, testfun, keyfun);
+  return search_common(lit("rsearch"), 0, 1, seq, key, testfun, keyfun);
 }
 
 val contains(val key, val seq, val testfun, val keyfun)
 {
-  return search_common(lit("contains"), 0, seq, key, testfun, keyfun);
+  return search_common(lit("contains"), 0, 0, seq, key, testfun, keyfun);
+}
+
+val search_all(val seq, val key, val testfun, val keyfun)
+{
+  return search_common(lit("search-all"), 1, 0, seq, key, testfun, keyfun);
 }
 
 static val lazy_where_func(val iter, val lcons)

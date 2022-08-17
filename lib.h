@@ -1252,6 +1252,7 @@ val update(val seq, val fun);
 val search(val seq, val key, val from, val to);
 val contains(val key, val seq, val testfun, val keyfun);
 val rsearch(val seq, val key, val from, val to);
+val search_all(val seq, val key, val testfun, val keyfun);
 val where(val func, val seq);
 val sel(val seq, val where);
 val reject(val seq, val where);
