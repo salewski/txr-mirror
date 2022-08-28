@@ -338,6 +338,7 @@
       ("clock-t" "N-01B6F219")
       ("clockid-t" "N-01153D9E")
       ("close" "D-0016")
+      ("close-lazy-streams" "N-00B8ACD5")
       ("close-stream" "N-00596930")
       ("closedir" "N-01FEE88A")
       ("closelog" "N-02CEE7EA")

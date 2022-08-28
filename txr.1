@@ -23796,6 +23796,76 @@ is true, then
 .meta throw-on-error-p
 shall be false, and vice versa.
 
+.coNP Macro @ close-lazy-streams
+.synb
+.mets (close-lazy-streams << body-form *)
+.syne
+.desc
+The
+.code close-lazy-streams
+macro establishes a dynamic environment in which zero or more
+.metn body-form s
+are evaluated, yielding the value of the last
+.metn body-form ,
+or else
+.code nil
+if there are no
+.meta body-form
+arguments. In this regard, the macro operator resembles
+.codn progn .
+
+The environment established by
+.code close-lazy-streams
+sets up special monitoring of the the functions
+.code lazy-stream-cons
+and
+.codn get-lines .
+Whenever these functions register an I/O stream with a lazy list, that stream is
+recorded in a hidden. When the
+.code close-lazy-streams
+form terminates, it invokes the
+.code close-stream
+on each stream in the hidden list.
+
+Note: the
+.code close-lazy-streams
+macro provides a possible solution for situations in which a body of code,
+possibly consisting of nested functions, manipulates lazy lists of lines coming
+from from I/O streams, such that these lists are not completely forced.
+Incompletely processed lazy lists will not close their associated streams until
+they are reclaimed by garbage collection, which could cause the application to
+run out of file descriptors.
+The
+.code close-lazy-streams
+macro allows the application to delineate a dynamic contour of code
+upon whose termination all such stream associations generated within
+that contour will be duly cleaned up.
+
+.TP* Example:
+
+Collect list of names of
+.code .tl
+files which contain the string
+.strn "(cons " :
+
+.verb
+  ;; Incorrect version: could run out of open files if there are many
+  ;; files which contain a match processed, because find-if will stop
+  ;; traversing the list of lines when it finds a match:
+  (build
+    (each ((file (glob "*.tl")))
+      (if (find-if #/\e(cons / (file-get-lines file))
+        (add file))))
+
+  ;; Addressed with close-lazy-streams: after each iteration, the
+  ;; stream created by file-get-lines is closed.
+  (build
+    (each ((file (glob "*.tl")))
+      (close-lazy-streams
+        (if (find-if #/\e(cons / (file-get-lines file))
+          (add file)))))
+.brev
+
 .coNP Macro @ delay
 .synb
 .mets (delay << expression )

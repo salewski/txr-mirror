@@ -7486,6 +7486,8 @@ void eval_init(void)
 
   reg_fun(intern(lit("rt-assert-fail"), system_package), func_n4ov(rt_assert_fail, 3));
 
+  reg_var(lazy_streams_s, nil);
+
   eval_error_s = intern(lit("eval-error"), user_package);
   case_error_s = intern(lit("case-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

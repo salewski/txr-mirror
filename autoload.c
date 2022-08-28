@@ -473,6 +473,7 @@ static val getput_set_entries(val fun)
     lit("command-get-buf"), lit("command-put-buf"),
     lit("command-get-json"), lit("command-put-json"),
     lit("command-get-jsons"), lit("command-put-jsons"),
+    lit("close-lazy-streams"),
     nil
   };
   autoload_set(al_fun, name, fun);

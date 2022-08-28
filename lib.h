@@ -560,6 +560,7 @@ extern val path_not_found_s, path_exists_s, path_permission_s;
 extern val warning_s, defr_warning_s, restart_s, continue_s;
 extern val gensym_counter_s, length_s;
 extern val rplaca_s, rplacd_s, seq_iter_s;
+extern val lazy_streams_s;
 
 #define gensym_counter (deref(lookup_var_l(nil, gensym_counter_s)))
 

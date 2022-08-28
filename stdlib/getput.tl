@@ -187,3 +187,9 @@
 (defun command-put-jsons (cmd seq : flat-p mopt)
   (with-stream (s (open-command cmd `w@mopt`))
     (put-jsons seq s flat-p)))
+
+(defmacro close-lazy-streams (. body)
+  ^(let ((sys:*lazy-streams*))
+     (unwind-protect
+       (progn ,*body))
+     (mapdo (fun close-stream) sys:*lazy-streams*)))

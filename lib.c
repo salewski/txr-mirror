@@ -120,6 +120,7 @@ val path_not_found_s, path_exists_s, path_permission_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
 val gensym_counter_s, length_s;
 val rplaca_s, rplacd_s, seq_iter_s;
+val lazy_streams_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
 val wrap_k, reflect_k;
@@ -144,6 +145,8 @@ static val cobj_hash;
 struct cobj_class *seq_iter_cls;
 
 static val recycled_conses;
+
+static val lazy_streams_binding;
 
 const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NIL,      /* NIL */
@@ -9516,6 +9519,20 @@ static val lazy_stream_func_nt(val env, val lcons)
   return prefetched_line;
 }
 
+static void lazy_stream_register(val stream)
+{
+  val lazy_streams_dyn_binding = lookup_var(nil, lazy_streams_s);
+
+  if (lazy_streams_dyn_binding) {
+    if (!lazy_streams_binding)
+      lazy_streams_binding = lookup_global_var(lazy_streams_s);
+
+    if (lazy_streams_dyn_binding != lazy_streams_binding) {
+      val list = us_cdr(lazy_streams_dyn_binding);
+      us_rplacd(lazy_streams_dyn_binding, cons(stream, list));
+    }
+  }
+}
 
 val lazy_stream_cons(val stream, val no_throw_close)
 {
@@ -9523,6 +9540,7 @@ val lazy_stream_cons(val stream, val no_throw_close)
   no_throw_close = default_null_arg(no_throw_close);
 
   if (real_time_stream_p(stream)) {
+    lazy_stream_register(stream);
     return make_lazy_cons(func_f1(stream, if3(no_throw_close,
                                               simple_lazy_stream_func_nt,
                                               simple_lazy_stream_func)));
@@ -9534,6 +9552,7 @@ val lazy_stream_cons(val stream, val no_throw_close)
       return nil;
     }
 
+    lazy_stream_register(stream);
     return make_lazy_cons(func_f1(cons(stream, first),
                                   if3(no_throw_close,
                                       lazy_stream_func_nt,
@@ -13243,7 +13262,7 @@ static void obj_init(void)
           &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &identity_star_f, &less_f, &greater_f,
-          &prog_string, &cobj_hash,
+          &prog_string, &cobj_hash, &lazy_streams_binding,
           convert(val *, 0));
 
   nil_string = lit("nil");
@@ -13387,6 +13406,7 @@ static void obj_init(void)
   rplaca_s = intern(lit("rplaca"), user_package);
   rplacd_s = intern(lit("rplacd"), user_package);
   seq_iter_s = intern(lit("seq-iter"), user_package);
+  lazy_streams_s = intern(lit("*lazy-streams*"), system_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);
