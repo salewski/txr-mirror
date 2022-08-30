@@ -4117,8 +4117,7 @@ and takes various arguments, according to these possibilities:
 
 .mono
 .mets @(next)
-.mets @(next << source )
-.mets @(next < source :nothrow)
+.mets @(next < source <> [ :nothrow ] <> [ :noclose ])
 .mets @(next :args)
 .mets @(next :env)
 .mets @(next :list << lisp-expr )
@@ -4180,6 +4179,22 @@ parameter. This
 mechanism does not suppress all exceptions related to the processing
 of that stream; unusual conditions encountered during the reading of
 data from the stream may throw exceptions.
+
+When the subsequent directives which follow
+.code @(next)
+are processed, the directive terminates, and any stream which had been opened
+for
+.meta source
+is closed. If the
+.code :noclose
+keyword is present, then this is prevented; the stream
+remains open. Note: keeping the stream open may be necessary if the
+.code @(data)
+directive is used to capture the input list into a variable whose value is used
+after the
+.code @(next)
+directive terminates, because the input list is lazy, and may depend on
+the stream continuing to be open.
 
 The variant
 .code "@(next :args)"

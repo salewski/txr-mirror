@@ -65,7 +65,7 @@ val else_s, elif_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, lists_k, resolve_k;
 val append_k, into_k, var_k, list_k, tlist_k, string_k, env_k, counter_k;
-val named_k, continue_k, finish_k, mandatory_k;
+val named_k, noclose_k, continue_k, finish_k, mandatory_k;
 
 val filter_s;
 
@@ -73,6 +73,8 @@ val noval_s;
 
 static val h_directive_table, v_directive_table;
 static val non_matching_directive_table, binding_directive_table;
+
+static val v_next_keys, v_output_keys;
 
 static void debuglf(val form, val fmt, ...)
 {
@@ -2962,7 +2964,7 @@ static val v_next_impl(match_files_ctx *c)
 
     {
       int old_hacky_open = opt_compat && opt_compat <= 142;
-      val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
+      val alist = improper_plist_to_alist(args, v_next_keys);
       val from_var_p = assoc(var_k, alist);
       val from_var = cdr(from_var_p);
       val list_p = assoc(list_k, alist);
@@ -2972,6 +2974,7 @@ static val v_next_impl(match_files_ctx *c)
       val string_p = assoc(string_k, alist);
       val string_expr = cdr(string_p);
       val nothrow = cdr(assoc(nothrow_k, alist));
+      val noclose = cdr(assoc(noclose_k, alist));
       val str = if3(meta,
                     txeval(specline, source, c->bindings),
                     tleval_nothrow(specline, source, c->bindings, nothrow));
@@ -3079,14 +3082,29 @@ static val v_next_impl(match_files_ctx *c)
         val stream = complex_open(str, nil, nil, nothrow, nil);
 
         if (stream) {
-          cons_bind (new_bindings, success,
-                     match_files(mf_file_data(*c, str, stream,
-                                              lazy_stream_cons(stream, nothrow),
-                                              one)));
+          val res = nil;
+          uw_simple_catch_begin;
 
-          if (success)
-            return cons(new_bindings,
-                        if3(c->data, cons(c->data, c->data_lineno), t));
+          {
+            cons_bind (new_bindings, success,
+                       match_files(mf_file_data(*c, str, stream,
+                                                lazy_stream_cons(stream, nothrow),
+                                                one)));
+
+            if (success)
+              res = cons(new_bindings,
+                         if3(c->data, cons(c->data, c->data_lineno), t));
+          }
+
+          uw_unwind {
+            if (!noclose)
+              close_stream(stream, nil);
+          }
+
+          uw_catch_end;
+
+          if (res)
+            return res;
         } else {
           debuglf(first_spec, lit("could not open ~a: "
                                   "treating as failed match due to nothrow"),
@@ -4024,7 +4042,7 @@ static val v_output(match_files_ctx *c)
     pop(&dest_spec);
   }
 
-  alist = improper_plist_to_alist(dest_spec, list(nothrow_k, append_k, nao));
+  alist = improper_plist_to_alist(dest_spec, v_output_keys);
 
   nothrow = cdr(assoc(nothrow_k, alist));
   append = cdr(assoc(append_k, alist));
@@ -4880,6 +4898,11 @@ static void open_data_source(match_files_ctx *c)
 
 static val match_files(match_files_ctx c)
 {
+  val stream_in = c.stream;
+  val res = nil;
+
+  uw_simple_catch_begin;
+
   gc_hint(c.data);
 
   gc_stack_check();
@@ -4914,7 +4937,8 @@ repeat_spec_same_data:
         } else if (result == decline_k) {
           /* Vertical directive declined; go to horizontal processing */
         } else {
-          return result;
+          res = result;
+          goto out;
         }
       } else if (gethash(h_directive_table,sym)) {
         /* Lone horizontal-only directive: go to horizontal processing */
@@ -4935,7 +4959,8 @@ repeat_spec_same_data:
           if (!cdr(uw_get_func(sym)))
             sem_error(specline, lit("function ~s not found"), sym, nao);
         } else {
-          return result;
+          res = result;
+          goto out;
         }
       }
     }
@@ -4953,18 +4978,28 @@ repeat_spec_same_data:
                                               c.curfile, c.stream)));
 
       if (!success)
-        return nil;
+        goto out;
 
       c.bindings = new_bindings;
     } else if (consp(c.data) || nilp(c.data)) {
       debuglf(specline, lit("spec ran out of data"), nao);
-      return nil;
+      goto out;
     } else {
       internal_error("bug in data stream opening logic");
     }
   }
 
-  return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
+  res = cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
+
+out:
+  uw_unwind {
+    if (c.stream && c.stream != stream_in)
+      close_stream(c.stream, nil);
+  }
+
+  uw_catch_end;
+
+  return res;
 }
 
 val match_filter(val name, val arg, val other_args)
@@ -5150,6 +5185,7 @@ static void syms_init(void)
   string_k = intern(lit("string"), keyword_package);
   env_k = intern(lit("env"), keyword_package);
   named_k = intern(lit("named"), keyword_package);
+  noclose_k = intern(lit("noclose"), keyword_package);
   continue_k = intern(lit("continue"), keyword_package);
   finish_k = intern(lit("finish"), keyword_package);
   mandatory_k = intern(lit("mandatory"), keyword_package);
@@ -5297,10 +5333,18 @@ static void dir_tables_init(void)
   sethash(binding_directive_table, name_s, one);
 }
 
+static void plist_keys_init(void)
+{
+  protect(&v_next_keys, &v_output_keys, convert(val *, 0));
+  v_next_keys = list(nothrow_k, noclose_k, nao);
+  v_output_keys = list(nothrow_k, append_k, nao);
+}
+
 void match_init(void)
 {
   syms_init();
   dir_tables_init();
+  plist_keys_init();
 }
 
 void match_compat_fixup(int compat_ver)
