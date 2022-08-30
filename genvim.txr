@@ -63,7 +63,8 @@ static void dir_tables_init(void)
 @(bind comments #"\\;\\;\\; \\;\\; \\;")
 @(bind txr-elem "txr_error,txr_atat,txr_comment,txr_contin,\
                  txr_char,txr_error,txr_char,txr_regdir,txr_variable,\
-                 txr_splicevar,txr_metanum,txr_directive")
+                 txr_splicevar,txr_metanum,txr_directive,txr_bracevar,\
+                 txr_bracket")
 @(bind txr-qelem "txr_splicevar,txr_metanum,txr_qbracevar,txr_list,\
                   txr_bracket,txr_escat,txr_stresc,txr_numesc,txr_badesc")
 @(bind bvar "txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,\
@@ -176,7 +177,7 @@ syn match txr_metaat "@@"@(if txr-p " contained")
 syn match txr_buf_error "[^']" contained
 syn match txr_buf_interior "\([@hex][\n\t ]*[@hex]\|[\n\t ]\+\)" contained
 
-syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=@bvar
+syn region txr_bracevar contained matchgroup=Delimiter start="[*]\?{" matchgroup=Delimiter end="}" contains=@bvar
 syn region txr_qbracevar contained matchgroup=Delimiter start="[*]\?{" matchgroup=Delimiter end="}" contains=@bvar
 @  (if txr-p)
 syn region txr_directive contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=@dir
