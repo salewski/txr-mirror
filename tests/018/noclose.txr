@@ -1,0 +1,16 @@
+@(next :list [mapcar tostring (range 1 20000)])
+@(collect)
+@num
+@(next self-path)
+@line
+@(end)
+@(try)
+@(next :list [mapcar tostring (range 1 20000)])
+@(collect)
+@num
+@(next "data")
+@line
+@(end)
+@(catch)
+@(do (put-line "caught"))
+@(end)
