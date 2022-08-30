@@ -61,22 +61,25 @@ static void dir_tables_init(void)
                                               meth umeth usl))
                         (list text)))))
 @(bind comments #"\\;\\;\\; \\;\\; \\;")
+@(bind txr-elem "txr_error,txr_atat,txr_comment,txr_contin,\
+                 txr_char,txr_error,txr_char,txr_regdir,txr_variable,\
+                 txr_splicevar,txr_metanum,txr_directive")
 @(bind bvar "txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,\
              txr_metaat,txr_circ,txr_braced_ident,txr_dot,\
              txr_dotdot,txr_string,txr_list,txr_bracket,\
-             txr_mlist,txr_mbracket,txr_regex,tl_regex,txr_quasilit,\
+             txr_regex,tl_regex,txr_quasilit,\
              txr_chr,txr_nested_error")
 @(bind dir "txr_keyword,txr_string,txr_list,txr_bracket,\
-            txr_mlist,txr_mbracket,txr_quasilit,txr_num,txr_pnum,\
+            txr_quasilit,txr_num,txr_pnum,\
             txr_badnum,tl_ident,tl_regex,txr_string,txr_chr,\
             txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,\
             txr_metaat,txr_circ,txr_ncomment,txr_nested_error")
 @(bind list "tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,\
              txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,\
-             txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,\
+             txr_ign_tok,txr_list,txr_bracket,\
              txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,\
              txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,\
-             txr_jarray,txr_jatom,txr_ncomment,txr_nested_error")
+             txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error")
 @(bind jlist "txr_jarray_in,txr_jhash_in,txr_jkeyword,txr_jstring,\
               txr_jnum,txr_jpunc,txr_junqlist,txr_junqbkt,txr_junqtok,\
               txr_circ,txr_jerr")
@@ -112,20 +115,21 @@ setlocal iskeyword=a-z,A-Z,48-57,!,$,%,&,*,+,-,<,=,>,?,\\,_,~,/,^
 @  (rep) @{tl-sym}@(mod 0 4)@\nsyn keyword tl_keyword contained @{tl-sym}@(end)
 @  (if txr-p)
 @    (rep) @{txr-sym}@(mod 0 4)@\nsyn keyword txr_keyword contained @{txr-sym}@(end)
-syn match txr_error "@at[*]\?[\t ]*."
-syn match txr_atat "@at@@"
-syn match txr_comment "@at[#;].*"
-syn match txr_contin "@at\\$"
-syn match txr_char "@at\\."
-syn match txr_error "@at\\[xo]"
-syn match txr_char "@at\\x[@hex]\+;\?"
-syn match txr_char "@at\\[@oct]\+;\?"
-syn match txr_regdir "@at/\(\\/\|[^/]\|\\\n\)*/"
+syn match txr_at "@at" nextgroup=@{txr-elem}
+syn match txr_error "[*]\?[\t ]*." contained
+syn match txr_atat "@@" contained
+syn match txr_comment "[#;].*" contained
+syn match txr_contin "\\$" contained
+syn match txr_char "\\." contained
+syn match txr_error "\\[xo]" contained
+syn match txr_char "\\x[@hex]\+;\?" contained
+syn match txr_char "\\[@oct]\+;\?" contained
+syn match txr_regdir "/\(\\/\|[^/]\|\\\n\)*/" contained
 @  (end)
 syn match txr_nested_error "[^\t ]\+" contained
-syn match txr_variable "@at[*]\?[ \t]*[@alpha][@alnum]*"
-syn match txr_splicevar "@@[ \t,*@@]*[@alpha][@alnum]*" contained
-syn match txr_metanum "@@\+[0-9]\+"@(if txr-p " contained")
+syn match txr_variable "[*]\?[ \t]*[@alpha][@alnum]*" contained
+syn match txr_splicevar "[ \t,*@@]*[@alpha][@alnum]*" contained
+syn match txr_metanum "@at\+[0-9]\+"@(if txr-p " contained")
 syn match txr_badesc "\\." contained
 syn match txr_escat "\\@@" contained
 syn match txr_stresc "\\[@chesc"`']" contained
@@ -133,7 +137,7 @@ syn match txr_numesc "\\x[@hex]\+;\?" contained
 syn match txr_numesc "\\[@oct]\+;\?" contained
 syn match txr_regesc "\\[@chesc/sSdDwW()\|.*?+~&%\[\]\-]" contained
 
-syn match txr_error "#[^HSRTN]"@(if txr-p " contained")
+syn match tl_error "#[^HSRTN]"@(if txr-p " contained")
 
 syn match txr_chr "#\\x[@hex]\+"@(if txr-p " contained")
 syn match txr_chr "#\\o[@oct]\+"@(if txr-p " contained")
@@ -145,7 +149,7 @@ syn match txr_hashbang "\%^#!.*"
 
 syn match txr_dot "\." contained
 syn match txr_ident "[@alnum@glyph]*[@alpha@glyph^][@alnum@glyph^]*" contained
-syn match tl_ident "[:@@][@alnum@glyph^/]\+"@(if txr-p " contained")
+syn match tl_ident "[:][@alnum@glyph^/]\+"@(if txr-p " contained")
 syn match txr_braced_ident "[:][@alnum@glyph^/]\+" contained
 syn match tl_ident "[@alnum@glyph/]\+[@alnum@glyph^/#]*"@(if txr-p " contained")
 syn match txr_pnum "#[xob][+\-]\?[@alnum]\+" contains=txr_xnum,txr_bnum,txr_onum@(if txr-p " contained")
@@ -161,10 +165,10 @@ syn match tl_splice "[ \t,]\|,[*]"@(if txr-p " contained")
 
 syn match txr_unquote "," contained
 syn match txr_splice ",\*" contained
-syn match txr_quote "'" contained
-syn match txr_quote "\^" contained
+syn match txr_quote "'"@(if txr-p " contained")
+syn match txr_quote "\^"@(if txr-p " contained")
 syn match txr_dotdot "\.\." contained
-syn match txr_metaat "@@" contained
+syn match txr_metaat "@@"@(if txr-p " contained")
 
 syn match txr_buf_error "[^']" contained
 syn match txr_buf_interior "\([@hex][\n\t ]*[@hex]\|[\n\t ]\+\)" contained
@@ -172,12 +176,12 @@ syn match txr_buf_interior "\([@hex][\n\t ]*[@hex]\|[\n\t ]\+\)" contained
 syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=@bvar
 syn region tl_bracevar contained matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=@bvar
 @  (if txr-p)
-syn region txr_directive matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=@dir
+syn region txr_directive contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=@dir
 @  (end)
 syn region txr_list @(if txr-p "contained ")matchgroup=Delimiter start="\(#[HSRTN]\?\)\?(" matchgroup=Delimiter end=")" contains=@list
 syn region txr_bracket @(if txr-p "contained ")matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=@list
-syn region txr_mlist @(if txr-p "contained ")matchgroup=Delimiter start="@@[ \t^',]*(" matchgroup=Delimiter end=")" contains=@list
-syn region txr_mbracket matchgroup=Delimiter start="@@[ \t^',]*\[" matchgroup=Delimiter end="\]" contains=@list
+syn region txr_mlist contained matchgroup=Delimiter start="@@[ \t^',]*(" matchgroup=Delimiter end=")" contains=@list
+syn region txr_mbracket contained matchgroup=Delimiter start="@@[ \t^',]*\[" matchgroup=Delimiter end="\]" contains=@list
 syn region txr_string @(if txr-p "contained ")start=+#\?\*\?"+ skip=+\\\n+ end=+["\n]+ contains=txr_stresc,txr_numesc,txr_badesc
 syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ skip=+\\\n+ end=+[`\n]+ contains=txr_splicevar,txr_metanum,tl_bracevar,txr_mlist,txr_mbracket,txr_escat,txr_stresc,txr_numesc,txr_badesc
 syn region txr_regex @(if txr-p "contained ")start="/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
@@ -253,6 +257,7 @@ hi def link txr_circ Special
 hi def link txr_munqspl Special
 hi def link tl_splice Special
 hi def link txr_error Error
+hi def link tl_error Error
 hi def link txr_nested_error Error
 hi def link txr_buf String
 hi def link txr_buf_interior String
