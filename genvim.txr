@@ -79,7 +79,7 @@ static void dir_tables_init(void)
             txr_metaat,txr_circ,txr_ncomment,txr_nested_error")
 @(bind list "tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,\
              txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,\
-             txr_ign_tok,txr_list,txr_bracket,\
+             txr_ign_tok,txr_ign_json,txr_list,txr_bracket,\
              txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,\
              txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,\
              txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error")
@@ -190,10 +190,14 @@ syn region txr_regex @(if txr-p "contained ")start="/" skip=+\\\n+ end="[/\n]" c
 syn region tl_regex @(if txr-p "contained ")start="#/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region txr_buf @(if txr-p "contained ")matchgroup=txr_buf start="#b'" end="'" contains=txr_buf_interior,txr_buf_error
 syn region txr_ign_tok @(if txr-p "contained ")matchgroup=Comment start="#;" end="[ \(\)\[\]]"me=e   contains=@list
-syn region txr_ign_par @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTN]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_par_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
+syn region txr_ign_par @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign_bkt @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTNJ]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*{" matchgroup=Comment end="}" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign_par_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign_bkt_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign_bra_interior contained matchgroup=Comment start="{" matchgroup=Comment end="}" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
 
 syn match txr_jerr "@jerr" contained
 syn match txr_jpunc "@jpunc" contained
@@ -203,10 +207,10 @@ syn match txr_jnum "@jnum" contained
 syn match txr_jkeyword "@(join-with "\\|" . jsonkw)" contained
 
 syn region txr_jatom @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*"rs=e end="@ws\|[\])}]"re=e-1 contains=@jlist
-syn region txr_junqtok @(if txr-p "contained ")matchgroup=Delimiter start="\~" end="[ \(\)\[\]{}]"re=s contains=@list
-syn region txr_junqlist @(if txr-p "contained ")matchgroup=Delimiter start="\~\*\?#\?(" end=")" contains=@list
-syn region txr_junqbkt @(if txr-p "contained ")matchgroup=Delimiter start="\~\*\?\[" end="\]" contains=@list
-syn region txr_jstring @(if txr-p "contained ")matchgroup=Delimiter start=+"+ end=+["\n]+ contains=txr_jesc,txr_juesc,txr_badesc
+syn region txr_junqtok contained matchgroup=Delimiter start="\~" end="[ \(\)\[\]{}]"re=s contains=@list
+syn region txr_junqlist contained matchgroup=Delimiter start="\~\*\?#\?(" end=")" contains=@list
+syn region txr_junqbkt contained matchgroup=Delimiter start="\~\*\?\[" end="\]" contains=@list
+syn region txr_jstring contained matchgroup=Delimiter start=+"+ end=+["\n]+ contains=txr_jesc,txr_juesc,txr_badesc
 syn region txr_jarray @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*\[" matchgroup=Delimiter end="\]" contains=@jlist
 syn region txr_jhash @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*{" matchgroup=Delimiter end="}" contains=@jlist
 syn region txr_jarray_in contained matchgroup=Delimiter start="\[" end="\]" contains=@jlist
