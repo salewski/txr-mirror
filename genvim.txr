@@ -190,9 +190,8 @@ syn region txr_regex @(if txr-p "contained ")start="/" skip=+\\\n+ end="[/\n]" c
 syn region tl_regex @(if txr-p "contained ")start="#/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region txr_buf @(if txr-p "contained ")matchgroup=txr_buf start="#b'" end="'" contains=txr_buf_interior,txr_buf_error
 syn region txr_ign_tok @(if txr-p "contained ")matchgroup=Comment start="#;" end="[ \(\)\[\]]"me=e   contains=@list
-syn region txr_ign_par @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
+syn region txr_ign_par @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
+syn region txr_ign_bkt @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTN]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
 syn region txr_ign_par_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
 syn region txr_ign_bkt_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
 
