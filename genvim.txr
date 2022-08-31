@@ -78,8 +78,8 @@ static void dir_tables_init(void)
             txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,\
             txr_metaat,txr_circ,txr_ncomment,txr_nested_error")
 @(bind list "tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,\
-             txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,\
-             txr_ign_tok,txr_ign_json,txr_list,txr_bracket,\
+             txr_badnum,tl_ident,txr_metanum,\
+             txr_ign,txr_ign_json,txr_list,txr_bracket,\
              txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,\
              txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,\
              txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error")
@@ -189,15 +189,15 @@ syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ skip=+\\\n+ end
 syn region txr_regex @(if txr-p "contained ")start="/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region tl_regex @(if txr-p "contained ")start="#/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region txr_buf @(if txr-p "contained ")matchgroup=txr_buf start="#b'" end="'" contains=txr_buf_interior,txr_buf_error
-syn region txr_ign_tok @(if txr-p "contained ")matchgroup=Comment start="#;" end="[ \(\)\[\]]"me=e   contains=@list
-syn region txr_ign_par @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
-syn region txr_ign_bkt @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTNJ]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
-syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*{" matchgroup=Comment end="}" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
-syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
-syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
-syn region txr_ign_par_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
-syn region txr_ign_bkt_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
-syn region txr_ign_bra_interior contained matchgroup=Comment start="{" matchgroup=Comment end="}" contains=txr_ign_par_interior,txr_ign_bkt_interior,txr_ign_bra_interior
+syn region txr_ign @(if txr-p "contained ")matchgroup=Comment start="#;" end="[ \(\)\[\]]"me=e   contains=@list
+syn region txr_ign @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_interior
+syn region txr_ign @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*\(#[HSRTNJ]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_interior
+syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*{" matchgroup=Comment end="}" contains=txr_ign_interior
+syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*\[" matchgroup=Comment end="\]" contains=txr_ign_interior
+syn region txr_ign_json @(if txr-p "contained ")matchgroup=Comment start="#;[ \t',^@@]*#J[~^]*(" matchgroup=Comment end=")" contains=txr_ign_interior
+syn region txr_ign_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_interior
+syn region txr_ign_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_interior
+syn region txr_ign_interior contained matchgroup=Comment start="{" matchgroup=Comment end="}" contains=txr_ign_interior
 
 syn match txr_jerr "@jerr" contained
 syn match txr_jpunc "@jpunc" contained
@@ -268,11 +268,8 @@ hi def link txr_nested_error Error
 hi def link txr_buf String
 hi def link txr_buf_interior String
 hi def link txr_buf_error Error
-hi def link txr_ign_par Comment
-hi def link txr_ign_bkt_interior Comment
-hi def link txr_ign_par_interior Comment
-hi def link txr_ign_bkt Comment
-hi def link txr_ign_tok Comment
+hi def link txr_ign_interior Comment
+hi def link txr_ign Comment
 
 hi def link txr_jkeyword Type
 hi def link txr_jnum Number
