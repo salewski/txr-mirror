@@ -270,6 +270,7 @@ hi def link txr_buf_interior String
 hi def link txr_buf_error Error
 hi def link txr_ign_interior Comment
 hi def link txr_ign Comment
+hi def link txr_ign_json Comment
 
 hi def link txr_jkeyword Type
 hi def link txr_jnum Number
