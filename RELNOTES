@@ -1,3 +1,32 @@
+                                    TXR 281
+                                   2022-09-03
+
+
+  Features:
+
+  - Lib:
+    - New search-all library function: like search but finds all matches.
+    - New macro: close-lazy-streams: creates a dynamic contour of code which
+      closes all streams that were bound to lazy conses during its execution.
+
+  - TXR Pattern Language:
+    - The @(next) directive now supports a :noclose modifier.
+      - Because @(next) now closes the stream when it's done processing (see
+        Bugs below), this new feature is required to opt-out of that behavior.
+
+  - Vim:
+    - Improvements to syntax highlighting definitions.
+
+  Bugs
+
+  - ffi: now defends against out-of-range wchar_t values being converted
+    to Lisp character type.
+  - TXR Pattern Language:
+    - When a subquery opens a stream as a data source, that is now closed
+      when that subquery is finished processing.
+
+
+
                                     TXR 280
                                    2022-08-09
 
