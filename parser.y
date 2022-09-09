@@ -1103,6 +1103,8 @@ dwim : '[' '.' n_exprs ']'      { val a = car($3);
                                                       cons(ur, cdr($3))), ur); }
      | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
+     | '[' LAMBDOT n_expr ']'   { $$ = rl(cons(dwim_s, $3), num($1)); }
+     | '[' CONSDOT n_expr ']'   { $$ = rl(cons(dwim_s, $3), num($1)); }
      | '[' error                { $$ = nil;
                                   yybadtok(yychar, lit("DWIM expression")); }
      ;

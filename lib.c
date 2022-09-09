@@ -14099,8 +14099,14 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         cnum max_len = ctx->strm->max_length;
         cnum max_count = max_len;
 
-        if (sym == dwim_s && have_args) {
+        if (sym == dwim_s) {
           put_char(chr('['), out);
+          if (!have_args) {
+            put_string(lit(". "), out);
+            obj_print_impl(args, out, pretty, ctx);
+            put_char(chr(']'), out);
+            break;
+          }
           obj = args;
           closepar = chr(']');
         } else {
