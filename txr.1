@@ -12018,6 +12018,34 @@ or an atom
 as
 .codn "(. sym)" .
 
+This notation is implemented for the square brackets, according to this
+transformation:
+
+.verb
+  [. expr] -> (dwim . expr)
+.brev
+
+This is useful in Structural Pattern Matching, allowing a pattern like
+
+.verb
+  [. @args]
+.brev
+
+to match a
+.code dwim
+expression and capture all of its arguments in a variable, without having
+to resort to the internal notation:
+
+Compatibility Note: support for
+.code "[. expr]"
+was introduced in \*(TX 282. Older versions do not read the syntax,
+but do print
+.code "(dwim . @var)"
+as
+.code "[. @var]"
+which is then unreadable in those versions, breaking read-print
+consistency.
+
 .NP* Referencing Dot
 
 A dot token which is flanked by expressions on both sides, without any
