@@ -58667,8 +58667,9 @@ print a single leading zero in place of a positive sign; and
 print a space in place of a positive sign.
 .RE
 
-The precision options apply only when the value being printed is a number;
-otherwise they are ignored.
+The precision value influences the printing of values of all types.
+The precision options apply only when the value being printed is a
+number; otherwise they are ignored.
 
 If the
 .codn + ,
@@ -58704,19 +58705,17 @@ print positions.
 
 A numeric argument is formatted into the field in two distinct steps, both of
 which involve the precision value in a different role. The details of the first
-of these steps, and the role payed by precision, depends on which conversion
-directive is used. The second step works in a generic way, and is described
-below.
+of these steps, and the role payed by precision, depend on which conversion
+directive is used, as well as whether the argument is integer or
+floating-point.  That first step prepares the printed representation of a
+number which is then fitted into the field by the second step,
+and also calculates the
+.I "effective precision"
+value, which is based on the original width and precision.  The second step
+works with the effective precision rather than the original precision. Its
+description follows.
 
-The second step, namely setting a the printed representation of the number
-into the text field, occurs in the following way.
-
-First, the precision that was specified, or else the default precision that was
-used by the first stage in the absence of the precision being specified, is
-clamped to one less than the field width, or else zero if the field width
-is zero. The resulting value is called the effective precision.
-
-Next, the length of the printed representation of the number, not including
+First, the length of the printed representation of the number, not including
 its sign, is calculated. If this part of the number is shorter than the
 effective precision, then it is padded on the left with spaces or leading zeros
 so that the resulting string is equal to the precision.
@@ -58766,8 +58765,9 @@ When the
 .code a
 specifier is used for numbers, the formatting is performed in two
 distinct steps: the printed representation of the number is calculated
-first, and then that representation is set into the field. The precision
-parameter plays two different roles in these two steps.
+first, and then that representation is set into the field. At the same time,
+an effective precision is calculated, based on the precision and width,
+and that effective precision is used in the second step.
 
 In the first step, the rendering of a floating-point number to its printed
 representation, the precision specifies the maximum number of total significant
@@ -58778,7 +58778,10 @@ specified, then it is obtained from the
 .code *print-flo-precision*
 special variable, whose default value is the same as that of the
 .code flo-dig
-variable.
+variable. The effective precision for the second step is then taken
+from the original precision, or one less than the width, whichever of the
+these two values is smaller, but no lower than zero. If the width is
+unspecified, it is taken as zero.
 
 Floating point values which are integers are
 printed without a trailing
@@ -58798,6 +58801,42 @@ figures.
 
 Integers are not affected by the precision value in the conversion to
 text; all of the digits of the integer are taken into the second step.
+In the case of integers, The effective precision for the second step is then
+taken from the original precision, or one less than the width, whichever of the
+these two values is smaller. However, if the width is not specified, or given
+as zero, then the unmodified precision value is taken as the effective
+precision. Thus, in the zero width or missing width case, integers are always
+padded with spaces or leading zeros due to the precision value, even if such
+padding overflows the field width.
+
+Rationale: the purpose of the elaborate rules for calculating the
+effective precision is to both obtain consistency in the printing of integers
+and floating-point values that are integers, as well as to break that
+consistency when the width is omitted or zero. This break in consistency
+has two benefits. The common situation of adding leading spaces or zeros
+to integers can be specified without specifying the width. For instance
+.str "~,8a"
+will format an integer right-justified in an eight-character extent, without
+width having to be used in order to specify a field to accommodate
+that padding. The effective padding amount going into the second step is 8,
+exceeding the zero width, and thus allowing the padding to overflow the field.
+In the case of floating-point, precision alone can express the common
+requirement for limiting the number of digits can be expressed by the
+precision, without causing unwanted padding when there are fewer digits.
+If the above
+.str "~,8a"
+is used to format a floating-point value, it will be limited to 8 digits
+of precision, regardless of its magnitude and the position of its
+decimal point, or whether or not exponential notation is used.
+The effective precision for field placement shall then be zero in
+the second step, so that no padding is generated.  However, if a nonzero
+width is used, then formatting becomes consistent between floating-point
+and integer so that, for instance, the format directive
+.str "~8,8a"
+produces the same output for the argument values 42 and 42.0, namely
+an eight-character-wide field in which the digits
+.str 42
+appear right-aligned.
 
 .coIP s
 Prints any object in a standard way, as if by the
