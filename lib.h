@@ -52,17 +52,41 @@ typedef double_uintptr_t dbl_ucnum;
 #define FLEX_ARRAY 1
 #endif
 
-#define TAG_SHIFT 2
-#define TAG_MASK ((convert(cnum, 1) << TAG_SHIFT) - 1)
+#define PTR_BIT (SIZEOF_PTR * CHAR_BIT)
+
 #define TAG_PTR 0
 #define TAG_NUM 1
 #define TAG_CHR 2
 #define TAG_LIT 3
-#define NUM_MAX (INT_PTR_MAX/4)
-#define NUM_MIN (INT_PTR_MIN/4)
 
-#define PTR_BIT (SIZEOF_PTR * CHAR_BIT)
+#if CONFIG_NAN_BOXING
+
+#define TAG_FLNUM 4 /* pseudo-tag */
+#define TAG_WIDTH 2
+#define TAG_PAIR(A, B) ((A) << TAG_WIDTH | (B))
+
+#define NAN_TAG_BIT     14
+#define NAN_TAG_MASK    0xFFFC000000000000U
+#define TAG_BIGMASK     0xFFFF000000000000U
+#define TAG_BIGSHIFT    48
+
+#define NAN_FLNUM_DELTA 0x0004000000000000U
+
+#define NUM_MAX (INT_PTR_MAX >> NAN_TAG_BIT)
+#define NUM_MIN (INT_PTR_MIN >> NAN_TAG_BIT)
+#define NUM_BIT (PTR_BIT - NAN_TAG_BIT)
+
+#else
+
+#define TAG_SHIFT 2
+#define TAG_MASK ((convert(cnum, 1) << TAG_SHIFT) - 1)
+#define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
+
+#define NUM_MAX (INT_PTR_MAX >> TAG_SHIFT)
+#define NUM_MIN (INT_PTR_MIN >> TAG_SHIFT)
 #define NUM_BIT (PTR_BIT - TAG_SHIFT)
+
+#endif
 
 #ifdef __GNUC__
 #define NORETURN __attribute__((noreturn))
@@ -73,15 +97,14 @@ typedef double_uintptr_t dbl_ucnum;
 #endif
 
 typedef enum type {
-  NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
-  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, CPTR, ENV,
-  BGNUM, FLNUM, RNG, BUF, TNOD, DARG, MAXTYPE = DARG
+  NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, FLNUM,
+  CONS, STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, CPTR, ENV,
+  BGNUM, RNG, BUF, TNOD, DARG, MAXTYPE = DARG
   /* If extending, check TYPE_SHIFT and all ocurrences of MAX_TYPE */
 } type_t;
 
 #define TYPE_SHIFT 5
 #define TYPE_PAIR(A, B) ((A) << TYPE_SHIFT | (B))
-#define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
 
 typedef enum functype
 {
@@ -315,10 +338,12 @@ struct bignum {
   mp_int mp;
 };
 
+#if !CONFIG_NAN_BOXING
 struct flonum {
   obj_common;
   double n;
 };
+#endif
 
 struct range {
   obj_common;
@@ -353,7 +378,9 @@ union obj {
   struct cptr cp;
   struct env e;
   struct bignum bn;
+#if !CONFIG_NAN_BOXING
   struct flonum fl;
+#endif
   struct range rn;
   struct buf b;
   struct tnod tn;
@@ -438,15 +465,54 @@ extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
 
 #define SEQ_KIND_PAIR(A, B) ((A) << 3 | (B))
 
+#if CONFIG_NAN_BOXING
+
+INLINE cnum tag(val obj)
+{
+  ucnum word = coerce(ucnum, obj) >> TAG_BIGSHIFT;
+  if (word <= TAG_LIT)
+    return word;
+  if ((word & (NAN_TAG_MASK >> TAG_BIGSHIFT)) == (NAN_TAG_MASK >> TAG_BIGSHIFT))
+    return TAG_NUM;
+  return TAG_PTR;
+}
+
+INLINE cnum tag_ex(val obj)
+{
+  ucnum word = coerce(ucnum, obj) >> TAG_BIGSHIFT;
+  if (word <= TAG_LIT)
+    return word;
+  if ((word & (NAN_TAG_MASK >> TAG_BIGSHIFT)) == (NAN_TAG_MASK >> TAG_BIGSHIFT))
+    return TAG_NUM;
+  return TAG_FLNUM;
+}
+
+INLINE int is_ptr(val obj)
+{
+  return obj && coerce(ucnum, obj) >> TAG_BIGSHIFT == TAG_PTR;
+}
+
+INLINE int is_flo(val obj)
+{
+  ucnum nantag = coerce(ucnum, obj) & NAN_TAG_MASK;
+  return nantag != 0 && nantag != NAN_TAG_MASK;
+}
+
+#else
+
 INLINE cnum tag(val obj) { return coerce(cnum, obj) & TAG_MASK; }
+INLINE cnum tag_ex(val obj) { return tag(obj); }
 INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
+
+#endif
+
 INLINE int is_num(val obj) { return tag(obj) == TAG_NUM; }
 INLINE int is_chr(val obj) { return tag(obj) == TAG_CHR; }
 INLINE int is_lit(val obj) { return tag(obj) == TAG_LIT; }
 
 INLINE type_t type(val obj)
 {
-  cnum tg = tag(obj);
+  cnum tg = tag_ex(obj);
   return obj ? tg
                ? convert(type_t, tg)
                : obj->t.type
@@ -455,7 +521,7 @@ INLINE type_t type(val obj)
 
 typedef struct wli wchli_t;
 
-#if SIZEOF_WCHAR_T < 4
+#if SIZEOF_WCHAR_T < 4 && !CONFIG_NAN_BOXING
 #define wli_noex(lit) (coerce(const wchli_t *,\
                               convert(const wchar_t *,\
                                       L"\0" L ## lit L"\0" + 1)))
@@ -472,19 +538,31 @@ typedef struct wli wchli_t;
 
 INLINE val auto_str(const wchli_t *str)
 {
+#if CONFIG_NAN_BOXING
+  return coerce(val, coerce(cnum, str) |
+                    (coerce(cnum, TAG_LIT) << TAG_BIGSHIFT));
+#else
   return coerce(val, coerce(cnum, str) | TAG_LIT);
+#endif
 }
 
 INLINE val static_str(const wchli_t *str)
 {
+#if CONFIG_NAN_BOXING
+  return coerce(val, coerce(cnum, str) |
+                    (coerce(cnum, TAG_LIT) << TAG_BIGSHIFT));
+#else
   return coerce(val, coerce(cnum, str) | TAG_LIT);
+#endif
 }
 
 INLINE wchar_t *litptr(val obj)
 {
-#if SIZEOF_WCHAR_T < 4
+#if SIZEOF_WCHAR_T < 4 && !CONFIG_NAN_BOXING
  wchar_t *ret = coerce(wchar_t *, (coerce(cnum, obj) & ~TAG_MASK));
  return (*ret == 0) ? ret + 1 : ret;
+#elif CONFIG_NAN_BOXING
+ return coerce(wchar_t *, coerce(cnum, obj) & ~TAG_BIGMASK);
 #else
  return coerce(wchar_t *, coerce(cnum, obj) & ~TAG_MASK);
 #endif
@@ -492,7 +570,9 @@ INLINE wchar_t *litptr(val obj)
 
 INLINE val num_fast(cnum n)
 {
-#if HAVE_UBSAN
+#if CONFIG_NAN_BOXING
+  return coerce(val, n | NAN_TAG_MASK);
+#elif HAVE_UBSAN
   return coerce(val, (n * (1 << TAG_SHIFT)) | TAG_NUM);
 #else
   return coerce(val, (n << TAG_SHIFT) | TAG_NUM);
@@ -506,25 +586,60 @@ INLINE mp_int *mp(val bign)
 
 INLINE val chr(wchar_t ch)
 {
+#if CONFIG_NAN_BOXING
+  return coerce(val, ch | convert(cnum, TAG_CHR) << TAG_BIGSHIFT);
+#else
   return coerce(val, (convert(cnum, ch) << TAG_SHIFT) | TAG_CHR);
+#endif
+}
+
+INLINE cnum c_ch(val num)
+{
+#if CONFIG_NAN_BOXING
+    return coerce(cnum, num) & ~TAG_BIGMASK;
+#else
+    return coerce(cnum, num) >> TAG_SHIFT;
+#endif
 }
 
 INLINE cnum c_n(val num)
 {
+#if CONFIG_NAN_BOXING
+    cnum n = coerce(cnum, num) & ~NAN_TAG_MASK;
+    return n << NAN_TAG_BIT >> NAN_TAG_BIT;
+#else
     return coerce(cnum, num) >> TAG_SHIFT;
+#endif
 }
 
 INLINE ucnum c_u(val num)
 {
+#if CONFIG_NAN_BOXING
+    return coerce(ucnum, num) & ~NAN_TAG_MASK;
+#else
     return convert(ucnum, coerce(cnum, num) >> TAG_SHIFT);
+#endif
 }
 
-#if SIZEOF_WCHAR_T < 4
+INLINE double c_f(val num)
+{
+#if CONFIG_NAN_BOXING
+  ucnum u = coerce(ucnum, num) - NAN_FLNUM_DELTA;
+  return *coerce(double *, &u);
+#else
+  return num->fl.n;
+#endif
+}
+
+#if SIZEOF_WCHAR_T < 4 && !CONFIG_NAN_BOXING
 #define lit_noex(strlit) coerce(obj_t *,\
                                 coerce(cnum, L"\0" L ## strlit L"\0" + 1) | \
                                 TAG_LIT)
+#elif CONFIG_NAN_BOXING
+#define lit_noex(strlit) coerce(val, coerce(cnum, L ## strlit) |  \
+                                     (coerce(cnum, TAG_LIT) << TAG_BIGSHIFT))
 #else
-#define lit_noex(strlit) coerce(obj_t *, coerce(cnum, L ## strlit) | TAG_LIT)
+#define lit_noex(strlit) coerce(val, coerce(cnum, L ## strlit) | TAG_LIT)
 #endif
 
 #define lit(strlit) lit_noex(strlit)
@@ -610,7 +725,7 @@ val iter_more(val iter);
 val iter_item(val iter);
 val iter_step(val iter);
 val iter_reset(val iter, val obj);
-val throw_mismatch(val self, val obj, type_t);
+NORETURN val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)
 {
   if (type(obj) != typecode)
@@ -1300,7 +1415,12 @@ INLINE val null(val v) { return v ? nil : t; }
 
 #define nilp(o) ((o) == nil)
 
-#define nao coerce(obj_t *, 1 << TAG_SHIFT) /* "not an object" sentinel value. */
+/* "not an object" sentinel value. */
+#if CONFIG_NAN_BOXING
+#define nao coerce(obj_t *, 1)
+#else
+#define nao coerce(obj_t *, 1 << TAG_SHIFT)
+#endif
 
 #define missingp(v) ((v) == colon_k)
 

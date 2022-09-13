@@ -1150,7 +1150,9 @@ static val buf_int(val num)
   val self = lit("buf-int");
 
   switch (type(num)) {
-  case NUM: case CHR:
+  case CHR:
+    return buf_int(num_fast(c_ch(num)));
+  case NUM:
     num = bignum(c_num(num, self));
     /* fallthrough */
   case BGNUM:
@@ -1180,7 +1182,9 @@ static val buf_uint(val num)
   val self = lit("buf-uint");
 
   switch (type(num)) {
-  case NUM: case CHR:
+  case CHR:
+    return buf_uint(num_fast(c_ch(num)));
+  case NUM:
     num = bignum(c_num(num, self));
     /* fallthrough */
   case BGNUM:

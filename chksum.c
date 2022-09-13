@@ -212,7 +212,7 @@ val sha256_hash(val ctx, val obj)
     sha256_szmax_upd(ps256, obj->b.data, c_unum(obj->b.len, self));
     break;
   case CHR:
-    utf8_encode(c_chr(obj), sha256_utf8_byte_callback, coerce(mem_t *, ps256));
+    utf8_encode(c_ch(obj), sha256_utf8_byte_callback, coerce(mem_t *, ps256));
     break;
   case NUM:
     {
@@ -476,7 +476,7 @@ val md5_hash(val ctx, val obj)
     md5_szmax_upd(pmd5, obj->b.data, c_unum(obj->b.len, self));
     break;
   case CHR:
-    utf8_encode(c_chr(obj), md5_utf8_byte_callback, coerce(mem_t *, pmd5));
+    utf8_encode(c_ch(obj), md5_utf8_byte_callback, coerce(mem_t *, pmd5));
     break;
   case NUM:
     {

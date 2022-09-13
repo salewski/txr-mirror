@@ -153,6 +153,7 @@ const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NOTSEQ,   /* NUM */
   SEQ_NOTSEQ,   /* CHR */
   SEQ_VECLIKE,  /* LIT */
+  SEQ_NOTSEQ,   /* FLNUM */
   SEQ_LISTLIKE, /* CONS */
   SEQ_VECLIKE,  /* STR */
   SEQ_NOTSEQ,   /* SYM */
@@ -165,7 +166,6 @@ const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NOTSEQ,   /* CPTR */
   SEQ_NOTSEQ,   /* ENV */
   SEQ_NOTSEQ,   /* BGNUM */
-  SEQ_NOTSEQ,   /* FLNUM */
   SEQ_NOTSEQ,   /* RNG */
   SEQ_VECLIKE,  /* BUF */
   SEQ_NOTSEQ,   /* TNOD */
@@ -811,7 +811,7 @@ val seq_geti(seq_iter_t *it)
   return v;
 }
 
-static void seq_iter_rewind(seq_iter_t *it, val self)
+static void seq_iter_rewind(seq_iter_t *it)
 {
   switch (it->inf.type) {
   case RNG:
@@ -820,10 +820,10 @@ static void seq_iter_rewind(seq_iter_t *it, val self)
 
       switch (type(rf)) {
       case NUM:
-        it->ui.cn = c_num(rf, self);
+        it->ui.cn = c_n(rf);
         break;
       case CHR:
-        it->ui.cn = c_chr(rf);
+        it->ui.cn = c_ch(rf);
         break;
       case BGNUM:
         it->ui.vn = rf;
@@ -1241,7 +1241,7 @@ val iter_more(val iter)
   case NIL:
     return nil;
   case CHR:
-    return if2(c_chr(iter) <= 0x10FFFF, t);
+    return if2(c_ch(iter) <= 0x10FFFF, t);
   case NUM:
   case BGNUM:
     return t;
@@ -4180,7 +4180,7 @@ val equal(val left, val right)
     break;
   case FLNUM:
     if (type(right) == FLNUM) {
-      if (left->fl.n == right->fl.n)
+      if (c_f(left) == c_f(right))
         return t;
       return nil;
     }
@@ -5096,7 +5096,7 @@ val string_get_code(val str)
 
 val stringp(val str)
 {
-  if (str) switch (tag(str)) {
+  if (str) switch (tag_ex(str)) {
   case TAG_LIT:
     return t;
   case TAG_PTR:
@@ -12216,7 +12216,7 @@ val diff(val seq1, val seq2, val testfun, val keyfun)
     val el2;
     int found = 0;
 
-    seq_iter_rewind(&si2, self);
+    seq_iter_rewind(&si2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);
@@ -12322,7 +12322,7 @@ val isec(val seq1, val seq2, val testfun, val keyfun)
     val el1_key = funcall1(keyfun, el1);
     val el2;
 
-    seq_iter_rewind(&si2, self);
+    seq_iter_rewind(&si2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);
@@ -12354,7 +12354,7 @@ val isecp(val seq1, val seq2, val testfun, val keyfun)
     val el1_key = funcall1(keyfun, el1);
     val el2;
 
-    seq_iter_rewind(&si2, self);
+    seq_iter_rewind(&si2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);

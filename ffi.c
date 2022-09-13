@@ -879,8 +879,10 @@ static void ffi_float_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 
   switch (type(n)) {
   case NUM:
+    v = c_n(n);
+    break;
   case CHR:
-    v = c_num(n, self);
+    v = c_ch(n);
     break;
   case BGNUM:
     n = int_flo(n);
@@ -918,8 +920,10 @@ static void ffi_double_put(struct txr_ffi_type *tft, val n, mem_t *dst,
 
   switch (type(n)) {
   case NUM:
+    v = c_n(n);
+    break;
   case CHR:
-    v = c_num(n, self);
+    v = c_ch(n);
     break;
   case BGNUM:
     n = int_flo(n);
@@ -6618,7 +6622,9 @@ val carray_uint(val num, val eltype_in)
   carray_elem_check(tft, self);
 
   switch (type(num)) {
-  case NUM: case CHR:
+  case CHR:
+    return carray_uint(num_fast(c_ch(num)), eltype);
+  case NUM:
     num = bignum(c_num(num, self));
     /* fallthrough */
   case BGNUM:
@@ -6653,7 +6659,9 @@ val carray_int(val num, val eltype_in)
   carray_elem_check(tft, self);
 
   switch (type(num)) {
-  case NUM: case CHR:
+  case CHR:
+    return carray_int(num_fast(c_ch(num)), eltype);
+  case NUM:
     num = bignum(c_num(num, self));
     /* fallthrough */
   case BGNUM:

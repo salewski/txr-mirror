@@ -3709,7 +3709,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               uw_throwf(error_s, lit("~a: excessive precision: ~s"),
                         self, num(precision), nao);
 
-            sprintf(num_buf, "%.*g", precision, obj->fl.n);
+            sprintf(num_buf, "%.*g", precision, c_f(obj));
 
 #if CONFIG_LOCALE_TOLERANCE
             if (dec_point != '.') {

@@ -189,7 +189,14 @@ val normalize(val bignum)
 ucnum c_unum(val num, val self)
 {
   switch (type(num)) {
-  case CHR: case NUM:
+  case CHR:
+    {
+      cnum n = c_ch(num);
+      if (n >= 0)
+        return n;
+    }
+    goto range;
+  case NUM:
     {
       cnum n = c_n(num);
       if (n >= 0)
@@ -227,7 +234,9 @@ val unum(ucnum u)
 dbl_cnum c_dbl_num(val n)
 {
   switch (type(n)) {
-  case CHR: case NUM:
+  case CHR:
+    return c_ch(n);
+  case NUM:
     return c_n(n);
   case BGNUM:
     if (mp_in_double_intptr_range(mp(n))) {
@@ -245,7 +254,14 @@ dbl_cnum c_dbl_num(val n)
 dbl_ucnum c_dbl_unum(val n)
 {
   switch (type(n)) {
-  case CHR: case NUM:
+  case CHR:
+    {
+      dbl_cnum cn = c_ch(n);
+      if (cn >= 0)
+        return cn;
+      break;
+    }
+  case NUM:
     {
       dbl_cnum cn = c_n(n);
       if (cn >= 0)
@@ -656,7 +672,7 @@ tail:
     break;
   case TAG_PAIR(TAG_CHR, TAG_NUM):
     {
-      wchar_t a = c_chr(anum);
+      wchar_t a = c_ch(anum);
       cnum b = c_n(bnum);
       cnum sum = a + b;
 
@@ -667,7 +683,7 @@ tail:
   case TAG_PAIR(TAG_NUM, TAG_CHR):
     {
       cnum a = c_n(anum);
-      wchar_t b = c_chr(bnum);
+      wchar_t b = c_ch(bnum);
       cnum sum = a + b;
 
       if (sum < 0 || sum > 0x10FFFF)
@@ -696,8 +712,17 @@ val minus(val anum, val bnum)
 
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM):
   case TAG_PAIR(TAG_CHR, TAG_CHR):
+    {
+      cnum a = c_ch(anum);
+      cnum b = c_ch(bnum);
+      cnum sum = a - b;
+
+      if (sum < NUM_MIN || sum > NUM_MAX)
+        return bignum(sum);
+      return num_fast(sum);
+    }
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
     {
       cnum a = c_n(anum);
       cnum b = c_n(bnum);
@@ -828,7 +853,7 @@ tail:
     break;
   case TAG_PAIR(TAG_CHR, TAG_NUM):
     {
-      wchar_t a = c_chr(anum);
+      wchar_t a = c_ch(anum);
       cnum b = c_n(bnum);
       cnum sum = a - b;
 
@@ -911,7 +936,7 @@ static val signum(val anum)
     return if3(mp_isneg(mp(anum)), negone, one);
   case FLNUM:
     {
-      double a = anum->fl.n;
+      double a = c_f(anum);
       return flo(if3(a > 0, 1.0, if3(a < 0, -1.0, 0.0)));
     }
   case NUM:
@@ -1967,10 +1992,13 @@ val gt(val anum, val bnum)
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
-  case TYPE_PAIR(CHR, CHR):
-  case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     return c_n(anum) > c_n(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, CHR):
+    return c_ch(anum) > c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(NUM, CHR):
+    return c_n(anum) > c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, NUM):
+    return c_ch(anum) > c_n(bnum) ? t : nil;
   case TYPE_PAIR(NUM, BGNUM):
   case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
@@ -1980,11 +2008,13 @@ tail:
   case TYPE_PAIR(BGNUM, BGNUM):
     return mp_cmp(mp(anum), mp(bnum)) == MP_GT ? t : nil;
   case TYPE_PAIR(NUM, FLNUM):
-  case TYPE_PAIR(CHR, FLNUM):
     return c_n(anum) > c_flo(bnum, self) ? t : nil;
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_ch(anum) > c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
-  case TYPE_PAIR(FLNUM, CHR):
     return c_flo(anum, self) > c_n(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum, self) > c_ch(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
     return c_flo(anum, self) > c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
@@ -2030,10 +2060,13 @@ val lt(val anum, val bnum)
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
-  case TYPE_PAIR(CHR, CHR):
-  case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     return c_n(anum) < c_n(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, CHR):
+    return c_ch(anum) < c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(NUM, CHR):
+    return c_n(anum) < c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, NUM):
+    return c_ch(anum) < c_n(bnum) ? t : nil;
   case TYPE_PAIR(NUM, BGNUM):
   case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
@@ -2043,11 +2076,13 @@ tail:
   case TYPE_PAIR(BGNUM, BGNUM):
     return mp_cmp(mp(anum), mp(bnum)) == MP_LT ? t : nil;
   case TYPE_PAIR(NUM, FLNUM):
-  case TYPE_PAIR(CHR, FLNUM):
     return c_n(anum) < c_flo(bnum, self) ? t : nil;
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_ch(anum) < c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
-  case TYPE_PAIR(FLNUM, CHR):
     return c_flo(anum, self) < c_n(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum, self) < c_ch(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
     return c_flo(anum, self) < c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
@@ -2093,10 +2128,13 @@ val ge(val anum, val bnum)
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
-  case TYPE_PAIR(CHR, CHR):
-  case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     return c_n(anum) >= c_n(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, CHR):
+    return c_ch(anum) >= c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(NUM, CHR):
+    return c_n(anum) >= c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, NUM):
+    return c_ch(anum) >= c_n(bnum) ? t : nil;
   case TYPE_PAIR(NUM, BGNUM):
   case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
@@ -2111,11 +2149,13 @@ tail:
       return nil;
     }
   case TYPE_PAIR(NUM, FLNUM):
-  case TYPE_PAIR(CHR, FLNUM):
     return c_n(anum) >= c_flo(bnum, self) ? t : nil;
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_ch(anum) >= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
-  case TYPE_PAIR(FLNUM, CHR):
     return c_flo(anum, self) >= c_n(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum, self) >= c_ch(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
     return c_flo(anum, self) >= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
@@ -2161,10 +2201,13 @@ val le(val anum, val bnum)
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
-  case TYPE_PAIR(CHR, CHR):
-  case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     return c_n(anum) <= c_n(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, CHR):
+    return c_ch(anum) <= c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(NUM, CHR):
+    return c_n(anum) <= c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, NUM):
+    return c_ch(anum) <= c_n(bnum) ? t : nil;
   case TYPE_PAIR(NUM, BGNUM):
   case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
@@ -2179,11 +2222,13 @@ tail:
       return nil;
     }
   case TYPE_PAIR(NUM, FLNUM):
-  case TYPE_PAIR(CHR, FLNUM):
     return c_n(anum) <= c_flo(bnum, self) ? t : nil;
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_ch(anum) <= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
-  case TYPE_PAIR(FLNUM, CHR):
     return c_flo(anum, self) <= c_n(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum, self) <= c_ch(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
     return c_flo(anum, self) <= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
@@ -2259,10 +2304,13 @@ val numeq(val anum, val bnum)
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
-  case TYPE_PAIR(CHR, CHR):
-  case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     return c_n(anum) == c_n(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, CHR):
+    return c_ch(anum) == c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(NUM, CHR):
+    return c_n(anum) == c_ch(bnum) ? t : nil;
+  case TYPE_PAIR(CHR, NUM):
+    return c_ch(anum) == c_n(bnum) ? t : nil;
   case TYPE_PAIR(NUM, BGNUM):
   case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_EQ ? t : nil;
@@ -2272,11 +2320,13 @@ tail:
   case TYPE_PAIR(BGNUM, BGNUM):
     return mp_cmp(mp(anum), mp(bnum)) == MP_EQ ? t : nil;
   case TYPE_PAIR(NUM, FLNUM):
-  case TYPE_PAIR(CHR, FLNUM):
     return c_n(anum) == c_flo(bnum, self) ? t : nil;
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_ch(anum) == c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
-  case TYPE_PAIR(FLNUM, CHR):
     return c_flo(anum, self) == c_n(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum, self) == c_ch(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
     return c_flo(anum, self) == c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
@@ -3074,9 +3124,14 @@ val logand(val a, val b)
 
   switch (TYPE_PAIR(type(a), type(b))) {
   case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     {
       cnum ac = c_n(a);
+      cnum bc = c_ch(b);
+      return chr(ac & bc);
+    }
+  case TYPE_PAIR(CHR, NUM):
+    {
+      cnum ac = c_ch(a);
       cnum bc = c_n(b);
       return chr(ac & bc);
     }
@@ -3125,9 +3180,14 @@ val logior(val a, val b)
 
   switch (TYPE_PAIR(type(a), type(b))) {
   case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     {
       cnum ac = c_n(a);
+      cnum bc = c_ch(b);
+      return chr(ac | bc);
+    }
+  case TYPE_PAIR(CHR, NUM):
+    {
+      cnum ac = c_ch(a);
       cnum bc = c_n(b);
       return chr(ac | bc);
     }
@@ -3176,9 +3236,14 @@ val logxor(val a, val b)
 
   switch (TYPE_PAIR(type(a), type(b))) {
   case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     {
       cnum ac = c_n(a);
+      cnum bc = c_ch(b);
+      return chr(ac ^ bc);
+    }
+  case TYPE_PAIR(CHR, NUM):
+    {
+      cnum ac = c_ch(a);
       cnum bc = c_n(b);
       return chr(ac ^ bc);
     }
@@ -3229,11 +3294,18 @@ val logxor_old(val a, val b)
 
   switch (TYPE_PAIR(type(a), type(b))) {
   case TYPE_PAIR(NUM, CHR):
-  case TYPE_PAIR(CHR, NUM):
     if (a == b) {
       return a;
     } else {
       cnum ac = c_n(a);
+      cnum bc = c_ch(b);
+      return chr(ac ^ bc);
+    }
+  case TYPE_PAIR(CHR, NUM):
+    if (a == b) {
+      return a;
+    } else {
+      cnum ac = c_ch(a);
       cnum bc = c_n(b);
       return chr(ac ^ bc);
     }
@@ -3556,9 +3628,15 @@ val bit(val a, val bit)
 
   switch (ta) {
   case NUM:
-  case CHR:
     {
       cnum an = c_n(a);
+      if (bn < (SIZEOF_PTR * CHAR_BIT))
+        return (an & (convert(cnum, 1) << bn)) ? t : nil;
+      return an < 0 ? t : nil;
+    }
+  case CHR:
+    {
+      cnum an = c_ch(a);
       if (bn < (SIZEOF_PTR * CHAR_BIT))
         return (an & (convert(cnum, 1) << bn)) ? t : nil;
       return an < 0 ? t : nil;
@@ -3614,9 +3692,23 @@ val bitset(val n)
 
   switch (type(n)) {
   case NUM:
-  case CHR:
     {
       cnum c = c_n(n);
+      ucnum d = c;
+      int p = 0;
+
+      if (c < 0)
+        d = ~d;
+
+      for (; d; d >>= 1, p++)
+        if (d & 1)
+          ptail = list_collect(ptail, num_fast(p));
+
+      return out;
+    }
+  case CHR:
+    {
+      cnum c = c_ch(n);
       ucnum d = c;
       int p = 0;
 
@@ -3672,8 +3764,9 @@ val logcount(val n)
   val self = logcount_s;
 
   switch (type(n)) {
-  case NUM:
   case CHR:
+    return logcount(num_fast(c_ch(n)));
+  case NUM:
     {
       int_ptr_t c = c_n(n);
       uint_ptr_t d = c;
@@ -3835,7 +3928,7 @@ val tofloat(val obj)
     return flo_int(obj);
   case TAG_CHR:
     {
-      cnum ch = c_n(obj);
+      cnum ch = c_ch(obj);
       if (ch >= '0' && ch <= '9')
         return flo(ch - '0');
       return nil;
@@ -3872,7 +3965,7 @@ val toint(val obj, val base)
     return int_str(obj, base);
   case TAG_CHR:
     {
-      cnum ch = c_n(obj);
+      cnum ch = c_ch(obj);
 
       if (ch >= '0' && ch <= '9')
         return num(ch - '0');
@@ -3928,6 +4021,7 @@ val width(val obj)
 
   switch (type(obj)) {
   case CHR:
+    return width(num_fast(c_ch(obj)));
   case NUM:
     {
       cnum n = c_n(obj);
@@ -4128,7 +4222,9 @@ val num(cnum n)
 cnum c_num(val n, val self)
 {
   switch (type(n)) {
-  case CHR: case NUM:
+  case CHR:
+    return c_ch(n);
+  case NUM:
     return c_n(n);
   case BGNUM:
     if (mp_in_intptr_range(mp(n))) {
@@ -4146,7 +4242,9 @@ cnum c_num(val n, val self)
 cnum c_fixnum(val num, val self)
 {
   switch (type(num)) {
-  case CHR: case NUM:
+  case CHR:
+    return c_ch(num);
+  case NUM:
     return c_n(num);
   default:
     type_mismatch(lit("~a: ~s is not fixnum integer or character"),
@@ -4175,17 +4273,28 @@ val flo(double n)
   if (bad_float(n)) {
     uw_throw(numeric_error_s, lit("out-of-range floating-point result"));
   } else {
+#if CONFIG_NAN_BOXING
+    ucnum u = *(ucnum *) &n + NAN_FLNUM_DELTA;
+    return coerce(val, u);
+#else
     val obj = make_obj();
     obj->fl.type = FLNUM;
     obj->fl.n = n;
     return obj;
+#endif
   }
 }
 
 double c_flo(val num, val self)
 {
+#if CONFIG_NAN_BOXING
+  if (is_flo(num))
+    return c_f(num);
+  throw_mismatch(self, num, FLNUM);
+#else
   type_check(self, num, FLNUM);
   return num->fl.n;
+#endif
 }
 
 val fixnump(val num)
@@ -4200,7 +4309,7 @@ val bignump(val num)
 
 val integerp(val num)
 {
-  switch (tag(num)) {
+  switch (tag_ex(num)) {
   case TAG_NUM:
     return t;
   case TAG_PTR:
@@ -4221,9 +4330,13 @@ val floatp(val num)
 
 val numberp(val num)
 {
-  switch (tag(num)) {
+  switch (tag_ex(num)) {
   case TAG_NUM:
     return t;
+#if CONFIG_NAN_BOXING
+  case TAG_FLNUM:
+    return t;
+#endif
   case TAG_PTR:
     if (num == nil)
       return nil;

@@ -317,6 +317,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case STR:
     return hash_c_str(obj->st.str, seed, count);
   case CHR:
+    return c_ch(obj);
   case NUM:
     return c_u(obj);
   case SYM:
@@ -358,7 +359,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case BGNUM:
     return mp_hash(mp(obj)) * if3(seed, seed, 1);
   case FLNUM:
-    return hash_double(obj->fl.n) * if3(seed, seed, 1);
+    return hash_double(c_f(obj)) * if3(seed, seed, 1);
   case COBJ:
   case CPTR:
     if (obj->co.ops->equalsub) {
@@ -394,7 +395,7 @@ static ucnum eql_hash(val obj, int *count)
     case BGNUM:
       return mp_hash(mp(obj));
     case FLNUM:
-      return hash_double(obj->fl.n);
+      return hash_double(c_f(obj));
     case RNG:
       return eql_hash(obj->rn.from, count) + 2 * eql_hash(obj->rn.to, count);
     default:
@@ -406,6 +407,7 @@ static ucnum eql_hash(val obj, int *count)
       }
     }
   case TAG_CHR:
+    return c_ch(obj);
   case TAG_NUM:
     return c_u(obj);
   case TAG_LIT:
@@ -422,7 +424,7 @@ static ucnum eql_hash(val obj, int *count)
 
 static ucnum eq_hash(val obj)
 {
-  switch (tag(obj)) {
+  switch (tag_ex(obj)) {
   case TAG_PTR:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
@@ -431,6 +433,7 @@ static ucnum eq_hash(val obj)
       return coerce(ucnum, obj) >> 5;
     }
   case TAG_CHR:
+    return c_ch(obj);
   case TAG_NUM:
     return c_u(obj);
   case TAG_LIT:
@@ -440,6 +443,10 @@ static ucnum eq_hash(val obj)
     case 64: default:
       return coerce(ucnum, obj) >> 3;
     }
+#if CONFIG_NAN_BOXING
+  case TAG_FLNUM:
+    return coerce(ucnum, obj);
+#endif
   }
   /* notreached */
   abort();
