@@ -97,7 +97,7 @@ struct struct_type {
 
 struct struct_inst {
   struct struct_type *type;
-  cnum id : sizeof (cnum) * CHAR_BIT - TAG_SHIFT;
+  cnum id : NUM_BIT;
   unsigned lazy : 1;
   unsigned dirty : 1;
   val slot[FLEX_ARRAY];

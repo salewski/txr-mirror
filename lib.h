@@ -62,6 +62,7 @@ typedef double_uintptr_t dbl_ucnum;
 #define NUM_MIN (INT_PTR_MIN/4)
 
 #define PTR_BIT (SIZEOF_PTR * CHAR_BIT)
+#define NUM_BIT (PTR_BIT - TAG_SHIFT)
 
 #ifdef __GNUC__
 #define NORETURN __attribute__((noreturn))

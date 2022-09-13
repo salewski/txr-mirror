@@ -55,7 +55,6 @@
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-#define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
 val plus_s, minus_s, inv_minus_s, neg_s, abs_s, signum_s;
@@ -945,7 +944,7 @@ tail:
 #else
       cnum ap = ABS(a);
       cnum bp = ABS(b);
-      if (highest_bit(ap) + highest_bit(bp) < CNUM_BIT - 1) {
+      if (highest_bit(ap) + highest_bit(bp) < PTR_BIT - 1) {
         cnum product = a * b;
         if (product >= NUM_MIN && product <= NUM_MAX)
           return num_fast(product);
@@ -2561,7 +2560,7 @@ val square(val anum)
       return num_fast(product);
 #else
       cnum ap = ABS(a);
-      if (2 * highest_bit(ap) < CNUM_BIT - 1) {
+      if (2 * highest_bit(ap) < PTR_BIT - 1) {
         cnum product = a * a;
         if (product >= NUM_MIN && product <= NUM_MAX)
           return num_fast(product);
@@ -3283,7 +3282,6 @@ static val comp_trunc(val a, val bits)
   cnum an, bn;
   val b;
   const cnum num_mask = (NUM_MAX << 1) | 1;
-  const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
 
   if (!fixnump(bits))
     goto bad2;
@@ -3296,8 +3294,8 @@ static val comp_trunc(val a, val bits)
   switch (type(a)) {
   case NUM:
     an = c_n(a);
-    if (bn < num_bits) {
-      cnum mask = num_mask >> (num_bits - bn);
+    if (bn < NUM_BIT) {
+      cnum mask = num_mask >> (NUM_BIT - bn);
       return num_fast((an & mask) ^ mask);
     }
     a = bignum(an);
@@ -3362,7 +3360,6 @@ val logtrunc(val a, val bits)
   cnum an, bn;
   val b;
   const cnum num_mask = (NUM_MAX << 1) | 1;
-  const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
 
   if (!fixnump(bits))
     goto bad2;
@@ -3376,8 +3373,8 @@ val logtrunc(val a, val bits)
     mp_err mpe;
   case NUM:
     an = c_n(a);
-    if (bn <= num_bits) {
-      cnum mask = num_mask >> (num_bits - bn);
+    if (bn <= NUM_BIT) {
+      cnum mask = num_mask >> (NUM_BIT - bn);
       return num_fast(an & mask);
     }
     a = bignum(an);
@@ -3451,7 +3448,6 @@ val ash(val a, val bits)
   val self = ash_s;
   type_t ta = type(a);
   cnum bn;
-  const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
   mp_err mpe = MP_OKAY;
 
   if (ta == COBJ)
@@ -3476,7 +3472,7 @@ val ash(val a, val bits)
       {
         cnum an = c_n(a);
         int hb = highest_significant_bit(an);
-        if (bn + hb < num_bits) {
+        if (bn + hb < NUM_BIT) {
 #if HAVE_UBSAN
           return num_fast(an * (convert(cnum, 1) << bn));
 #else
@@ -3512,9 +3508,9 @@ val ash(val a, val bits)
       {
         cnum an = c_n(a);
         bn = -bn;
-        if (bn <= num_bits)
+        if (bn <= NUM_BIT)
           return num_fast(an >> bn);
-        return num_fast(an >> num_bits);
+        return num_fast(an >> NUM_BIT);
       }
     case BGNUM:
       {
