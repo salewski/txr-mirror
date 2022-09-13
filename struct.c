@@ -538,7 +538,7 @@ val make_struct_type(val name, val supers,
         struct stslot *ss = &st->stslot[n];
         val key = if2(su, cons(slot, num_fast(su->id)));
         val msl = if2(su, gethash(slot_hash, key));
-        cnum m = (coerce(cnum, msl) >> TAG_SHIFT) - STATIC_SLOT_BASE;
+        cnum m = c_n(msl) - STATIC_SLOT_BASE;
 
         if (!inherited_p || (opt_compat && opt_compat <= 151)) {
           ss->home_type = stype;
@@ -1123,7 +1123,7 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
     } else {
       val key = cons(sym, num_fast(id));
       val sl = gethash(slot_hash, key);
-      cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+      cnum slnum = c_n(sl);
 
       rcyc_cons(key);
 
@@ -1157,7 +1157,7 @@ static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
     } else if (slot < 0) {
       val key = cons(sym, num_fast(id));
       val sl = gethash(slot_hash, key);
-      cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+      cnum slnum = c_n(sl);
 
       rcyc_cons(key);
 
@@ -1174,7 +1174,7 @@ static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
     slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
     val key = cons(sym, num_fast(id));
     val sl = gethash(slot_hash, key);
-    cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+    cnum slnum = c_n(sl);
 
     sym->s.slot_cache = slot_cache;
 
@@ -1574,7 +1574,7 @@ val static_slot_p(val type, val sym)
   if (memq(sym, st->slots)) {
     val key = cons(sym, num_fast(st->id));
     val sl = gethash(slot_hash, key);
-    cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+    cnum slnum = c_n(sl);
 
     rcyc_cons(key);
 

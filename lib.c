@@ -6654,7 +6654,7 @@ wchar_t c_chr(val chr)
 {
   if (!is_chr(chr))
     type_mismatch(lit("~s is not a character"), chr, nao);
-  return convert(wchar_t, coerce(cnum, chr) >> TAG_SHIFT);
+  return convert(wchar_t, c_n(chr));
 }
 
 val chr_isalnum(val ch)

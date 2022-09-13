@@ -139,7 +139,7 @@ int num_to_buffer(val num, mem_t *buf, int bytes)
   switch (type(num)) {
   case CHR: case NUM:
     {
-      cnum n = coerce(cnum, num) >> TAG_SHIFT;
+      cnum n = c_n(num);
       mem_t *ptr = buf + bytes;
 
       for (; n != 0; n >>= 8) {
@@ -192,7 +192,7 @@ ucnum c_unum(val num, val self)
   switch (type(num)) {
   case CHR: case NUM:
     {
-      cnum n = coerce(cnum, num) >> TAG_SHIFT;
+      cnum n = c_n(num);
       if (n >= 0)
         return n;
     }
@@ -229,7 +229,7 @@ dbl_cnum c_dbl_num(val n)
 {
   switch (type(n)) {
   case CHR: case NUM:
-    return coerce(cnum, n) >> TAG_SHIFT;
+    return c_n(n);
   case BGNUM:
     if (mp_in_double_intptr_range(mp(n))) {
       double_intptr_t out;
@@ -248,7 +248,7 @@ dbl_ucnum c_dbl_unum(val n)
   switch (type(n)) {
   case CHR: case NUM:
     {
-      dbl_cnum cn = coerce(cnum, n) >> TAG_SHIFT;
+      dbl_cnum cn = c_n(n);
       if (cn >= 0)
         return cn;
       break;
@@ -4133,7 +4133,7 @@ cnum c_num(val n, val self)
 {
   switch (type(n)) {
   case CHR: case NUM:
-    return coerce(cnum, n) >> TAG_SHIFT;
+    return c_n(n);
   case BGNUM:
     if (mp_in_intptr_range(mp(n))) {
       int_ptr_t out;
@@ -4151,7 +4151,7 @@ cnum c_fixnum(val num, val self)
 {
   switch (type(num)) {
   case CHR: case NUM:
-    return coerce(cnum, num) >> TAG_SHIFT;
+    return c_n(num);
   default:
     type_mismatch(lit("~a: ~s is not fixnum integer or character"),
                   self, num, nao);
