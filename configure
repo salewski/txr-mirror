@@ -1597,9 +1597,10 @@ fi
 
 if [ -n "$nan_boxing" ] ; then
   if [ $SIZEOF_PTR -ne 8 ] ; then
-    printf "Warning: NaN boxing disabled: it requires 32 bit pointers\n"
+    printf "Warning: NaN boxing disabled: it requires 64 bit pointers\n"
+  else
+    printf "#define CONFIG_NAN_BOXING 1\n" >> config.h
   fi
-  printf "#define CONFIG_NAN_BOXING 1\n" >> config.h
 fi
 
 if [ -n "$nan_boxing" ] ; then
