@@ -218,6 +218,8 @@ libffi_cflags=
 darwin_target=
 solaris_target=
 build_id=
+nan_boxing=
+nan_boxing_given=
 
 #
 # Parse configuration variables
@@ -591,6 +593,14 @@ build-id [$build_id]
 
   The build_id variable can be overridden from the make command line.
 
+nan-boxing [$nan_boxing]
+
+  This option specifies whether NaN-boxing representation is used
+  for Lisp values. This is good for floating-point work because
+  floating-point values do not require heap allocation.
+  It is enabled automatically on targets with 64 bit pointers,
+  and is not supported on targets with 32 bit pointers.
+  Disable it to select the regular tagged pointer representation.
 !
   exit 1
 fi
@@ -1571,6 +1581,24 @@ then
   printf "#define HAVE_DOUBLE_INTPTR_T 1\n" >> config.h
   printf "typedef superlong_t double_intptr_t;\n" >> config.h
   printf "typedef superulong_t double_uintptr_t;\n" >> config.h
+fi
+
+if ! [ $nan_boxing_given ] ; then
+  printf "Checking whether to use NaN boxing ... "
+
+  if [ $SIZEOF_PTR -eq 8 ] ; then
+    nan_boxing=y
+    printf "yes\n"
+  else
+    printf "no\n"
+  fi
+fi
+
+if [ -n "$nan_boxing" ] ; then
+  if [ $SIZEOF_PTR -ne 8 ] ; then
+    printf "Warning: NaN boxing disabled: it requires 32 bit pointers\n"
+  fi
+  printf "#define CONFIG_NAN_BOXING 1\n" >> config.h
 fi
 
 printf "Checking for intmax_t  ... "
