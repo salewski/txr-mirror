@@ -135,8 +135,7 @@
          (set bl.links (list [bb.hash jlabel])))
         ((close @nil @nil @nil @jlabel . @nil)
          (set bl.links (list [bb.hash jlabel])
-              bl.next nxbl
-              link-next nil))
+              bl.next nxbl))
         ((swtch @nil . @jlabels)
          (set bl.links [mapcar bb.hash (uniq jlabels)]
               link-next nil))
@@ -502,6 +501,7 @@
 
 (defmeth basic-blocks check-bypass-empty (bb bl nx)
   (unless (cdr bl.insns)
+    (upd nx.rlinks (remq bl))
     (each ((pb bl.rlinks))
       (if (eq pb.next bl)
         (set pb.next nx))
