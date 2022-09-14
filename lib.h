@@ -625,7 +625,14 @@ INLINE double c_f(val num)
 {
 #if CONFIG_NAN_BOXING
   ucnum u = coerce(ucnum, num) - NAN_FLNUM_DELTA;
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
   return *coerce(double *, &u);
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #else
   return num->fl.n;
 #endif

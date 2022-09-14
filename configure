@@ -1603,24 +1603,6 @@ if [ -n "$nan_boxing" ] ; then
   fi
 fi
 
-if [ -n "$nan_boxing" ] ; then
-  printf "Checking how to disable strict aliasing warnings ... "
-
-  cat > conftest.c <<!
-int main(void)
-{
-  return 0;
-}
-!
-
-  if conftest EXTRA_FLAGS=-Wno-strict-aliasing ; then
-    printf -- "-Wno-strict-aliasing\n"
-    diag_flags="$diag_flags -Wno-strict-aliasing"
-  else
-    printf "unknown\n"
-  fi
-fi
-
 printf "Checking for intmax_t  ... "
 cat > conftest.c <<!
 #include <inttypes.h>
