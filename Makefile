@@ -160,6 +160,7 @@ endef
 
 define COMPILE_TL
 $(call ABBREV,TXR)
+$(call SH,rm -f $@.tmp)
 $(call SH,$(TXR) --in-package=sys --compile=$<:$@.tmp)
 $(call SH,mv $@.tmp $@)
 endef
