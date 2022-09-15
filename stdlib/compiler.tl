@@ -111,12 +111,14 @@
       (compile-error me.co.last-form "duplicate variable: ~s" sym))
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
            (bn (new vbinding sym sym loc loc env me)))
-      (set me.vb (acons sym bn me.vb))))
+      (set me.vb (acons sym bn me.vb))
+      bn))
 
   (:method extend-var* (me sym)
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
            (bn (new vbinding sym sym loc loc env me)))
-      (set me.vb (acons sym bn me.vb))))
+      (set me.vb (acons sym bn me.vb))
+      bn))
 
   (:method extend-fun (me sym)
     (when (assoc sym me.fb)
@@ -850,8 +852,8 @@
   (mac-param-bind form (op symbols try-expr desc-expr . clauses) form
     (with-gensyms (ex-sym-var ex-args-var)
       (let* ((nenv (new env up env co me))
-             (esvb (cdar nenv.(extend-var ex-sym-var)))
-             (eavb (cdar nenv.(extend-var ex-args-var)))
+             (esvb nenv.(extend-var ex-sym-var))
+             (eavb nenv.(extend-var ex-args-var))
              (tfrag me.(compile oreg nenv try-expr))
              (dfrag me.(compile oreg nenv desc-expr))
              (lhand (gensym "l"))
@@ -973,7 +975,7 @@
                              (form
                                (let* ((tmp (if seq (gensym)))
                                       (bind (if seq
-                                              (cdar nenv.(extend-var tmp))
+                                              nenv.(extend-var tmp)
                                               nenv.(lookup-var sym)))
                                       (frag me.(compile bind.loc fenv form)))
                                  (when seq
@@ -1510,8 +1512,8 @@
   (mac-param-bind form (op obj . cases) form
     (let* ((ncases (len cases))
            (nenv (new env up env co me))
-           (obj-immut-var (cdar nenv.(extend-var (gensym))))
-           (obj-var (cdar nenv.(extend-var (gensym))))
+           (obj-immut-var nenv.(extend-var (gensym)))
+           (obj-var nenv.(extend-var (gensym)))
            (err-blk (gensym))
            (lout (gensym "l"))
            (ctx-form ^',form)
