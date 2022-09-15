@@ -131,12 +131,6 @@
            (bn (new fbinding sym sym loc loc env me)))
       (set me.fb (acons sym bn me.fb))))
 
-  (:method rename-var (me from-sym to-sym)
-    (iflet ((cell (assoc from-sym me.vb)))
-      (rplaca cell to-sym)
-      (let ((bn (cdr cell)))
-        (set bn.sym to-sym))))
-
   (:method out-of-scope (me reg)
     (if (eq (car reg) 'v)
       (let ((lev (ssucc (cadr reg))))
@@ -977,16 +971,15 @@
                                                         (cdr allsyms))
                                                   frag.fvars)))))
                              (form
-                               (let* ((tmp (if seq (gensym)))
-                                      (bind (if seq
-                                              nenv.(extend-var tmp)
-                                              nenv.(lookup-var sym)))
-                                      (frag me.(compile bind.loc fenv form)))
+                               (let* ((loc (if seq
+                                             nenv.(get-loc)
+                                             nenv.(lookup-var sym).loc))
+                                      (frag me.(compile loc fenv form)))
                                  (when seq
-                                   fenv.(rename-var tmp sym))
+                                   nenv.(extend-var* sym loc))
                                  (pend frag.code)
                                  (unless (null-reg frag.oreg)
-                                   (pend me.(maybe-mov bind.loc frag.oreg)))
+                                   (pend me.(maybe-mov loc frag.oreg)))
                                  (set ffuns (uni ffuns frag.ffuns)
                                       fvars (uni fvars
                                                  (if seq
