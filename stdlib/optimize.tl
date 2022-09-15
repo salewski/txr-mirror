@@ -39,6 +39,7 @@
     rlinks
     insns
     closer
+    nojoin
 
     (:method print (bl stream pretty-p)
        (put-string "#S" stream)
@@ -64,7 +65,7 @@
     tryjoin
     (:static start (gensym "start-"))
     (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr
-                        uwprot catch block jend))
+                        uwprot catch block jend xend))
 
     (:postinit (bb)
       (let* ((insns (early-peephole (dedup-labels (cons bb.start bb.insns))))
@@ -146,7 +147,9 @@
         ((uwprot @clabel)
          (set bl.links (list [bb.hash clabel])))
         ((@(or abscsr ret jend) . @nil)
-         (set link-next nil)))
+         (set link-next nil))
+        ((xend . @nil)
+         (set bl.nojoin t)))
       (when (and nxbl link-next)
         (set bl.next nxbl)
         (pushnew nxbl bl.links))
@@ -200,7 +203,7 @@
                (let* ((li (liveness (cdr insns)))
                       (insn (car insns)))
                  (match-case insn
-                   ((@(or end jend prof) @reg)
+                   ((@(or end jend xend prof) @reg)
                     (refs li insn reg))
                    ((@(or apply call) @def . @refs)
                     (def-ref li insn def . refs))
@@ -230,7 +233,7 @@
                     (def li insn reg))
                    ((@op . @nil)
                     (caseq op
-                      ((end jend prof or apply call or gapply gcall mov if
+                      ((end jend xend prof or apply call or gapply gcall mov if
                         ifq ifql swtch block ret abscsr catch handle getv
                         getvb getfb getl1b getlx getf setl1 setlx bindv close)
                        (error `wrongly handled @insn instruction`))
@@ -481,7 +484,7 @@
   (whilet ((rescan (zap bb.rescan)))
     (whilet ((bl (pop bb.tryjoin)))
       (let ((nxbl bl.next))
-        (when (null (cdr nxbl.rlinks))
+        (unless (or bl.nojoin (cdr nxbl.rlinks))
           bb.(join-block bl nxbl)
           (set bb.recalc t)
           (when (memq nxbl bb.tryjoin)
@@ -527,6 +530,7 @@
                 (cond
                   ((and (eq bl.next nxbl)
                         (eq (car bl.links) nxbl)
+                        (null bl.nojoin)
                         (null (cdr bl.links))
                         (null (cdr nxbl.rlinks)))
                    bb.(join-block bl nxbl)

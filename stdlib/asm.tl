@@ -394,6 +394,8 @@
 
 (defopcode-alias jend end)
 
+(defopcode-alias xend end)
+
 (defopcode-derived op-prof prof auto op-end)
 
 (defopcode op-call call auto

@@ -1599,7 +1599,7 @@
       (new (frag oreg
                  ^((prof ,oreg)
                    ,*bfrag.code
-                   (end ,bfrag.oreg))
+                   (xend ,bfrag.oreg))
                  bfrag.fvars bfrag.ffuns)))))
 
 (defun misleading-ref-check (frag env form)
