@@ -106,17 +106,21 @@
       (((up me.up)) up.(lookup-block sym mark-used))
       (t nil)))
 
-  (:method extend-var (me sym)
+  (:method get-loc (me)
+    (when (>= me.v-cntr %lev-size%)
+      (compile-error me.last-form
+                     "code too complex: too many lexicals in one frame"))
+    ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
+
+  (:method extend-var (me sym : (loc me.(get-loc)))
     (when (assoc sym me.vb)
       (compile-error me.co.last-form "duplicate variable: ~s" sym))
-    (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
-           (bn (new vbinding sym sym loc loc env me)))
+    (let ((bn (new vbinding sym sym loc loc env me)))
       (set me.vb (acons sym bn me.vb))
       bn))
 
-  (:method extend-var* (me sym)
-    (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
-           (bn (new vbinding sym sym loc loc env me)))
+  (:method extend-var* (me sym : (loc me.(get-loc)))
+    (let ((bn (new vbinding sym sym loc loc env me)))
       (set me.vb (acons sym bn me.vb))
       bn))
 
