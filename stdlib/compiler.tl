@@ -1058,42 +1058,40 @@
           (when (> pars.nfix %max-lambda-fixed-args%)
             (compile-warning form "~s arguments in a lambda (max is ~s)"
                              pars.nfix %max-lambda-fixed-args%))
-          (flet ((spec-sub (sym)
+          (flet ((spec-sub (sym : (loc :))
                    (cond
                      ((special-var-p sym)
                       (let ((sub (gensym)))
                         (push (cons sym sub) specials)
                         (set need-dframe t)
-                        nenv.(extend-var sub)
+                        nenv.(extend-var sub loc)
                         sub))
                      (t
                        (push sym lexsyms)
-                       nenv.(extend-var sym)
+                       nenv.(extend-var sym loc)
                        sym))))
             (let* ((req-pars (collect-each ((rp pars.req))
                                (spec-sub rp)))
+                   (allsyms req-pars)
                    (opt-pars (collect-each ((op pars.opt))
                                (tree-bind (var-sym : init-form have-sym) op
-                                 (list (spec-sub var-sym)
-                                       init-form
-                                       (if have-sym (spec-sub have-sym))))))
-                   (rest-par (when pars.rest (spec-sub pars.rest)))
-                   (allsyms req-pars))
+                                 (let* ((loc nenv.(get-loc))
+                                        (ifrag me.(compile loc nenv init-form)))
+                                   (set fvars (uni fvars
+                                                   (diff ifrag.fvars allsyms)))
+                                   (push var-sym allsyms)
+                                   (push have-sym allsyms)
+                                   (list (spec-sub var-sym loc)
+                                         ifrag
+                                         (if have-sym (spec-sub have-sym)))))))
+                   (rest-par (when pars.rest (spec-sub pars.rest))))
               (upd specials nreverse)
               (with-closure-spy me (and (not specials)
                                         (>= *opt-level* 2))
                                 cspy (new closure-spy env nenv)
                 (let* ((col-reg (if opt-pars me.(get-dreg :)))
                        (tee-reg (if opt-pars me.(get-dreg t)))
-                       (ifrags (collect-each ((op opt-pars))
-                                 (tree-bind (var-sym init-form have-sym) op
-                                   (let* ((vbind nenv.(lookup-var var-sym))
-                                          (ifrag me.(compile vbind.loc nenv init-form)))
-                                     (set fvars (uni fvars
-                                                     (diff ifrag.fvars allsyms)))
-                                     (push var-sym allsyms)
-                                     (push have-sym allsyms)
-                                     ifrag))))
+                       (ifrags [mapcar cadr opt-pars])
                        (opt-code (append-each ((op opt-pars)
                                                (ifrg ifrags))
                                    (tree-bind (var-sym init-form have-sym) op

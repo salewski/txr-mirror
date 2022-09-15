@@ -128,6 +128,11 @@
 
 (test (functionp (lambda (: (n n)))) t)
 
+(defvarl n)
+
+(ltest
+  [(lambda (: (n n)) n)] nil)
+
 (cond
   (*compile-test* (exit t))
   (t (set *compile-test* t)
