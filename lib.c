@@ -529,7 +529,7 @@ static int seq_iter_peek_range_chr(seq_iter_t *it, val *pval)
   return 0;
 }
 
-static int seq_iter_get_range_bignum(seq_iter_t *it, val *pval)
+static int seq_iter_get_range_number(seq_iter_t *it, val *pval)
 {
   if (lt(it->ui.vn, it->ul.vbound)) {
     *pval = it->ui.iter;
@@ -539,7 +539,7 @@ static int seq_iter_get_range_bignum(seq_iter_t *it, val *pval)
   return 0;
 }
 
-static int seq_iter_peek_range_bignum(seq_iter_t *it, val *pval)
+static int seq_iter_peek_range_number(seq_iter_t *it, val *pval)
 {
   if (lt(it->ui.vn, it->ul.vbound)) {
     *pval = it->ui.iter;
@@ -620,7 +620,7 @@ static int seq_iter_peek_rev_range_chr(seq_iter_t *it, val *pval)
   return 0;
 }
 
-static int seq_iter_get_rev_range_bignum(seq_iter_t *it, val *pval)
+static int seq_iter_get_rev_range_number(seq_iter_t *it, val *pval)
 {
   if (gt(it->ui.vn, it->ul.vbound)) {
     *pval = it->ui.iter = pred(it->ui.iter);
@@ -629,7 +629,7 @@ static int seq_iter_get_rev_range_bignum(seq_iter_t *it, val *pval)
   return 0;
 }
 
-static int seq_iter_peek_rev_range_bignum(seq_iter_t *it, val *pval)
+static int seq_iter_peek_rev_range_number(seq_iter_t *it, val *pval)
 {
   if (gt(it->ui.vn, it->ul.vbound)) {
     *pval = pred(it->ui.iter);
@@ -892,9 +892,9 @@ struct seq_iter_ops si_range_chr_ops =
   seq_iter_ops_init_nomark(seq_iter_get_range_chr,
                            seq_iter_peek_range_chr);
 
-struct seq_iter_ops si_range_bignum_ops =
-  seq_iter_ops_init(seq_iter_get_range_bignum,
-                    seq_iter_peek_range_bignum);
+struct seq_iter_ops si_range_number_ops =
+  seq_iter_ops_init(seq_iter_get_range_number,
+                    seq_iter_peek_range_number);
 
 struct seq_iter_ops si_range_str_ops =
   seq_iter_ops_init(seq_iter_get_range_str,
@@ -908,9 +908,9 @@ struct seq_iter_ops si_rev_range_chr_ops =
   seq_iter_ops_init_nomark(seq_iter_get_rev_range_chr,
                            seq_iter_peek_rev_range_chr);
 
-struct seq_iter_ops si_rev_range_bignum_ops =
-  seq_iter_ops_init(seq_iter_get_rev_range_bignum,
-                    seq_iter_peek_rev_range_bignum);
+struct seq_iter_ops si_rev_range_number_ops =
+  seq_iter_ops_init(seq_iter_get_rev_range_number,
+                    seq_iter_peek_rev_range_number);
 
 struct seq_iter_ops si_rev_range_str_ops =
   seq_iter_ops_init(seq_iter_get_rev_range_str,
@@ -946,14 +946,22 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
 
       if (less(rf, rt)) switch (type(rf)) {
       case NUM:
-        if (bignump(rt) && !mp_in_intptr_range(mp(rt))) {
+      num_range_fwd:
+        switch (type(rt)) {
+        case BGNUM:
+          if (mp_in_intptr_range(mp(rt))) {
+        case NUM:
+            it->ui.cn = c_num(rf, self);
+            it->ul.cbound = c_num(rt, self);
+            it->ops = &si_range_cnum_ops;
+            break;
+          }
+          /* fallthrough */
+        default:
           it->ui.vn = rf;
           it->ul.vbound = rt;
-          it->ops = &si_range_bignum_ops;
-        } else {
-          it->ui.cn = c_num(rf, self);
-          it->ul.cbound = c_num(rt, self);
-          it->ops = &si_range_cnum_ops;
+          it->ops = &si_range_number_ops;
+          break;
         }
         break;
       case CHR:
@@ -962,9 +970,13 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         it->ops = &si_range_chr_ops;
         break;
       case BGNUM:
+        if (mp_in_intptr_range(mp(rf)))
+          goto num_range_fwd;
+        /* fallthrough */
+      case FLNUM:
         it->ui.vn = rf;
         it->ul.vbound = rt;
-        it->ops = &si_range_bignum_ops;
+        it->ops = &si_range_number_ops;
         break;
       case LIT:
       case STR:
@@ -979,14 +991,22 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         unsup_obj(self, it->inf.obj);
       } else if (!equal(rf, rt)) switch (type(rf)) {
       case NUM:
-        if (bignump(rt) && !mp_in_intptr_range(mp(rt))) {
+      num_range_rev:
+        switch (type(rt)) {
+        case BGNUM:
+          if (mp_in_intptr_range(mp(rt))) {
+        case NUM:
+            it->ui.cn = c_num(rf, self);
+            it->ul.cbound = c_num(rt, self);
+            it->ops = &si_rev_range_cnum_ops;
+            break;
+          }
+          /* fallthrough */
+        default:
           it->ui.vn = rf;
           it->ul.vbound = rt;
-          it->ops = &si_rev_range_bignum_ops;
-        } else {
-          it->ui.cn = c_num(rf, self);
-          it->ul.cbound = c_num(rt, self);
-          it->ops = &si_rev_range_cnum_ops;
+          it->ops = &si_rev_range_number_ops;
+          break;
         }
         break;
       case CHR:
@@ -995,9 +1015,13 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         it->ops = &si_rev_range_chr_ops;
         break;
       case BGNUM:
+        if (mp_in_intptr_range(mp(rf)))
+          goto num_range_rev;
+        /* fallthrough */
+      case FLNUM:
         it->ui.vn = rf;
         it->ul.vbound = rt;
-        it->ops = &si_rev_range_bignum_ops;
+        it->ops = &si_rev_range_number_ops;
         break;
       case LIT:
       case STR:
