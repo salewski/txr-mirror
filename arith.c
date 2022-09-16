@@ -4268,20 +4268,17 @@ INLINE int bad_float(double d)
 #define bad_float(d) (0)
 #endif
 
+#if CONFIG_NAN_BOXING && defined __GNUC__
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
 val flo(double n)
 {
   if (bad_float(n)) {
     uw_throw(numeric_error_s, lit("out-of-range floating-point result"));
   } else {
 #if CONFIG_NAN_BOXING
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#endif
     ucnum u = *(ucnum *) &n + NAN_FLNUM_DELTA;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
     return coerce(val, u);
 #else
     val obj = make_obj();
@@ -4291,6 +4288,10 @@ val flo(double n)
 #endif
   }
 }
+
+#if CONFIG_NAN_BOXING && defined __GNUC__
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
 double c_flo(val num, val self)
 {

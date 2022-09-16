@@ -621,22 +621,23 @@ INLINE ucnum c_u(val num)
 #endif
 }
 
+#if CONFIG_NAN_BOXING && defined __GNUC__
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
 INLINE double c_f(val num)
 {
 #if CONFIG_NAN_BOXING
   ucnum u = coerce(ucnum, num) - NAN_FLNUM_DELTA;
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#endif
   return *coerce(double *, &u);
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 #else
   return num->fl.n;
 #endif
 }
+
+#if CONFIG_NAN_BOXING && defined __GNUC__
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
 #if SIZEOF_WCHAR_T < 4 && !CONFIG_NAN_BOXING
 #define lit_noex(strlit) coerce(obj_t *,\
