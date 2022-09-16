@@ -3621,6 +3621,43 @@ Dialect Note: unlike in Common Lisp,
 is not an integer, but the floating-point number
 .codn 123.0 .
 
+Integers within a certain small range centered on zero have
+.code fixnum
+type. Values in the
+.code fixnum
+range fit into a Lisp value directly, not requiring heap allocation.
+A value which is implemented as a reference to a heap-allocated
+object is called
+.IR boxed ,
+whereas a self-contained value not referencing any storage
+elsewhere is called
+.IR unboxed .
+Thus values in the
+.code fixnum
+are unboxed; those outside of the range have
+.code bignum
+type instead, and are boxed.  The variables
+.code fixnum-min
+and
+.code fixnum-max
+indicate the range.
+
+Floating-point values are all unboxed if \*(TX is built with "NaN boxing"
+enabled, otherwise they are all boxed. The Lisp expression
+.code "(eq (read \(dq0.0\(dq) (read \(dq0.0\(dq))"
+returns
+.code t
+under NaN boxing, indicating that the two instances of 0.0 are the
+same object. In the absence of NaN boxing, the two
+.code read
+calls produce distinct, boxed representations of 0.0, which
+compare unequal under
+.codn eq .
+(The expression
+.code "(eq 0.0 0.0)"
+may not be relied upon if it is compiled, since compilation may deduplicate
+identical boxed literals, leading to a false positive.)
+
 .SS* Comments
 
 Comments of the form
@@ -14459,6 +14496,7 @@ Lisp variables using the
 .code @
 prefix, which is a consequence of that prefix introducing an expression that is
 evaluated as Lisp, the name of a variable being such an expression.
+
 
 .SH* LISP OPERATOR, FUNCTION AND MACRO REFERENCE
 
