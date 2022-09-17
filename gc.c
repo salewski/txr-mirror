@@ -81,6 +81,9 @@
 typedef struct heap {
   obj_t block[HEAP_SIZE];
   struct heap *next;
+#if CONFIG_NAN_BOXING_STRIP_TAG
+  ucnum tag;
+#endif
 } heap_t;
 
 typedef struct mach_context {
@@ -157,8 +160,17 @@ void protect(val *first, ...)
 
 static void more(void)
 {
+#if CONFIG_NAN_BOXING_STRIP_TAG
+  ucnum tagged_ptr = coerce(cnum, chk_malloc_gc_more(sizeof (heap_t)));
+  heap_t *heap = coerce(heap_t *, tagged_ptr & ~TAG_BIGMASK);
+#else
   heap_t *heap = coerce(heap_t *, chk_malloc_gc_more(sizeof *heap));
+#endif
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;
+
+#if CONFIG_NAN_BOXING_STRIP_TAG
+  heap->tag = tagged_ptr >> TAG_BIGSHIFT;
+#endif
 
   if (free_list == 0)
     free_tail = &heap->block[0].t.next;
@@ -720,7 +732,12 @@ NOINLINE static int_ptr_t sweep(void)
         }
       }
       *pph = heap->next;
+#if CONFIG_NAN_BOXING_STRIP_TAG
+      free(coerce(heap_t *, coerce(ucnum, heap) | (heap->tag << TAG_BIGSHIFT)));
+#else
       free(heap);
+#endif
+
 #if HAVE_VALGRIND
       if (vg_dbg) {
         val iter, next;
