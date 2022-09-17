@@ -1586,8 +1586,7 @@ fi
 if ! [ $nan_boxing_given ] ; then
   printf "Checking whether to use NaN boxing ... "
 
-  # too experimental: disabled
-  if false && [ $SIZEOF_PTR -eq 8 ] ; then
+  if [ $SIZEOF_PTR -eq 8 ] ; then
     nan_boxing=y
     printf "yes\n"
   else
