@@ -623,6 +623,7 @@ INLINE ucnum c_u(val num)
 
 #if CONFIG_NAN_BOXING && defined __GNUC__
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 
 INLINE double c_f(val num)
@@ -637,6 +638,7 @@ INLINE double c_f(val num)
 
 #if CONFIG_NAN_BOXING && defined __GNUC__
 #pragma GCC diagnostic warning "-Wstrict-aliasing"
+#pragma GCC diagnostic warning "-Wuninitialized"
 #endif
 
 #if SIZEOF_WCHAR_T < 4 && !CONFIG_NAN_BOXING
