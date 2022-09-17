@@ -59,506 +59,507 @@ syn keyword tl_keyword contained :longest :macos :mandatory :mass-delegate
 syn keyword tl_keyword contained :match :maxgap :maxtimes :method
 syn keyword tl_keyword contained :mid :mingap :mintimes :mode
 syn keyword tl_keyword contained :mtime :name :named :next-spec
-syn keyword tl_keyword contained :nlink :nothrow :oct :openbsd
-syn keyword tl_keyword contained :outf :outp :output :owner
-syn keyword tl_keyword contained :perms :postinit :prio :rdev
-syn keyword tl_keyword contained :real-time :reflect :repeat-spec :resolve
-syn keyword tl_keyword contained :rfilt :set :set-file :shortest
-syn keyword tl_keyword contained :size :solaris :solaris10 :space
-syn keyword tl_keyword contained :static :str :string :symacro
-syn keyword tl_keyword contained :symlinks :text :times :tlist
-syn keyword tl_keyword contained :to_html :tobase64 :tobase64url :tofloat
-syn keyword tl_keyword contained :tohtml :tohtml* :toint :tonumber
-syn keyword tl_keyword contained :topercent :tourl :uid :unknown
-syn keyword tl_keyword contained :upcase :use :use-from :use-syms
-syn keyword tl_keyword contained :userdata :var :vars :weak-and
-syn keyword tl_keyword contained :weak-keys :weak-or :weak-vals :whole
-syn keyword tl_keyword contained :word-char :wrap < <=
-syn keyword tl_keyword contained = > >= abort
-syn keyword tl_keyword contained abs abs-path-p acons acons-new
-syn keyword tl_keyword contained aconsql-new acos acosh add-suffix
-syn keyword tl_keyword contained ado af-inet af-inet6 af-unix
-syn keyword tl_keyword contained af-unspec ai-addrconfig ai-all ai-canonname
-syn keyword tl_keyword contained ai-numerichost ai-numericserv ai-passive ai-v4mapped
-syn keyword tl_keyword contained alet align alignof alist-nremove
-syn keyword tl_keyword contained alist-remove all allocate-struct and
-syn keyword tl_keyword contained andf ap apf append
-syn keyword tl_keyword contained append* append-each append-each* append-each-prod
-syn keyword tl_keyword contained append-each-prod* append-match-products append-matches apply
-syn keyword tl_keyword contained aret array arraysize ash
-syn keyword tl_keyword contained asin asinh assert assoc
-syn keyword tl_keyword contained assq assql at-exit-call at-exit-do-not-call
-syn keyword tl_keyword contained atan atan2 atanh atom
-syn keyword tl_keyword contained awk base-name base64-decode base64-decode-buf
-syn keyword tl_keyword contained base64-encode base64-stream-dec base64-stream-enc base64url-decode
-syn keyword tl_keyword contained base64url-decode-buf base64url-encode base64url-stream-dec base64url-stream-enc
-syn keyword tl_keyword contained bchar be-double be-float be-int16
-syn keyword tl_keyword contained be-int32 be-int64 be-uint16 be-uint32
-syn keyword tl_keyword contained be-uint64 bignum-len bignump bindable
-syn keyword tl_keyword contained bit bitset blkcnt-t blksize-t
-syn keyword tl_keyword contained block block* bool boundp
-syn keyword tl_keyword contained bracket break-str brkint bs0
-syn keyword tl_keyword contained bs1 bsdly bstr bstr-d
-syn keyword tl_keyword contained bstr-s buf buf-alloc-size buf-carray
-syn keyword tl_keyword contained buf-compress buf-d buf-decompress buf-get-char
-syn keyword tl_keyword contained buf-get-cptr buf-get-double buf-get-float buf-get-i16
-syn keyword tl_keyword contained buf-get-i32 buf-get-i64 buf-get-i8 buf-get-int
-syn keyword tl_keyword contained buf-get-long buf-get-short buf-get-u16 buf-get-u32
-syn keyword tl_keyword contained buf-get-u64 buf-get-u8 buf-get-uchar buf-get-uint
-syn keyword tl_keyword contained buf-get-ulong buf-get-ushort buf-int buf-list
-syn keyword tl_keyword contained buf-put-buf buf-put-char buf-put-cptr buf-put-double
-syn keyword tl_keyword contained buf-put-float buf-put-i16 buf-put-i32 buf-put-i64
-syn keyword tl_keyword contained buf-put-i8 buf-put-int buf-put-long buf-put-short
-syn keyword tl_keyword contained buf-put-u16 buf-put-u32 buf-put-u64 buf-put-u8
-syn keyword tl_keyword contained buf-put-uchar buf-put-uint buf-put-ulong buf-put-ushort
-syn keyword tl_keyword contained buf-set-length buf-str buf-trim buf-uint
-syn keyword tl_keyword contained bufp build build-list buildn
-syn keyword tl_keyword contained built-in-type-p butlast butlastn caaaaar
-syn keyword tl_keyword contained caaaadr caaaar caaadar caaaddr
-syn keyword tl_keyword contained caaadr caaar caadaar caadadr
-syn keyword tl_keyword contained caadar caaddar caadddr caaddr
-syn keyword tl_keyword contained caadr caar cadaaar cadaadr
-syn keyword tl_keyword contained cadaar cadadar cadaddr cadadr
-syn keyword tl_keyword contained cadar caddaar caddadr caddar
-syn keyword tl_keyword contained cadddar caddddr cadddr caddr
-syn keyword tl_keyword contained cadr call call-clobber-expander call-delete-expander
-syn keyword tl_keyword contained call-finalizers call-super-fun call-super-method call-update-expander
-syn keyword tl_keyword contained callf car carray carray-blank
-syn keyword tl_keyword contained carray-buf carray-buf-sync carray-cptr carray-dup
-syn keyword tl_keyword contained carray-free carray-get carray-getz carray-int
-syn keyword tl_keyword contained carray-list carray-own carray-pun carray-put
-syn keyword tl_keyword contained carray-putz carray-ref carray-refset carray-replace
-syn keyword tl_keyword contained carray-set-length carray-sub carray-type carray-uint
-syn keyword tl_keyword contained carray-vec carrayp caseq caseq*
-syn keyword tl_keyword contained caseql caseql* casequal casequal*
-syn keyword tl_keyword contained cat-files cat-str cat-streams cat-vec
-syn keyword tl_keyword contained catch catch* catch** catenated-stream-p
-syn keyword tl_keyword contained catenated-stream-push cbaud cbaudex cdaaaar
-syn keyword tl_keyword contained cdaaadr cdaaar cdaadar cdaaddr
-syn keyword tl_keyword contained cdaadr cdaar cdadaar cdadadr
-syn keyword tl_keyword contained cdadar cdaddar cdadddr cdaddr
-syn keyword tl_keyword contained cdadr cdar cddaaar cddaadr
-syn keyword tl_keyword contained cddaar cddadar cddaddr cddadr
-syn keyword tl_keyword contained cddar cdddaar cdddadr cdddar
-syn keyword tl_keyword contained cddddar cdddddr cddddr cdddr
-syn keyword tl_keyword contained cddr cdr ceil ceil-rem
-syn keyword tl_keyword contained chain chand char chdir
-syn keyword tl_keyword contained chmod chmod-rec chown chown-rec
-syn keyword tl_keyword contained chr-digit chr-int chr-isalnum chr-isalpha
-syn keyword tl_keyword contained chr-isascii chr-isblank chr-iscntrl chr-isdigit
-syn keyword tl_keyword contained chr-isgraph chr-islower chr-isprint chr-ispunct
-syn keyword tl_keyword contained chr-isspace chr-isunisp chr-isupper chr-isxdigit
-syn keyword tl_keyword contained chr-num chr-str chr-str-set chr-tolower
-syn keyword tl_keyword contained chr-toupper chr-xdigit chrp clamp
-syn keyword tl_keyword contained clear-dirty clear-error clear-mask clear-struct
-syn keyword tl_keyword contained clearhash clocal clock-t clockid-t
-syn keyword tl_keyword contained close close-stream closedir closelog
-syn keyword tl_keyword contained closure cmp-str cmspar coded-length
-syn keyword tl_keyword contained collect-each collect-each* collect-each-prod collect-each-prod*
-syn keyword tl_keyword contained comb command-get command-get-buf command-get-json
-syn keyword tl_keyword contained command-get-jsons command-get-lines command-get-string command-put
-syn keyword tl_keyword contained command-put-buf command-put-json command-put-jsons command-put-lines
-syn keyword tl_keyword contained command-put-string compare-swap compile compile-defr-warning
-syn keyword tl_keyword contained compile-error compile-file compile-only compile-toplevel
-syn keyword tl_keyword contained compile-update-file compile-warning compl-span-str cond
-syn keyword tl_keyword contained conda condlet cons conses
-syn keyword tl_keyword contained conses* consp constantp contain[s]
-syn keyword tl_keyword contained copy copy-alist copy-buf copy-carray
-syn keyword tl_keyword contained copy-cons copy-cptr copy-file copy-files
-syn keyword tl_keyword contained copy-fun copy-hash copy-list copy-path-rec
-syn keyword tl_keyword contained copy-search-tree copy-str copy-struct copy-tnode
-syn keyword tl_keyword contained copy-tree copy-tree-iter copy-vec cos
-syn keyword tl_keyword contained cosh count count-if count-until-match
-syn keyword tl_keyword contained countq countql countqual cptr
-syn keyword tl_keyword contained cptr-buf cptr-carray cptr-cast cptr-free
-syn keyword tl_keyword contained cptr-get cptr-int cptr-null cptr-obj
-syn keyword tl_keyword contained cptr-out cptr-size-hint cptr-type cptr-zap
-syn keyword tl_keyword contained cptrp cr0 cr1 cr2
-syn keyword tl_keyword contained cr3 crc32 crc32-stream crdly
-syn keyword tl_keyword contained cread crtscts crypt cs5
-syn keyword tl_keyword contained cs6 cs7 cs8 csize
-syn keyword tl_keyword contained cstopb cum-norm-dist cxr cyr
-syn keyword tl_keyword contained daemon dec defer-warning defex
-syn keyword tl_keyword contained deffi deffi-cb deffi-cb-unsafe deffi-struct
-syn keyword tl_keyword contained deffi-sym deffi-type deffi-union deffi-var
-syn keyword tl_keyword contained define-accessor define-modify-macro define-option-struct define-param-expander
-syn keyword tl_keyword contained define-place-macro define-struct-clause defmacro defmatch
-syn keyword tl_keyword contained defmeth defpackage defparm defparml
-syn keyword tl_keyword contained defplace defset defstruct defsymacro
-syn keyword tl_keyword contained defun defun-match defvar defvarl
-syn keyword tl_keyword contained del delay delcons delete-package
-syn keyword tl_keyword contained dev-t diff digits digpow
-syn keyword tl_keyword contained dir-name dirstat disassemble display-width
-syn keyword tl_keyword contained divides dlclose dlopen dlsym
-syn keyword tl_keyword contained dlsym-checked dlvsym dlvsym-checked do
-syn keyword tl_keyword contained doc dohash doloop doloop*
-syn keyword tl_keyword contained dotimes double downcase-str drop
-syn keyword tl_keyword contained drop-until drop-while dt-blk dt-chr
-syn keyword tl_keyword contained dt-dir dt-fifo dt-lnk dt-reg
-syn keyword tl_keyword contained dt-sock dt-unknown dump-compiled-objects dump-deferred-warnings
-syn keyword tl_keyword contained dup dupfd dwim e2big
-syn keyword tl_keyword contained eacces each each* each-false
-syn keyword tl_keyword contained each-match each-match-product each-prod each-prod*
-syn keyword tl_keyword contained each-true eaddrinuse eaddrnotavail eafnosupport
-syn keyword tl_keyword contained eagain ealready ebadf ebadmsg
-syn keyword tl_keyword contained ebusy ecanceled ecaseq ecaseq*
-syn keyword tl_keyword contained ecaseql ecaseql* ecasequal ecasequal*
-syn keyword tl_keyword contained echild echo echoctl echoe
-syn keyword tl_keyword contained echok echoke echonl echoprt
-syn keyword tl_keyword contained econnaborted econnrefused econnreset edeadlk
-syn keyword tl_keyword contained edestaddrreq edom edquot eexist
-syn keyword tl_keyword contained efault efbig ehostunreach eidrm
-syn keyword tl_keyword contained eighth eilseq einprogress eintr
-syn keyword tl_keyword contained einval eio eisconn eisdir
-syn keyword tl_keyword contained elemsize elemtype eloop emfile
-syn keyword tl_keyword contained emlink empty emsgsize emultihop
-syn keyword tl_keyword contained enametoolong endgrent endp endpwent
-syn keyword tl_keyword contained ends-with enetdown enetreset enetunreach
-syn keyword tl_keyword contained enfile enobufs enodata enodev
-syn keyword tl_keyword contained enoent enoexec enolck enolink
-syn keyword tl_keyword contained enomem enomsg enoprotoopt enospc
-syn keyword tl_keyword contained enosr enostr enosys enotconn
-syn keyword tl_keyword contained enotdir enotempty enotrecoverable enotsock
-syn keyword tl_keyword contained enotsup enotty ensure-dir enum
-syn keyword tl_keyword contained enumed env env-fbind env-fbindings
-syn keyword tl_keyword contained env-hash env-next env-vbind env-vbindings
-syn keyword tl_keyword contained enxio eopnotsupp eoverflow eownerdead
-syn keyword tl_keyword contained eperm epipe eproto eprotonosupport
-syn keyword tl_keyword contained eprototype eq eql equal
-syn keyword tl_keyword contained equot erange erofs errno
-syn keyword tl_keyword contained error espipe esrch estale
-syn keyword tl_keyword contained etime etimedout etxtbsy etypecase
-syn keyword tl_keyword contained eval eval-only evenp ewouldblock
-syn keyword tl_keyword contained exception-subtype-map exception-subtype-p exdev exec
-syn keyword tl_keyword contained exit exit* exp expand
-syn keyword tl_keyword contained expand* expand-left expand-right expand-with-free-refs
-syn keyword tl_keyword contained expt exptmod extproc f$
-syn keyword tl_keyword contained f-dupfd f-dupfd-cloexec f-getfd f-getfl
-syn keyword tl_keyword contained f-getlk f-rdlck f-setfd f-setfl
-syn keyword tl_keyword contained f-setlk f-setlkw f-unlck f-wrlck
-syn keyword tl_keyword contained f^ f^$ false fboundp
-syn keyword tl_keyword contained fcntl fd-cloexec ff0 ff1
-syn keyword tl_keyword contained ffdly ffi ffi-alignof ffi-arraysize
-syn keyword tl_keyword contained ffi-call ffi-elemsize ffi-elemtype ffi-get
-syn keyword tl_keyword contained ffi-in ffi-make-call-desc ffi-make-closure ffi-offsetof
-syn keyword tl_keyword contained ffi-out ffi-put ffi-put-into ffi-size
-syn keyword tl_keyword contained ffi-type-compile ffi-type-operator-p ffi-type-p ffi-typedef
-syn keyword tl_keyword contained fifth file-append file-append-buf file-append-json
-syn keyword tl_keyword contained file-append-jsons file-append-lines file-append-string file-get
-syn keyword tl_keyword contained file-get-buf file-get-json file-get-jsons file-get-lines
-syn keyword tl_keyword contained file-get-string file-place-buf file-put file-put-buf
-syn keyword tl_keyword contained file-put-json file-put-jsons file-put-lines file-put-string
-syn keyword tl_keyword contained fileno fill-buf fill-buf-adjust fill-carray
-syn keyword tl_keyword contained fill-obj fill-vec filter-equal filter-string-tree
-syn keyword tl_keyword contained finalize find find-frame find-frames
-syn keyword tl_keyword contained find-frames-by-mask find-if find-max find-max-key
-syn keyword tl_keyword contained find-min find-min-key find-package find-struct-type
-syn keyword tl_keyword contained find-symbol find-symbol-fb find-true first
-syn keyword tl_keyword contained fixnum-max fixnum-min fixnump flatcar
-syn keyword tl_keyword contained flatcar* flatten flatten* flet
-syn keyword tl_keyword contained flip flipargs flo-dig flo-down
-syn keyword tl_keyword contained flo-epsilon flo-get-round-mode flo-int flo-max
-syn keyword tl_keyword contained flo-max-dig flo-min flo-near flo-set-round-mode
-syn keyword tl_keyword contained flo-str flo-up flo-zero float
-syn keyword tl_keyword contained floatp floor floor-rem flow
-syn keyword tl_keyword contained flush-stream flusho fmakunbound fmt
-syn keyword tl_keyword contained fnm-casefold fnm-extmatch fnm-leading-dir fnm-noescape
-syn keyword tl_keyword contained fnm-pathname fnm-period fnmatch for
-syn keyword tl_keyword contained for* force force-break fork
-syn keyword tl_keyword contained format fourth fr$ fr^
-syn keyword tl_keyword contained fr^$ from frr fsblkcnt-t
-syn keyword tl_keyword contained fsfilcnt-t fstat ftw ftw-actionretval
-syn keyword tl_keyword contained ftw-chdir ftw-continue ftw-d ftw-depth
-syn keyword tl_keyword contained ftw-dnr ftw-dp ftw-f ftw-mount
-syn keyword tl_keyword contained ftw-ns ftw-phys ftw-skip-siblings ftw-skip-subtree
-syn keyword tl_keyword contained ftw-sl ftw-sln ftw-stop fun
-syn keyword tl_keyword contained fun-fixparam-count fun-optparam-count fun-variadic func-get-env
-syn keyword tl_keyword contained func-get-form func-get-name func-set-env functionp
-syn keyword tl_keyword contained gcd gen gen-hash-seed generate
-syn keyword tl_keyword contained gensym gequal get-buf-from-stream get-byte
-syn keyword tl_keyword contained get-char get-clobber-expander get-delete-expander get-error
-syn keyword tl_keyword contained get-error-str get-frames get-hash-userdata get-indent
-syn keyword tl_keyword contained get-indent-mode get-json get-jsons get-line
-syn keyword tl_keyword contained get-line-as-buf get-lines get-list-from-stream get-obj
-syn keyword tl_keyword contained get-sig-handler get-stack-limit get-string get-string-from-stream
-syn keyword tl_keyword contained get-update-expander getaddrinfo getegid getenv
-syn keyword tl_keyword contained geteuid getgid getgrent getgrgid
-syn keyword tl_keyword contained getgrnam getgroups gethash getitimer
-syn keyword tl_keyword contained getopts getpid getppid getpwent
-syn keyword tl_keyword contained getpwnam getpwuid getresgid getresuid
-syn keyword tl_keyword contained getrlimit getuid gid-t ginterate
-syn keyword tl_keyword contained giterate glob glob-altdirfunc glob-brace
-syn keyword tl_keyword contained glob-err glob-mark glob-nocheck glob-noescape
-syn keyword tl_keyword contained glob-nomagic glob-nosort glob-onlydir glob-period
-syn keyword tl_keyword contained glob-tilde glob-tilde-check go grade
-syn keyword tl_keyword contained greater group-by group-map group-reduce
-syn keyword tl_keyword contained gun handle handle* handler-bind
-syn keyword tl_keyword contained hash hash-alist hash-begin hash-construct
-syn keyword tl_keyword contained hash-count hash-diff hash-eql hash-equal
-syn keyword tl_keyword contained hash-from-alist hash-from-pairs hash-invert hash-isec
-syn keyword tl_keyword contained hash-keys hash-keys-of hash-list hash-next
-syn keyword tl_keyword contained hash-pairs hash-peek hash-proper-subset hash-reset
-syn keyword tl_keyword contained hash-revget hash-subset hash-symdiff hash-uni
-syn keyword tl_keyword contained hash-update hash-update-1 hash-userdata hash-values
-syn keyword tl_keyword contained hash-zip hashp have hlet
-syn keyword tl_keyword contained hlet* html-decode html-encode html-encode*
-syn keyword tl_keyword contained hupcl iapply icanon icrnl
-syn keyword tl_keyword contained id-t identity identity* ido
-syn keyword tl_keyword contained iexten if if-match ifa
-syn keyword tl_keyword contained iff iffi iflet ignbrk
-syn keyword tl_keyword contained igncr ignerr ignpar ignwarn
-syn keyword tl_keyword contained imaxbel improper-plist-to-alist in in-package
-syn keyword tl_keyword contained in-range in-range* in6addr-any in6addr-loopback
-syn keyword tl_keyword contained in6addr-str inaddr-any inaddr-loopback inaddr-str
-syn keyword tl_keyword contained inc inc-indent indent-code indent-data
-syn keyword tl_keyword contained indent-foff indent-off inhash inlcr
-syn keyword tl_keyword contained ino-t inpck int int-buf
-syn keyword tl_keyword contained int-carray int-chr int-cptr int-flo
-syn keyword tl_keyword contained int-ptr-t int-str int16 int32
-syn keyword tl_keyword contained int64 int8 integerp intern
-syn keyword tl_keyword contained intern-fb interp-fun-p interpose intmax-t
-syn keyword tl_keyword contained inv-cum-norm invoke-catch ip ipf
-syn keyword tl_keyword contained ipproto-ip ipproto-ipv6 ipproto-tcp ipproto-udp
-syn keyword tl_keyword contained ipv6-join-group ipv6-leave-group ipv6-multicast-hops ipv6-multicast-if
-syn keyword tl_keyword contained ipv6-multicast-loop ipv6-unicast-hops ipv6-v6only iread
-syn keyword tl_keyword contained isatty isec isecp isig
-syn keyword tl_keyword contained isqrt istrip iter-begin iter-item
-syn keyword tl_keyword contained iter-more iter-reset iter-step iterable
-syn keyword tl_keyword contained itimer-prof itimer-real itimer-virtual iuclc
-syn keyword tl_keyword contained iutf8 ixany ixoff ixon
-syn keyword tl_keyword contained join join-with json juxt
-syn keyword tl_keyword contained keep-if keep-if* keep-match-products keep-matches
-syn keyword tl_keyword contained keepq keepql keepqual key
-syn keyword tl_keyword contained key-t keyword-package keywordp kill
-syn keyword tl_keyword contained labels lambda lambda-match last
-syn keyword tl_keyword contained lazy-str lazy-str-force lazy-str-force-upto lazy-str-get-trailing-list
-syn keyword tl_keyword contained lazy-stream-cons lazy-stringp lchown lcm
-syn keyword tl_keyword contained lcons lcons-car lcons-cdr lcons-fun
-syn keyword tl_keyword contained lconsp ldiff ldo le-double
-syn keyword tl_keyword contained le-float le-int16 le-int32 le-int64
-syn keyword tl_keyword contained le-uint16 le-uint32 le-uint64 left
-syn keyword tl_keyword contained len length length-buf length-carray
-syn keyword tl_keyword contained length-list length-str length-str-< length-str-<=
-syn keyword tl_keyword contained length-str-> length-str->= length-vec lequal
-syn keyword tl_keyword contained less let let* lexical-fun-p
-syn keyword tl_keyword contained lexical-lisp1-binding lexical-var-p lib-version link
-syn keyword tl_keyword contained lisp-parse list list* list-carray
-syn keyword tl_keyword contained list-seq list-str list-vec list-vector
-syn keyword tl_keyword contained listp lnew lnew* load
-syn keyword tl_keyword contained load-for load-time loff-t log
-syn keyword tl_keyword contained log-alert log-auth log-authpriv log-cons
-syn keyword tl_keyword contained log-crit log-daemon log-debug log-emerg
-syn keyword tl_keyword contained log-err log-info log-ndelay log-notice
-syn keyword tl_keyword contained log-nowait log-odelay log-perror log-pid
-syn keyword tl_keyword contained log-user log-warning log10 log2
-syn keyword tl_keyword contained logand logcount logior lognot
-syn keyword tl_keyword contained logtest logtrunc logxor long
-syn keyword tl_keyword contained long-suffix longlong lop lset
-syn keyword tl_keyword contained lstat lutimes m$ m^
-syn keyword tl_keyword contained m^$ mac-env-param-bind mac-param-bind macro-ancestor
-syn keyword tl_keyword contained macro-form-p macro-time macroexpand macroexpand-1
-syn keyword tl_keyword contained macroexpand-1-lisp1 macroexpand-lisp1 macrolet madv-dodump
-syn keyword tl_keyword contained madv-dofork madv-dontdump madv-dontfork madv-dontneed
-syn keyword tl_keyword contained madv-free madv-hugepage madv-hwpoison madv-keeponfork
-syn keyword tl_keyword contained madv-mergeable madv-nohugepage madv-normal madv-random
-syn keyword tl_keyword contained madv-remove madv-sequential madv-unmergeable madv-willneed
-syn keyword tl_keyword contained madv-wipeonfork madvise major make-buf
-syn keyword tl_keyword contained make-buf-stream make-byte-input-stream make-catenated-stream make-env
-syn keyword tl_keyword contained make-hash make-lazy-cons make-lazy-struct make-like
-syn keyword tl_keyword contained make-package make-random-state make-similar-hash make-similar-tree
-syn keyword tl_keyword contained make-string-byte-input-stream make-string-input-stream make-string-output-stream make-strlist-input-stream
-syn keyword tl_keyword contained make-strlist-output-stream make-struct make-struct-delegate-stream make-struct-type
-syn keyword tl_keyword contained make-sym make-time make-time-utc make-trie
-syn keyword tl_keyword contained make-union make-zstruct makedev makunbound
-syn keyword tl_keyword contained map-anon map-fixed map-growsdown map-huge-mask
-syn keyword tl_keyword contained map-huge-shift map-hugetlb map-locked map-nonblock
-syn keyword tl_keyword contained map-noreserve map-populate map-private map-shared
-syn keyword tl_keyword contained map-stack mapcar mapcar* mapdo
-syn keyword tl_keyword contained mapf maphash mappend mappend*
-syn keyword tl_keyword contained maprend maprod maprodo mask
-syn keyword tl_keyword contained match match-case match-ecase match-error
-syn keyword tl_keyword contained match-fboundp match-fun match-regex match-regex-right
-syn keyword tl_keyword contained match-regst match-regst-right match-str match-str-tree
-syn keyword tl_keyword contained max mboundp md5 md5-begin
-syn keyword tl_keyword contained md5-end md5-hash md5-stream member
-syn keyword tl_keyword contained member-if memp memq memql
-syn keyword tl_keyword contained memqual meq meql mequal
-syn keyword tl_keyword contained merge merge-delete-package meth method
-syn keyword tl_keyword contained min minor minusp mismatch
-syn keyword tl_keyword contained mkdir mkdtemp mkfifo mknod
-syn keyword tl_keyword contained mkstemp mkstring mlet mmakunbound
-syn keyword tl_keyword contained mmap mod mode-t mprotect
-syn keyword tl_keyword contained ms-async ms-invalidate ms-sync msync
-syn keyword tl_keyword contained mul-each mul-each* mul-each-prod mul-each-prod*
-syn keyword tl_keyword contained multi multi-sort munmap n-choose-k
-syn keyword tl_keyword contained n-perm-k nand nandf nconc
-syn keyword tl_keyword contained neg neq neql nequal
-syn keyword tl_keyword contained new new* nexpand-left nil
-syn keyword tl_keyword contained nilf ninth nl0 nl1
-syn keyword tl_keyword contained nldly nlink-t noflsh none
-syn keyword tl_keyword contained nor norf not notf
-syn keyword tl_keyword contained nreconc nreverse nrot nshuffle
-syn keyword tl_keyword contained nsort nth nthcdr nthlast
-syn keyword tl_keyword contained null nullify num-chr num-str
-syn keyword tl_keyword contained numberp nzerop o-accmode o-append
-syn keyword tl_keyword contained o-async o-cloexec o-creat o-direct
-syn keyword tl_keyword contained o-directory o-noatime o-noctty o-nofollow
-syn keyword tl_keyword contained o-nonblock o-path o-rdonly o-rdwr
-syn keyword tl_keyword contained o-sync o-trunc o-wronly oand
-syn keyword tl_keyword contained obtain obtain* obtain*-block obtain-block
-syn keyword tl_keyword contained ocrnl oddp ofdel off-t
-syn keyword tl_keyword contained offsetof ofill olcuc onlcr
-syn keyword tl_keyword contained onlret onocr op open-command
-syn keyword tl_keyword contained open-directory open-file open-fileno open-files
-syn keyword tl_keyword contained open-files* open-pipe open-process open-socket
-syn keyword tl_keyword contained open-socket-pair open-subprocess open-tail opendir
-syn keyword tl_keyword contained openlog opip opost opt
-syn keyword tl_keyword contained opthelp opthelp-conventions opthelp-types or
-syn keyword tl_keyword contained orf pack package-alist package-fallback-list
-syn keyword tl_keyword contained package-foreign-symbols package-local-symbols package-name package-symbols
-syn keyword tl_keyword contained packagep pad page-size pairlis
-syn keyword tl_keyword contained parenb parmrk parodd parse-errors
-syn keyword tl_keyword contained partition partition* partition-by partition-if
-syn keyword tl_keyword contained path-blkdev-p path-cat path-chrdev-p path-components-safe
-syn keyword tl_keyword contained path-dir-empty path-dir-p path-equal path-executable-to-me-p
-syn keyword tl_keyword contained path-exists-p path-file-p path-mine-p path-my-group-p
-syn keyword tl_keyword contained path-newer path-older path-pipe-p path-private-to-me-p
-syn keyword tl_keyword contained path-read-writable-to-me-p path-readable-to-me-p path-safe-sticky-dir path-same-object
-syn keyword tl_keyword contained path-search path-sep-chars path-setgid-p path-setuid-p
-syn keyword tl_keyword contained path-sock-p path-sticky-p path-strictly-private-to-me-p path-symlink-p
-syn keyword tl_keyword contained path-writable-to-me-p pdec pendin perm
-syn keyword tl_keyword contained pic pid-t pinc pipe
-syn keyword tl_keyword contained place-form-p placelet placelet* plist-to-alist
-syn keyword tl_keyword contained plusp poll poll-err poll-in
-syn keyword tl_keyword contained poll-nval poll-out poll-pri poll-rdband
-syn keyword tl_keyword contained poll-rdhup poll-wrband poly pop
-syn keyword tl_keyword contained pop-after-load portable-abs-path-p pos pos-if
-syn keyword tl_keyword contained pos-max pos-min posq posql
-syn keyword tl_keyword contained posqual pppred ppred pprinl
-syn keyword tl_keyword contained pprint pprof pred prinl
-syn keyword tl_keyword contained print prod prof prog
-syn keyword tl_keyword contained prog* prog1 prog2 progn
-syn keyword tl_keyword contained promisep prop proper-list-p proper-listp
-syn keyword tl_keyword contained prot-exec prot-growsdown prot-growsup prot-none
-syn keyword tl_keyword contained prot-read prot-write pset ptr
-syn keyword tl_keyword contained ptr-in ptr-in-d ptr-out ptr-out-d
-syn keyword tl_keyword contained ptr-out-s ptrdiff-t pub:txr-sym pure-rel-path-p
-syn keyword tl_keyword contained purge-deferred-warning push push-after-load pushhash
-syn keyword tl_keyword contained pushnew put-buf put-byte put-carray
-syn keyword tl_keyword contained put-char put-json put-jsonl put-jsons
-syn keyword tl_keyword contained put-line put-lines put-obj put-string
-syn keyword tl_keyword contained put-strings pwd qquote qref
-syn keyword tl_keyword contained quantile quip quote r$
-syn keyword tl_keyword contained r^ r^$ raise rand
-syn keyword tl_keyword contained random random-buf random-fixnum random-float
-syn keyword tl_keyword contained random-float-incl random-sample random-state-get-vec random-state-p
-syn keyword tl_keyword contained range range* range-regex rangep
-syn keyword tl_keyword contained rassoc rassq rassql rcomb
-syn keyword tl_keyword contained rcons read read-once read-until-match
-syn keyword tl_keyword contained readdir readlink real-time-stream-p realpath
-syn keyword tl_keyword contained record-adapter reduce-left reduce-right ref
-syn keyword tl_keyword contained refset regex-compile regex-from-trie regex-optimize
-syn keyword tl_keyword contained regex-parse regex-prefix-match regex-source regexp
-syn keyword tl_keyword contained register-exception-subtypes register-tentative-def regsub rehome-sym
-syn keyword tl_keyword contained reject rel-path relate release-deferred-warnings
-syn keyword tl_keyword contained remhash remove-if remove-if* remove-path
-syn keyword tl_keyword contained remove-path-rec remq remq* remql
-syn keyword tl_keyword contained remql* remqual remqual* rename-path
-syn keyword tl_keyword contained repeat replace replace-buf replace-env
-syn keyword tl_keyword contained replace-list replace-str replace-struct replace-tree-iter
-syn keyword tl_keyword contained replace-vec reset-struct rest ret
-syn keyword tl_keyword contained retf return return* return-from
-syn keyword tl_keyword contained revappend reverse rfind rfind-if
-syn keyword tl_keyword contained right rlcp rlcp-tree rlet
-syn keyword tl_keyword contained rlim-infinity rlim-saved-cur rlim-saved-max rlimit-as
-syn keyword tl_keyword contained rlimit-core rlimit-cpu rlimit-data rlimit-fsize
-syn keyword tl_keyword contained rlimit-nofile rlimit-stack rlist rlist*
-syn keyword tl_keyword contained rmdir rmember rmember-if rmemq
-syn keyword tl_keyword contained rmemql rmemqual rmismatch rot
-syn keyword tl_keyword contained rotate round round-rem rperm
-syn keyword tl_keyword contained rplaca rplacd rpoly rpos
-syn keyword tl_keyword contained rpos-if rposq rposql rposqual
-syn keyword tl_keyword contained rr rra rsearch rslot
-syn keyword tl_keyword contained rtld-deepbind rtld-global rtld-lazy rtld-local
-syn keyword tl_keyword contained rtld-nodelete rtld-noload rtld-now run
-syn keyword tl_keyword contained s-ifblk s-ifchr s-ifdir s-ififo
-syn keyword tl_keyword contained s-iflnk s-ifmt s-ifreg s-ifsock
-syn keyword tl_keyword contained s-irgrp s-iroth s-irusr s-irwxg
-syn keyword tl_keyword contained s-irwxo s-irwxu s-isgid s-isuid
-syn keyword tl_keyword contained s-isvtx s-iwgrp s-iwoth s-iwusr
-syn keyword tl_keyword contained s-ixgrp s-ixoth s-ixusr save-exe
-syn keyword tl_keyword contained sbit scan-until-match search search-regex
-syn keyword tl_keyword contained search-regst search-str search-str-tree second
-syn keyword tl_keyword contained seek-cur seek-end seek-set seek-stream
-syn keyword tl_keyword contained select self-load-path self-path separate
-syn keyword tl_keyword contained seq-begin seq-next seq-reset seqp
-syn keyword tl_keyword contained set set-diff set-hash-userdata set-indent
-syn keyword tl_keyword contained set-indent-mode set-key set-left set-mask
-syn keyword tl_keyword contained set-max-depth set-max-length set-package-fallback-list set-right
-syn keyword tl_keyword contained set-sig-handler set-stack-limit setegid setenv
-syn keyword tl_keyword contained seteuid setgid setgrent setgroups
-syn keyword tl_keyword contained sethash setitimer setlogmask setpwent
-syn keyword tl_keyword contained setresgid setresuid setrlimit setuid
-syn keyword tl_keyword contained seventh sh sha256 sha256-begin
-syn keyword tl_keyword contained sha256-end sha256-hash sha256-stream shift
-syn keyword tl_keyword contained short short-suffix shuffle shut-rd
-syn keyword tl_keyword contained shut-rdwr shut-wr sig-abrt sig-alrm
-syn keyword tl_keyword contained sig-atomic-t sig-bus sig-check sig-chld
-syn keyword tl_keyword contained sig-cont sig-fpe sig-hup sig-ill
-syn keyword tl_keyword contained sig-int sig-io sig-iot sig-kill
-syn keyword tl_keyword contained sig-pipe sig-poll sig-prof sig-pwr
-syn keyword tl_keyword contained sig-quit sig-segv sig-stkflt sig-stop
-syn keyword tl_keyword contained sig-sys sig-term sig-trap sig-tstp
-syn keyword tl_keyword contained sig-ttin sig-ttou sig-urg sig-usr1
-syn keyword tl_keyword contained sig-usr2 sig-vtalrm sig-winch sig-xcpu
-syn keyword tl_keyword contained sig-xfsz sign-extend signum sin
-syn keyword tl_keyword contained sinh sixth size-t size-vec
-syn keyword tl_keyword contained sizeof slet slot slotp
-syn keyword tl_keyword contained slots slotset so-acceptconn so-broadcast
-syn keyword tl_keyword contained so-debug so-dontroute so-error so-keepalive
-syn keyword tl_keyword contained so-linger so-oobinline so-rcvbuf so-rcvlowat
-syn keyword tl_keyword contained so-rcvtimeo so-reuseaddr so-sndbuf so-sndlowat
-syn keyword tl_keyword contained so-sndtimeo so-type sock-accept sock-bind
-syn keyword tl_keyword contained sock-cloexec sock-connect sock-dgram sock-family
-syn keyword tl_keyword contained sock-listen sock-nonblock sock-opt sock-peer
-syn keyword tl_keyword contained sock-recv-timeout sock-send-timeout sock-set-opt sock-set-peer
-syn keyword tl_keyword contained sock-shutdown sock-stream sock-type socklen-t
-syn keyword tl_keyword contained sol-socket some some-false some-true
-syn keyword tl_keyword contained sort sort-group source-loc source-loc-str
-syn keyword tl_keyword contained span-str special-operator-p special-var-p spl
-syn keyword tl_keyword contained splice split split* split-str
-syn keyword tl_keyword contained split-str-set spln sqrt square
-syn keyword tl_keyword contained ssize-t sspl sssucc ssucc
-syn keyword tl_keyword contained starts-with stat static-slot static-slot-ensure
-syn keyword tl_keyword contained static-slot-home static-slot-p static-slot-set stdlib
-syn keyword tl_keyword contained str str-buf str-d str-in6addr
-syn keyword tl_keyword contained str-in6addr-net str-inaddr str-inaddr-net str-s
-syn keyword tl_keyword contained str-seq str< str<= str=
-syn keyword tl_keyword contained str> str>= stream-get-prop stream-set-prop
-syn keyword tl_keyword contained streamp strerror string-extend string-finish
-syn keyword tl_keyword contained string-get-code string-lt string-set-code stringp
-syn keyword tl_keyword contained strsignal struct struct-from-args struct-from-plist
-syn keyword tl_keyword contained struct-get-initfun struct-get-postinitfun struct-set-initfun struct-set-postinitfun
-syn keyword tl_keyword contained struct-type struct-type-name struct-type-p structp
-syn keyword tl_keyword contained sub sub-buf sub-list sub-str
-syn keyword tl_keyword contained sub-tree sub-vec subq subql
-syn keyword tl_keyword contained subqual subst subtypep succ
-syn keyword tl_keyword contained sum sum-each sum-each* sum-each-prod
-syn keyword tl_keyword contained sum-each-prod* super super-method suspend
-syn keyword tl_keyword contained swap symacrolet symbol-function symbol-macro
-syn keyword tl_keyword contained symbol-name symbol-package symbol-value symbolp
-syn keyword tl_keyword contained symdiff symlink sys:%backpatch-high16% sys:%backpatch-low16%
-syn keyword tl_keyword contained sys:%big-endian% sys:%bin-op% sys:%bin-ops% sys:%block-using-funs%
-syn keyword tl_keyword contained sys:%call-op% sys:%const-foldable% sys:%const-foldable-funs% sys:%dbg-command-env%
-syn keyword tl_keyword contained sys:%effect-free% sys:%effect-free-funs% sys:%eval-cache% sys:%functional%
-syn keyword tl_keyword contained sys:%functional-funs% sys:%gcall-op% sys:%lev-bits% sys:%lev-size%
-syn keyword tl_keyword contained sys:%max-lambda-fixed-args% sys:%max-lev% sys:%max-lev-idx% sys:%max-sm-lev%
-syn keyword tl_keyword contained sys:%max-sm-lev-idx% sys:%max-v-lev% sys:%nary-ops% sys:%oc-code%
-syn keyword tl_keyword contained sys:%oc-hash% sys:%oc-list-builder% sys:%package-manip% sys:%param-info%
-syn keyword tl_keyword contained sys:%quip-rand-state% sys:%quips% sys:%shuffled-quips% sys:%sm-lev-bits%
-syn keyword tl_keyword contained sys:%sm-lev-size% sys:%test-funs% sys:%test-funs-neg% sys:%test-funs-ops%
-syn keyword tl_keyword contained sys:%test-funs-pos% sys:%test-inv% sys:%test-opcode% sys:%tlo-ver%
-syn keyword tl_keyword contained sys:*dedup* sys:*emit* sys:*eval* sys:*in-compilation-unit*
+syn keyword tl_keyword contained :nlink :noclose :nothrow :oct
+syn keyword tl_keyword contained :openbsd :outf :outp :output
+syn keyword tl_keyword contained :owner :perms :postinit :prio
+syn keyword tl_keyword contained :rdev :real-time :reflect :repeat-spec
+syn keyword tl_keyword contained :resolve :rfilt :set :set-file
+syn keyword tl_keyword contained :shortest :size :solaris :solaris10
+syn keyword tl_keyword contained :space :static :str :string
+syn keyword tl_keyword contained :symacro :symlinks :text :times
+syn keyword tl_keyword contained :tlist :to_html :tobase64 :tobase64url
+syn keyword tl_keyword contained :tofloat :tohtml :tohtml* :toint
+syn keyword tl_keyword contained :tonumber :topercent :tourl :uid
+syn keyword tl_keyword contained :unknown :upcase :use :use-from
+syn keyword tl_keyword contained :use-syms :userdata :var :vars
+syn keyword tl_keyword contained :weak-and :weak-keys :weak-or :weak-vals
+syn keyword tl_keyword contained :whole :word-char :wrap <
+syn keyword tl_keyword contained <= = > >=
+syn keyword tl_keyword contained abort abs abs-path-p acons
+syn keyword tl_keyword contained acons-new aconsql-new acos acosh
+syn keyword tl_keyword contained add-suffix ado af-inet af-inet6
+syn keyword tl_keyword contained af-unix af-unspec ai-addrconfig ai-all
+syn keyword tl_keyword contained ai-canonname ai-numerichost ai-numericserv ai-passive
+syn keyword tl_keyword contained ai-v4mapped alet align alignof
+syn keyword tl_keyword contained alist-nremove alist-remove all allocate-struct
+syn keyword tl_keyword contained and andf ap apf
+syn keyword tl_keyword contained append append* append-each append-each*
+syn keyword tl_keyword contained append-each-prod append-each-prod* append-match-products append-matches
+syn keyword tl_keyword contained apply aret array arraysize
+syn keyword tl_keyword contained ash asin asinh assert
+syn keyword tl_keyword contained assoc assq assql at-exit-call
+syn keyword tl_keyword contained at-exit-do-not-call atan atan2 atanh
+syn keyword tl_keyword contained atom awk base-name base64-decode
+syn keyword tl_keyword contained base64-decode-buf base64-encode base64-stream-dec base64-stream-enc
+syn keyword tl_keyword contained base64url-decode base64url-decode-buf base64url-encode base64url-stream-dec
+syn keyword tl_keyword contained base64url-stream-enc bchar be-double be-float
+syn keyword tl_keyword contained be-int16 be-int32 be-int64 be-uint16
+syn keyword tl_keyword contained be-uint32 be-uint64 bignum-len bignump
+syn keyword tl_keyword contained bindable bit bitset blkcnt-t
+syn keyword tl_keyword contained blksize-t block block* bool
+syn keyword tl_keyword contained boundp bracket break-str brkint
+syn keyword tl_keyword contained bs0 bs1 bsdly bstr
+syn keyword tl_keyword contained bstr-d bstr-s buf buf-alloc-size
+syn keyword tl_keyword contained buf-carray buf-compress buf-d buf-decompress
+syn keyword tl_keyword contained buf-get-char buf-get-cptr buf-get-double buf-get-float
+syn keyword tl_keyword contained buf-get-i16 buf-get-i32 buf-get-i64 buf-get-i8
+syn keyword tl_keyword contained buf-get-int buf-get-long buf-get-short buf-get-u16
+syn keyword tl_keyword contained buf-get-u32 buf-get-u64 buf-get-u8 buf-get-uchar
+syn keyword tl_keyword contained buf-get-uint buf-get-ulong buf-get-ushort buf-int
+syn keyword tl_keyword contained buf-list buf-put-buf buf-put-char buf-put-cptr
+syn keyword tl_keyword contained buf-put-double buf-put-float buf-put-i16 buf-put-i32
+syn keyword tl_keyword contained buf-put-i64 buf-put-i8 buf-put-int buf-put-long
+syn keyword tl_keyword contained buf-put-short buf-put-u16 buf-put-u32 buf-put-u64
+syn keyword tl_keyword contained buf-put-u8 buf-put-uchar buf-put-uint buf-put-ulong
+syn keyword tl_keyword contained buf-put-ushort buf-set-length buf-str buf-trim
+syn keyword tl_keyword contained buf-uint bufp build build-list
+syn keyword tl_keyword contained buildn built-in-type-p butlast butlastn
+syn keyword tl_keyword contained caaaaar caaaadr caaaar caaadar
+syn keyword tl_keyword contained caaaddr caaadr caaar caadaar
+syn keyword tl_keyword contained caadadr caadar caaddar caadddr
+syn keyword tl_keyword contained caaddr caadr caar cadaaar
+syn keyword tl_keyword contained cadaadr cadaar cadadar cadaddr
+syn keyword tl_keyword contained cadadr cadar caddaar caddadr
+syn keyword tl_keyword contained caddar cadddar caddddr cadddr
+syn keyword tl_keyword contained caddr cadr call call-clobber-expander
+syn keyword tl_keyword contained call-delete-expander call-finalizers call-super-fun call-super-method
+syn keyword tl_keyword contained call-update-expander callf car carray
+syn keyword tl_keyword contained carray-blank carray-buf carray-buf-sync carray-cptr
+syn keyword tl_keyword contained carray-dup carray-free carray-get carray-getz
+syn keyword tl_keyword contained carray-int carray-list carray-own carray-pun
+syn keyword tl_keyword contained carray-put carray-putz carray-ref carray-refset
+syn keyword tl_keyword contained carray-replace carray-set-length carray-sub carray-type
+syn keyword tl_keyword contained carray-uint carray-vec carrayp caseq
+syn keyword tl_keyword contained caseq* caseql caseql* casequal
+syn keyword tl_keyword contained casequal* cat-files cat-str cat-streams
+syn keyword tl_keyword contained cat-vec catch catch* catch**
+syn keyword tl_keyword contained catenated-stream-p catenated-stream-push cbaud cbaudex
+syn keyword tl_keyword contained cdaaaar cdaaadr cdaaar cdaadar
+syn keyword tl_keyword contained cdaaddr cdaadr cdaar cdadaar
+syn keyword tl_keyword contained cdadadr cdadar cdaddar cdadddr
+syn keyword tl_keyword contained cdaddr cdadr cdar cddaaar
+syn keyword tl_keyword contained cddaadr cddaar cddadar cddaddr
+syn keyword tl_keyword contained cddadr cddar cdddaar cdddadr
+syn keyword tl_keyword contained cdddar cddddar cdddddr cddddr
+syn keyword tl_keyword contained cdddr cddr cdr ceil
+syn keyword tl_keyword contained ceil-rem chain chand char
+syn keyword tl_keyword contained chdir chmod chmod-rec chown
+syn keyword tl_keyword contained chown-rec chr-digit chr-int chr-isalnum
+syn keyword tl_keyword contained chr-isalpha chr-isascii chr-isblank chr-iscntrl
+syn keyword tl_keyword contained chr-isdigit chr-isgraph chr-islower chr-isprint
+syn keyword tl_keyword contained chr-ispunct chr-isspace chr-isunisp chr-isupper
+syn keyword tl_keyword contained chr-isxdigit chr-num chr-str chr-str-set
+syn keyword tl_keyword contained chr-tolower chr-toupper chr-xdigit chrp
+syn keyword tl_keyword contained clamp clear-dirty clear-error clear-mask
+syn keyword tl_keyword contained clear-struct clearhash clocal clock-t
+syn keyword tl_keyword contained clockid-t close close-lazy-streams close-stream
+syn keyword tl_keyword contained closedir closelog closure cmp-str
+syn keyword tl_keyword contained cmspar coded-length collect-each collect-each*
+syn keyword tl_keyword contained collect-each-prod collect-each-prod* comb command-get
+syn keyword tl_keyword contained command-get-buf command-get-json command-get-jsons command-get-lines
+syn keyword tl_keyword contained command-get-string command-put command-put-buf command-put-json
+syn keyword tl_keyword contained command-put-jsons command-put-lines command-put-string compare-swap
+syn keyword tl_keyword contained compile compile-defr-warning compile-error compile-file
+syn keyword tl_keyword contained compile-only compile-toplevel compile-update-file compile-warning
+syn keyword tl_keyword contained compl-span-str cond conda condlet
+syn keyword tl_keyword contained cons conses conses* consp
+syn keyword tl_keyword contained constantp contain[s] copy copy-alist
+syn keyword tl_keyword contained copy-buf copy-carray copy-cons copy-cptr
+syn keyword tl_keyword contained copy-file copy-files copy-fun copy-hash
+syn keyword tl_keyword contained copy-list copy-path-rec copy-search-tree copy-str
+syn keyword tl_keyword contained copy-struct copy-tnode copy-tree copy-tree-iter
+syn keyword tl_keyword contained copy-vec cos cosh count
+syn keyword tl_keyword contained count-if count-until-match countq countql
+syn keyword tl_keyword contained countqual cptr cptr-buf cptr-carray
+syn keyword tl_keyword contained cptr-cast cptr-free cptr-get cptr-int
+syn keyword tl_keyword contained cptr-null cptr-obj cptr-out cptr-size-hint
+syn keyword tl_keyword contained cptr-type cptr-zap cptrp cr0
+syn keyword tl_keyword contained cr1 cr2 cr3 crc32
+syn keyword tl_keyword contained crc32-stream crdly cread crtscts
+syn keyword tl_keyword contained crypt cs5 cs6 cs7
+syn keyword tl_keyword contained cs8 csize cstopb cum-norm-dist
+syn keyword tl_keyword contained cxr cyr daemon dec
+syn keyword tl_keyword contained defer-warning defex deffi deffi-cb
+syn keyword tl_keyword contained deffi-cb-unsafe deffi-struct deffi-sym deffi-type
+syn keyword tl_keyword contained deffi-union deffi-var define-accessor define-modify-macro
+syn keyword tl_keyword contained define-option-struct define-param-expander define-place-macro define-struct-clause
+syn keyword tl_keyword contained defmacro defmatch defmeth defpackage
+syn keyword tl_keyword contained defparm defparml defplace defset
+syn keyword tl_keyword contained defstruct defsymacro defun defun-match
+syn keyword tl_keyword contained defvar defvarl del delay
+syn keyword tl_keyword contained delcons delete-package dev-t diff
+syn keyword tl_keyword contained digits digpow dir-name dirstat
+syn keyword tl_keyword contained disassemble display-width divides dlclose
+syn keyword tl_keyword contained dlopen dlsym dlsym-checked dlvsym
+syn keyword tl_keyword contained dlvsym-checked do doc dohash
+syn keyword tl_keyword contained doloop doloop* dotimes double
+syn keyword tl_keyword contained downcase-str drop drop-until drop-while
+syn keyword tl_keyword contained dt-blk dt-chr dt-dir dt-fifo
+syn keyword tl_keyword contained dt-lnk dt-reg dt-sock dt-unknown
+syn keyword tl_keyword contained dump-compiled-objects dump-deferred-warnings dup dupfd
+syn keyword tl_keyword contained dwim e2big eacces each
+syn keyword tl_keyword contained each* each-false each-match each-match-product
+syn keyword tl_keyword contained each-prod each-prod* each-true eaddrinuse
+syn keyword tl_keyword contained eaddrnotavail eafnosupport eagain ealready
+syn keyword tl_keyword contained ebadf ebadmsg ebusy ecanceled
+syn keyword tl_keyword contained ecaseq ecaseq* ecaseql ecaseql*
+syn keyword tl_keyword contained ecasequal ecasequal* echild echo
+syn keyword tl_keyword contained echoctl echoe echok echoke
+syn keyword tl_keyword contained echonl echoprt econnaborted econnrefused
+syn keyword tl_keyword contained econnreset edeadlk edestaddrreq edom
+syn keyword tl_keyword contained edquot eexist efault efbig
+syn keyword tl_keyword contained ehostunreach eidrm eighth eilseq
+syn keyword tl_keyword contained einprogress eintr einval eio
+syn keyword tl_keyword contained eisconn eisdir elemsize elemtype
+syn keyword tl_keyword contained eloop emfile emlink empty
+syn keyword tl_keyword contained emsgsize emultihop enametoolong endgrent
+syn keyword tl_keyword contained endp endpwent ends-with enetdown
+syn keyword tl_keyword contained enetreset enetunreach enfile enobufs
+syn keyword tl_keyword contained enodata enodev enoent enoexec
+syn keyword tl_keyword contained enolck enolink enomem enomsg
+syn keyword tl_keyword contained enoprotoopt enospc enosr enostr
+syn keyword tl_keyword contained enosys enotconn enotdir enotempty
+syn keyword tl_keyword contained enotrecoverable enotsock enotsup enotty
+syn keyword tl_keyword contained ensure-dir enum enumed env
+syn keyword tl_keyword contained env-fbind env-fbindings env-hash env-next
+syn keyword tl_keyword contained env-vbind env-vbindings enxio eopnotsupp
+syn keyword tl_keyword contained eoverflow eownerdead eperm epipe
+syn keyword tl_keyword contained eproto eprotonosupport eprototype eq
+syn keyword tl_keyword contained eql equal equot erange
+syn keyword tl_keyword contained erofs errno error espipe
+syn keyword tl_keyword contained esrch estale etime etimedout
+syn keyword tl_keyword contained etxtbsy etypecase eval eval-only
+syn keyword tl_keyword contained evenp ewouldblock exception-subtype-map exception-subtype-p
+syn keyword tl_keyword contained exdev exec exit exit*
+syn keyword tl_keyword contained exp expand expand* expand-left
+syn keyword tl_keyword contained expand-right expand-with-free-refs expt exptmod
+syn keyword tl_keyword contained extproc f$ f-dupfd f-dupfd-cloexec
+syn keyword tl_keyword contained f-getfd f-getfl f-getlk f-rdlck
+syn keyword tl_keyword contained f-setfd f-setfl f-setlk f-setlkw
+syn keyword tl_keyword contained f-unlck f-wrlck f^ f^$
+syn keyword tl_keyword contained false fboundp fcntl fd-cloexec
+syn keyword tl_keyword contained ff0 ff1 ffdly ffi
+syn keyword tl_keyword contained ffi-alignof ffi-arraysize ffi-call ffi-elemsize
+syn keyword tl_keyword contained ffi-elemtype ffi-get ffi-in ffi-make-call-desc
+syn keyword tl_keyword contained ffi-make-closure ffi-offsetof ffi-out ffi-put
+syn keyword tl_keyword contained ffi-put-into ffi-size ffi-type-compile ffi-type-operator-p
+syn keyword tl_keyword contained ffi-type-p ffi-typedef fifth file-append
+syn keyword tl_keyword contained file-append-buf file-append-json file-append-jsons file-append-lines
+syn keyword tl_keyword contained file-append-string file-get file-get-buf file-get-json
+syn keyword tl_keyword contained file-get-jsons file-get-lines file-get-string file-place-buf
+syn keyword tl_keyword contained file-put file-put-buf file-put-json file-put-jsons
+syn keyword tl_keyword contained file-put-lines file-put-string fileno fill-buf
+syn keyword tl_keyword contained fill-buf-adjust fill-carray fill-obj fill-vec
+syn keyword tl_keyword contained filter-equal filter-string-tree finalize find
+syn keyword tl_keyword contained find-frame find-frames find-frames-by-mask find-if
+syn keyword tl_keyword contained find-max find-max-key find-min find-min-key
+syn keyword tl_keyword contained find-package find-struct-type find-symbol find-symbol-fb
+syn keyword tl_keyword contained find-true first fixnum-max fixnum-min
+syn keyword tl_keyword contained fixnump flatcar flatcar* flatten
+syn keyword tl_keyword contained flatten* flet flip flipargs
+syn keyword tl_keyword contained flo-dig flo-down flo-epsilon flo-get-round-mode
+syn keyword tl_keyword contained flo-int flo-max flo-max-dig flo-min
+syn keyword tl_keyword contained flo-near flo-set-round-mode flo-str flo-up
+syn keyword tl_keyword contained flo-zero float floatp floor
+syn keyword tl_keyword contained floor-rem flow flush-stream flusho
+syn keyword tl_keyword contained fmakunbound fmt fnm-casefold fnm-extmatch
+syn keyword tl_keyword contained fnm-leading-dir fnm-noescape fnm-pathname fnm-period
+syn keyword tl_keyword contained fnmatch for for* force
+syn keyword tl_keyword contained force-break fork format fourth
+syn keyword tl_keyword contained fr$ fr^ fr^$ from
+syn keyword tl_keyword contained frr fsblkcnt-t fsfilcnt-t fstat
+syn keyword tl_keyword contained ftw ftw-actionretval ftw-chdir ftw-continue
+syn keyword tl_keyword contained ftw-d ftw-depth ftw-dnr ftw-dp
+syn keyword tl_keyword contained ftw-f ftw-mount ftw-ns ftw-phys
+syn keyword tl_keyword contained ftw-skip-siblings ftw-skip-subtree ftw-sl ftw-sln
+syn keyword tl_keyword contained ftw-stop fun fun-fixparam-count fun-optparam-count
+syn keyword tl_keyword contained fun-variadic func-get-env func-get-form func-get-name
+syn keyword tl_keyword contained func-set-env functionp gcd gen
+syn keyword tl_keyword contained gen-hash-seed generate gensym gequal
+syn keyword tl_keyword contained get-buf-from-stream get-byte get-char get-clobber-expander
+syn keyword tl_keyword contained get-delete-expander get-error get-error-str get-frames
+syn keyword tl_keyword contained get-hash-userdata get-indent get-indent-mode get-json
+syn keyword tl_keyword contained get-jsons get-line get-line-as-buf get-lines
+syn keyword tl_keyword contained get-list-from-stream get-obj get-sig-handler get-stack-limit
+syn keyword tl_keyword contained get-string get-string-from-stream get-update-expander getaddrinfo
+syn keyword tl_keyword contained getegid getenv geteuid getgid
+syn keyword tl_keyword contained getgrent getgrgid getgrnam getgroups
+syn keyword tl_keyword contained gethash getitimer getopts getpid
+syn keyword tl_keyword contained getppid getpwent getpwnam getpwuid
+syn keyword tl_keyword contained getresgid getresuid getrlimit getuid
+syn keyword tl_keyword contained gid-t ginterate giterate glob
+syn keyword tl_keyword contained glob-altdirfunc glob-brace glob-err glob-mark
+syn keyword tl_keyword contained glob-nocheck glob-noescape glob-nomagic glob-nosort
+syn keyword tl_keyword contained glob-onlydir glob-period glob-tilde glob-tilde-check
+syn keyword tl_keyword contained go grade greater group-by
+syn keyword tl_keyword contained group-map group-reduce gun handle
+syn keyword tl_keyword contained handle* handler-bind hash hash-alist
+syn keyword tl_keyword contained hash-begin hash-construct hash-count hash-diff
+syn keyword tl_keyword contained hash-eql hash-equal hash-from-alist hash-from-pairs
+syn keyword tl_keyword contained hash-invert hash-isec hash-keys hash-keys-of
+syn keyword tl_keyword contained hash-list hash-next hash-pairs hash-peek
+syn keyword tl_keyword contained hash-proper-subset hash-reset hash-revget hash-subset
+syn keyword tl_keyword contained hash-symdiff hash-uni hash-update hash-update-1
+syn keyword tl_keyword contained hash-userdata hash-values hash-zip hashp
+syn keyword tl_keyword contained have hlet hlet* html-decode
+syn keyword tl_keyword contained html-encode html-encode* hupcl iapply
+syn keyword tl_keyword contained icanon icrnl id-t identity
+syn keyword tl_keyword contained identity* ido iexten if
+syn keyword tl_keyword contained if-match ifa iff iffi
+syn keyword tl_keyword contained iflet ignbrk igncr ignerr
+syn keyword tl_keyword contained ignpar ignwarn imaxbel improper-plist-to-alist
+syn keyword tl_keyword contained in in-package in-range in-range*
+syn keyword tl_keyword contained in6addr-any in6addr-loopback in6addr-str inaddr-any
+syn keyword tl_keyword contained inaddr-loopback inaddr-str inc inc-indent
+syn keyword tl_keyword contained indent-code indent-data indent-foff indent-off
+syn keyword tl_keyword contained inhash inlcr ino-t inpck
+syn keyword tl_keyword contained int int-buf int-carray int-chr
+syn keyword tl_keyword contained int-cptr int-flo int-ptr-t int-str
+syn keyword tl_keyword contained int16 int32 int64 int8
+syn keyword tl_keyword contained integerp intern intern-fb interp-fun-p
+syn keyword tl_keyword contained interpose intmax-t inv-cum-norm invoke-catch
+syn keyword tl_keyword contained ip ipf ipproto-ip ipproto-ipv6
+syn keyword tl_keyword contained ipproto-tcp ipproto-udp ipv6-join-group ipv6-leave-group
+syn keyword tl_keyword contained ipv6-multicast-hops ipv6-multicast-if ipv6-multicast-loop ipv6-unicast-hops
+syn keyword tl_keyword contained ipv6-v6only iread isatty isec
+syn keyword tl_keyword contained isecp isig isqrt istrip
+syn keyword tl_keyword contained iter-begin iter-item iter-more iter-reset
+syn keyword tl_keyword contained iter-step iterable itimer-prof itimer-real
+syn keyword tl_keyword contained itimer-virtual iuclc iutf8 ixany
+syn keyword tl_keyword contained ixoff ixon join join-with
+syn keyword tl_keyword contained json juxt keep-if keep-if*
+syn keyword tl_keyword contained keep-match-products keep-matches keepq keepql
+syn keyword tl_keyword contained keepqual key key-t keyword-package
+syn keyword tl_keyword contained keywordp kill labels lambda
+syn keyword tl_keyword contained lambda-match last lazy-str lazy-str-force
+syn keyword tl_keyword contained lazy-str-force-upto lazy-str-get-trailing-list lazy-stream-cons lazy-stringp
+syn keyword tl_keyword contained lchown lcm lcons lcons-car
+syn keyword tl_keyword contained lcons-cdr lcons-fun lconsp ldiff
+syn keyword tl_keyword contained ldo le-double le-float le-int16
+syn keyword tl_keyword contained le-int32 le-int64 le-uint16 le-uint32
+syn keyword tl_keyword contained le-uint64 left len length
+syn keyword tl_keyword contained length-buf length-carray length-list length-str
+syn keyword tl_keyword contained length-str-< length-str-<= length-str-> length-str->=
+syn keyword tl_keyword contained length-vec lequal less let
+syn keyword tl_keyword contained let* lexical-fun-p lexical-lisp1-binding lexical-var-p
+syn keyword tl_keyword contained lib-version link lisp-parse list
+syn keyword tl_keyword contained list* list-carray list-seq list-str
+syn keyword tl_keyword contained list-vec list-vector listp lnew
+syn keyword tl_keyword contained lnew* load load-for load-time
+syn keyword tl_keyword contained loff-t log log-alert log-auth
+syn keyword tl_keyword contained log-authpriv log-cons log-crit log-daemon
+syn keyword tl_keyword contained log-debug log-emerg log-err log-info
+syn keyword tl_keyword contained log-ndelay log-notice log-nowait log-odelay
+syn keyword tl_keyword contained log-perror log-pid log-user log-warning
+syn keyword tl_keyword contained log10 log2 logand logcount
+syn keyword tl_keyword contained logior lognot logtest logtrunc
+syn keyword tl_keyword contained logxor long long-suffix longlong
+syn keyword tl_keyword contained lop lset lstat lutimes
+syn keyword tl_keyword contained m$ m^ m^$ mac-env-param-bind
+syn keyword tl_keyword contained mac-param-bind macro-ancestor macro-form-p macro-time
+syn keyword tl_keyword contained macroexpand macroexpand-1 macroexpand-1-lisp1 macroexpand-lisp1
+syn keyword tl_keyword contained macrolet madv-dodump madv-dofork madv-dontdump
+syn keyword tl_keyword contained madv-dontfork madv-dontneed madv-free madv-hugepage
+syn keyword tl_keyword contained madv-hwpoison madv-keeponfork madv-mergeable madv-nohugepage
+syn keyword tl_keyword contained madv-normal madv-random madv-remove madv-sequential
+syn keyword tl_keyword contained madv-unmergeable madv-willneed madv-wipeonfork madvise
+syn keyword tl_keyword contained major make-buf make-buf-stream make-byte-input-stream
+syn keyword tl_keyword contained make-catenated-stream make-env make-hash make-lazy-cons
+syn keyword tl_keyword contained make-lazy-struct make-like make-package make-random-state
+syn keyword tl_keyword contained make-similar-hash make-similar-tree make-string-byte-input-stream make-string-input-stream
+syn keyword tl_keyword contained make-string-output-stream make-strlist-input-stream make-strlist-output-stream make-struct
+syn keyword tl_keyword contained make-struct-delegate-stream make-struct-type make-sym make-time
+syn keyword tl_keyword contained make-time-utc make-trie make-union make-zstruct
+syn keyword tl_keyword contained makedev makunbound map-anon map-fixed
+syn keyword tl_keyword contained map-growsdown map-huge-mask map-huge-shift map-hugetlb
+syn keyword tl_keyword contained map-locked map-nonblock map-noreserve map-populate
+syn keyword tl_keyword contained map-private map-shared map-stack mapcar
+syn keyword tl_keyword contained mapcar* mapdo mapf maphash
+syn keyword tl_keyword contained mappend mappend* maprend maprod
+syn keyword tl_keyword contained maprodo mask match match-case
+syn keyword tl_keyword contained match-ecase match-error match-fboundp match-fun
+syn keyword tl_keyword contained match-regex match-regex-right match-regst match-regst-right
+syn keyword tl_keyword contained match-str match-str-tree max mboundp
+syn keyword tl_keyword contained md5 md5-begin md5-end md5-hash
+syn keyword tl_keyword contained md5-stream member member-if memp
+syn keyword tl_keyword contained memq memql memqual meq
+syn keyword tl_keyword contained meql mequal merge merge-delete-package
+syn keyword tl_keyword contained meth method min minor
+syn keyword tl_keyword contained minusp mismatch mkdir mkdtemp
+syn keyword tl_keyword contained mkfifo mknod mkstemp mkstring
+syn keyword tl_keyword contained mlet mmakunbound mmap mod
+syn keyword tl_keyword contained mode-t mprotect ms-async ms-invalidate
+syn keyword tl_keyword contained ms-sync msync mul-each mul-each*
+syn keyword tl_keyword contained mul-each-prod mul-each-prod* multi multi-sort
+syn keyword tl_keyword contained munmap n-choose-k n-perm-k nand
+syn keyword tl_keyword contained nandf nconc neg neq
+syn keyword tl_keyword contained neql nequal new new*
+syn keyword tl_keyword contained nexpand-left nil nilf ninth
+syn keyword tl_keyword contained nl0 nl1 nldly nlink-t
+syn keyword tl_keyword contained noflsh none nor norf
+syn keyword tl_keyword contained not notf nreconc nreverse
+syn keyword tl_keyword contained nrot nshuffle nsort nth
+syn keyword tl_keyword contained nthcdr nthlast null nullify
+syn keyword tl_keyword contained num-chr num-str numberp nzerop
+syn keyword tl_keyword contained o-accmode o-append o-async o-cloexec
+syn keyword tl_keyword contained o-creat o-direct o-directory o-noatime
+syn keyword tl_keyword contained o-noctty o-nofollow o-nonblock o-path
+syn keyword tl_keyword contained o-rdonly o-rdwr o-sync o-trunc
+syn keyword tl_keyword contained o-wronly oand obtain obtain*
+syn keyword tl_keyword contained obtain*-block obtain-block ocrnl oddp
+syn keyword tl_keyword contained ofdel off-t offsetof ofill
+syn keyword tl_keyword contained olcuc onlcr onlret onocr
+syn keyword tl_keyword contained op open-command open-directory open-file
+syn keyword tl_keyword contained open-fileno open-files open-files* open-pipe
+syn keyword tl_keyword contained open-process open-socket open-socket-pair open-subprocess
+syn keyword tl_keyword contained open-tail opendir openlog opip
+syn keyword tl_keyword contained opost opt opthelp opthelp-conventions
+syn keyword tl_keyword contained opthelp-types or orf pack
+syn keyword tl_keyword contained package-alist package-fallback-list package-foreign-symbols package-local-symbols
+syn keyword tl_keyword contained package-name package-symbols packagep pad
+syn keyword tl_keyword contained page-size pairlis parenb parmrk
+syn keyword tl_keyword contained parodd parse-errors partition partition*
+syn keyword tl_keyword contained partition-by partition-if path-blkdev-p path-cat
+syn keyword tl_keyword contained path-chrdev-p path-components-safe path-dir-empty path-dir-p
+syn keyword tl_keyword contained path-equal path-executable-to-me-p path-exists-p path-file-p
+syn keyword tl_keyword contained path-mine-p path-my-group-p path-newer path-older
+syn keyword tl_keyword contained path-pipe-p path-private-to-me-p path-read-writable-to-me-p path-readable-to-me-p
+syn keyword tl_keyword contained path-safe-sticky-dir path-same-object path-search path-sep-chars
+syn keyword tl_keyword contained path-setgid-p path-setuid-p path-sock-p path-sticky-p
+syn keyword tl_keyword contained path-strictly-private-to-me-p path-symlink-p path-writable-to-me-p pdec
+syn keyword tl_keyword contained pendin perm pic pid-t
+syn keyword tl_keyword contained pinc pipe place-form-p placelet
+syn keyword tl_keyword contained placelet* plist-to-alist plusp poll
+syn keyword tl_keyword contained poll-err poll-in poll-nval poll-out
+syn keyword tl_keyword contained poll-pri poll-rdband poll-rdhup poll-wrband
+syn keyword tl_keyword contained poly pop pop-after-load portable-abs-path-p
+syn keyword tl_keyword contained pos pos-if pos-max pos-min
+syn keyword tl_keyword contained posq posql posqual pppred
+syn keyword tl_keyword contained ppred pprinl pprint pprof
+syn keyword tl_keyword contained pred prinl print prod
+syn keyword tl_keyword contained prof prog prog* prog1
+syn keyword tl_keyword contained prog2 progn promisep prop
+syn keyword tl_keyword contained proper-list-p proper-listp prot-exec prot-growsdown
+syn keyword tl_keyword contained prot-growsup prot-none prot-read prot-write
+syn keyword tl_keyword contained pset ptr ptr-in ptr-in-d
+syn keyword tl_keyword contained ptr-out ptr-out-d ptr-out-s ptrdiff-t
+syn keyword tl_keyword contained pub:txr-sym pure-rel-path-p purge-deferred-warning push
+syn keyword tl_keyword contained push-after-load pushhash pushnew put-buf
+syn keyword tl_keyword contained put-byte put-carray put-char put-json
+syn keyword tl_keyword contained put-jsonl put-jsons put-line put-lines
+syn keyword tl_keyword contained put-obj put-string put-strings pwd
+syn keyword tl_keyword contained qquote qref quantile quip
+syn keyword tl_keyword contained quote r$ r^ r^$
+syn keyword tl_keyword contained raise rand random random-buf
+syn keyword tl_keyword contained random-fixnum random-float random-float-incl random-sample
+syn keyword tl_keyword contained random-state-get-vec random-state-p range range*
+syn keyword tl_keyword contained range-regex rangep rassoc rassq
+syn keyword tl_keyword contained rassql rcomb rcons read
+syn keyword tl_keyword contained read-once read-until-match readdir readlink
+syn keyword tl_keyword contained real-time-stream-p realpath record-adapter reduce-left
+syn keyword tl_keyword contained reduce-right ref refset regex-compile
+syn keyword tl_keyword contained regex-from-trie regex-optimize regex-parse regex-prefix-match
+syn keyword tl_keyword contained regex-source regexp register-exception-subtypes register-tentative-def
+syn keyword tl_keyword contained regsub rehome-sym reject rel-path
+syn keyword tl_keyword contained relate release-deferred-warnings remhash remove-if
+syn keyword tl_keyword contained remove-if* remove-path remove-path-rec remq
+syn keyword tl_keyword contained remq* remql remql* remqual
+syn keyword tl_keyword contained remqual* rename-path repeat replace
+syn keyword tl_keyword contained replace-buf replace-env replace-list replace-str
+syn keyword tl_keyword contained replace-struct replace-tree-iter replace-vec reset-struct
+syn keyword tl_keyword contained rest ret retf return
+syn keyword tl_keyword contained return* return-from revappend reverse
+syn keyword tl_keyword contained rfind rfind-if right rlcp
+syn keyword tl_keyword contained rlcp-tree rlet rlim-infinity rlim-saved-cur
+syn keyword tl_keyword contained rlim-saved-max rlimit-as rlimit-core rlimit-cpu
+syn keyword tl_keyword contained rlimit-data rlimit-fsize rlimit-nofile rlimit-stack
+syn keyword tl_keyword contained rlist rlist* rmdir rmember
+syn keyword tl_keyword contained rmember-if rmemq rmemql rmemqual
+syn keyword tl_keyword contained rmismatch rot rotate round
+syn keyword tl_keyword contained round-rem rperm rplaca rplacd
+syn keyword tl_keyword contained rpoly rpos rpos-if rposq
+syn keyword tl_keyword contained rposql rposqual rr rra
+syn keyword tl_keyword contained rsearch rslot rtld-deepbind rtld-global
+syn keyword tl_keyword contained rtld-lazy rtld-local rtld-nodelete rtld-noload
+syn keyword tl_keyword contained rtld-now run s-ifblk s-ifchr
+syn keyword tl_keyword contained s-ifdir s-ififo s-iflnk s-ifmt
+syn keyword tl_keyword contained s-ifreg s-ifsock s-irgrp s-iroth
+syn keyword tl_keyword contained s-irusr s-irwxg s-irwxo s-irwxu
+syn keyword tl_keyword contained s-isgid s-isuid s-isvtx s-iwgrp
+syn keyword tl_keyword contained s-iwoth s-iwusr s-ixgrp s-ixoth
+syn keyword tl_keyword contained s-ixusr save-exe sbit scan-until-match
+syn keyword tl_keyword contained search search-all search-regex search-regst
+syn keyword tl_keyword contained search-str search-str-tree second seek-cur
+syn keyword tl_keyword contained seek-end seek-set seek-stream select
+syn keyword tl_keyword contained self-load-path self-path separate seq-begin
+syn keyword tl_keyword contained seq-next seq-reset seqp set
+syn keyword tl_keyword contained set-diff set-hash-userdata set-indent set-indent-mode
+syn keyword tl_keyword contained set-key set-left set-mask set-max-depth
+syn keyword tl_keyword contained set-max-length set-package-fallback-list set-right set-sig-handler
+syn keyword tl_keyword contained set-stack-limit setegid setenv seteuid
+syn keyword tl_keyword contained setgid setgrent setgroups sethash
+syn keyword tl_keyword contained setitimer setlogmask setpwent setresgid
+syn keyword tl_keyword contained setresuid setrlimit setuid seventh
+syn keyword tl_keyword contained sh sha256 sha256-begin sha256-end
+syn keyword tl_keyword contained sha256-hash sha256-stream shift short
+syn keyword tl_keyword contained short-suffix shuffle shut-rd shut-rdwr
+syn keyword tl_keyword contained shut-wr sig-abrt sig-alrm sig-atomic-t
+syn keyword tl_keyword contained sig-bus sig-check sig-chld sig-cont
+syn keyword tl_keyword contained sig-fpe sig-hup sig-ill sig-int
+syn keyword tl_keyword contained sig-io sig-iot sig-kill sig-pipe
+syn keyword tl_keyword contained sig-poll sig-prof sig-pwr sig-quit
+syn keyword tl_keyword contained sig-segv sig-stkflt sig-stop sig-sys
+syn keyword tl_keyword contained sig-term sig-trap sig-tstp sig-ttin
+syn keyword tl_keyword contained sig-ttou sig-urg sig-usr1 sig-usr2
+syn keyword tl_keyword contained sig-vtalrm sig-winch sig-xcpu sig-xfsz
+syn keyword tl_keyword contained sign-extend signum sin sinh
+syn keyword tl_keyword contained sixth size-t size-vec sizeof
+syn keyword tl_keyword contained slet slot slotp slots
+syn keyword tl_keyword contained slotset so-acceptconn so-broadcast so-debug
+syn keyword tl_keyword contained so-dontroute so-error so-keepalive so-linger
+syn keyword tl_keyword contained so-oobinline so-rcvbuf so-rcvlowat so-rcvtimeo
+syn keyword tl_keyword contained so-reuseaddr so-sndbuf so-sndlowat so-sndtimeo
+syn keyword tl_keyword contained so-type sock-accept sock-bind sock-cloexec
+syn keyword tl_keyword contained sock-connect sock-dgram sock-family sock-listen
+syn keyword tl_keyword contained sock-nonblock sock-opt sock-peer sock-recv-timeout
+syn keyword tl_keyword contained sock-send-timeout sock-set-opt sock-set-peer sock-shutdown
+syn keyword tl_keyword contained sock-stream sock-type socklen-t sol-socket
+syn keyword tl_keyword contained some some-false some-true sort
+syn keyword tl_keyword contained sort-group source-loc source-loc-str span-str
+syn keyword tl_keyword contained special-operator-p special-var-p spl splice
+syn keyword tl_keyword contained split split* split-str split-str-set
+syn keyword tl_keyword contained spln sqrt square ssize-t
+syn keyword tl_keyword contained sspl sssucc ssucc starts-with
+syn keyword tl_keyword contained stat static-slot static-slot-ensure static-slot-home
+syn keyword tl_keyword contained static-slot-p static-slot-set stdlib str
+syn keyword tl_keyword contained str-buf str-d str-in6addr str-in6addr-net
+syn keyword tl_keyword contained str-inaddr str-inaddr-net str-s str-seq
+syn keyword tl_keyword contained str< str<= str= str>
+syn keyword tl_keyword contained str>= stream-get-prop stream-set-prop streamp
+syn keyword tl_keyword contained strerror string-extend string-finish string-get-code
+syn keyword tl_keyword contained string-lt string-set-code stringp strsignal
+syn keyword tl_keyword contained struct struct-from-args struct-from-plist struct-get-initfun
+syn keyword tl_keyword contained struct-get-postinitfun struct-set-initfun struct-set-postinitfun struct-type
+syn keyword tl_keyword contained struct-type-name struct-type-p structp sub
+syn keyword tl_keyword contained sub-buf sub-list sub-str sub-tree
+syn keyword tl_keyword contained sub-vec subq subql subqual
+syn keyword tl_keyword contained subst subtypep succ sum
+syn keyword tl_keyword contained sum-each sum-each* sum-each-prod sum-each-prod*
+syn keyword tl_keyword contained super super-method suspend swap
+syn keyword tl_keyword contained symacrolet symbol-function symbol-macro symbol-name
+syn keyword tl_keyword contained symbol-package symbol-value symbolp symdiff
+syn keyword tl_keyword contained symlink sys:%backpatch-high16% sys:%backpatch-low16% sys:%big-endian%
+syn keyword tl_keyword contained sys:%bin-op% sys:%bin-ops% sys:%block-using-funs% sys:%call-op%
+syn keyword tl_keyword contained sys:%const-foldable% sys:%const-foldable-funs% sys:%dbg-command-env% sys:%effect-free%
+syn keyword tl_keyword contained sys:%effect-free-funs% sys:%eval-cache% sys:%functional% sys:%functional-funs%
+syn keyword tl_keyword contained sys:%gcall-op% sys:%lev-bits% sys:%lev-size% sys:%max-lambda-fixed-args%
+syn keyword tl_keyword contained sys:%max-lev% sys:%max-lev-idx% sys:%max-sm-lev% sys:%max-sm-lev-idx%
+syn keyword tl_keyword contained sys:%max-v-lev% sys:%nary-ops% sys:%oc-code% sys:%oc-hash%
+syn keyword tl_keyword contained sys:%oc-list-builder% sys:%package-manip% sys:%param-info% sys:%quip-rand-state%
+syn keyword tl_keyword contained sys:%quips% sys:%shuffled-quips% sys:%sm-lev-bits% sys:%sm-lev-size%
+syn keyword tl_keyword contained sys:%test-funs% sys:%test-funs-neg% sys:%test-funs-ops% sys:%test-funs-pos%
+syn keyword tl_keyword contained sys:%test-inv% sys:%test-opcode% sys:%tlo-ver% sys:*dedup*
+syn keyword tl_keyword contained sys:*emit* sys:*eval* sys:*in-compilation-unit* sys:*lazy-streams*
 syn keyword tl_keyword contained sys:*load-recursive* sys:*load-time* sys:*match-form* sys:*op-ctx*
 syn keyword tl_keyword contained sys:*pl-env* sys:*pl-form* sys:*top-level* sys:*trace-hash*
 syn keyword tl_keyword contained sys:*trace-level* sys:*unchecked-calls* sys:abscond* sys:abscond-from
@@ -730,19 +731,20 @@ syn keyword txr_keyword contained or output rebind rep
 syn keyword txr_keyword contained repeat require set single
 syn keyword txr_keyword contained skip some text throw
 syn keyword txr_keyword contained trailer try until var
-syn match txr_error "\(@[ \t]*\)[*]\?[\t ]*."
-syn match txr_atat "\(@[ \t]*\)@"
-syn match txr_comment "\(@[ \t]*\)[#;].*"
-syn match txr_contin "\(@[ \t]*\)\\$"
-syn match txr_char "\(@[ \t]*\)\\."
-syn match txr_error "\(@[ \t]*\)\\[xo]"
-syn match txr_char "\(@[ \t]*\)\\x[0-9A-Fa-f]\+;\?"
-syn match txr_char "\(@[ \t]*\)\\[0-7]\+;\?"
-syn match txr_regdir "\(@[ \t]*\)/\(\\/\|[^/]\|\\\n\)*/"
+syn match txr_at "\(@[ \t]*\)" nextgroup=txr_error,txr_atat,txr_comment,txr_contin,txr_char,txr_error,txr_char,txr_regdir,txr_variable,txr_splicevar,txr_metanum,txr_directive,txr_bracevar,txr_bracket
+syn match txr_error "[*]\?[\t ]*." contained
+syn match txr_atat "@" contained
+syn match txr_comment "[#;].*" contained
+syn match txr_contin "\\$" contained
+syn match txr_char "\\." contained
+syn match txr_error "\\[xo]" contained
+syn match txr_char "\\x[0-9A-Fa-f]\+;\?" contained
+syn match txr_char "\\[0-7]\+;\?" contained
+syn match txr_regdir "/\(\\/\|[^/]\|\\\n\)*/" contained
 syn match txr_nested_error "[^\t ]\+" contained
-syn match txr_variable "\(@[ \t]*\)[*]\?[ \t]*[A-Za-z_][A-Za-z_0-9]*"
-syn match txr_splicevar "@[ \t,*@]*[A-Za-z_][A-Za-z_0-9]*" contained
-syn match txr_metanum "@\+[0-9]\+" contained
+syn match txr_variable "[*]\?[ \t]*[A-Za-z_][A-Za-z_0-9]*" contained
+syn match txr_splicevar "[ \t,*@]*[A-Za-z_][A-Za-z_0-9]*" contained
+syn match txr_metanum "\(@[ \t]*\)\+[0-9]\+" contained
 syn match txr_badesc "\\." contained
 syn match txr_escat "\\@" contained
 syn match txr_stresc "\\[abtnvfre\\ "`']" contained
@@ -750,7 +752,7 @@ syn match txr_numesc "\\x[0-9A-Fa-f]\+;\?" contained
 syn match txr_numesc "\\[0-7]\+;\?" contained
 syn match txr_regesc "\\[abtnvfre\\ /sSdDwW()\|.*?+~&%\[\]\-]" contained
 
-syn match txr_error "#[^HSRTN]" contained
+syn match tl_error "#[^HSRTN]" contained
 
 syn match txr_chr "#\\x[0-9A-Fa-f]\+" contained
 syn match txr_chr "#\\o[0-7]\+" contained
@@ -760,9 +762,10 @@ syn match txr_ncomment ";.*" contained
 
 syn match txr_hashbang "\%^#!.*"
 
+syn match txr_qat "\(@[ \t]*\)" nextgroup=txr_splicevar,txr_metanum,txr_qbracevar,txr_list,txr_bracket,txr_escat,txr_stresc,txr_numesc,txr_badesc contained
 syn match txr_dot "\." contained
 syn match txr_ident "[A-Za-z_0-9!$%&*+\-<=>?\\_~]*[A-Za-z_!$%&*+\-<=>?\\_~^][A-Za-z_0-9!$%&*+\-<=>?\\_~^]*" contained
-syn match tl_ident "[:@][A-Za-z_0-9!$%&*+\-<=>?\\_~^/]\+" contained
+syn match tl_ident "[:][A-Za-z_0-9!$%&*+\-<=>?\\_~^/]\+" contained
 syn match txr_braced_ident "[:][A-Za-z_0-9!$%&*+\-<=>?\\_~^/]\+" contained
 syn match tl_ident "[A-Za-z_0-9!$%&*+\-<=>?\\_~/]\+[A-Za-z_0-9!$%&*+\-<=>?\\_~^/#]*" contained
 syn match txr_pnum "#[xob][+\-]\?[A-Za-z_0-9]\+" contains=txr_xnum,txr_bnum,txr_onum contained
@@ -786,24 +789,25 @@ syn match txr_metaat "@" contained
 syn match txr_buf_error "[^']" contained
 syn match txr_buf_interior "\([0-9A-Fa-f][\n\t ]*[0-9A-Fa-f]\|[\n\t ]\+\)" contained
 
-syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,tl_regex,txr_quasilit,txr_chr,txr_nested_error
-syn region tl_bracevar contained matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,tl_regex,txr_quasilit,txr_chr,txr_nested_error
-syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_num,txr_pnum,txr_badnum,tl_ident,tl_regex,txr_string,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
-syn region txr_list contained matchgroup=Delimiter start="\(#[HSRTN]\?\)\?(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
-syn region txr_bracket contained matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
-syn region txr_mlist contained matchgroup=Delimiter start="@[ \t^',]*(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
-syn region txr_mbracket matchgroup=Delimiter start="@[ \t^',]*\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
+syn region txr_bracevar contained matchgroup=Delimiter start="[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_regex,tl_regex,txr_quasilit,txr_chr,txr_nested_error
+syn region txr_qbracevar contained matchgroup=Delimiter start="[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_regex,tl_regex,txr_quasilit,txr_chr,txr_nested_error
+syn region txr_directive contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_bracket,txr_quasilit,txr_num,txr_pnum,txr_badnum,tl_ident,tl_regex,txr_string,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
+syn region txr_list contained matchgroup=Delimiter start="\(#[HSRTN]\?\)\?(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign,txr_ign_json,txr_list,txr_bracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error
+syn region txr_bracket contained matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign,txr_ign_json,txr_list,txr_bracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error
 syn region txr_string contained start=+#\?\*\?"+ skip=+\\\n+ end=+["\n]+ contains=txr_stresc,txr_numesc,txr_badesc
-syn region txr_quasilit contained start=+#\?\*\?`+ skip=+\\\n+ end=+[`\n]+ contains=txr_splicevar,txr_metanum,tl_bracevar,txr_mlist,txr_mbracket,txr_escat,txr_stresc,txr_numesc,txr_badesc
+syn region txr_quasilit contained start=+#\?\*\?`+ skip=+\\\n+ end=+[`\n]+ contains=txr_qat
 syn region txr_regex contained start="/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region tl_regex contained start="#/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region txr_buf contained matchgroup=txr_buf start="#b'" end="'" contains=txr_buf_interior,txr_buf_error
-syn region txr_ign_tok contained matchgroup=Comment start="#;" end="[ \(\)\[\]]"me=e   contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
-syn region txr_ign_par contained matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt contained matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt contained matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_par_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
+syn region txr_ign contained matchgroup=Comment start="#;" end="[ \(\)\[\]]"me=e   contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign,txr_ign_json,txr_list,txr_bracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error
+syn region txr_ign contained matchgroup=Comment start="#;[ \t',^@]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_interior
+syn region txr_ign contained matchgroup=Comment start="#;[ \t',^@]*\(#[HSRTNJ]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_interior
+syn region txr_ign_json contained matchgroup=Comment start="#;[ \t',^@]*#J[~^]*{" matchgroup=Comment end="}" contains=txr_ign_interior
+syn region txr_ign_json contained matchgroup=Comment start="#;[ \t',^@]*#J[~^]*\[" matchgroup=Comment end="\]" contains=txr_ign_interior
+syn region txr_ign_json contained matchgroup=Comment start="#;[ \t',^@]*#J[~^]*(" matchgroup=Comment end=")" contains=txr_ign_interior
+syn region txr_ign_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_interior
+syn region txr_ign_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_interior
+syn region txr_ign_interior contained matchgroup=Comment start="{" matchgroup=Comment end="}" contains=txr_ign_interior
 
 syn match txr_jerr "." contained
 syn match txr_jpunc "[,: \t\n]" contained
@@ -813,9 +817,9 @@ syn match txr_jnum "-\?\(0\|[1-9][0-9]*\)\([.][0-9]\+\)\?\([Ee][+-]\?[0-9]\+\)\?
 syn match txr_jkeyword "true\|false\|null" contained
 
 syn region txr_jatom contained matchgroup=Delimiter start="#J\^\?[\t\n ]*"rs=e end="[\t\n ]\|[\])}]"re=e-1 contains=txr_jarray_in,txr_jhash_in,txr_jkeyword,txr_jstring,txr_jnum,txr_jpunc,txr_junqlist,txr_junqbkt,txr_junqtok,txr_circ,txr_jerr
-syn region txr_junqtok contained matchgroup=Delimiter start="\~" end="[ \(\)\[\]{}]"re=s contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
-syn region txr_junqlist contained matchgroup=Delimiter start="\~\*\?#\?(" end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
-syn region txr_junqbkt contained matchgroup=Delimiter start="\~\*\?\[" end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,txr_nested_error
+syn region txr_junqtok contained matchgroup=Delimiter start="\~" end="[ \(\)\[\]{}]"re=s contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign,txr_ign_json,txr_list,txr_bracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error
+syn region txr_junqlist contained matchgroup=Delimiter start="\~\*\?#\?(" end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign,txr_ign_json,txr_list,txr_bracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error
+syn region txr_junqbkt contained matchgroup=Delimiter start="\~\*\?\[" end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign,txr_ign_json,txr_list,txr_bracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,txr_jarray,txr_jatom,txr_ncomment,tl_error,txr_nested_error
 syn region txr_jstring contained matchgroup=Delimiter start=+"+ end=+["\n]+ contains=txr_jesc,txr_juesc,txr_badesc
 syn region txr_jarray contained matchgroup=Delimiter start="#J\^\?[\t\n ]*\[" matchgroup=Delimiter end="\]" contains=txr_jarray_in,txr_jhash_in,txr_jkeyword,txr_jstring,txr_jnum,txr_jpunc,txr_junqlist,txr_junqbkt,txr_junqtok,txr_circ,txr_jerr
 syn region txr_jhash contained matchgroup=Delimiter start="#J\^\?[\t\n ]*{" matchgroup=Delimiter end="}" contains=txr_jarray_in,txr_jhash_in,txr_jkeyword,txr_jstring,txr_jnum,txr_jpunc,txr_junqlist,txr_junqbkt,txr_junqtok,txr_circ,txr_jerr
@@ -827,6 +831,7 @@ syn match txr_circ "#[0-9]\+[#=]" contained
 hi def link txr_at Special
 hi def link txr_atstar Special
 hi def link txr_atat Special
+hi def link txr_qat Special
 hi def link txr_comment Comment
 hi def link txr_ncomment Comment
 hi def link txr_hashbang Preproc
@@ -866,15 +871,14 @@ hi def link txr_circ Special
 hi def link txr_munqspl Special
 hi def link tl_splice Special
 hi def link txr_error Error
+hi def link tl_error Error
 hi def link txr_nested_error Error
 hi def link txr_buf String
 hi def link txr_buf_interior String
 hi def link txr_buf_error Error
-hi def link txr_ign_par Comment
-hi def link txr_ign_bkt_interior Comment
-hi def link txr_ign_par_interior Comment
-hi def link txr_ign_bkt Comment
-hi def link txr_ign_tok Comment
+hi def link txr_ign_interior Comment
+hi def link txr_ign Comment
+hi def link txr_ign_json Comment
 
 hi def link txr_jkeyword Type
 hi def link txr_jnum Number
@@ -886,5 +890,5 @@ hi def link txr_jerr Error
 
 let b:current_syntax = "lisp"
 
-set lispwords=ado,alet,align,alignof,ap,append-each,append-each*,append-each-prod,append-each-prod*,append-match-products,append-matches,aret,array,arraysize,assert,awk,bit,block,block*,bool,buf,buf-d,build,buildn,carray,caseq,caseq*,caseql,caseql*,casequal,casequal*,catch,catch*,catch**,clear-mask,collect-each,collect-each*,collect-each-prod,collect-each-prod*,compare-swap,compile-only,cond,conda,condlet,cptr,dec,defex,deffi,deffi-cb,deffi-cb-unsafe,deffi-struct,deffi-sym,deffi-type,deffi-union,deffi-var,define-accessor,define-modify-macro,define-option-struct,define-param-expander,define-place-macro,define-struct-clause,defmacro,defmatch,defmeth,defpackage,defparm,defparml,defplace,defset,defstruct,defsymacro,defun,defun-match,defvar,defvarl,del,delay,do,dohash,doloop,doloop*,dotimes,each,each*,each-false,each-match,each-match-product,each-prod,each-prod*,each-true,ecaseq,ecaseq*,ecaseql,ecaseql*,ecasequal,ecasequal*,elemsize,elemtype,enum,enumed,equot,etypecase,eval-only,ffi,flet,flip,flow,for,for*,fun,gen,go,gun,handle,handle*,handler-bind,hlet,hlet*,ido,if,if-match,ifa,iflet,ignerr,ignwarn,in-package,ip,json,keep-match-products,keep-matches,labels,lambda,lambda-match,lcons,ldo,let,let*,lnew*,load-for,load-time,lop,lset,mac-env-param-bind,mac-param-bind,macro-time,macrolet,match,match-case,match-ecase,mlet,mul-each,mul-each*,mul-each-prod,mul-each-prod*,nand,new*,nor,obtain,obtain*,obtain*-block,obtain-block,offsetof,op,pack,pdec,pic,pinc,placelet,placelet*,pop,pop-after-load,pprof,prof,prog,prog*,prog1,prog2,progn,ptr,ptr-in,ptr-in-d,ptr-out,ptr-out-d,ptr-out-s,push,push-after-load,pushnew,ret,return,return-from,rlet,rslot,sbit,set-mask,sizeof,slet,some-false,some-true,splice,struct,sum-each,sum-each*,sum-each-prod,sum-each-prod*,suspend,symacrolet,sys:abscond-from,sys:arith-each,sys:awk-fun-let,sys:awk-mac-let,sys:awk-redir,sys:awk-symac-let,sys:blk,sys:catch,sys:conv,sys:conv-expand-sym,sys:dlib-expr,sys:dvbind,sys:each-op,sys:expr,sys:fbind,sys:fixed-point,sys:for-op,sys:ign-notfound,sys:l1-val,sys:lbind,sys:lisp1-value,sys:load-time-lit,sys:path-examine,sys:placelet-1,sys:rewrite-case,sys:splice,sys:struct-lit,sys:switch,sys:txr-case-impl,sys:unquote,sys:upenv,sys:var,sys:when-exprs-match,sys:with-disabled-debugging,tagbody,tb,tc,test-clear,test-dec,test-inc,test-set,trace,tree-bind,tree-case,txr-case,txr-if,txr-when,typecase,typedef,ubit,union,unless,unquote,until,until*,untrace,unwind-protect,upd,uref,when,when-match,whena,whenlet,while,while*,while-match,while-match-case,while-true-match-case,whilet,with-clobber-expander,with-compilation-unit,with-delete-expander,with-dyn-lib,with-gensyms,with-hash-iter,with-in-buf-stream,with-in-string-byte-stream,with-in-string-stream,with-objects,with-out-buf-stream,with-out-string-stream,with-out-strlist-stream,with-resources,with-slots,with-stream,with-update-expander,yield,yield-from,zap,zarray,znew,:method,:function,:init,:postinit,:fini
+set lispwords=ado,alet,align,alignof,ap,append-each,append-each*,append-each-prod,append-each-prod*,append-match-products,append-matches,aret,array,arraysize,assert,awk,bit,block,block*,bool,buf,buf-d,build,buildn,carray,caseq,caseq*,caseql,caseql*,casequal,casequal*,catch,catch*,catch**,clear-mask,close-lazy-streams,collect-each,collect-each*,collect-each-prod,collect-each-prod*,compare-swap,compile-only,cond,conda,condlet,cptr,dec,defex,deffi,deffi-cb,deffi-cb-unsafe,deffi-struct,deffi-sym,deffi-type,deffi-union,deffi-var,define-accessor,define-modify-macro,define-option-struct,define-param-expander,define-place-macro,define-struct-clause,defmacro,defmatch,defmeth,defpackage,defparm,defparml,defplace,defset,defstruct,defsymacro,defun,defun-match,defvar,defvarl,del,delay,do,dohash,doloop,doloop*,dotimes,each,each*,each-false,each-match,each-match-product,each-prod,each-prod*,each-true,ecaseq,ecaseq*,ecaseql,ecaseql*,ecasequal,ecasequal*,elemsize,elemtype,enum,enumed,equot,etypecase,eval-only,ffi,flet,flip,flow,for,for*,fun,gen,go,gun,handle,handle*,handler-bind,hlet,hlet*,ido,if,if-match,ifa,iflet,ignerr,ignwarn,in-package,ip,json,keep-match-products,keep-matches,labels,lambda,lambda-match,lcons,ldo,let,let*,lnew*,load-for,load-time,lop,lset,mac-env-param-bind,mac-param-bind,macro-time,macrolet,match,match-case,match-ecase,mlet,mul-each,mul-each*,mul-each-prod,mul-each-prod*,nand,new*,nor,obtain,obtain*,obtain*-block,obtain-block,offsetof,op,pack,pdec,pic,pinc,placelet,placelet*,pop,pop-after-load,pprof,prof,prog,prog*,prog1,prog2,progn,ptr,ptr-in,ptr-in-d,ptr-out,ptr-out-d,ptr-out-s,push,push-after-load,pushnew,ret,return,return-from,rlet,rslot,sbit,set-mask,sizeof,slet,some-false,some-true,splice,struct,sum-each,sum-each*,sum-each-prod,sum-each-prod*,suspend,symacrolet,sys:abscond-from,sys:arith-each,sys:awk-fun-let,sys:awk-mac-let,sys:awk-redir,sys:awk-symac-let,sys:blk,sys:catch,sys:conv,sys:conv-expand-sym,sys:dlib-expr,sys:dvbind,sys:each-op,sys:expr,sys:fbind,sys:fixed-point,sys:for-op,sys:ign-notfound,sys:l1-val,sys:lbind,sys:lisp1-value,sys:load-time-lit,sys:path-examine,sys:placelet-1,sys:rewrite-case,sys:splice,sys:struct-lit,sys:switch,sys:txr-case-impl,sys:unquote,sys:upenv,sys:var,sys:when-exprs-match,sys:with-disabled-debugging,tagbody,tb,tc,test-clear,test-dec,test-inc,test-set,trace,tree-bind,tree-case,txr-case,txr-if,txr-when,typecase,typedef,ubit,union,unless,unquote,until,until*,untrace,unwind-protect,upd,uref,when,when-match,whena,whenlet,while,while*,while-match,while-match-case,while-true-match-case,whilet,with-clobber-expander,with-compilation-unit,with-delete-expander,with-dyn-lib,with-gensyms,with-hash-iter,with-in-buf-stream,with-in-string-byte-stream,with-in-string-stream,with-objects,with-out-buf-stream,with-out-string-stream,with-out-strlist-stream,with-resources,with-slots,with-stream,with-update-expander,yield,yield-from,zap,zarray,znew,:method,:function,:init,:postinit,:fini
 set comments=:@\;\;\;,:@\;\;,:@\;
