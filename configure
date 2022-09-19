@@ -615,7 +615,7 @@ cat > reconfigure <<!
 #
 # Configured on $(date) using:
 
-$cmdline
+$cmdline "\$@"
 
 # The above did not complete.
 !
