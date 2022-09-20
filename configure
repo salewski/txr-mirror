@@ -1083,7 +1083,6 @@ if ! conftest ; then
     lang_flags="$(echo "$lang_flags" | sed -e 's/-ansi/-std=c99/')"
   else
     printf "no\n\n"
-    conftest && true
     printf "Errors from compilation: \n\n"
     cat conftest.err
     exit 1
