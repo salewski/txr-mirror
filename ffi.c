@@ -3742,7 +3742,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
                 cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops));
   ucnum offs = 0;
   ucnum most_align = 1;
-  uint prev_bigendian = 0;
+  unsigned prev_bigendian = 0;
   int need_out_handler = 0;
   int bit_offs = 0;
   const unsigned bits_int = 8 * sizeof(int);
