@@ -11,7 +11,9 @@
 
 (defstruct derived base
   (:fini (me)
-    (put-line `@(typeof me):@{me.id} derived fini`)))
+    (put-line `@(typeof me):@{me.id} derived fini`))
+  (:postfini (me)
+    (put-line `@(typeof me):@{me.id} derived postfini`)))
 
 (unwind-protect
   (with-objects ((b (new base others (mapcar (ret (new derived)) (range 1 20)))))

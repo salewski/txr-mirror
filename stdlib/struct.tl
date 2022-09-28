@@ -48,7 +48,8 @@
       (compile-error form "bad syntax: dotted form"))
     (let ((instance-init-form nil)
           (instance-postinit-form nil)
-          (instance-fini-form nil))
+          (instance-fini-form nil)
+          (instance-postfini-form nil))
       (labels ((expand-slot (form slot)
                  (tree-case slot
                    ((op . args)
@@ -100,6 +101,15 @@
                           (compile-error form
                                          "duplicate :fini"))
                         (set instance-fini-form
+                             (cons arg body))
+                        ^((,word nil nil)))
+                      (:postfini
+                        (unless (bindable arg)
+                          (sys:bad-slot-syntax form slot))
+                        (when instance-postfini-form
+                          (compile-error form
+                                         "duplicate :postfini"))
+                        (set instance-postfini-form
                              (cons arg body))
                         ^((,word nil nil)))
                       (t (when body
@@ -158,12 +168,16 @@
                       ,*(mapcar (aret ^(when (static-slot-p ,arg-sym ',@2)
                                          (static-slot-set ,arg-sym ',@2 ,@3)))
                                 (append func-si-forms val-si-forms))))
-               ,(if (or inst-si-forms instance-init-form instance-fini-form)
+               ,(if (or inst-si-forms instance-init-form
+                        instance-fini-form instance-postfini-form)
                   ^(lambda (,arg-sym)
                      ,*(if (cdr instance-fini-form)
                          ^((finalize ,arg-sym (lambda (,(car instance-fini-form))
                                                 ,*(cdr instance-fini-form))
                                      t)))
+                     ,*(if (cdr instance-postfini-form)
+                         ^((finalize ,arg-sym (lambda (,(car instance-postfini-form))
+                                                ,*(cdr instance-postfini-form)))))
                      ,*(if inst-si-forms
                          ^((let ((,type-sym (struct-type ,arg-sym)))
                              ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)

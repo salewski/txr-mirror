@@ -29375,15 +29375,58 @@ of a
 specifier are not surrounded by an implicit
 .codn block .
 
+At most one
+.code :fini
+may be specified.
+
 Note that an object's finalizers can be called explicitly with
 .codn call-finalizers .
-.RE
-.IP
-The
+Note: the
 .code with-objects
 macro arranges for finalizers to be called on objects when the execution
 of a scope terminates by any means.
-
+.meIP (:postfini <> ( param ) << body-form *)
+Like
+.codn :fini ,
+.code :postfini
+specifier doesn't describe a slot. The syntax is identical to
+.codn :fini .
+Independently of whether
+.code :fini
+is specified, at most one
+.code :postfini
+may be specified. The only difference between
+.code :fini
+and
+.code :postfini
+is that
+.code :postfini
+arranges for a finalizer to be registered as if by the evaluation of the form
+.mono
+.meti (finalize < obj (lambda <> ( param ) << body-form ...))
+.onom
+where
+.meta obj
+denotes the structure instance. Note the that unlike
+.codn :fini ,
+this omits the
+.code t
+parameter, which means that
+.code :postfini
+finalizers of derived structures execute after the execution of inherited
+finalizers. When both
+.code :fini
+and
+.code :postfini
+are specified in the same
+.code defstruct
+form, the
+.code :postfini
+finalizer executes after the
+.code :fini
+finalizer regardless of the order in which they appear.
+.RE
+.IP
 The slot names given in a
 .code defstruct
 must all be unique among themselves, but they
