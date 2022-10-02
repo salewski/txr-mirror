@@ -279,3 +279,12 @@
                 (,setter (val)
                   ^(sock-set-opt ,',sock ,',level ,',option ,val ,',type)))
        ,body)))
+
+(defun sockaddr-str (str)
+  (cond
+    ((starts-with "[" str) (in6addr-str str))
+    ((starts-with "/" str) (new sockaddr-un path str))
+    ((contains "::" str) (in6addr-str str))
+    ((contains "." str) (inaddr-str str))
+    (t (or (ignerr (in6addr-str str))
+           (inaddr-str str)))))

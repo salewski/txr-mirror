@@ -75409,6 +75409,92 @@ brackets. The closing square bracket must be followed by a colon and one or
 more digits denoting a decimal number in the range 0 to 65535. For instance
 .strn "[1:2:3::4/64]:1234".
 
+.coNP Function @ sockaddr-str
+.synb
+.mets (sockaddr-str << string )
+.syne
+.desc
+The function
+.code sockaddr-str
+analyzes the
+.meta string
+argument to determine whether it represents a valid IPv4, IPv6 or Unix domain
+address. If so, it constructs an object, representing that address, of type
+.codn sockaddr-in ,
+.code sockaddr-in
+or
+.codn sockaddr-un .
+
+The slash prefix notation, and port numbers are handled, and represented
+in the returned structures accordingly.
+
+The
+.code sockaddr-str
+function works by applying simple tests to the input, and then invoking
+the functions
+.code inaddr-str
+or
+.codn in6addr-str ,
+or constructing a 
+.code sockaddr-un
+structure whose
+.code path
+slot is
+.metn string .
+
+The precise procedure followed is:
+.RS
+.IP 1.
+If
+.meta string
+starts with
+.str [
+then it is handled via
+.codn in6addr-str .
+.IP 2.
+If
+.meta string
+starts with
+.str /
+then it is assumed to be the path of a Unix socket.
+A
+.code sockaddr-un
+structure is constructed whose
+.code path
+slot is
+.metn string .
+This is the only case in which a structure of type
+.code sockaddr-un
+is returned.
+.IP 3.
+If
+.meta string
+contains
+.str "::"
+as a substring, it is handled via
+.codn in6addr-str .
+.IP 4.
+If
+.meta string
+contains
+.str .
+then it is handled via
+.codn inaddr-str .
+.IP 5.
+If the above tests fail,
+.meta string
+is passed to
+.codn in6addr-str ,
+and if that call returns normally,
+.code sockaddr-str
+returns that value.
+.IP 6.
+Otherwise,
+.code string
+is passed to
+.codn inaddr-str .
+.RE
+
 .SS* Unix Terminal Control
 
 \*(TX provides access to the terminal control "termios" interfaces defined by

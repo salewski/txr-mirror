@@ -1829,6 +1829,7 @@
       ("sockaddr" "N-02C48759")
       ("sockaddr-in" "N-01DD05D9")
       ("sockaddr-in6" "N-013DD169")
+      ("sockaddr-str" "N-0370C05F")
       ("sockaddr-un" "N-01DD05D2")
       ("socklen-t" "N-01153D9E")
       ("sol-socket" "N-031C01CB")

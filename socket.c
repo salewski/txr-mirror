@@ -1253,6 +1253,7 @@ static val sock_set_entries(val fun)
     lit("sock-accept"), lit("sock-shutdown"), lit("open-socket"),
     lit("open-socket-pair"), lit("sock-send-timeout"), lit("sock-recv-timeout"),
     lit("sock-opt"), lit("sock-set-opt"),
+    lit("sockaddr-str"),
     nil
   };
   val name_noload[] = {
