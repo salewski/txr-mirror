@@ -1865,6 +1865,7 @@
       ("static-slot-set" "N-0017D1B5")
       ("stdlib" "N-008E4BC2")
       ("str" "D-005E")
+      ("str-addr" "N-02E1B78B")
       ("str-buf" "N-012BF6AD")
       ("str-d" "N-01736060")
       ("str-in6addr" "N-01FF658D")

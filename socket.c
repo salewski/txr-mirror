@@ -1259,7 +1259,7 @@ static val sock_set_entries(val fun)
   val name_noload[] = {
     lit("family"), lit("addr"), lit("port"), lit("flow-info"),
     lit("scope-id"), lit("prefix"), lit("path"), lit("flags"), lit("socktype"),
-    lit("protocol"), lit("canonname"), nil
+    lit("protocol"), lit("canonname"), lit("str-addr"), nil
   };
   autoload_set(al_struct, sname, fun);
   autoload_set(al_var, vname, fun);

@@ -290,3 +290,31 @@
     ((contains "." str) (inaddr-str str))
     (t (or (ignerr (in6addr-str str))
            (inaddr-str str)))))
+
+(defmeth sockaddr-in str-addr (me)
+  (let* ((pfx me.prefix)
+         (port me.port)
+         (addr me.addr)
+         (str (if (and pfx (< pfx 32))
+                (str-inaddr-net addr pfx)
+                (str-inaddr addr))))
+    (if (and port (plusp port))
+      `@str:@port`
+      str)))
+
+(defmeth sockaddr-in6 str-addr (me)
+  (let* ((pfx me.prefix)
+         (port me.port)
+         (addr me.addr)
+         (str (if (and pfx (< pfx 128))
+                (str-in6addr-net addr pfx)
+                (str-in6addr addr))))
+    (if (and port (plusp port))
+      `[@str]:@port`
+      str)))
+
+(defmeth sockaddr-un str-addr (me)
+  (let ((path me.path))
+    (if (stringp me.path)
+      path
+      (error "~s: slot path of ~s isn't a string" '(meth socakddr-un str-addr) me))))

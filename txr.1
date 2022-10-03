@@ -75495,6 +75495,48 @@ is passed to
 .codn inaddr-str .
 .RE
 
+.coNP Method @ str-addr
+.synb
+.mets << sockaddr .(str-addr)
+.syne
+.desc
+A method named
+.code str-addr
+is defined for the struct types
+.codn sockaddr-in ,
+.code sockaddr-in6
+and
+.codn sockaddr-un .
+It returns a text representation of the address as a string. If the
+.code port
+slot of
+.code sockaddr-in
+or
+.code sockaddr-in6
+is a nonzero integer, then it is incorporated into the text representation.
+Likewise if the
+.code prefix
+slot has a non-default value specifying fewer bits than the width of
+the address, the prefix notation is produced.
+
+The intent is that the representations produced are suitable as input
+to the
+.code sockaddr-str
+function which will reproducing an address object of the same type,
+featuring the same
+.codn addr ,
+.code port
+and
+.codn prefix .
+In the case of
+.codn sockaddr-un ,
+the
+.code sockaddr-str
+function will reproduce the same address only if the
+.code path
+slot is a string starting with
+.strn / .
+
 .SS* Unix Terminal Control
 
 \*(TX provides access to the terminal control "termios" interfaces defined by
