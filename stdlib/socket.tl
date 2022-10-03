@@ -67,12 +67,14 @@
 
 
 (defun sys:in6addr-condensed-text (numeric-pieces)
-  (let* ((str (cat-str [mapcar (op fmt "~x") numeric-pieces] ":"))
-         (zr (rra #/0(:0)+/ str))
+  (let* ((str (cat-str [mapcar [iff zerop (ret "Z") (op fmt "~x")]
+                               numeric-pieces] ":"))
+         (zr (rra #/Z(:Z)+/ str))
          (lp [pos-max zr : [callf - to from]])
          (lr [zr lp]))
     (when lp
       (del [str lr]))
+    (upd str (regsub "Z" "0"))
     (cond
       ((equal "" str) "::")
       ((starts-with ":" str) `:@str`)
