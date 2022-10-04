@@ -2,6 +2,7 @@
   (hash-from-pairs
     '(("!>" "N-02B10DF9")
       ("%e%" "N-03F0FA9E")
+      ("%fun%" "N-00719365")
       ("%pi%" "N-03F0FA9E")
       ("*" "N-022396F7")
       ("*args*" "N-03DEE18A")

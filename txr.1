@@ -19801,6 +19801,85 @@ if
 is a symbol which names a special operator, otherwise it returns
 .codn nil .
 
+.coNP Symbol macro @ %fun%
+.desc
+The symbol macro
+.code %fun%
+indicates the current function name, There is a global
+.code %fun%
+symbol macro which expands to
+.codn nil .
+Around certain kinds of named functions, a local binding for
+.code %fun%
+is established which provides the function name. The purpose of this name
+is for use in diagnostic messages; therefore it is an abbreviated name.
+
+The
+.code %fun%
+macro is established for
+.codn defun ,
+.code defmacro
+and
+.code defmeth
+forms. It is also established for methods defined inside a
+.code defstruct
+form including the methods
+.codn :init ,
+.codn :postinit ,
+.code :fini
+and
+.codn :postfini .
+
+The
+.code %fun%
+macro is visible not only to the its function's body, but also to the
+expressions inside the parameter list which compute the default values
+for optional parameters.
+
+The name provided by
+.code %fun%
+is intended for use in diagnostic messages and is therefore an informal
+name, and not the formal name which can be passed to
+.code symbol-function
+to retrieve the function.
+
+In the case of a
+.code defun
+function named
+.codn x ,
+the
+.code %fun%
+name is that symbol,
+.codn x .
+Thus, in this case, the name is the same
+as the formal name.
+In the case of a
+.code defmacro
+named
+.codn x ,
+.code %fun%
+also expands to the symbol x
+.codn x ,
+but that is the formal name of the macro, which is
+.codn "(macro x)" .
+In the case of a method
+.code x
+of a structure type
+.codn s ,
+.code %fun%
+is the two-element list
+.codn "(s x)" ,
+rather than the formal name
+.codn "(meth s x)" .
+
+.TP* Example:
+
+.verb
+  ;; log a message naming the function
+  (defun connect-to-host (addr)
+    (format t "~s: connecting to host ~s" %fun% addr))
+.brev
+
 .SS* Object Type
 
 In \*(TL, objects obey the following type hierarchy. In this type hierarchy,

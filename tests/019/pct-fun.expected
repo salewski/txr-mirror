@@ -1,0 +1,18 @@
+(foo :init)
+(foo :postinit)
+(foo foo)
+(foo bar)
+(foo :fini)
+(foo :postfini)
+function
+function2
+mac
+(foo :init)
+(foo :postinit)
+(foo foo)
+(foo bar)
+(foo :fini)
+(foo :postfini)
+function
+function2
+mac

@@ -36,6 +36,10 @@
                     (not init-form-present)))
              slot-init-forms))
 
+(defmacro sys:meth-lambda (struct slot params . body)
+  ^(symacrolet ((%fun% '(,struct ,slot)))
+     (lambda ,params ,*body)))
+
 (defmacro defstruct (:form form name-spec super-spec . slot-specs)
   (tree-bind (name args) (tree-case name-spec
                            ((atom . args) (list atom args))
@@ -57,22 +61,22 @@
                       (append-each ((exslot [expander slot form]))
                         [expand-slot form exslot])
                       :))
-                   ((word name args . body)
+                   ((word slname args . body)
                     (caseq word
                       (:method
                         (when (not args)
-                          (compile-error form "method ~s needs at least one parameter" name))
-                        ^((:function ,name
-                            (lambda ,args
-                              (block ,name ,*body)))))
-                      (:function ^((,word ,name
-                                          (lambda ,args
-                                            (block ,name
+                          (compile-error form "method ~s needs at least one parameter" slname))
+                        ^((:function ,slname
+                            (sys:meth-lambda ,slname ,name ,args
+                              (block ,slname ,*body)))))
+                      (:function ^((,word ,slname
+                                          (sys:meth-lambda ,slname ,name ,args
+                                            (block ,slname
                                               ,*body)))))
                       ((:static :instance)
                        (when body
                          (sys:bad-slot-syntax form slot))
-                       ^((,word ,name ,args)))
+                       ^((,word ,slname ,args)))
                       (t :)))
                    ((word (arg) . body)
                     (caseq word
@@ -172,11 +176,13 @@
                         instance-fini-form instance-postfini-form)
                   ^(lambda (,arg-sym)
                      ,*(if (cdr instance-fini-form)
-                         ^((finalize ,arg-sym (lambda (,(car instance-fini-form))
+                         ^((finalize ,arg-sym (sys:meth-lambda ,name :fini
+                                                               (,(car instance-fini-form))
                                                 ,*(cdr instance-fini-form))
                                      t)))
                      ,*(if (cdr instance-postfini-form)
-                         ^((finalize ,arg-sym (lambda (,(car instance-postfini-form))
+                         ^((finalize ,arg-sym (sys:meth-lambda ,name :postfini
+                                                               (,(car instance-postfini-form))
                                                 ,*(cdr instance-postfini-form)))))
                      ,*(if inst-si-forms
                          ^((let ((,type-sym (struct-type ,arg-sym)))
@@ -184,8 +190,9 @@
                                                 (slotset ,arg-sym ',@2 ,@3)))
                                        inst-si-forms))))
                      ,*(if (cdr instance-init-form)
-                         ^((let ((,(car instance-init-form) ,arg-sym))
-                             ,*(cdr instance-init-form))))))
+                         ^((symacrolet ((%fun% '(,name :init)))
+                             (let ((,(car instance-init-form) ,arg-sym))
+                               ,*(cdr instance-init-form)))))))
                ,(when args
                   (when (> (countql : args) 1)
                     (compile-error form
@@ -207,7 +214,7 @@
                                              (slotset ,arg-sym ',@1 ,@2)))
                                      opt-args o-gens p-gens))))))
                ,(if instance-postinit-form
-                  ^(lambda (,arg-sym)
+                  ^(sys:meth-lambda ,name :postinit (,arg-sym)
                      ,*(if (cdr instance-postinit-form)
                          ^((let ((,(car instance-postinit-form) ,arg-sym))
                              ,*(cdr instance-postinit-form)))))))))))))
@@ -364,7 +371,8 @@
       (compile-defr-warning form ^(struct-type . ,type-sym)
                             "definition of struct ~s not seen here" type-sym)))
   (register-tentative-def ^(slot . ,name))
-  ^(sys:define-method ',type-sym ',name (lambda ,arglist
+  ^(sys:define-method ',type-sym ',name (sys:meth-lambda ,type-sym ,name
+                                                         ,arglist
                                           (block ,name ,*body))))
 
 (defmacro with-slots ((. slot-specs) obj-expr . body)

@@ -106,6 +106,7 @@ val load_path_s, load_hooks_s, load_recursive_s, load_search_dirs_s;
 val load_time_s, load_time_lit_s;
 val eval_only_s, compile_only_s;
 val const_foldable_s;
+val pct_fun_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -4776,6 +4777,12 @@ static val rt_load_for(struct args *args)
   return nil;
 }
 
+static val fun_macro_env(val menv, val name)
+{
+  val qname = list(quote_s, name, nao);
+  return make_env(cons(cons(pct_fun_s, qname), nil), nil, menv);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -5005,11 +5012,12 @@ again:
 
       {
         val body = rest(rest(rest(form)));
+        val menv0 = fun_macro_env(menv, name);
         cons_bind (params_ex, body_ex0,
-                   expand_params(params, body, menv,
+                   expand_params(params, body, menv0,
                                  eq(sym, defmacro_s), form));
-        val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
-        val body_ex = expand_progn(body_ex0, new_menv);
+        val menv1 = make_var_shadowing_env(menv0, get_param_syms(params_ex));
+        val body_ex = expand_progn(body_ex0, menv1);
         val form_ex = form;
 
         if (body != body_ex || params != params_ex)
@@ -6756,6 +6764,7 @@ void eval_init(void)
   eval_only_s  = intern(lit("eval-only"), user_package);
   compile_only_s = intern(lit("compile-only"), user_package);
   const_foldable_s = intern(lit("%const-foldable%"), system_package);
+  pct_fun_s = intern(lit("%fun%"), user_package);
 
   qquote_init();
 
@@ -7487,6 +7496,8 @@ void eval_init(void)
   reg_fun(intern(lit("rt-assert-fail"), system_package), func_n4ov(rt_assert_fail, 3));
 
   reg_var(lazy_streams_s, nil);
+
+  reg_symacro(pct_fun_s, nil);
 
   eval_error_s = intern(lit("eval-error"), user_package);
   case_error_s = intern(lit("case-error"), user_package);
