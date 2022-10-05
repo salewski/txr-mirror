@@ -83,22 +83,26 @@
                       (:init
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (push (cons arg body) instance-init-forms)
+                        (if body
+                          (push (cons arg body) instance-init-forms))
                         ^((,word nil nil)))
                       (:postinit
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (push (cons arg body) instance-postinit-forms)
+                        (if body
+                          (push (cons arg body) instance-postinit-forms))
                         ^((,word nil nil)))
                       (:fini
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (push (cons arg body) instance-fini-forms)
+                        (if body
+                          (push (cons arg body) instance-fini-forms))
                         ^((,word nil nil)))
                       (:postfini
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (push (cons arg body) instance-postfini-forms)
+                        (if body
+                          (push (cons arg body) instance-postfini-forms))
                         ^((,word nil nil)))
                       (t (when body
                            (sys:bad-slot-syntax form slot))
@@ -160,24 +164,21 @@
                         instance-fini-forms instance-postfini-forms)
                   ^(lambda (,arg-sym)
                      ,*(append-each ((iff (nreverse instance-fini-forms)))
-                         (if (cdr iff)
-                           ^((finalize ,arg-sym (sys:meth-lambda ,name :fini (,(car iff))
-                                                  ,*(cdr iff))
-                                       t))))
+                         ^((finalize ,arg-sym (sys:meth-lambda ,name :fini (,(car iff))
+                                                ,*(cdr iff))
+                                     t)))
                      ,*(append-each ((ipf (nreverse instance-postfini-forms)))
-                         (if (cdr ipf)
-                           ^((finalize ,arg-sym (sys:meth-lambda ,name :postfini (,(car ipf))
-                                                ,*(cdr ipf))))))
+                         ^((finalize ,arg-sym (sys:meth-lambda ,name :postfini (,(car ipf))
+                                              ,*(cdr ipf)))))
                      ,*(if inst-si-forms
                          ^((let ((,type-sym (struct-type ,arg-sym)))
                              ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)
                                                 (slotset ,arg-sym ',@2 ,@3)))
                                        inst-si-forms))))
                      ,*(append-each ((iif (nreverse instance-init-forms)))
-                         (if (cdr iif)
-                           ^((symacrolet ((%fun% '(,name :init)))
-                               (let ((,(car iif) ,arg-sym))
-                                 ,*(cdr iif))))))))
+                         ^((symacrolet ((%fun% '(,name :init)))
+                             (let ((,(car iif) ,arg-sym))
+                               ,*(cdr iif)))))))
                ,(when args
                   (when (> (countql : args) 1)
                     (compile-error form
@@ -201,9 +202,8 @@
                ,(if instance-postinit-forms
                   ^(sys:meth-lambda ,name :postinit (,arg-sym)
                      ,*(append-each ((ipf (nreverse instance-postinit-forms)))
-                         (if (cdr ipf)
-                           ^((let ((,(car ipf) ,arg-sym))
-                               ,*(cdr ipf))))))))))))))
+                         ^((let ((,(car ipf) ,arg-sym))
+                             ,*(cdr ipf)))))))))))))
 
 (defmacro sys:struct-lit (name . plist)
   ^(sys:make-struct-lit ',name ',plist))
