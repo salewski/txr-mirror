@@ -29342,11 +29342,12 @@ which the variable
 .meta param
 is bound to the structure object.
 
-The
+Multiple
 .code :init
-specifier may not appear more than once in a given
+specifiers may appear in the same
 .code defstruct
-form.
+form. They are executed in their order of appearance,
+left to right.
 
 When an object with one or more levels of inheritance
 is instantiated, the
@@ -29391,6 +29392,7 @@ of an
 .code :init
 specifier are not surrounded by an implicit
 .codn block .
+
 .meIP (:postinit <> ( param ) << body-form *)
 The
 .code :postinit
@@ -29419,8 +29421,13 @@ actions,
 .code :postinit
 actions registered at different levels of the type's
 inheritance hierarchy are invoked in the base-to-derived
-order, and in right-to-left order among multiple bases
-at the same level.
+order, in right-to-left order among multiple bases
+at the same level. Multiple
+.code :postinit
+form in the same
+.code defstruct
+are invoked in left-to-right order.
+
 .meIP (:fini <> ( param ) << body-form *)
 The
 .code :fini
@@ -29454,9 +29461,11 @@ of a
 specifier are not surrounded by an implicit
 .codn block .
 
-At most one
+Multiple
 .code :fini
-may be specified.
+clauses may be specified in the same
+.codn defstruct ,
+in which case they are invoked in reverse, right-to-left order.
 
 Note that an object's finalizers can be called explicitly with
 .codn call-finalizers .
@@ -29464,6 +29473,7 @@ Note: the
 .code with-objects
 macro arranges for finalizers to be called on objects when the execution
 of a scope terminates by any means.
+
 .meIP (:postfini <> ( param ) << body-form *)
 Like
 .codn :fini ,
@@ -29493,17 +29503,25 @@ this omits the
 parameter, which means that
 .code :postfini
 finalizers of derived structures execute after the execution of inherited
-finalizers. When both
+finalizers.  It also means that multiple
+.code :postfini
+finalizers appearing in the same
+.code defstruct
+execute in left-to-right order unlike the reverse right-to-left order of
+.code :fini
+finalizers.
+
+When both
 .code :fini
 and
 .code :postfini
-are specified in the same
+clauses are specified in the same
 .code defstruct
-form, the
+form, all the
 .code :postfini
-finalizer executes after the
+finalizers execute after all the
 .code :fini
-finalizer regardless of the order in which they appear.
+finalizers regardless of the order in which they appear.
 .RE
 .IP
 The slot names given in a

@@ -121,3 +121,11 @@ derived:38 derived postfini
 derived:39 derived postfini
 derived:40 derived postfini
 derived:41 derived postfini
+multi :init: 1
+multi :init: 2
+multi :postinit: 1
+multi :postinit: 2
+multi :fini: 2
+multi :fini: 1
+multi :postfini: 1
+multi :postfini: 2

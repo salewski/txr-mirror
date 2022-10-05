@@ -22,3 +22,23 @@
 
 (mapcar (ret (new derived)) (range 1 20))
 (sys:gc)
+
+(defstruct multi ()
+  (:init (me)
+    (put-line `@{%fun%}: 1`))
+  (:init (me)
+    (put-line `@{%fun%}: 2`))
+  (:postinit (me)
+    (put-line `@{%fun%}: 1`))
+  (:postinit (me)
+    (put-line `@{%fun%}: 2`))
+  (:fini (me)
+    (put-line `@{%fun%}: 1`))
+  (:fini (me)
+    (put-line `@{%fun%}: 2`))
+  (:postfini (me)
+    (put-line `@{%fun%}: 1`))
+  (:postfini (me)
+    (put-line `@{%fun%}: 2`)))
+
+(with-objects ((m (new multi))))

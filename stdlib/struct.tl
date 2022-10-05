@@ -50,10 +50,10 @@
       (compile-warning form "~s is a built-in type" name))
     (unless (proper-listp slot-specs)
       (compile-error form "bad syntax: dotted form"))
-    (let ((instance-init-form nil)
-          (instance-postinit-form nil)
-          (instance-fini-form nil)
-          (instance-postfini-form nil))
+    (let ((instance-init-forms nil)
+          (instance-postinit-forms nil)
+          (instance-fini-forms nil)
+          (instance-postfini-forms nil))
       (labels ((expand-slot (form slot)
                  (tree-case slot
                    ((op . args)
@@ -83,38 +83,22 @@
                       (:init
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (when instance-init-form
-                          (compile-error form
-                                         "duplicate :init"))
-                        (set instance-init-form
-                             (cons arg body))
+                        (push (cons arg body) instance-init-forms)
                         ^((,word nil nil)))
                       (:postinit
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (when instance-postinit-form
-                          (compile-error form
-                                         "duplicate :postinit"))
-                        (set instance-postinit-form
-                             (cons arg body))
+                        (push (cons arg body) instance-postinit-forms)
                         ^((,word nil nil)))
                       (:fini
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (when instance-fini-form
-                          (compile-error form
-                                         "duplicate :fini"))
-                        (set instance-fini-form
-                             (cons arg body))
+                        (push (cons arg body) instance-fini-forms)
                         ^((,word nil nil)))
                       (:postfini
                         (unless (bindable arg)
                           (sys:bad-slot-syntax form slot))
-                        (when instance-postfini-form
-                          (compile-error form
-                                         "duplicate :postfini"))
-                        (set instance-postfini-form
-                             (cons arg body))
+                        (push (cons arg body) instance-postfini-forms)
                         ^((,word nil nil)))
                       (t (when body
                            (sys:bad-slot-syntax form slot))
@@ -172,27 +156,28 @@
                       ,*(mapcar (aret ^(when (static-slot-p ,arg-sym ',@2)
                                          (static-slot-set ,arg-sym ',@2 ,@3)))
                                 (append func-si-forms val-si-forms))))
-               ,(if (or inst-si-forms instance-init-form
-                        instance-fini-form instance-postfini-form)
+               ,(if (or inst-si-forms instance-init-forms
+                        instance-fini-forms instance-postfini-forms)
                   ^(lambda (,arg-sym)
-                     ,*(if (cdr instance-fini-form)
-                         ^((finalize ,arg-sym (sys:meth-lambda ,name :fini
-                                                               (,(car instance-fini-form))
-                                                ,*(cdr instance-fini-form))
-                                     t)))
-                     ,*(if (cdr instance-postfini-form)
-                         ^((finalize ,arg-sym (sys:meth-lambda ,name :postfini
-                                                               (,(car instance-postfini-form))
-                                                ,*(cdr instance-postfini-form)))))
+                     ,*(append-each ((iff (nreverse instance-fini-forms)))
+                         (if (cdr iff)
+                           ^((finalize ,arg-sym (sys:meth-lambda ,name :fini (,(car iff))
+                                                  ,*(cdr iff))
+                                       t))))
+                     ,*(append-each ((ipf (nreverse instance-postfini-forms)))
+                         (if (cdr ipf)
+                           ^((finalize ,arg-sym (sys:meth-lambda ,name :postfini (,(car ipf))
+                                                ,*(cdr ipf))))))
                      ,*(if inst-si-forms
                          ^((let ((,type-sym (struct-type ,arg-sym)))
                              ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)
                                                 (slotset ,arg-sym ',@2 ,@3)))
                                        inst-si-forms))))
-                     ,*(if (cdr instance-init-form)
-                         ^((symacrolet ((%fun% '(,name :init)))
-                             (let ((,(car instance-init-form) ,arg-sym))
-                               ,*(cdr instance-init-form)))))))
+                     ,*(append-each ((iif (nreverse instance-init-forms)))
+                         (if (cdr iif)
+                           ^((symacrolet ((%fun% '(,name :init)))
+                               (let ((,(car iif) ,arg-sym))
+                                 ,*(cdr iif))))))))
                ,(when args
                   (when (> (countql : args) 1)
                     (compile-error form
@@ -213,11 +198,12 @@
                            ,*(mapcar (ret ^(if ,@3
                                              (slotset ,arg-sym ',@1 ,@2)))
                                      opt-args o-gens p-gens))))))
-               ,(if instance-postinit-form
+               ,(if instance-postinit-forms
                   ^(sys:meth-lambda ,name :postinit (,arg-sym)
-                     ,*(if (cdr instance-postinit-form)
-                         ^((let ((,(car instance-postinit-form) ,arg-sym))
-                             ,*(cdr instance-postinit-form)))))))))))))
+                     ,*(append-each ((ipf (nreverse instance-postinit-forms)))
+                         (if (cdr ipf)
+                           ^((let ((,(car ipf) ,arg-sym))
+                               ,*(cdr ipf))))))))))))))
 
 (defmacro sys:struct-lit (name . plist)
   ^(sys:make-struct-lit ',name ',plist))
