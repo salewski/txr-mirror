@@ -163,13 +163,19 @@
                ,(if (or inst-si-forms instance-init-forms
                         instance-fini-forms instance-postfini-forms)
                   ^(lambda (,arg-sym)
-                     ,*(append-each ((iff (nreverse instance-fini-forms)))
-                         ^((finalize ,arg-sym (sys:meth-lambda ,name :fini (,(car iff))
-                                                ,*(cdr iff))
+                     ,*(if instance-fini-forms
+                         ^((finalize ,arg-sym
+                                     (sys:meth-lambda ,name :fini (,arg-sym)
+                                       ,*(append-each ((iff instance-fini-forms))
+                                           ^((let ((,(car iff) ,arg-sym))
+                                               ,*(cdr iff)))))
                                      t)))
-                     ,*(append-each ((ipf (nreverse instance-postfini-forms)))
-                         ^((finalize ,arg-sym (sys:meth-lambda ,name :postfini (,(car ipf))
-                                              ,*(cdr ipf)))))
+                     ,*(if instance-postfini-forms
+                         ^((finalize ,arg-sym
+                                     (sys:meth-lambda ,name :postfini (,arg-sym)
+                                       ,*(append-each ((iff (nreverse instance-postfini-forms)))
+                                           ^((let ((,(car iff) ,arg-sym))
+                                               ,*(cdr iff))))))))
                      ,*(if inst-si-forms
                          ^((let ((,type-sym (struct-type ,arg-sym)))
                              ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)
