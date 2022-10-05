@@ -398,7 +398,7 @@
        ,body)))
 
 (defmacro define-struct-clause (:form form keyword (. params) . body)
-  (if (meq keyword :static :instance :function :method :init :postinit :fini)
+  (if (meq keyword :static :instance :function :method :init :postinit :fini :postfini)
     (compile-error form "~s is a reserved defstruct clause keyword" keyword))
   (unless (keywordp keyword)
     (compile-error form "~s: clauses must be named by keyword symbols" keyword))
