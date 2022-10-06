@@ -227,6 +227,21 @@ static wchar_t *unicode_ident(scanner_t *scn, const char *lex)
   return wlex;
 }
 
+static char *remove_char(char *str, int c)
+{
+  char *dst = str, *src = str;
+
+  while (*src) {
+    int ch = *src++;
+    if (ch != c)
+      *dst++ = ch;
+  }
+
+  *dst = 0;
+
+  return str;
+}
+
 %}
 
 %option stack noinput reentrant bison-bridge extra-type="parser_t *"
@@ -237,14 +252,25 @@ SGN     [+\-]
 EXP     [eE][+\-]?[0-9]+
 DIG     [0-9]
 DIG19   [1-9]
+DIGSEP  {DIG}({DIG}|,)*{DIG}|{DIG}
 XDIG    [0-9A-Fa-f]
+XDIGSEP {XDIG}({XDIG}|,)*{XDIG}|{XDIG}
 NUM     {SGN}?{DIG}+
+NUMSEP  {SGN}?{DIGSEP}
 FLO     {SGN}?({DIG}*[.]{DIG}+{EXP}?|{DIG}+[.]?{EXP})
-FLODOT  {SGN}?{DIG}+[.]
+FLOSEP  {SGN}?({DIGSEP}*[.]{DIGSEP}+{EXP}?|{DIGSEP}+[.]?{EXP})
+FLODOT  {SGN}?{DIGSEP}+[.]
 DOTFLO  [.]{DIG}+
 XNUM    #x{SGN}?{XDIG}+
-ONUM    #o{SGN}?[0-7]+
-BNUM    #b{SGN}?[0-1]+
+XNUMSEP #x{SGN}?{XDIGSEP}
+ODIG    [0-7]
+ODIGSEP {ODIG}({ODIG}|,)*{ODIG}|{ODIG}
+BDIG    [01]
+BDIGSEP {BDIG}({BDIG}|,)*{BDIG}|{BDIG}
+ONUM    #o{SGN}?{ODIG}+
+ONUMSEP #o{SGN}?{ODIGSEP}
+BNUM    #b{SGN}?{BDIG}+
+BNUMSEP #b{SGN}?{BDIGSEP}
 BSCHR   ([a-zA-Z0-9!$%&*+\-<=>?\\_~]|{UONLY})
 NSCHR   ([a-zA-Z0-9!$%&*+\-<=>?\\_~/]|{UONLY})
 ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\_~/]
@@ -302,8 +328,20 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
   return NUMBER;
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>({XNUM}|{ONUM}|{BNUM}) {
-  val str = string_own(utf8_dup_from(yytext + 2));
+<SPECIAL,QSPECIAL,NESTED,BRACED>{NUMSEP} {
+  val str = string_own(utf8_dup_from(remove_char(yytext, ',')));
+
+  if (yy_top_state(yyscanner) == INITIAL
+      || yy_top_state(yyscanner) == QSILIT
+      || yy_top_state(yyscanner) == QWLIT)
+    yy_pop_state(yyscanner);
+
+  yylval->val = int_str(str, num(10));
+  return NUMBER;
+}
+
+<SPECIAL,QSPECIAL,NESTED,BRACED>{XNUMSEP}|{ONUMSEP}|{BNUMSEP} {
+  val str = string_own(utf8_dup_from(remove_char(yytext + 2, ',')));
   int base;
 
   switch (yytext[1]) {
@@ -321,7 +359,7 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
   return NUMBER;
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>({BNUM}|{ONUM}|{XNUM}){TOK} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>({BNUMSEP}|{ONUMSEP}|{XNUMSEP}){TOK} {
   int base = 0;
   val str = string_own(utf8_dup_from(yytext + 2));
 
@@ -355,9 +393,24 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
   return NUMBER;
 }
 
-<SPECIAL>{WS}({FLO}[.]?|{FLODOT}){TOK} |
-<BRACED>{WS}({FLO}[.]?|{FLODOT}){BTOK} |
-<NESTED>{WS}({FLO}[.]?|{FLODOT}){NTOK} {
+<SPECIAL,NESTED,BRACED>{WS}{FLOSEP} {
+  if (yy_top_state(yyscanner) == INITIAL
+      || yy_top_state(yyscanner) == QSILIT
+      || yy_top_state(yyscanner) == QWLIT)
+    yy_pop_state(yyscanner);
+
+  remove_char(yytext, ',');
+
+  if ((yylval->val = flo_str_utf8(yytext)) == nil)
+    out_of_range_float(yyg, yytext);
+
+  return NUMBER;
+}
+
+
+<SPECIAL>{WS}({FLOSEP}[.]?|{FLODOT}){TOK} |
+<BRACED>{WS}({FLOSEP}[.]?|{FLODOT}){BTOK} |
+<NESTED>{WS}({FLOSEP}[.]?|{FLODOT}){NTOK} {
   val str = string_utf8(yytext);
 
   yyerrorf(yyg, lit("trailing junk in floating-point literal: ~a"), str, nao);

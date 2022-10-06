@@ -3503,7 +3503,7 @@ merged into the surrounding syntax.
 
 \*(TX supports integers and floating-point numbers. 
 
-An integer constant is made up of digits
+An integer literal is made up of digits
 .code 0
 through
 .codn 9 ,
@@ -3512,6 +3512,12 @@ optionally preceded by a
 or
 .code -
 sign.
+The character
+.code ,
+(comma) may appear between digits, as a visual separator of no semantic significance.
+The digit sequence must start and end with a digit.
+Runs of consecutive commas are permitted.  Commas outside of the digit sequence
+are interpreted as the Lisp unquote syntax.
 
 Examples:
 
@@ -3521,6 +3527,16 @@ Examples:
   +0
   -0
   +234483527304983792384729384723234
+  -1,000,000,001
+  1,2,3,,4  ;; equivalent to 1234
+.brev
+
+Examples that are not integer tokens:
+
+.verb
+  ,123   ;; equivalent to (sys:unquote 123)
+  123,a  ;; equivalent to 123, followed by (sys:unquote a)
+  -,1    ;; symbol -  followed by (sys:unquote 1)
 .brev
 
 An integer constant can also be specified in hexadecimal using the prefix
@@ -3539,12 +3555,20 @@ through
   #x-ABC  ;; -2748
 .brev
 
+These digits may contain separator commas, just as in the case
+of the decimal integer:
+
+.verb
+  #xFFFF,FFFF,FFFF
+.brev
+
 Similarly, octal numbers are supported with the prefix
 .code #o
 followed by octal digits:
 
 .verb
-  #o777   ;; 511
+  #o777         ;; 511
+  #o123,456     ;; 42797
 .brev
 
 and binary numbers can be written with a
@@ -3552,14 +3576,23 @@ and binary numbers can be written with a
 prefix:
 
 .verb
-  #b1110  ;; 14
+  #b1110        ;; 14
+  #b1111,1111   ;; 255
+.brev
+
+A comma between the radix prefix and digits is
+a syntax error:
+
+.verb
+  #x,DEF5,549C  ;; Syntax error
+  #b,1001,1101  ;; Likewise
 .brev
 
 Note that the
 .code #b
 prefix is also used for buffer literals.
 
-A floating-point constant is marked by the inclusion of a decimal point, the
+A floating-point literal is marked by the inclusion of a decimal point, the
 scientific E notation, or both. It is an optional sign, followed
 by a mantissa consisting of digits, a decimal point, more digits, and then an
 optional E notation consisting of the letter
@@ -3575,6 +3608,10 @@ In the mantissa, the digits are not optional. At least one digit must either
 precede the decimal point or follow it.
 That is to say, a decimal point by itself is not a floating-point constant.
 
+The digits of the mantissa may include separator commas, in the same manner as decimal
+integer literals, in both the integer and fractional part. The digits of the
+exponent may  not include separator commas.
+
 Examples:
 
 .verb
@@ -3587,6 +3624,7 @@ Examples:
   -.5
   +3E+3
   1.E5
+  1,123,456.935,342E+013
 .brev
 
 Examples which are not floating-point constant tokens:
@@ -3598,6 +3636,7 @@ Examples which are not floating-point constant tokens:
   1.0E   ;; syntax error: invalid floating point constant
   1.E    ;; syntax error: invalid floating point literal
   .e     ;; syntax error: dot token followed by symbol
+  ,1.0   ;; equivalent to (sys:unquote 1.0)
 .brev
 
 In \*(TX there is a special "dotdot" token consisting of two consecutive periods.

@@ -41,10 +41,15 @@ static void dir_tables_init(void)
 @(bind hex "0-9A-Fa-f")
 @(bind at "\\(@[ \\t]*\\)")
 @(bind alpha "A-Za-z_")
+@(bind alpha-noe "A-DF-Za-dfz_")
 @(bind alnum "A-Za-z_0-9")
 @(bind dig "0-9")
 @(bind dig19 "1-9")
 @(bind oct "0-7")
+@(bind digsep `\\([@dig][,@dig]*[@dig]\\|[@dig]\\)`)
+@(bind hexsep `\\([@hex][,@hex]*[@hex]\\|[@hex]\\)`)
+@(bind octsep `\\([@oct][,@oct]*[@oct]\\|[@oct]\\)`)
+@(bind binsep `\\([01][,01]*[01]\\|[01]\\)`)
 @(bind chesc `abtnvfre@bs `)
 @(bind glyph `!$%&*+\\-<=>?@{bs}_~`)
 @(bind lispwords @(append-each ((sym tl-orig-sym)
@@ -156,14 +161,14 @@ syn match txr_ident "[@alnum@glyph]*[@alpha@glyph^][@alnum@glyph^]*" contained
 syn match tl_ident "[:][@alnum@glyph^/]\+"@(if txr-p " contained")
 syn match txr_braced_ident "[:][@alnum@glyph^/]\+" contained
 syn match tl_ident "[@alnum@glyph/]\+[@alnum@glyph^/#]*"@(if txr-p " contained")
-syn match txr_pnum "#[xob][+\-]\?[@alnum]\+" contains=txr_xnum,txr_bnum,txr_onum@(if txr-p " contained")
-syn match txr_xnum "#x[+\-]\?[@hex]\+" containedin=txr_pnum contained
-syn match txr_onum "#o[+\-]\?[@oct]\+" containedin=txr_pnum contained
-syn match txr_bnum "#b[+\-]\?[01]\+" containedin=txr_pnum contained
-syn match txr_num "[+\-]\?[@dig]\+\([^@alnum@glyph^/#]\|\n\)"me=e-1@(if txr-p " contained")
-syn match txr_badnum "[+\-]\?[@dig]*[.][@dig]\+\([eE][+\-]\?[@dig]\+\)\?[@alpha@glyph^/#]\+"@(if txr-p " contained")
-syn match txr_num "[+\-]\?[@dig]*[.][@dig]\+\([eE][+\-]\?[@dig]\+\)\?\([^@alnum@glyph^/#]\|\n\)"me=e-1@(if txr-p " contained")
-syn match txr_num "[+\-]\?[@dig]\+\([eE][+\-]\?[@dig]\+\)\([^@alnum@glyph^/#]\|\n\)"me=e-1@(if txr-p " contained")
+syn match txr_pnum "#[xob][+\-]\?[@alnum,]\+" contains=txr_xnum,txr_bnum,txr_onum@(if txr-p " contained")
+syn match txr_xnum "#x[+\-]\?@hexsep" containedin=txr_pnum contained
+syn match txr_onum "#o[+\-]\?@octsep" containedin=txr_pnum contained
+syn match txr_bnum "#b[+\-]\?@binsep" containedin=txr_pnum contained
+syn match txr_num "[+\-]\?@digsep\?[.]@digsep\([eE][+\-]\?[@dig]\+\)\?"@(if txr-p " contained")
+syn match txr_num "[+\-]\?@digsep[.]\?\([eE][+\-]\?[@dig]\+\)"@(if txr-p " contained")
+syn match txr_badnum "[+\-]\?@digsep\?[.]@digsep\([@{alpha-noe}@glyph^/#]\|[eE][^+\-@dig]\|[eE][+/-]\?$\|[eE][+\-][^0-9]\)"@(if txr-p " contained")
+syn match txr_badnum "[+\-]\?@digsep[.]\?\([@{alpha-noe}@glyph^/#]\|[eE][^+\-@dig]\|[eE][+/-]\?$\|[eE][+\-][^0-9]\)"@(if txr-p " contained")
 syn match tl_ident ":"@(if txr-p " contained")
 syn match tl_splice "[ \t,]\|,[*]"@(if txr-p " contained")
 
