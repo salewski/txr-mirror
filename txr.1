@@ -32126,10 +32126,12 @@ to refer to the delegating object.
 
 The
 .meta delegate-expr
-is an expression which is inserted into every method. It is required
-to evaluates to the delegate object. This expression may make a reference to
+is an expression which is inserted into every method. Its evaluation
+is expected to produce the delegate object.
+This expression may reference
 .meta self-var
-in order to retrieve the delegate from the delegating object.
+in order to retrieve or otherwise obtain the delegate from the delegating
+object.
 
 The
 .meta from-type
