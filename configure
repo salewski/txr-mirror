@@ -214,6 +214,7 @@ have_termios=
 have_winsize=
 termios_define=
 have_pkgconfig=
+have_malloc_usable_size=
 libffi_cflags=
 darwin_target=
 solaris_target=
@@ -3334,6 +3335,34 @@ int main(void)
   printf "none\n"
   break
 done
+
+printf "Checking for malloc_usable_size ..."
+
+for header in stdlib malloc malloc_np ; do
+  cat > conftest.c <<!
+#include <$header.h>
+
+int main(int argc, char **argv)
+{
+  void *p = malloc(42);
+  size_t s = malloc_usable_size(p);
+  return 0;
+}
+!
+
+  if conftest ; then
+    printf "yes (<%s.h>)\n" $header
+    printf "#define HAVE_MALLOC_USABLE_SIZE 1\n" >> config.h
+    if [ $header != stdlib ] ; then
+      header=$(printf "%s" $header | tr '[a-z]' '[A-Z]')
+      printf "#define HAVE_%s_H 1\n" $header >> config.h
+    fi
+    have_malloc_usable_size=y
+    break
+  fi
+done
+
+[ "$have_malloc_usable_size" ] || printf "no\n"
 
 printf "Checking for termios ... "
 

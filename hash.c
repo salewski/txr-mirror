@@ -315,6 +315,13 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     return equal_hash(obj->c.car, count, seed)
             + equal_hash(obj->c.cdr, count, seed + (CONS << 8));
   case STR:
+#if HAVE_MALLOC_USABLE_SIZE
+    if (seed == 0) {
+      return if3(obj->st.hash != 0,
+                 obj->st.hash,
+                 obj->st.hash = hash_c_str(obj->st.str, 0, count));
+    }
+#endif
     return hash_c_str(obj->st.str, seed, count);
   case CHR:
     return c_ch(obj);

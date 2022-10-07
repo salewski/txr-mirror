@@ -154,7 +154,11 @@ struct string {
   obj_common;
   wchar_t *str;
   val len;
-  val alloc;
+#if HAVE_MALLOC_USABLE_SIZE
+  ucnum hash;
+#else
+  cnum alloc;
+#endif
 };
 
 typedef struct {

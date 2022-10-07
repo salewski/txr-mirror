@@ -48,6 +48,9 @@
 #if HAVE_MALLOC_H
 #include <malloc.h>
 #endif
+#if HAVE_MALLOC_NP_H
+#include <malloc_np.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "arith.h"
@@ -4856,7 +4859,11 @@ val string_own(wchar_t *str)
   obj->st.type = STR;
   obj->st.str = str;
   obj->st.len = nil;
-  obj->st.alloc = nil;
+#if HAVE_MALLOC_USABLE_SIZE
+  obj->st.hash = 0;
+#else
+  obj->st.alloc = 0;
+#endif
   return obj;
 }
 
@@ -4866,7 +4873,11 @@ val string(const wchar_t *str)
   obj->st.type = STR;
   obj->st.str = chk_strdup(str);
   obj->st.len = nil;
-  obj->st.alloc = nil;
+#if HAVE_MALLOC_USABLE_SIZE
+  obj->st.hash = 0;
+#else
+  obj->st.alloc = 0;
+#endif
   return obj;
 }
 
@@ -4876,7 +4887,11 @@ val string_utf8(const char *str)
   obj->st.type = STR;
   obj->st.str = utf8_dup_from(str);
   obj->st.len = nil;
-  obj->st.alloc = nil;
+#if HAVE_MALLOC_USABLE_SIZE
+  obj->st.hash = 0;
+#else
+  obj->st.alloc = 0;
+#endif
   return obj;
 }
 
@@ -4912,7 +4927,9 @@ val mkstring(val len, val ch_in)
   wmemset(str, c_chr(ch), l);
   str[l] = 0;
   s->st.len = len;
-  s->st.alloc = plus(len, one);
+#if !HAVE_MALLOC_USABLE_SIZE
+  s->st.alloc = c_num(len, self) + 1;
+#endif
   return s;
 }
 
@@ -4927,13 +4944,18 @@ val mkustring(val len)
   val s = string_own(str);
   str[l] = 0;
   s->st.len = len;
-  s->st.alloc = plus(len, one);
+#if !HAVE_MALLOC_USABLE_SIZE
+  s->st.alloc = c_num(len, self) + 1;
+#endif
   return s;
 }
 
 val init_str(val str, const wchar_t *data, val self)
 {
   wmemcpy(str->st.str, data, c_num(str->st.len, self));
+#if HAVE_MALLOC_USABLE_SIZE
+  str->st.hash = 0;
+#endif
   return str;
 }
 
@@ -5016,8 +5038,12 @@ val string_extend(val str, val tail, val finish_in)
   {
     val finish = default_null_arg(finish_in);
     cnum len = c_fixnum(length_str(str), self);
-    cnum oalloc = c_fixnum(str->st.alloc, self), alloc = oalloc;
-    cnum delta, needed;
+#if HAVE_MALLOC_USABLE_SIZE
+    cnum oalloc = malloc_usable_size(str->st.str) / sizeof str->st.str[0];
+#else
+    cnum oalloc = str->st.alloc;
+#endif
+    cnum alloc = oalloc, delta, needed;
 
     if (stringp(tail))
       delta = c_fixnum(length_str(tail), self);
@@ -5043,7 +5069,9 @@ val string_extend(val str, val tail, val finish_in)
 
       if (alloc != oalloc) {
         str->st.str = chk_wrealloc(str->st.str, alloc);
-        set(mkloc(str->st.alloc, str), num(alloc));
+#if !HAVE_MALLOC_USABLE_SIZE
+        str->st.alloc = alloc;
+#endif
       }
     }
 
@@ -5055,6 +5083,9 @@ val string_extend(val str, val tail, val finish_in)
       str->st.str[len] = c_chr(tail);
       str->st.str[len + 1] = 0;
     }
+#if HAVE_MALLOC_USABLE_SIZE
+    str->st.hash = 0;
+#endif
   }
 
   return str;
@@ -5067,12 +5098,18 @@ val string_finish(val str)
 
   {
     cnum len = c_fixnum(length_str(str), self);
-    cnum alloc = c_fixnum(str->st.alloc, self);
+#if HAVE_MALLOC_USABLE_SIZE
+    cnum alloc = malloc_usable_size(str->st.str) / sizeof str->st.str[0];
+#else
+    cnum alloc = str->st.alloc;
+#endif
 
     if (alloc > len + 1) {
       alloc = len + 1;
       str->st.str = chk_wrealloc(str->st.str, alloc);
+#if !HAVE_MALLOC_USABLE_SIZE
       set(mkloc(str->st.alloc, str), num(alloc));
+#endif
     }
   }
 
@@ -5086,11 +5123,14 @@ val string_set_code(val str, val code)
 
   {
     cnum len = c_fixnum(length_str(str), self);
-    cnum alloc = c_fixnum(str->st.alloc, self);
+#if HAVE_MALLOC_USABLE_SIZE
+    cnum alloc = malloc_usable_size(str->st.str) / sizeof str->st.str[0];
+#else
+    cnum alloc = str->st.alloc;
+#endif
 
     if (alloc < len + 2) {
       string_extend(str, one, t);
-      alloc = c_fixnum(str->st.alloc, self);
       set(mkloc(str->st.len, str), num(len));
     }
 
@@ -5109,7 +5149,11 @@ val string_get_code(val str)
 
   {
     cnum len = c_fixnum(length_str(str), self);
-    cnum alloc = c_fixnum(str->st.alloc, self);
+#if HAVE_MALLOC_USABLE_SIZE
+    cnum alloc = malloc_usable_size(str->st.str) / sizeof str->st.str[0];
+#else
+    cnum alloc = str->st.alloc;
+#endif
 
     if (alloc >= len + 2)
       return num(str->st.str[len + 1]);
@@ -5155,7 +5199,9 @@ val length_str(val str)
   case STR:
     if (!str->st.len) {
       set(mkloc(str->st.len, str), num(wcslen(str->st.str)));
-      set(mkloc(str->st.alloc, str), plus(str->st.len, one));
+#if !HAVE_MALLOC_USABLE_SIZE
+      str->st.alloc = c_num(str->st.len, self) + 1;
+#endif
     }
     return str->st.len;
   default:
@@ -5550,6 +5596,10 @@ val replace_str(val str_in, val items, val from, val to)
   from = max2(zero, min2(from, len));
   to = max2(zero, min2(to, len));
 
+
+#if HAVE_MALLOC_USABLE_SIZE
+  str_in->st.hash = 0;
+#endif
 
   {
     val len_rep = minus(to, from);
@@ -6834,6 +6884,10 @@ val chr_str_set(val str, val ind, val chr)
     uw_throwf(error_s, lit("~a: cannot modify literal string ~s"),
               self, str, nao);
   }
+
+#if HAVE_MALLOC_USABLE_SIZE
+  str->st.hash = 0;
+#endif
 
   if (index < 0) {
     ind = plus(length_str(str), ind);
