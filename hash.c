@@ -923,9 +923,8 @@ static val do_make_hash(hash_weak_opt_t wkopt, hash_type_t type, val seed)
     val table = vector(mod, nil);
     val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
 
-    h->seed = convert(u32_t, c_unum(default_arg(seed,
-                                                if3(hash_seed_s,
-                                                    hash_seed, zero)), self));
+    h->seed = c_unum(default_arg(seed, if3(hash_seed_s, hash_seed, zero)),
+                     self);
     h->wkopt = wkopt;
     h->modulus = c_unum(mod, self);
     h->count = 0;
