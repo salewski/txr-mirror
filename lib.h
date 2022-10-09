@@ -154,9 +154,7 @@ struct string {
   obj_common;
   wchar_t *str;
   val len;
-#if HAVE_MALLOC_USABLE_SIZE
-  ucnum hash;
-#else
+#if !HAVE_MALLOC_USABLE_SIZE
   cnum alloc;
 #endif
 };

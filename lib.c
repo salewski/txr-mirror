@@ -4859,9 +4859,7 @@ val string_own(wchar_t *str)
   obj->st.type = STR;
   obj->st.str = str;
   obj->st.len = nil;
-#if HAVE_MALLOC_USABLE_SIZE
-  obj->st.hash = 0;
-#else
+#if !HAVE_MALLOC_USABLE_SIZE
   obj->st.alloc = 0;
 #endif
   return obj;
@@ -4873,9 +4871,7 @@ val string(const wchar_t *str)
   obj->st.type = STR;
   obj->st.str = chk_strdup(str);
   obj->st.len = nil;
-#if HAVE_MALLOC_USABLE_SIZE
-  obj->st.hash = 0;
-#else
+#if !HAVE_MALLOC_USABLE_SIZE
   obj->st.alloc = 0;
 #endif
   return obj;
@@ -4887,9 +4883,7 @@ val string_utf8(const char *str)
   obj->st.type = STR;
   obj->st.str = utf8_dup_from(str);
   obj->st.len = nil;
-#if HAVE_MALLOC_USABLE_SIZE
-  obj->st.hash = 0;
-#else
+#if !HAVE_MALLOC_USABLE_SIZE
   obj->st.alloc = 0;
 #endif
   return obj;
@@ -4953,9 +4947,6 @@ val mkustring(val len)
 val init_str(val str, const wchar_t *data, val self)
 {
   wmemcpy(str->st.str, data, c_num(str->st.len, self));
-#if HAVE_MALLOC_USABLE_SIZE
-  str->st.hash = 0;
-#endif
   return str;
 }
 
@@ -5083,9 +5074,6 @@ val string_extend(val str, val tail, val finish_in)
       str->st.str[len] = c_chr(tail);
       str->st.str[len + 1] = 0;
     }
-#if HAVE_MALLOC_USABLE_SIZE
-    str->st.hash = 0;
-#endif
   }
 
   return str;
@@ -5595,11 +5583,6 @@ val replace_str(val str_in, val items, val from, val to)
 
   from = max2(zero, min2(from, len));
   to = max2(zero, min2(to, len));
-
-
-#if HAVE_MALLOC_USABLE_SIZE
-  str_in->st.hash = 0;
-#endif
 
   {
     val len_rep = minus(to, from);
@@ -6884,10 +6867,6 @@ val chr_str_set(val str, val ind, val chr)
     uw_throwf(error_s, lit("~a: cannot modify literal string ~s"),
               self, str, nao);
   }
-
-#if HAVE_MALLOC_USABLE_SIZE
-  str->st.hash = 0;
-#endif
 
   if (index < 0) {
     ind = plus(length_str(str), ind);
