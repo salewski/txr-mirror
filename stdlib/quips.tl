@@ -101,6 +101,7 @@
     "TXR Labs engaged in gain-of-function experiments as far back as 2009."
     "TXR Lisp has dark mode now: global *dark-mode* and lexical with-dark-mode."
     "Merry GNUsmas, dear FSF friends! ... Crap, wait. That's 'Samsung' backwards!"
+    "Truly future-proof systems are rare; future-resistant ones are everywhere."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
