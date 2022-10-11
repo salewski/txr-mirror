@@ -14658,8 +14658,14 @@ val put_json(val obj, val stream_in, val flat)
                   set_indent_mode(stream, num_fast(indent_foff)),
                   test_set_indent_mode(stream, num_fast(indent_off),
                                        num_fast(indent_data)));
+  val isave = get_indent(stream);
+  uw_simple_catch_begin;
   out_json_rec(obj, stream, 0);
-  set_indent_mode(stream, imode);
+  uw_unwind {
+    set_indent_mode(stream, imode);
+    set_indent(stream, isave);
+  }
+  uw_catch_end;
   return t;
 }
 
