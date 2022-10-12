@@ -4104,6 +4104,18 @@ val inc_indent(val stream, val delta)
   return oldval;
 }
 
+val inc_indent_abs(val stream, val delta)
+{
+  val self = lit("inc-indent-abs");
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(self, stream, stream_cls));
+  val oldval = num(s->indent_chars);
+  s->indent_chars = c_num(plus(delta, oldval), self);
+  if (s->indent_chars < 0)
+    s->indent_chars = 0;
+  return oldval;
+}
+
 val width_check(val stream, val alt)
 {
   val self = lit("width-check");
@@ -5553,6 +5565,7 @@ void stream_init(void)
   reg_fun(intern(lit("get-indent"), user_package), func_n1(get_indent));
   reg_fun(intern(lit("set-indent"), user_package), func_n2(set_indent));
   reg_fun(intern(lit("inc-indent"), user_package), func_n2(inc_indent));
+  reg_fun(intern(lit("inc-indent-abs"), user_package), func_n2(inc_indent_abs));
   reg_fun(intern(lit("width-check"), user_package), func_n2(width_check));
   reg_fun(intern(lit("force-break"), user_package), func_n1(force_break));
   reg_fun(intern(lit("set-max-length"), user_package), func_n2(set_max_length));

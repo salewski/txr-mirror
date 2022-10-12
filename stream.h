@@ -236,6 +236,7 @@ val set_indent_mode(val stream, val mode);
 val get_indent(val stream);
 val set_indent(val stream, val indent);
 val inc_indent(val stream, val delta);
+val inc_indent_abs(val stream, val delta);
 val width_check(val stream, val alt);
 val force_break(val stream);
 val set_max_length(val stream, val length);

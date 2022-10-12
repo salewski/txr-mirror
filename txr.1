@@ -62570,11 +62570,12 @@ if and only if the current mode is
 equal to
 .metn compare-mode .
 
-.coNP Functions @, get-indent @ set-indent and @ inc-indent
+.coNP Functions @, get-indent @, set-indent @ inc-indent and @ inc-indent-abs
 .synb
 .mets (get-indent << stream )
 .mets (set-indent < stream << new-indent )
 .mets (inc-indent < stream << indent-delta )
+.mets (inc-indent-abs < stream << indent-delta )
 .syne
 .desc
 These functions manipulate the indentation value of the stream.
@@ -62603,6 +62604,16 @@ and returns the old value.
 The indentation is calculated by adding
 .meta indent-delta
 to the current column position.
+If a negative indentation results, it is clamped to zero.
+
+The
+.code inc-indent-abs
+function sets
+.metn stream 's
+indentation relative to the current indentation value.
+The indentation is calculated by adding
+.meta indent-delta
+to the current indentation amount.
 If a negative indentation results, it is clamped to zero.
 
 .coNP Function @ width-check
