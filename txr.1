@@ -32025,16 +32025,38 @@ must be an expression which the delegate method can evaluate to
 produce a delegate object. The delegate method then passes its
 arguments to the target method, given by the
 .meta target-name
-argument, invoked on the delegate object. If the delegate method has optional
-parameters which have not received an argument value, those parameters
-are treated as if they had received the colon symbol
+argument, invoked on the delegate object.
+
+If the delegate method specifies an optional parameter without a default
+initializing expression, and that optional parameter
+is not given an argument value, it receives the colon symbol
 .code :
-as their value, and that value is passed on. If the delegate method has
-variadic parameters, they are applied to the target. If optional parameters
-specified in
+as its argument. That value is passed on to the corresponding parameter
+of the delegate target method. Thus, if the target method has
+an optional parameter in that same parameter position, that colon symbol
+argument then has the effect of requesting the default value.
+If the target method has an ordinary parameter in that position, then
+the colon symbol is received as an ordinary argument value.
+
+If the delegate method specifies an optional parameter with a default
+initializing expression, and that optional parameter is not given
+an argument value, then the expression is evaluated to produce a value
+for that parameter, in the usual manner, and that value is passed as
+an argument to the corresponding parameter of the delegate target.
+Thus, delegates are able to specify different optional argument defaulting
+from their targets.
+
+A delegate may have an optional parameter in a position where the target
+has a required parameter and vice versa.
+
+The three-element optional parameter expression, specifying a Boolean variable
+which indicates whether the optional parameter has been given an argument, is
+not supported by the
 .code :delegate
-are given argument values, those are discarded, playing no role in the
-delegation.
+clause, and is diagnosed.
+
+If the delegate method has variadic parameters, they are passed on to the
+target after the fixed parameters.
 
 .TP* Example:
 

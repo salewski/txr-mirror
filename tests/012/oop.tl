@@ -102,12 +102,20 @@
 (defstruct contractor ()
   sub
   (:delegate work (me) me.sub.sub)
-  (:delegate break (me : min) me.sub.sub relax))
+  (:delegate break (me : min) me.sub.sub relax)
+  (:delegate break20 (me : (min 20)) me.sub.sub relax))
 
 (let ((co (new contractor sub (new contractor sub (new worker name "foo")))))
   (mtest co.(work) "worker foo works"
          co.(break) "worker foo relaxes for 15 min"
-         co.(break 5) "worker foo relaxes for 5 min"))
+         co.(break 5) "worker foo relaxes for 5 min"
+         co.(break20 5) "worker foo relaxes for 5 min"
+         co.(break20) "worker foo relaxes for 20 min"))
+
+(test
+  (defstruct bad-delegate ()
+    (:delegate del (x : (y z w))))
+  :error)
 
 (defstruct api-x ()
   (:method get (x a b : c . d) ^(api-x get ,x ,a ,b ,c ,d))

@@ -427,9 +427,19 @@
          (pp (new (fun-param-parser (cdr params) form)))
          (opt pp.(opt-syms))
          (args (append pp.req opt pp.rest)))
-    ^((:method ,meth-name (,obj ,*pp.req
-                           ,*(if opt (cons : (mapcar (lop list :) opt)))
-                           ,*pp.rest)
+    ^((:method ,meth-name
+        (,obj ,*pp.req
+              ,*(if opt
+                  (cons : (collect-each ((o pp.opt))
+                            (tree-case o
+                              ((sym) ^(,sym :))
+                              ((sym init) o)
+                              ((sym init sym-p)
+                               (compile-error form
+                                              "~s: three-element optional \ \
+                                              parameter ~s not supported"
+                                              o))))))
+              ,*pp.rest)
         (qref ,delegate-expr (,target-method ,*args))))))
 
 (define-struct-clause :mass-delegate (:form form self-var delegate-expr
