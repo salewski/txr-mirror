@@ -15345,39 +15345,76 @@ it is possible to write
 except that the latter produces a variadic function.
 
 .TP* Examples:
-.IP "Counting function:"
-This function, which takes no arguments, captures the
-variable
+
+The following expression returns a function which captures
+the variable
 .codn counter .
-Whenever this object is called, it increments
+Whenever the returned function is called, it increments
 .code counter
-by
-.code 1
-and returns the incremented value.
+by one, and returns the incremented value.
 
 .verb
   (let ((counter 0))
     (lambda () (inc counter)))
 .brev
 
-.IP "Function that takes two or more arguments:"
-The third and subsequent arguments are aggregated into a list passed as the
-single parameter
+The following produces a variadic function which requires at least two
+arguments.  The third and subsequent arguments are aggregated into a list
+passed as the single parameter
 .codn z :
 
 .verb
   (lambda (x y . z) (list 'my-arguments-are x y z))
 .brev
 
-.IP "Variadic function:"
+A variadic function with no required arguments. The parameter name for the
+received arguments appears alone in place of the parameter list.
+
 .verb
   (lambda args (list 'my-list-of-arguments args))
 .brev
 
-.IP "Optional arguments:"
+Same as the previous example, using a dotted notation specific to \*(TL.
+
+.verb
+  (lambda (. args) (list 'my-list-of-arguments args))
+.brev
+
+Note that
+.code "(. args)"
+is just a written notation equivalent to
+.code args
+and not a different object structure.
+
+Optional arguments:
+
 .verb
   [(lambda (x : y) (list x y)) 1] -> (1 nil)
   [(lambda (x : y) (list x y)) 1 2] -> (1 2)
+.brev
+
+Passing
+.code :
+(colon symbol) to request default value of optional parameter:
+
+.verb
+  [(lambda (x : (y 42) z) (list x y z)) 1 2 3] -> (1 2 3)
+  [(lambda (x : (y 42) z) (list x y z)) 1 : 3] -> (1 42 3)
+  [(lambda (x : (y 42) z) (list x y z)) 1] -> (1 42 nil)
+.brev
+
+Presence-indicating variable accompanying optional parameter:
+
+.verb
+  [(lambda (x : (y 42 have-y)) (list x y have-y)) 1 2]
+  -> (1 2 t)
+
+  [(lambda (x : (y 42 have-y)) (list x y have-y)) 1]
+  -> (1 42 nil)
+
+  ;; defaulting via : is indistinguishable from missing
+  [(lambda (x : (y 42 have-y)) (list x y have-y)) 1 :]
+  -> (1 42 nil)
 .brev
 
 .coNP Macros @ flet and @ labels
