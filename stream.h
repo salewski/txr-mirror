@@ -131,10 +131,17 @@ struct stdio_mode {
 #define std_debug (deref(lookup_var_l(nil, stddebug_s)))
 #define std_error (deref(lookup_var_l(nil, stderr_s)))
 #define std_null (deref(lookup_var_l(nil, stdnull_s)))
+
+enum json_fmt {
+  json_fmt_default,
+  json_fmt_standard
+};
+
 loc lookup_var_l(val env, val sym);
 
 extern val from_start_k, from_current_k, from_end_k;
 extern val real_time_k, name_k, addr_k, fd_k, byte_oriented_k;
+extern val standard_k;
 extern val format_s;
 
 extern val stdio_stream_s;
@@ -148,6 +155,7 @@ extern val get_error_s, get_error_str_s, clear_error_s, get_fd_s;
 
 extern val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 extern val pprint_flo_format_s, print_base_s, print_circle_s;
+extern val print_json_format_s;
 
 #if HAVE_SOCKETS
 extern val socket_error_s;

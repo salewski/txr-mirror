@@ -95,9 +95,11 @@ val get_error_s, get_error_str_s, clear_error_s, get_fd_s;
 
 val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 val pprint_flo_format_s, print_base_s, print_circle_s;
+val print_json_format_s;
 
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, addr_k, fd_k, byte_oriented_k;
+val standard_k;
 val format_s;
 
 val stdio_stream_s;
@@ -5414,6 +5416,7 @@ void stream_init(void)
   addr_k = intern(lit("addr"), keyword_package);
   fd_k = intern(lit("fd"), keyword_package);
   byte_oriented_k = intern(lit("byte-oriented"), keyword_package);
+  standard_k = intern(lit("standard"), keyword_package);
   format_s = intern(lit("format"), user_package);
   stdio_stream_s = intern(lit("stdio-stream"), user_package);
 #if HAVE_SOCKETS
@@ -5469,6 +5472,7 @@ void stream_init(void)
   reg_var(print_base_s = intern(lit("*print-base*"), user_package),
           num_fast(10));
   reg_var(print_circle_s = intern(lit("*print-circle*"), user_package), nil);
+  reg_var(print_json_format_s = intern(lit("*print-json-format*"), user_package), nil);
 
 #if HAVE_ISATTY
   if (isatty(fileno(stdin)) == 1) {

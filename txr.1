@@ -79981,6 +79981,29 @@ argument is passed to that function, defaulting to
 The value returned is that of
 .codn put-jsons .
 
+.coNP Variable @ *print-json-format*
+.desc
+The
+.code *print-json-format*
+variable controls the formatting style exhibited by 
+.code put-json
+and related functions. The initial value of this variable is
+.codn nil .
+
+If the value is the keyword symbol
+.codn :standard ,
+then a widely-used format is used, in which the opening and closing
+braces and brackets of vectors and dictionaries are printed
+on separate lines, as are the elements of those objects.
+
+If the variable
+has any other value, including the initial value
+.codn nil ,
+then a default format is used in which braces, brackets
+and elements appear on the same line, subject to automatic
+breaking and indentation, similar to the way Lisp nested
+list structure is printed.
+
 .coNP Variable @ *read-bad-json*
 .desc
 This dynamic variable, initialized to a value of

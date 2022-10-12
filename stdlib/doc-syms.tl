@@ -36,6 +36,7 @@
       ("*print-flo-digits*" "N-00F41F6C")
       ("*print-flo-format*" "N-02B252AA")
       ("*print-flo-precision*" "N-02E97D03")
+      ("*print-json-format*" "N-02338B4D")
       ("*random-state*" "N-033875AD")
       ("*random-warmup*" "N-010348CD")
       ("*read-bad-json*" "N-01C77B65")
