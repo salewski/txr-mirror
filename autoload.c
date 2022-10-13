@@ -826,6 +826,7 @@ static val match_set_entries(val fun)
     lit("match"), lit("match-ecase"),
     lit("while-match"), lit("while-match-case"), lit("while-true-match-case"),
     lit("lambda-match"), lit("defun-match"), lit("defmatch"),
+    lit("macroexpand-match"),
     lit("each-match"), lit("append-matches"),
     lit("keep-matches"), lit("each-match-product"),
     lit("append-match-products"), lit("keep-match-products"),

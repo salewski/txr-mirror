@@ -833,6 +833,11 @@
                                      ,args ,*body)))
        ',name)))
 
+(defun macroexpand-match (pattern : env)
+  (iflet ((xfun (and (consp pattern) [*match-macro* (car pattern)])))
+    [xfun pattern env]
+    pattern))
+
 (defun check (f op pat)
   (if (or (not (listp pat))
           (meq (car pat) 'sys:expr 'sys:var 'sys:quasi))

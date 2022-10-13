@@ -1187,6 +1187,7 @@
       ("macroexpand-1-lisp1" "N-01E62179")
       ("macroexpand-1-place" "N-00684FF9")
       ("macroexpand-lisp1" "N-01E62179")
+      ("macroexpand-match" "N-02CCCB67")
       ("macroexpand-params" "N-037EB49A")
       ("macroexpand-place" "N-00684FF9")
       ("macrolet" "N-00AC12C0")

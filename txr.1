@@ -46939,6 +46939,56 @@ environment.
   -> nil
 .brev
 
+.coNP Function @ macroexpand-match
+.synb
+.mets (macroexpand-match < pattern <> [ env ])
+.syne
+.desc
+If
+.code pattern
+is a compound form whose operator symbol has been defined as a macro
+pattern using
+.codn defmatch ,
+then
+.code macroexpand-match
+will expand that pattern and return the expansion. Otherwise it returns the
+.code pattern
+argument.
+
+In order to be recognized by
+.code macroexpand-match
+the
+.meta pattern
+argument must not include the
+.code @
+prefix that would normally be used to invoke it. The expansion, however, will
+include that syntax.
+
+The
+.code env
+parameter specifies the macro-time environment for the expander.
+Note: pattern expanders, like built-in patterns, may use the macro environment
+for deciding whether a variable is an existing lexical variable, or a free
+variable, based on which a pattern may be expanded differently.
+
+.TP* Example:
+
+Given:
+.verb
+  (defmatch point (x y)
+    ^@(struct point x @,x y @,y))
+.brev
+a result similar to the following may be obtained:
+.verb
+  (macroexpand-match '(point a b)) -> @(struct point x @a y @b)
+.brev
+Note that the pattern is specified plainly as
+.code "(point a b)"
+rather than
+.codn "@(point a b)" ,
+yet the expansion is
+.codn "@(struct ...)" .
+
 .coNP Special variable @ *match-macro*
 .desc
 The
