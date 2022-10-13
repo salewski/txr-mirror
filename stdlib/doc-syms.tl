@@ -1186,6 +1186,7 @@
       ("macroexpand-1" "N-02ED5471")
       ("macroexpand-1-lisp1" "N-01E62179")
       ("macroexpand-lisp1" "N-01E62179")
+      ("macroexpand-params" "N-037EB49A")
       ("macrolet" "N-00AC12C0")
       ("madv-dontneed" "N-027D1E84")
       ("madv-normal" "N-027D1E84")

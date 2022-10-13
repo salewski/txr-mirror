@@ -504,7 +504,7 @@ static val tagbody_instantiate(void)
 static val pmac_set_entries(val fun)
 {
   val name[] = {
-    lit("define-param-expander"), nil
+    lit("define-param-expander"), lit("macroexpand-params"), nil
   };
   autoload_set(al_fun, name, fun);
   return nil;

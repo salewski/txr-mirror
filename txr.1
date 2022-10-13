@@ -41675,6 +41675,72 @@ Boolean indicator params:
   (keyfun) -> (10 nil 20 nil)
 .brev
 
+.coNP Function @ macroexpand-params
+.synb
+.mets (expand-params < proto-form <> [ env ])
+.syne
+.desc
+The
+.code expand-param
+function expands all of the parameter list macros expressed in the
+.I "prototype form"
+.metn proto-form ,
+returning an expanded version of the form.
+
+The
+.meta proto-form
+is a compound for which has a shape very similar to a lambda
+expression, and may be a lambda expression.
+
+The first element of
+.meta proto-form
+is a name, which is an arbitrary object, though the use of a symbol
+is strongly recommended. This object plays no role in
+.code expand-params
+other than for composing diagnostic messages if errors occur.
+
+The second element of
+.meta proto-form
+is the parameter list.
+
+The remaining elements of
+.meta proto-form
+are zero or more body forms.
+
+If
+.meta proto-form
+contains no parameter macro invocations, then it is returned.
+
+The optional
+.meta env
+parmeter specifies the macro environment which is passed to the
+parameter macro expanders, which they can receive via the
+.code :env
+parameter. The default value
+.code nil
+sepcifies the top-level environment.
+
+.TP* Examples:
+
+.verb
+;; No expansion: argument is returned
+(macroexpand-params '(foo (arg) body)) -> (foo (arg) body)
+
+;; Expand :key macro
+(macroexpand-params '(bar (:key a b c -- d (e 1234 f-p)) body))
+--> (bar (a b c . #:g0014)
+      (let (d e f-p)
+        (let ((#:g0015 (memp :d #:g0014)))
+          (when #:g0015
+            (set d (cadr #:g0015))))
+        (let ((#:g0015 (memp :e #:g0014)))
+          (cond 
+            (#:g0015 (set e (cadr #:g0015))
+                     (set f-p t))
+            (t (set e 1234))))
+        body))
+.brev
+
 .SS* Mutation of Syntactic Places
 .coNP Macro @ set
 .synb
