@@ -109,6 +109,7 @@ static val place_set_entries(val fun)
     lit("defplace"), lit("define-place-macro"), lit("define-modify-macro"),
     lit("placelet"), lit("placelet*"), lit("read-once"),
     lit("define-accessor"), lit("with-slots"),
+    lit("macroexpand-place"), lit("macroexpand-1-place"),
     nil
   };
 

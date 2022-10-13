@@ -41713,12 +41713,12 @@ contains no parameter macro invocations, then it is returned.
 
 The optional
 .meta env
-parmeter specifies the macro environment which is passed to the
+parameter specifies the macro environment which is passed to the
 parameter macro expanders, which they can receive via the
 .code :env
 parameter. The default value
 .code nil
-sepcifies the top-level environment.
+specifies the top-level environment.
 
 .TP* Examples:
 
@@ -43863,6 +43863,75 @@ in terms of
 .verb
   (define-place-macro first (obj)
     ^(car ,obj))
+.brev
+
+.coNP Functions @ macroexpand-place and @ macroexpand-1-place
+.synb
+.mets (macroexpand-1-place < form <> [ env ])
+.mets (macroexpand-place < form <> [ env ])
+.syne
+.desc
+If
+.meta form
+is a place macro form (a form whose operator symbol has been defined
+as a place macro using
+.codn define-place-macro )
+these functions expand the place macro form and return the expanded form.
+Otherwise, they return
+.metn form .
+
+.code macroexpand-place-1
+performs a single expansion, expanding only the place the macro
+that is referenced by the symbol in the first position of
+.metn form ,
+and returns the expansion. Note that if
+.meta form
+is an ordinary macro form, this function will not expand it,
+even if such an expansion would reveal a place macro form.
+
+.code macroexpand-place
+performs a full place expansion of
+.meta form
+by the following process.
+If
+.meta form
+is a place macro call, it is expanded, and the result is
+checked again to see whether it is a place macro, and
+expanded. This is repeated as many times as necessary
+until the result is no longer a place macro call.
+Then, if the resulting form is an ordinary macro invocation,
+it is expanded once as if by
+.codn macroexpand-1 .
+This process is iterated until a fixed point is reached.
+
+The optional
+.meta env
+parameter is a macro environment.  Note: the
+.code macroexpand-place-1
+function ignores the
+.meta env
+parameter, which could change in the future.
+
+.TP* Examples
+
+Given this ordinary macro definition
+
+.verb
+  (defmacro leftmost (x) ^(first ,x))
+.brev
+
+the following results are obtained:
+
+.verb
+  ;; ordinary macro leftmost expands to first,
+  ;; then first place macro expands to car:
+  (macroexpand-place '(leftmost x)) -> (car x)
+
+  ;; macroexpand-1-place won't expand ordinary macro:
+  (macroexpand-1-place '(leftmost x)) -> (leftmost x)
+
+  ;; macroexpand-1-place expands place macro
+  (macroexpand-1-place '(first x)) -> (car x)
 .brev
 
 .coNP Macro @ rlet

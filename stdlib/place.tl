@@ -63,7 +63,7 @@
   (or [*place-macro* sym]
       (progn (sys:autoload-try-fun sym) [*place-macro* sym])))
 
-(defun sys:pl-expand (unex-place env)
+(defun macroexpand-place (unex-place : env)
   (while t
     (let ((place unex-place)
           pm-expander)
@@ -76,11 +76,18 @@
       (when (or (eq place unex-place)
                 (null place)
                 (and (atom place) (not (symbolp place))))
-        (return-from sys:pl-expand place))
+        (return-from macroexpand-place place))
       (sys:setq unex-place place))))
 
+(defun macroexpand-1-place (unex-place : env-unused)
+  (let ((pm-expander (if (consp unex-place)
+                       (sys:get-place-macro (car unex-place)))))
+    (if pm-expander
+      [pm-expander unex-place]
+      unex-place)))
+
 (defun place-form-p (unex-place env)
-  (let ((place (sys:pl-expand unex-place env)))
+  (let ((place (macroexpand-place unex-place env)))
     (or (bindable place)
         (and (consp place) [*place-update-expander* (car place)] t))))
 
@@ -147,7 +154,7 @@
 
 (defun call-update-expander (getter setter unex-place env body)
   (sys:propagate-ancestor body unex-place getter setter)
-  (let* ((place (sys:pl-expand unex-place env))
+  (let* ((place (macroexpand-place unex-place env))
          (expander (get-update-expander place))
          (sys:*pl-env* env)
          (sys:*pl-form* unex-place)
@@ -157,7 +164,7 @@
 
 (defun call-clobber-expander (ssetter unex-place env body)
   (sys:propagate-ancestor body unex-place ssetter)
-  (let* ((place (sys:pl-expand unex-place env))
+  (let* ((place (macroexpand-place unex-place env))
          (expander (get-clobber-expander place))
          (sys:*pl-env* env)
          (sys:*pl-form* unex-place)
@@ -167,7 +174,7 @@
 
 (defun call-delete-expander (deleter unex-place env body)
   (sys:propagate-ancestor body unex-place deleter)
-  (let* ((place (sys:pl-expand unex-place env))
+  (let* ((place (macroexpand-place unex-place env))
          (expander (get-delete-expander place))
          (sys:*pl-env* env)
          (sys:*pl-form* unex-place)
