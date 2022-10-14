@@ -8421,7 +8421,7 @@ static NORETURN void wrongargs(val fun)
 
 val funcall(val fun)
 {
-  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
+  if (type(fun) != FUN || dbg_backtrace) generic: {
     args_decl(args, ARGS_MIN);
     return generic_funcall(fun, args);
   }
@@ -8455,12 +8455,14 @@ val funcall(val fun)
       break;
     }
   }
+  if (fun->f.optargs)
+    goto generic;
   wrongargs(fun);
 }
 
 val funcall1(val fun, val arg)
 {
-  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
+  if (type(fun) != FUN || dbg_backtrace) generic: {
     args_decl(args, ARGS_MIN);
     args_add(args, z(arg));
     return generic_funcall(fun, args);
@@ -8505,12 +8507,14 @@ val funcall1(val fun, val arg)
       break;
     }
   }
+  if (fun->f.optargs)
+    goto generic;
   wrongargs(fun);
 }
 
 val funcall2(val fun, val arg1, val arg2)
 {
-  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
+  if (type(fun) != FUN || dbg_backtrace) generic: {
     args_decl(args, ARGS_MIN);
     args_add2(args, z(arg1), z(arg2));
     return generic_funcall(fun, args);
@@ -8561,12 +8565,14 @@ val funcall2(val fun, val arg1, val arg2)
       break;
     }
   }
+  if (fun->f.optargs)
+    goto generic;
   wrongargs(fun);
 }
 
 val funcall3(val fun, val arg1, val arg2, val arg3)
 {
-  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
+  if (type(fun) != FUN || dbg_backtrace) generic: {
     args_decl(args, ARGS_MIN);
     args_add3(args, z(arg1), z(arg2), z(arg3));
     return generic_funcall(fun, args);
@@ -8623,12 +8629,14 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       break;
     }
   }
+  if (fun->f.optargs)
+    goto generic;
   wrongargs(fun);
 }
 
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
-  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
+  if (type(fun) != FUN || dbg_backtrace) generic: {
     args_decl(args, ARGS_MIN);
     args_add4(args, z(arg1), z(arg2), z(arg3), z(arg4));
     return generic_funcall(fun, args);
@@ -8691,6 +8699,8 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
       break;
     }
   }
+  if (fun->f.optargs)
+    goto generic;
   wrongargs(fun);
 }
 
