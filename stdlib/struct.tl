@@ -415,6 +415,11 @@
             (mac-param-bind ,form ,params (cdr ,slot) ,*body)))
        ,keyword)))
 
+(defun macroexpand-struct-clause (clause : form)
+  (iflet ((xfun (and (consp clause) [*struct-clause-expander* (car clause)])))
+    [xfun clause form]
+    (cons clause nil)))
+
 (compile-only
   (load-for (struct sys:param-parser-base "param")))
 

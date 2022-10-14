@@ -1190,6 +1190,7 @@
       ("macroexpand-match" "N-02CCCB67")
       ("macroexpand-params" "N-037EB49A")
       ("macroexpand-place" "N-00684FF9")
+      ("macroexpand-struct-clause" "N-01046265")
       ("macrolet" "N-00AC12C0")
       ("madv-dontneed" "N-027D1E84")
       ("madv-normal" "N-027D1E84")

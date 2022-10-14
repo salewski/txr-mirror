@@ -32313,6 +32313,56 @@ or a subtype thereof.
   fa.(write 4) -> ;; error: fa has no such method
 .brev
 
+.coNP Function @ macroexpand-struct-clause
+.synb
+.mets (macroexpand-struct-clause < clause <> [ form ])
+.syne
+.desc
+If
+.code clause
+is a compound expression whose operator symbol was defined by
+.code define-struct-clause
+then
+.code macroexpand-struct-clause
+expands the clause and returns the expansion, which is
+a list of zero or more clauses.
+Otherwise, the function returns a one-element list containing the
+.meta clause
+argument, as if by the
+.mono
+.meti (list << clause )
+.onom
+expression.
+
+The
+.meta form
+parameter, if present, is used for reporting errors.
+Note: clauses are usually expanded during the processing of a
+.code defstruct
+macro; in that situation, the entire unexpanded
+.code defstruct
+form serves the role,
+
+.TP* Examples:
+
+.verb
+  ;; try to expand :delegate, using incorrect syntax.
+  (macroexpand-struct-clause '(:delegate x (a b)))
+  --> error "** source location n/a: nil: too few elements ..."
+
+  ;; same, but with error reporting form.
+  (macroexpand-struct-clause '(:delegate x (a b)) '(abc xyz))
+  --> error: "** expr-1:1: abc: too few elements ..."
+
+  ;; correct :delegate syntax
+  (macroexpand-struct-clause '(:delegate x (a b) a.foo))
+  --> ((:method x (a b) (qref a.foo (x b))))
+
+  ;; not a defstruct macro clause
+  (macroexpand-struct-clause '(1 2 3))
+  -> ((1 2 3))
+.brev
+
 .coNP Special variable @ *struct-clause-expander*
 .desc
 The
