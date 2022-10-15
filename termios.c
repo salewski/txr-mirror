@@ -191,7 +191,7 @@ static speed_t termios_baud_to_speed(cnum baud)
 
 static val termios_unpack(struct termios *in)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val out = make_struct(termios_s, nil, args);
   int i, cc_sz = convert(int, sizeof in->c_cc / sizeof in->c_cc[0]);
   val cc = vector(num_fast(cc_sz), nil);

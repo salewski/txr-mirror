@@ -847,13 +847,13 @@ val make_struct(val type, val plist, struct args *boa)
 
 val struct_from_plist(val type, struct args *plist)
 {
-  args_decl(boa, ARGS_ABS_MIN);
+  args_decl_constsize(boa, ARGS_ABS_MIN);
   return make_struct_impl(lit("struct-from-plist"), type, plist, boa);
 }
 
 val struct_from_args(val type, struct args *boa)
 {
-  args_decl(pargs, ARGS_ABS_MIN);
+  args_decl_constsize(pargs, ARGS_ABS_MIN);
   return make_struct_impl(lit("struct-from-args"), type, pargs, boa);
 }
 
@@ -934,7 +934,7 @@ val make_lazy_struct(val type, val argfun)
 
 val make_struct_lit(val type, val plist)
 {
-  args_decl(args, ARGS_ABS_MIN);
+  args_decl_constsize(args, ARGS_ABS_MIN);
   val strct;
 
   if (opt_compat && opt_compat <= 154) {

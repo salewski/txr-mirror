@@ -3820,7 +3820,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
 val vformat(val stream, val fmtstr, va_list vl)
 {
   val arg;
-  args_decl(args, ARGS_MAX);
+  args_decl_constsize(args, ARGS_MAX);
 
   while ((arg = va_arg(vl, val)) != nao)
     args_add_checked(lit("format"), args, arg);

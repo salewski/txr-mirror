@@ -2791,7 +2791,7 @@ static val op_catch(val form, val env)
   result = eval(try_form, env, try_form);
 
   uw_catch(exsym, exvals) {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
     val iter;
 
     args_add(args, exsym);

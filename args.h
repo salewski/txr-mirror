@@ -64,14 +64,19 @@ INLINE void args_set_fill(struct args *args, cnum fill)
 }
 
 #define args_decl_list(NAME, N, L)                                      \
+  struct { struct args args; val arg[N]; } _ac;                         \
+  struct args *NAME = args_init_list(&_ac.args, N, L)
+
+#define args_decl_constsize(NAME, N) args_decl_list(NAME, N, nil)
+
+#define args_decl_list_dyn(NAME, N, L)                                  \
   mem_t *NAME ## _mem =                                                 \
     coerce(mem_t *,                                                     \
            alloca(offsetof(struct args, arg) + (N)*sizeof (val)));      \
   struct args *NAME = args_init_list(coerce(struct args *,              \
                                             NAME ## _mem), N, L)
 
-#define args_decl(NAME, N) args_decl_list(NAME, N, nil)
-
+#define args_decl(NAME, N) args_decl_list_dyn(NAME, N, nil)
 
 INLINE val args_add(struct args *args, val arg)
 {

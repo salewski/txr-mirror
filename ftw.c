@@ -71,7 +71,7 @@ static int ftw_callback(const char *c_path, const struct stat *c_sb,
     val base = num(fb->base);
     val result;
 
-    args_decl(args, max(ARGS_MIN, 5));
+    args_decl_constsize(args, max(ARGS_MIN, 5));
     args_add5(args, path, type, sb, level, base);
     result = generic_funcall(s_callback, args);
     c_result = if3(integerp(result), c_num(result, self), 0);

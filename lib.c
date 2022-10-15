@@ -8422,7 +8422,7 @@ static NORETURN void wrongargs(val fun)
 val funcall(val fun)
 {
   if (type(fun) != FUN || dbg_backtrace) generic: {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
     return generic_funcall(fun, args);
   }
 
@@ -8443,14 +8443,14 @@ val funcall(val fun)
       return vm_funcall4(fun, colon_k, colon_k, colon_k, colon_k);
     default:
       {
-        args_decl(args, ARGS_MIN);
+        args_decl_constsize(args, ARGS_MIN);
         return vm_execute_closure(fun, args);
       }
     }
   }
 
   if (fun->f.variadic) {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -8500,7 +8500,7 @@ val funcall(val fun)
 val funcall1(val fun, val arg)
 {
   if (type(fun) != FUN || dbg_backtrace) generic: {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
     args_add(args, z(arg));
     return generic_funcall(fun, args);
   }
@@ -8520,7 +8520,7 @@ val funcall1(val fun, val arg)
       return vm_funcall4(fun, z(arg), colon_k, colon_k, colon_k);
     default:
       {
-        args_decl(args, ARGS_MIN);
+        args_decl_constsize(args, ARGS_MIN);
         args_add(args, arg);
         return vm_execute_closure(fun, args);
       }
@@ -8528,7 +8528,7 @@ val funcall1(val fun, val arg)
   }
 
   if (fun->f.variadic) {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -8581,7 +8581,7 @@ val funcall1(val fun, val arg)
 val funcall2(val fun, val arg1, val arg2)
 {
   if (type(fun) != FUN || dbg_backtrace) generic: {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
     args_add2(args, z(arg1), z(arg2));
     return generic_funcall(fun, args);
   }
@@ -8599,7 +8599,7 @@ val funcall2(val fun, val arg1, val arg2)
       return vm_funcall4(fun, z(arg1), z(arg2), colon_k, colon_k);
     default:
       {
-        args_decl(args, ARGS_MIN);
+        args_decl_constsize(args, ARGS_MIN);
         args_add2(args, arg1, arg2);
         return vm_execute_closure(fun, args);
       }
@@ -8607,7 +8607,7 @@ val funcall2(val fun, val arg1, val arg2)
   }
 
   if (fun->f.variadic) {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -8664,7 +8664,7 @@ val funcall2(val fun, val arg1, val arg2)
 val funcall3(val fun, val arg1, val arg2, val arg3)
 {
   if (type(fun) != FUN || dbg_backtrace) generic: {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
     args_add3(args, z(arg1), z(arg2), z(arg3));
     return generic_funcall(fun, args);
   }
@@ -8680,14 +8680,14 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), colon_k);
     default:
       {
-        args_decl(args, ARGS_MIN);
+        args_decl_constsize(args, ARGS_MIN);
         args_add3(args, arg1, arg2, arg3);
         return vm_execute_closure(fun, args);
       }
     }
   }
   if (fun->f.variadic) {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -8746,7 +8746,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
   if (type(fun) != FUN || dbg_backtrace) generic: {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
     args_add4(args, z(arg1), z(arg2), z(arg3), z(arg4));
     return generic_funcall(fun, args);
   }
@@ -8765,7 +8765,7 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
   }
 
   if (fun->f.variadic) {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -11056,7 +11056,7 @@ val unique(val seq, val keyfun, struct args *hashv_args)
 
 val uniq(val seq)
 {
-  args_decl(hashv_args, ARGS_MIN);
+  args_decl_constsize(hashv_args, ARGS_MIN);
   args_add(hashv_args, equal_based_k);
   return unique(seq, identity_f, hashv_args);
 }
@@ -13354,7 +13354,7 @@ val relate(val domain_seq, val range_seq, val dfl_val)
   val lds = length(domain_seq);
   val use_hash = and2(gt(lds, num_fast(10)),
                       le(lds, length(range_seq)));
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val hash = if2(use_hash, hash_zip(domain_seq, range_seq, args));
 
   return if3(missingp(dfl_val),

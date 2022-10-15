@@ -134,7 +134,7 @@ static void ipv6_scope_id_from_num(struct sockaddr_in6 *dst, val scope)
 
 static val sockaddr_in_unpack(struct sockaddr_in *src)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val out = make_struct(sockaddr_in_s, nil, args);
   slotset(out, addr_s, ipv4_addr_to_num(&src->sin_addr));
   slotset(out, port_s, num_fast(ntohs(src->sin_port)));
@@ -143,7 +143,7 @@ static val sockaddr_in_unpack(struct sockaddr_in *src)
 
 static val sockaddr_in6_unpack(struct sockaddr_in6 *src)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val out = make_struct(sockaddr_in6_s, nil, args);
   slotset(out, addr_s, ipv6_addr_to_num(&src->sin6_addr));
   slotset(out, port_s, num_fast(ntohs(src->sin6_port)));
@@ -152,7 +152,7 @@ static val sockaddr_in6_unpack(struct sockaddr_in6 *src)
 
 static val sockaddr_un_unpack(struct sockaddr_un *src)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val out = make_struct(sockaddr_un_s, nil, args);
   slotset(out, path_s, string_utf8(src->sun_path));
   return out;

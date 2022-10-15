@@ -1263,7 +1263,7 @@ static val stat_to_list(struct stat st)
 
 val stat_to_struct(struct stat st, val path, val stat_opt)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val strct = default_arg(stat_opt, make_struct(stat_s, nil, args));
   slotset(strct, dev_s, num(st.st_dev));
   slotset(strct, ino_s, num(st.st_ino));
@@ -1905,7 +1905,7 @@ static void fill_passwd(val to, struct passwd *from)
 
 static val make_pwstruct(struct passwd *p)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val out = make_struct(passwd_s, nil, args);
   fill_passwd(out, p);
   return out;
@@ -2003,7 +2003,7 @@ static void fill_group(val to, struct group *from)
 
 static val make_grstruct(struct group *g)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val out = make_struct(group_s, nil, args);
   fill_group(out, g);
   return out;
@@ -2221,7 +2221,7 @@ static val fnmatch_wrap(val pattern, val string, val flags)
 #if HAVE_UNAME
 static val uname_wrap(void)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   struct utsname un;
   int res;
   if ((res = uname(&un)) >= 0) {
@@ -2459,7 +2459,7 @@ static val readdir_wrap(val dirobj, val dirent_in)
       dent = readdir(d->dir);
       continue;
     } else {
-      args_decl(args, ARGS_MIN);
+      args_decl_constsize(args, ARGS_MIN);
       val dirent = default_arg(dirent_in, make_struct(dirent_st, nil, args));
       slotset(dirent, name_s,
               if3(d->path,
@@ -2519,7 +2519,7 @@ val getrlimit_wrap(val resource, val rlim_opt)
                self, resource, num(errno), errno_to_str(errno), nao);
 
   if (missingp(rlim)) {
-    args_decl(args, ARGS_MIN);
+    args_decl_constsize(args, ARGS_MIN);
     rlim = make_struct(rlim_st, nil, args);
   }
 

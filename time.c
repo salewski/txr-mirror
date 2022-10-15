@@ -177,7 +177,7 @@ static void tm_to_time_struct(val time_struct, struct tm *ptm)
 
 static val broken_time_struct(struct tm *tms)
 {
-  args_decl(args, ARGS_MIN);
+  args_decl_constsize(args, ARGS_MIN);
   val ts = make_struct(time_s, nil, args);
 
   tm_to_time_struct(ts, tms);
