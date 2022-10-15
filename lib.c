@@ -8426,6 +8426,9 @@ val funcall(val fun)
     return generic_funcall(fun, args);
   }
 
+  if (fun->f.fixparam - fun->f.optargs > 0)
+    wrongargs(fun);
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8438,6 +8441,14 @@ val funcall(val fun)
       return fun->f.f.f0v(fun->f.env, args);
     case N0:
       return fun->f.f.n0v(args);
+    case N1:
+      return fun->f.f.n1v(colon_k, args);
+    case N2:
+      return fun->f.f.n2v(colon_k, colon_k, args);
+    case N3:
+      return fun->f.f.n3v(colon_k, colon_k, colon_k, args);
+    case N4:
+      return fun->f.f.n4v(colon_k, colon_k, colon_k, colon_k, args);
     default:
       break;
     }
@@ -8451,12 +8462,24 @@ val funcall(val fun)
       return fun->f.f.f0(fun->f.env);
     case N0:
       return fun->f.f.n0();
+    case N1:
+      return fun->f.f.n1(colon_k);
+    case N2:
+      return fun->f.f.n2(colon_k, colon_k);
+    case N3:
+      return fun->f.f.n3(colon_k, colon_k, colon_k);
+    case N4:
+      return fun->f.f.n4(colon_k, colon_k, colon_k, colon_k);
+    case N5:
+      return fun->f.f.n5(colon_k, colon_k, colon_k, colon_k, colon_k);
     default:
       break;
     }
   }
+
   if (fun->f.optargs)
     goto generic;
+
   wrongargs(fun);
 }
 
@@ -8468,6 +8491,9 @@ val funcall1(val fun, val arg)
     return generic_funcall(fun, args);
   }
 
+  if (fun->f.fixparam - fun->f.optargs > 1)
+    wrongargs(fun);
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8476,8 +8502,6 @@ val funcall1(val fun, val arg)
       args_add(args, arg);
       return funcall_interp(fun, args);
     case FVM:
-      if (fun->f.fixparam > 1)
-        break;
       args_add(args, arg);
       return vm_execute_closure(fun, args);
     case F0:
@@ -8490,6 +8514,12 @@ val funcall1(val fun, val arg)
       return fun->f.f.f1v(fun->f.env, z(arg), args);
     case N1:
       return fun->f.f.n1v(z(arg), args);
+    case N2:
+      return fun->f.f.n2v(z(arg), colon_k, args);
+    case N3:
+      return fun->f.f.n3v(z(arg), colon_k, colon_k, args);
+    case N4:
+      return fun->f.f.n4v(z(arg), colon_k, colon_k, colon_k, args);
     default:
       break;
     }
@@ -8503,12 +8533,22 @@ val funcall1(val fun, val arg)
       return fun->f.f.f1(fun->f.env, z(arg));
     case N1:
       return fun->f.f.n1(z(arg));
+    case N2:
+      return fun->f.f.n2(z(arg), colon_k);
+    case N3:
+      return fun->f.f.n3(z(arg), colon_k, colon_k);
+    case N4:
+      return fun->f.f.n4(z(arg), colon_k, colon_k, colon_k);
+    case N5:
+      return fun->f.f.n5(z(arg), colon_k, colon_k, colon_k, colon_k);
     default:
       break;
     }
   }
+
   if (fun->f.optargs)
     goto generic;
+
   wrongargs(fun);
 }
 
@@ -8520,6 +8560,9 @@ val funcall2(val fun, val arg1, val arg2)
     return generic_funcall(fun, args);
   }
 
+  if (fun->f.fixparam - fun->f.optargs > 2)
+    wrongargs(fun);
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8528,8 +8571,6 @@ val funcall2(val fun, val arg1, val arg2)
       args_add2(args, arg1, arg2);
       return funcall_interp(fun, args);
     case FVM:
-      if (fun->f.fixparam > 2)
-        break;
       args_add2(args, arg1, arg2);
       return vm_execute_closure(fun, args);
     case F0:
@@ -8548,6 +8589,10 @@ val funcall2(val fun, val arg1, val arg2)
       return fun->f.f.f2v(fun->f.env, z(arg1), z(arg2), args);
     case N2:
       return fun->f.f.n2v(z(arg1), z(arg2), args);
+    case N3:
+      return fun->f.f.n3v(z(arg1), z(arg2), colon_k, args);
+    case N4:
+      return fun->f.f.n4v(z(arg1), z(arg2), colon_k, colon_k, args);
     default:
       break;
     }
@@ -8561,12 +8606,22 @@ val funcall2(val fun, val arg1, val arg2)
       return fun->f.f.f2(fun->f.env, z(arg1), z(arg2));
     case N2:
       return fun->f.f.n2(z(arg1), z(arg2));
+    case N3:
+      return fun->f.f.n3(z(arg1), z(arg2), colon_k);
+    case N4:
+      return fun->f.f.n4(z(arg1), z(arg2), colon_k, colon_k);
+    case N5:
+      return fun->f.f.n5(z(arg1), z(arg2), colon_k, colon_k, colon_k);
+    case N6:
+      return fun->f.f.n6(z(arg1), z(arg2), colon_k, colon_k, colon_k, colon_k);
     default:
       break;
     }
   }
+
   if (fun->f.optargs)
     goto generic;
+
   wrongargs(fun);
 }
 
@@ -8578,6 +8633,9 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     return generic_funcall(fun, args);
   }
 
+  if (fun->f.fixparam - fun->f.optargs > 3)
+    wrongargs(fun);
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8586,8 +8644,6 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       args_add3(args, arg1, arg2, arg3);
       return funcall_interp(fun, args);
     case FVM:
-      if (fun->f.fixparam > 3)
-        break;
       args_add3(args, arg1, arg2, arg3);
       return vm_execute_closure(fun, args);
     case F0:
@@ -8612,6 +8668,8 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       return fun->f.f.f3v(fun->f.env, z(arg1), z(arg2), z(arg3), args);
     case N3:
       return fun->f.f.n3v(z(arg1), z(arg2), z(arg3), args);
+    case N4:
+        return fun->f.f.n4v(z(arg1), z(arg2), z(arg3), colon_k, args);
     default:
       break;
     }
@@ -8625,6 +8683,14 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       return fun->f.f.f3(fun->f.env, z(arg1), z(arg2), z(arg3));
     case N3:
       return fun->f.f.n3(z(arg1), z(arg2), z(arg3));
+    case N4:
+      return fun->f.f.n4(z(arg1), z(arg2), z(arg3), colon_k);
+    case N5:
+      return fun->f.f.n5(z(arg1), z(arg2), z(arg3), colon_k, colon_k);
+    case N6:
+      return fun->f.f.n6(z(arg1), z(arg2), z(arg3), colon_k, colon_k, colon_k);
+    case N7:
+      return fun->f.f.n7(z(arg1), z(arg2), z(arg3), colon_k, colon_k, colon_k, colon_k);
     default:
       break;
     }
@@ -8642,6 +8708,9 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     return generic_funcall(fun, args);
   }
 
+  if (fun->f.fixparam - fun->f.optargs > 4)
+    wrongargs(fun);
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8650,8 +8719,6 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
       args_add4(args, arg1, arg2, arg3, arg4);
       return funcall_interp(fun, args);
     case FVM:
-      if (fun->f.fixparam > 4)
-        break;
       args_add4(args, arg1, arg2, arg3, arg4);
       return vm_execute_closure(fun, args);
     case F0:
@@ -8695,12 +8762,22 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
       return fun->f.f.f4(fun->f.env, z(arg1), z(arg2), z(arg3), z(arg4));
     case N4:
       return fun->f.f.n4(z(arg1), z(arg2), z(arg3), z(arg4));
+    case N5:
+      return fun->f.f.n5(z(arg1), z(arg2), z(arg3), z(arg4), colon_k);
+    case N6:
+      return fun->f.f.n6(z(arg1), z(arg2), z(arg3), z(arg4), colon_k, colon_k);
+    case N7:
+      return fun->f.f.n7(z(arg1), z(arg2), z(arg3), z(arg4), colon_k, colon_k, colon_k);
+    case N8:
+      return fun->f.f.n8(z(arg1), z(arg2), z(arg3), z(arg4), colon_k, colon_k, colon_k, colon_k);
     default:
       break;
     }
   }
+
   if (fun->f.optargs)
     goto generic;
+
   wrongargs(fun);
 }
 
