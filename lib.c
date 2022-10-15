@@ -8429,14 +8429,32 @@ val funcall(val fun)
   if (fun->f.fixparam - fun->f.optargs > 0)
     wrongargs(fun);
 
+  if (fun->f.functype == FVM) {
+    switch (fun->f.fixparam) {
+    case 0:
+      return vm_funcall(fun);
+    case 1:
+      return vm_funcall1(fun, colon_k);
+    case 2:
+      return vm_funcall2(fun, colon_k, colon_k);
+    case 3:
+      return vm_funcall3(fun, colon_k, colon_k, colon_k);
+    case 4:
+      return vm_funcall4(fun, colon_k, colon_k, colon_k, colon_k);
+    default:
+      {
+        args_decl(args, ARGS_MIN);
+        return vm_execute_closure(fun, args);
+      }
+    }
+  }
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
       return funcall_interp(fun, args);
-    case FVM:
-      return vm_execute_closure(fun, args);
     case F0:
       return fun->f.f.f0v(fun->f.env, args);
     case N0:
@@ -8454,10 +8472,6 @@ val funcall(val fun)
     }
   } else {
     switch (fun->f.functype) {
-    case FVM:
-      if (fun->f.fixparam != 0)
-        break;
-      return vm_funcall(fun);
     case F0:
       return fun->f.f.f0(fun->f.env);
     case N0:
@@ -8494,6 +8508,25 @@ val funcall1(val fun, val arg)
   if (fun->f.fixparam - fun->f.optargs > 1)
     wrongargs(fun);
 
+  if (fun->f.functype == FVM) {
+    switch (fun->f.fixparam) {
+    case 1:
+      return vm_funcall1(fun, z(arg));
+    case 2:
+      return vm_funcall2(fun, z(arg), colon_k);
+    case 3:
+      return vm_funcall3(fun, z(arg), colon_k, colon_k);
+    case 4:
+      return vm_funcall4(fun, z(arg), colon_k, colon_k, colon_k);
+    default:
+      {
+        args_decl(args, ARGS_MIN);
+        args_add(args, arg);
+        return vm_execute_closure(fun, args);
+      }
+    }
+  }
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8501,9 +8534,6 @@ val funcall1(val fun, val arg)
     case FINTERP:
       args_add(args, arg);
       return funcall_interp(fun, args);
-    case FVM:
-      args_add(args, arg);
-      return vm_execute_closure(fun, args);
     case F0:
       args_add(args, arg);
       return fun->f.f.f0v(fun->f.env, args);
@@ -8525,10 +8555,6 @@ val funcall1(val fun, val arg)
     }
   } else {
     switch (fun->f.functype) {
-    case FVM:
-      if (fun->f.fixparam != 1)
-        break;
-      return vm_funcall1(fun, z(arg));
     case F1:
       return fun->f.f.f1(fun->f.env, z(arg));
     case N1:
@@ -8563,6 +8589,23 @@ val funcall2(val fun, val arg1, val arg2)
   if (fun->f.fixparam - fun->f.optargs > 2)
     wrongargs(fun);
 
+  if (fun->f.functype == FVM) {
+    switch (fun->f.fixparam) {
+    case 2:
+      return vm_funcall2(fun, z(arg1), z(arg2));
+    case 3:
+      return vm_funcall3(fun, z(arg1), z(arg2), colon_k);
+    case 4:
+      return vm_funcall4(fun, z(arg1), z(arg2), colon_k, colon_k);
+    default:
+      {
+        args_decl(args, ARGS_MIN);
+        args_add2(args, arg1, arg2);
+        return vm_execute_closure(fun, args);
+      }
+    }
+  }
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8570,9 +8613,6 @@ val funcall2(val fun, val arg1, val arg2)
     case FINTERP:
       args_add2(args, arg1, arg2);
       return funcall_interp(fun, args);
-    case FVM:
-      args_add2(args, arg1, arg2);
-      return vm_execute_closure(fun, args);
     case F0:
       args_add2(args, arg1, arg2);
       return fun->f.f.f0v(fun->f.env, args);
@@ -8598,10 +8638,6 @@ val funcall2(val fun, val arg1, val arg2)
     }
   } else {
     switch (fun->f.functype) {
-    case FVM:
-      if (fun->f.fixparam != 2)
-        break;
-      return vm_funcall2(fun, z(arg1), z(arg2));
     case F2:
       return fun->f.f.f2(fun->f.env, z(arg1), z(arg2));
     case N2:
@@ -8636,6 +8672,20 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
   if (fun->f.fixparam - fun->f.optargs > 3)
     wrongargs(fun);
 
+  if (fun->f.functype == FVM) {
+    switch (fun->f.fixparam) {
+    case 3:
+      return vm_funcall3(fun, z(arg1), z(arg2), z(arg3));
+    case 4:
+      return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), colon_k);
+    default:
+      {
+        args_decl(args, ARGS_MIN);
+        args_add3(args, arg1, arg2, arg3);
+        return vm_execute_closure(fun, args);
+      }
+    }
+  }
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8643,9 +8693,6 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     case FINTERP:
       args_add3(args, arg1, arg2, arg3);
       return funcall_interp(fun, args);
-    case FVM:
-      args_add3(args, arg1, arg2, arg3);
-      return vm_execute_closure(fun, args);
     case F0:
       args_add3(args, arg1, arg2, arg3);
       return fun->f.f.f0v(fun->f.env, args);
@@ -8675,10 +8722,6 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     }
   } else {
     switch (fun->f.functype) {
-    case FVM:
-      if (fun->f.fixparam != 3)
-        break;
-      return vm_funcall3(fun, z(arg1), z(arg2), z(arg3));
     case F3:
       return fun->f.f.f3(fun->f.env, z(arg1), z(arg2), z(arg3));
     case N3:
@@ -8711,6 +8754,16 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
   if (fun->f.fixparam - fun->f.optargs > 4)
     wrongargs(fun);
 
+  if (fun->f.functype == FVM) {
+    if (fun->f.fixparam == 4)
+      return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), z(arg4));
+    else {
+      args_decl(args, ARGS_MIN);
+      args_add4(args, arg1, arg2, arg3, arg4);
+      return vm_execute_closure(fun, args);
+    }
+  }
+
   if (fun->f.variadic) {
     args_decl(args, ARGS_MIN);
 
@@ -8718,9 +8771,6 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     case FINTERP:
       args_add4(args, arg1, arg2, arg3, arg4);
       return funcall_interp(fun, args);
-    case FVM:
-      args_add4(args, arg1, arg2, arg3, arg4);
-      return vm_execute_closure(fun, args);
     case F0:
       args_add4(args, arg1, arg2, arg3, arg4);
       return fun->f.f.f0v(fun->f.env, args);
@@ -8754,10 +8804,6 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     }
   } else {
     switch (fun->f.functype) {
-    case FVM:
-      if (fun->f.fixparam != 4)
-        break;
-      return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), z(arg4));
     case F4:
       return fun->f.f.f4(fun->f.env, z(arg1), z(arg2), z(arg3), z(arg4));
     case N4:
