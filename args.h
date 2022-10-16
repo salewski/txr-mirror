@@ -30,7 +30,7 @@ struct args {
   cnum argc;
   cnum fill;
   val list;
-  val arg[FLEX_ARRAY];
+  val arg[1]; /* deliberate disuse of FLEX_ARRAY */
 };
 
 typedef int arg_index;
@@ -38,11 +38,7 @@ typedef int arg_index;
 #define ARGS_MAX 32
 #define ARGS_MIN 4
 
-#if FLEX_ARRAY + 0 == 1
 #define ARGS_ABS_MIN 1
-#else
-#define ARGS_ABS_MIN 0
-#endif
 
 struct args_bool_key {
   val key;
@@ -64,7 +60,7 @@ INLINE void args_set_fill(struct args *args, cnum fill)
 }
 
 #define args_decl_list(NAME, N, L)                                      \
-  struct { struct args args; val arg[N]; } _ac;                         \
+  struct { struct args args; val arg[(N) - 1]; } _ac;                   \
   struct args *NAME = args_init_list(&_ac.args, N, L)
 
 #define args_decl_constsize(NAME, N) args_decl_list(NAME, N, nil)
