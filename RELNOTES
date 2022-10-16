@@ -1,3 +1,77 @@
+                                    TXR 283
+                                   2022-10-16
+
+
+  Features
+
+  - Low Level:
+    - NaN boxing now works on Android, in spite of its pointer tagging.
+    - String objects no longer track their storage allocation size
+      on platforms that have malloc_usable_size.
+      - The word of storage in a string object thus made available has not yet
+        been put to a use.
+
+
+  - Lisp:
+    - New %fun% symbol macro provides name of current function.
+    - Separator commas are now allowed in numeric tokens.
+    - New functions
+      - macroexpand-params:
+        - expand parameter list macros made with define-param-expander.
+      - macroexpand-place:
+        - expand place macros made with define-place-macro
+      - macroexpand-match:
+        - expand macro patterns made with defmatch.
+      - macroexpand-struct-clause:
+        - expand defstruct macro clause made with define-struct-clause.
+    - Small performance improvements in function dispatch.
+      - functions with optional arguments no longer put through slow path
+        - this could be listed under Bugs below
+      - helper functions for fixed argument dispatch cases now handle
+        more cases themselves rather than defer to slow path.
+      - use of alloca has been eliminated from the creation of arguments on the
+        stack in cases when the size is statically know.
+
+  - OOP:
+    - new :postfini clause in defstruct, allowing for finalization
+      with order opposite to :fini
+    - relaxation of constraint: defstruct can specify multiple :init,
+      :fini, :postinit and :postfini clauses.
+    - optional arguments :delegate clause now have init expressions
+      that are not ignored, but specify the default value.
+      - thus delegates can now customize the defaulting of
+        optionals rather than being stuck with the target's behavior.
+      - when delegates specify an optional parameter that corresponds
+        to a non-optional target parameter, they can thus now
+        specify a default value, rather than being stuck with nil.
+
+  - Networking:
+    - New sockaddr-str function: parse various textual address
+      types into appropriate type of sockaddr.
+    - New str-addr method in every sockaddr structure,
+      for generating textual address.
+
+  - I/O streams:
+    - new inc-indent-abs function for incrementing absolute
+      indentation, not relatively to current horizontal position.
+
+  - JSON:
+    - JSON printing now uses "standard-style" formatting,
+      if a the newly introduced *print-json-format* variable
+      is set/bound to the value :standard.
+
+
+
+  Bugs
+
+  - build: ./reconfigure issue when ./configure is interrupted.
+  - str-in6addr bug.
+  - hash: don't trim hash seed to 32 bits on 64 bit platforms.
+  - JSON: restore stream indentation state if exception occurs
+    during JSON printing.
+
+
+
                                     TXR 282
                                    2022-09-16
 
