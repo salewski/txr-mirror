@@ -58027,6 +58027,14 @@ and
 macros use their macro environment in determining whether a form is a
 macro call, thereby respecting lexical scoping.
 
+Note: an
+.code opip
+form with no arguments specifies a function which returns
+.codn nil ,
+which follows from a documented property of the
+.code chain
+function.
+
 .TP* Example:
 Take each element from the list
 .code "(1 2 3 4)"
@@ -58092,6 +58100,18 @@ is equivalent to the application of an
 .codn opip -generated
 function to the value of
 .metn form .
+
+Note: if there are no
+.meta opip-arg
+arguments, then
+.code flow
+evaluates the
+.code x
+argument and returns
+.codn nil ;
+which follows from the behavior of
+.code opip
+when that operator is invoked with no arguments.
 
 .TP* Examples:
 
