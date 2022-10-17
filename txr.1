@@ -29602,6 +29602,30 @@ form, all the
 finalizers execute after all the
 .code :fini
 finalizers regardless of the order in which they appear.
+
+.meIP (:inherit << super *)
+The
+.code :inherit
+clause specifies zero or more types to be inherited. Each
+.meta super
+argument must be a symbol which is the name of an existing struct type.
+These symbols are appended to the list of supertypes coming from the
+.meta super
+argument
+.codn defstruct .
+Note: the motivation behind
+.code :inherit
+is to make it possible for struct clauses defined by
+.code define-struct-clause
+to inject supertypes. Developers are encouraged to use the regular
+.meta super
+argument of
+.code defstruct
+to declare inheritance of supertypes, rather than writing visible
+.code :inherit
+clauses that can be moved into the
+.meta super
+argument.
 .RE
 .IP
 The slot names given in a

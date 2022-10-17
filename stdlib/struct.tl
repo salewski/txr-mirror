@@ -53,7 +53,8 @@
     (let ((instance-init-forms nil)
           (instance-postinit-forms nil)
           (instance-fini-forms nil)
-          (instance-postfini-forms nil))
+          (instance-postfini-forms nil)
+          (additional-supers nil))
       (labels ((expand-slot (form slot)
                  (tree-case slot
                    ((op . args)
@@ -61,6 +62,12 @@
                       (append-each ((exslot [expander slot form]))
                         [expand-slot form exslot])
                       :))
+                   ((word . args)
+                    (cond
+                      ((eq word :inherit)
+                       (set additional-supers (revappend args additional-supers))
+                       nil)
+                      (t :)))
                    ((word slname args . body)
                     (caseq word
                       (:method
@@ -122,9 +129,10 @@
                      ^((:instance ,name nil))))))
         (let* ((slot-init-forms (append-each ((slot slot-specs))
                                   (expand-slot form slot)))
-               (supers (if (and super-spec (atom super-spec))
-                         (list super-spec)
-                         super-spec))
+               (supers (append (if (and super-spec (atom super-spec))
+                                 (list super-spec)
+                                 super-spec)
+                               additional-supers))
                (stat-si-forms [keep-if (op member @1 '(:static :function))
                                        slot-init-forms car])
                (pruned-si-forms (sys:prune-missing-inits stat-si-forms))
@@ -404,7 +412,8 @@
        ,body)))
 
 (defmacro define-struct-clause (:form form keyword (. params) . body)
-  (if (meq keyword :static :instance :function :method :init :postinit :fini :postfini)
+  (if (meq keyword :static :instance :function :method
+           :init :postinit :fini :postfini :inherit)
     (compile-error form "~s is a reserved defstruct clause keyword" keyword))
   (unless (keywordp keyword)
     (compile-error form "~s: clauses must be named by keyword symbols" keyword))

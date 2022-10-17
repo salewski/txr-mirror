@@ -63,3 +63,18 @@
     [s3.b-hash 3].a "three")
   (call-finalizers s3)
   (test [s3.a-hash "one"] nil))
+
+(define-struct-clause :s3 ()
+  '((:inherit s3)
+    (:inherit passwd group)))
+
+(defstruct s4 (time)
+  (:s3))
+
+(let ((s4 (new s4 a "x" b 999)))
+  (mtest
+    [s4.a-hash "two"].a "two"
+    [s4.a-hash "x"].a "x"
+    [s4.b-hash 999].a "x"
+    s4.uid nil
+    s4.gid nil))
