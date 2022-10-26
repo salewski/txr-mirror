@@ -5632,12 +5632,14 @@ struct cat_str {
   val sep;
   cnum len_sep;
   size_t total;
+  int seen_one;
   wchar_t *str, *ptr;
 };
 
 static void cat_str_init(struct cat_str *cs, val sep, wchar_t *onech, val self)
 {
   cs->sep = sep;
+  cs->seen_one = 0;
   cs->total = 1;
   cs->str = cs->ptr = 0;
 
@@ -5652,7 +5654,7 @@ static void cat_str_init(struct cat_str *cs, val sep, wchar_t *onech, val self)
   }
 }
 
-static void cat_str_measure(struct cat_str *cs, val item, int more_p, val self)
+static void cat_str_measure(struct cat_str *cs, val item, val self)
 {
   if (!item)
     return;
@@ -5660,8 +5662,12 @@ static void cat_str_measure(struct cat_str *cs, val item, int more_p, val self)
   if (stringp(item)) {
     size_t ntotal = cs->total + c_num(length_str(item), self);
 
-    if (cs->len_sep && more_p)
-      ntotal += cs->len_sep;
+    if (cs->len_sep) {
+      if (cs->seen_one)
+        ntotal += cs->len_sep;
+      else
+        cs->seen_one = 1;
+    }
 
     if (ntotal < cs->total)
       goto oflow;
@@ -5673,8 +5679,12 @@ static void cat_str_measure(struct cat_str *cs, val item, int more_p, val self)
   if (chrp(item)) {
     size_t ntotal = cs->total + 1;
 
-    if (cs->len_sep && more_p)
-      ntotal += cs->len_sep;
+    if (cs->len_sep) {
+      if (cs->seen_one)
+        ntotal += cs->len_sep;
+      else
+        cs->seen_one = 1;
+    }
 
     if (ntotal < cs->total)
       goto oflow;
@@ -5683,32 +5693,54 @@ static void cat_str_measure(struct cat_str *cs, val item, int more_p, val self)
     return;
   }
 
-  uw_throwf(error_s, lit("~a: ~s is not a character or string"), self,
-            item, nao);
+  if (seqp(item)) {
+    seq_iter_t item_iter;
+    seq_iter_init(self, &item_iter, item);
+
+    while (seq_get(&item_iter, &item))
+      cat_str_measure(cs, item, self);
+
+    return;
+  }
+
+  uw_throwf(error_s, lit("~a: ~s neither character, string nor sequence"),
+            self, item, nao);
 oflow:
   uw_throwf(error_s, lit("~a: string length overflow"), self, nao);
 }
 
 static void cat_str_alloc(struct cat_str *cs)
 {
+  cs->seen_one = 0;
   cs->ptr = cs->str = chk_wmalloc(cs->total);
 }
 
-static void cat_str_append(struct cat_str *cs, val item, int more_p, val self)
+static void cat_str_append(struct cat_str *cs, val item, val self)
 {
   if (!item)
     return;
-  if (stringp(item)) {
-    cnum len = c_num(length_str(item), self);
-    wmemcpy(cs->ptr, c_str(item, self), len);
-    cs->ptr += len;
+  if (stringp(item) || chrp(item)) {
+    if (cs->len_sep) {
+      if (cs->seen_one) {
+        wmemcpy(cs->ptr, c_str(cs->sep, self), cs->len_sep);
+        cs->ptr += cs->len_sep;
+      } else {
+        cs->seen_one = 1;
+      }
+    }
+    if (chrp(item)) {
+      *cs->ptr++ = c_chr(item);
+    } else {
+      cnum len = c_num(length_str(item), self);
+      wmemcpy(cs->ptr, c_str(item, self), len);
+      cs->ptr += len;
+    }
   } else {
-    *cs->ptr++ = c_chr(item);
-  }
+    seq_iter_t item_iter;
+    seq_iter_init(self, &item_iter, item);
 
-  if (cs->len_sep && more_p) {
-    wmemcpy(cs->ptr, c_str(cs->sep, self), cs->len_sep);
-    cs->ptr += cs->len_sep;
+    while (seq_get(&item_iter, &item))
+      cat_str_append(cs, item, self);
   }
 }
 
@@ -5721,56 +5753,33 @@ static val cat_str_get(struct cat_str *cs)
 val cat_str(val items, val sep)
 {
   val self = lit("cat-str");
-  seq_iter_t item_iter;
-  val item, peek = nil;
-  int more = 0;
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-
   cat_str_init(&cs, sep, onech, self);
-
-  seq_iter_init(self, &item_iter, items);
-  more = seq_get(&item_iter, &item);
-  while (more)
-  {
-    cat_str_measure(&cs, item, more = seq_get(&item_iter, &peek), self);
-    item = peek;
-  }
-
+  cat_str_measure(&cs, items, self);
   cat_str_alloc(&cs);
-
-  seq_iter_init(self, &item_iter, items);
-  more = seq_get(&item_iter, &item);
-  while (more)
-  {
-    cat_str_append(&cs, item, more = seq_get(&item_iter, &peek), self);
-    item = peek;
-  }
+  cat_str_append(&cs, items, self);
 
   return cat_str_get(&cs);
 }
 
 static val vscat(val sep, va_list vl1, va_list vl2, val self)
 {
-  val item, next;
+  val item;
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
   cat_str_init(&cs, sep, onech, self);
 
-  for (item = va_arg(vl1, val); item != nao; item = next)
-  {
-    next = va_arg(vl1, val);
-    cat_str_measure(&cs, item, next != nao, self);
-  }
+  while ((item = va_arg(vl1, val)) != nao)
+    cat_str_measure(&cs, item, self);
 
   cat_str_alloc(&cs);
 
-  for (item = va_arg(vl2, val); item != nao; item = next)
+  while ((item = va_arg(vl2, val)) != nao)
   {
-    next = va_arg(vl2, val);
-    cat_str_append(&cs, item, next != nao, self);
+    cat_str_append(&cs, item, self);
   }
 
   return cat_str_get(&cs);
@@ -5796,13 +5805,13 @@ val scat2(val s1, val s2)
 
   cat_str_init(&cs, nil, NULL, self);
 
-  cat_str_measure(&cs, s1, 1, self);
-  cat_str_measure(&cs, s2, 0, self);
+  cat_str_measure(&cs, s1, self);
+  cat_str_measure(&cs, s2, self);
 
   cat_str_alloc(&cs);
 
-  cat_str_append(&cs, s1, 1, self);
-  cat_str_append(&cs, s2, 0, self);
+  cat_str_append(&cs, s1, self);
+  cat_str_append(&cs, s2, self);
 
   return cat_str_get(&cs);
 }
@@ -5815,13 +5824,13 @@ val scat3(val s1, val sep, val s2)
 
   cat_str_init(&cs, sep, onech, self);
 
-  cat_str_measure(&cs, s1, 1, self);
-  cat_str_measure(&cs, s2, 0, self);
+  cat_str_measure(&cs, s1, self);
+  cat_str_measure(&cs, s2, self);
 
   cat_str_alloc(&cs);
 
-  cat_str_append(&cs, s1, 1, self);
-  cat_str_append(&cs, s2, 0, self);
+  cat_str_append(&cs, s1, self);
+  cat_str_append(&cs, s2, self);
 
   return cat_str_get(&cs);
 }
@@ -5831,26 +5840,23 @@ val join_with(val sep, struct args *args)
   val self = lit("join-with");
   cnum index;
   val iter;
-  int more;
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
   cat_str_init(&cs, sep, onech, self);
 
-  for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
-       more;)
+  for (index = 0, iter = args->list; args_more_nozap(args, index, iter);)
   {
     val item = args_get_nozap(args, &index, &iter);
-    cat_str_measure(&cs, item, more = args_more_nozap(args, index, iter), self);
+    cat_str_measure(&cs, item, self);
   }
 
   cat_str_alloc(&cs);
 
-  for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
-       more;)
+  for (index = 0, iter = args->list; args_more_nozap(args, index, iter);)
   {
     val item = args_get_nozap(args, &index, &iter);
-    cat_str_append(&cs, item, more = args_more_nozap(args, index, iter), self);
+    cat_str_append(&cs, item, self);
   }
 
   return cat_str_get(&cs);

@@ -25644,12 +25644,17 @@ functions combine items into a single string, which is returned.
 
 Every
 .meta item
-argument must be a character or string object. The same is true of the
+argument must be a character, string or else a possibly empty
+sequence of items. This rule applies recursively.
+
+If a
 .meta sep
-argument, if present.
+argument is present, it must be a character or string.
+
 The
 .meta item-seq
-argument must be a sequence of any mixture of characters or strings.
+argument must be a sequence of any mixture of items which are
+characters, strings or sequences of items.
 Note that this means that if
 .meta item-seq
 is a character string, it is a valid argument, since it is a sequence
@@ -25662,47 +25667,38 @@ is empty, or no
 arguments are present, then all three functions return an
 empty string.
 
-The
-.code cat-str
-function receives the items as a single list. If the
-.meta sep
-argument is present, the items are catenated together such that
-.meta sep
-is interposed between them. If
+All three functions operate on an abstract sequence of character and string
+items, produced by a left-to-right recursive traversal of their
 .meta item-seq
-contains
+or
+.meta item
+arguments.
+
+Under the
+.code join-with
+function, as well as the
+.code cat-str
+function a
+.meta sep
+argument is given to it,
+the items are catenated together such that
+.meta sep
+is interposed between them. If there are
 .I n
-items, then
+character or string items, then
 .I "n - 1"
 copies of
 .meta sep
-occur in the resulting string.
+occur in the resulting string, which is returned.
 
-If
-.meta sep
-is absent, then
-.code cat-str
-catenates the items together directly, without any separator.
-
-Copies of the items appear in the resulting string in the same
-order as the items appear in
-.metn item-seq .
-
-The
-.code join-with
-function receives the items as arguments rather than a single
-.meta item-seq
-arguments. The arguments are joined into a single character string
-in order, with
-.meta sep
-interposed between them.
-
-The
+Under the
 .code join
-function takes no
+function, or
+.code cat-str
+function invoked without a
 .meta sep
-argument. It joins all of its argument items into a single
-string, in order.
+argument, the items are catenated together directly, without any separator.
+The resulting string is returned.
 
 .coNP Function @ split-str
 .synb

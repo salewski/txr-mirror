@@ -298,3 +298,16 @@
   (spln 2 "," "a,b,c") ("a" "b" "c")
   (spln 3 "," "a,b,c") ("a" "b" "c")
   (spln 4 "," "a,b,c") ("a" "b" "c"))
+
+(mtest
+  (cat-str '()) ""
+  (cat-str '() "-") ""
+  (cat-str '(()) "-") ""
+  (cat-str '((()) ()) "-") ""
+  (cat-str '((()) #()) "-") ""
+  (cat-str '((("a" ("b")) #(#\c))) "-") "a-b-c")
+
+(mtest
+  (join-with "--" '()) ""
+  (join-with "--" '(("b"))) "b"
+  (join-with "--" '("b" #(("c") ()) "d")) "b--c--d")
