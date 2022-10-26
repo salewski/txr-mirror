@@ -1442,9 +1442,13 @@ INLINE int null_or_missing_p(val v) { return (nilp(v) || missingp(v)); }
 
 #define if3(a, b, c) ((a) ? (b) : (c))
 
+#ifdef __GNUC__
+#define uses_or2 enum { f_o_o_ ## __LINE__ }
+#define or2(a, b) ((a) ?: (b))
+#else
 #define uses_or2 val or2_temp
-
 #define or2(a, b) ((or2_temp = (a)) ? or2_temp : (b))
+#endif
 
 #define or3(a, b, c) or2(a, or2(b, c))
 
