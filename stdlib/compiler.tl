@@ -848,52 +848,69 @@
 
 (defmeth compiler comp-catch (me oreg env form)
   (mac-param-bind form (op symbols try-expr desc-expr . clauses) form
-    (with-gensyms (ex-sym-var ex-args-var)
-      (let* ((nenv (new env up env co me))
-             (esvb nenv.(extend-var ex-sym-var))
-             (eavb nenv.(extend-var ex-args-var))
-             (tfrag me.(compile oreg nenv try-expr))
-             (dfrag me.(compile oreg nenv desc-expr))
-             (lhand (gensym "l"))
-             (lhend (gensym "l"))
-             (treg me.(alloc-treg))
-             (nclauses (len clauses))
-             (cfrags (collect-each ((cl clauses)
-                                    (i (range 1)))
-                       (mac-param-bind form (sym params . body) cl
-                         (let* ((cl-src ^(apply (lambda ,params ,*body)
-                                                ,ex-sym-var ,ex-args-var))
-                                (cfrag me.(compile oreg nenv (expand cl-src)))
-                                (lskip (gensym "l")))
-                           (new (frag oreg
-                                      ^((gcall ,treg
-                                               ,me.(get-sidx 'exception-subtype-p)
-                                               ,esvb.loc
-                                               ,me.(get-dreg sym))
-                                        (if ,treg ,lskip)
-                                        ,*cfrag.code
-                                        ,*me.(maybe-mov oreg cfrag.oreg)
-                                        ,*(unless (eql i nclauses)
-                                            ^((jmp ,lhend)))
-                                        ,lskip)
-                                      cfrag.fvars
-                                      cfrag.ffuns)))))))
-        me.(free-treg treg)
-        (new (frag oreg
-                   ^((frame ,nenv.lev ,nenv.v-cntr)
-                     ,*dfrag.code
-                     (catch ,esvb.loc ,eavb.loc
-                            ,me.(get-dreg symbols) ,dfrag.oreg ,lhand)
-                     ,*tfrag.code
-                     ,*me.(maybe-mov oreg tfrag.oreg)
-                     (jmp ,lhend)
-                     ,lhand
-                     ,*(mappend .code cfrags)
-                     ,lhend
-                     (end ,oreg)
-                     (end ,oreg))
-                   (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
-                   (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns])))))))
+    (if (and (plusp *opt-level*)
+             (or (null symbols)
+                 (safe-constantp try-expr)))
+      me.(compile oreg env try-expr)
+      (with-gensyms (ex-sym-var ex-args-var)
+        (let* ((nenv (new env up env co me))
+               (esvb nenv.(extend-var ex-sym-var))
+               (eavb nenv.(extend-var ex-args-var))
+               (tfrag me.(compile oreg nenv try-expr))
+               (dfrag me.(compile oreg nenv desc-expr))
+               (lhand (gensym "l"))
+               (lhend (gensym "l"))
+               (treg me.(alloc-treg))
+               (nclauses (len clauses))
+               (have-one-symbol (and (plusp *opt-level*) (eql 1 (len symbols))))
+               (one-symbol (if have-one-symbol (car symbols)))
+               (cfrags (collect-each ((cl clauses)
+                                      (i (range 1)))
+                         (mac-param-bind form (sym params . body) cl
+                           (let* ((cl-src ^(apply (lambda ,params ,*body)
+                                                  ,ex-sym-var ,ex-args-var))
+                                  (cfrag me.(compile oreg nenv (expand cl-src)))
+                                  (lskip (gensym "l")))
+                             (new (frag oreg
+                                        (cond
+                                          ((and have-one-symbol
+                                                (exception-subtype-p one-symbol sym))
+                                           ^(,*cfrag.code
+                                              ,*me.(maybe-mov oreg cfrag.oreg)
+                                              ,*(unless (eql i nclauses)
+                                                  ^((jmp ,lhend)))))
+                                          (have-one-symbol
+                                            (set cfrag.fvars nil
+                                                 cfrag.ffuns nil)
+                                            nil)
+                                          (t ^((gcall ,treg
+                                                      ,me.(get-sidx 'exception-subtype-p)
+                                                      ,esvb.loc
+                                                      ,me.(get-dreg sym))
+                                               (if ,treg ,lskip)
+                                               ,*cfrag.code
+                                               ,*me.(maybe-mov oreg cfrag.oreg)
+                                               ,*(unless (eql i nclauses)
+                                                   ^((jmp ,lhend)))
+                                               ,lskip)))
+                                        cfrag.fvars
+                                        cfrag.ffuns)))))))
+          me.(free-treg treg)
+          (new (frag oreg
+                     ^((frame ,nenv.lev ,nenv.v-cntr)
+                       ,*dfrag.code
+                       (catch ,esvb.loc ,eavb.loc
+                              ,me.(get-dreg symbols) ,dfrag.oreg ,lhand)
+                       ,*tfrag.code
+                       ,*me.(maybe-mov oreg tfrag.oreg)
+                       (jmp ,lhend)
+                       ,lhand
+                       ,*(mappend .code cfrags)
+                       ,lhend
+                       (end ,oreg)
+                       (end ,oreg))
+                     (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
+                     (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns]))))))))
 
 (defmeth compiler eliminate-frame (me code env)
   (if (>= me.(unalloc-reg-count) (len env.vb))
