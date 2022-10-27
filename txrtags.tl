@@ -191,10 +191,11 @@
                     (t :)))
                  ((word (arg) . body)
                   (caseq word
-                    ((:init :postinit :fini))
+                    ((:init :postinit :fini :postfini))
                     (t :)))
                  ((name . rest)
-                  (add (ntag slot-tag name struct-name)))
+                  (unless (keywordp name)
+                    (add (ntag slot-tag name struct-name))))
                  (name
                    (add (ntag slot-tag name struct-name struct-obj))))))))))))
 
