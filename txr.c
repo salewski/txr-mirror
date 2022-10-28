@@ -82,6 +82,7 @@ int opt_compat;
 int opt_dbg_expansion;
 int opt_free_all;
 val stdlib_path;
+val self_path_s;
 
 #if HAVE_FORK_STUFF
 #define IF_HAVE_FORK_STUFF(THEN, ELSE) THEN
@@ -455,6 +456,8 @@ static void do_compile_opt(val arg)
     source = sub_str(source, zero, col_pos);
   }
 
+  reg_varl(self_path_s, source);
+
   funcall2(compile_update_file, source, target);
 }
 
@@ -572,7 +575,6 @@ int txr_main(int argc, char **argv)
   val txr_lisp_p = nil;
   val enter_repl = nil;
   val args_s = intern(lit("*args*"), user_package);
-  val self_path_s = intern(lit("self-path"), user_package);
   val compat_var = lit("TXR_COMPAT");
   val compat_val = getenv_wrap(compat_var);
   val orig_args = nil, ref_arg_list = nil;
@@ -581,6 +583,8 @@ int txr_main(int argc, char **argv)
   list_collect_decl(eff_arg_list, eff_arg_tail);
 
   static char alt_args_buf[128 + 7] = "@(txr):", *alt_args = alt_args_buf + 7;
+
+  self_path_s = intern(lit("self-path"), user_package);
 
   if (ends_with(lit("lisp" EXE_SUFF), prog_path, nil, nil))
     txr_lisp_p = t;
@@ -1269,7 +1273,7 @@ repl:
                "due to environment variable.\n"),
            num(opt_compat), nao);
   reg_var(args_s, or2(orig_args, arg_list));
-  reg_varl(intern(lit("self-path"), user_package), lit("listener"));
+  reg_varl(self_path_s, lit("listener"));
   env_vbind(dyn_env, package_s,
             opt_compat && opt_compat <= 190 ? user_package : public_package);
   env_vbind(dyn_env, load_recursive_s, nil);

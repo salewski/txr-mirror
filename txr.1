@@ -78979,7 +78979,9 @@ smaller than 32767 bytes are strongly discouraged.
 .SS* Modularization
 .coNP Variable @ self-path
 .desc
-This variable holds the invocation pathname of the \*(TX program.
+This variable holds the invocation pathname of a \*(TX program
+that was specified on the command line.
+
 The value of
 .code self-path
 when \*(TL expressions are being evaluated in command-line arguments
@@ -78992,6 +78994,21 @@ when a \*(TX query is supplied on the command line via the
 command-line option is the string
 .strn cmdline .
 
+When a file is being compiled using the
+.code --compile
+option, the value of
+.code self-path
+is the source file path.
+
+When the interactive listener is entered,
+.code self-path
+is set to the value
+.strn listener ,
+even if prior to that, a file was compiled
+or executed, for which
+.code self-path
+had been set to the name of that file.
+
 Note that for programs read from a file,
 .code self-path
 holds the resolved name, and not the invocation name. For instance if
@@ -79001,6 +79018,15 @@ is invoked using the name
 whereby \*(TX infers the suffix, then
 .code self-path
 holds the suffixed name.
+
+Note that the functions
+.codn load ,
+.code compile-file
+and
+.code compile-update-file
+have no effect on the value of
+.code self-path.
+The variable is set strictly by command line processing.
 
 .coNP Variable @ stdlib
 .desc
