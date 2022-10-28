@@ -941,16 +941,24 @@ val txr_parse(val source_in, val error_stream,
 
 static void report_file_perm_problem(val name)
 {
+#ifdef __CYGWIN__
+  (void) name;
+#else
   format(std_output,
          lit("** security problem: ~a is readable by others\n"),
          name, nao);
+#endif
 }
 
 static void report_path_perm_problem(val name)
 {
+#ifdef __CYGWIN__
+  (void) name;
+#else
   format(std_output,
          lit("** security problem: a component of ~a is writable to others\n"),
          name, nao);
+#endif
 }
 
 static void load_rcfile(val name, val psafe_s, val ppriv_s)
@@ -1561,8 +1569,13 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
   val pexist_s =  intern(lit("path-exists-p"), user_package);
-  val ppriv_s =  intern(lit("path-strictly-private-to-me-p"), user_package);
+#ifdef __CYGWIN__
+  val ppriv_s = intern(lit("tf"), user_package);
+  val psafe_s = ppriv_s;
+#else
+  val ppriv_s = intern(lit("path-strictly-private-to-me-p"), user_package);
   val psafe_s = intern(lit("path-components-safe"), user_package);
+#endif
   val result_hash = make_hash(hash_weak_none, nil);
   val done = nil;
   val counter = one;
