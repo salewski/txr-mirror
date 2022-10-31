@@ -72856,8 +72856,13 @@ platform function. The hash value is assumed to be UTF-8 and converted to
 Unicode characters, though it is not expected to contain anything but 7
 bit ASCII characters.
 
-Note: the underlying C library function uses a static buffer for its return
-value. The return value of the \*(TL function is a copy of that buffer.
+Note: if C library function
+.code crypt
+uses a static buffer for its return value. If that function is used,
+the Lisp string returned by the \*(TL function carries its own copy of
+that buffer. Where available, the
+.code crypt_r
+function is used which avoids static storage.
 
 .SS* Unix Signal Handling
 
