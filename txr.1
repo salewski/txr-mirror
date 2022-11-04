@@ -29240,6 +29240,22 @@ is in fact implemented externally to
 using
 .codn define-struct-clause .
 
+.NP* Custom Preludes
+
+The
+.code defstruct
+macro has a provision for implicit inclusion of application-defined
+clauses called preludes, which are previously defined via the
+.code define-struct-prelude
+macro.
+During macro-expansion,
+.code defstruct
+checks whether the structure being defined is the target of one
+or more preludes. If so, it includes the clauses from those preludes
+as if they were written directly in the
+.code defstruct
+syntax.
+
 .coNP Macro @ defstruct
 .synb
 .mets (defstruct >> { name | >> ( name << arg *)} < super
@@ -29278,8 +29294,18 @@ used to call the function. Some remarks in the description of
 only apply to structure types defined using that macro.
 
 Slots are specified using zero or more
-.IR "slot specifiers" .
-Slot specifiers come in the following variety:
+.meta slot-specifier
+clauses.
+
+Application-defined clauses are possible via
+.codn define-struct-clause .
+The
+.code defstruct
+macro may bring in prelude clauses which are not specified in its syntax,
+but that have been specified using
+.codn define-struct-prelude .
+
+The following built-in clauses are supported:
 .RS
 .meIP < name
 The simplest slot specifier is just a name, which must be a bindable
@@ -32416,6 +32442,88 @@ An expander function returns a list of clauses, which may be any, possibly
 empty mixture of primary clauses accepted by
 .code defstruct
 and clause macros.
+
+.coNP Macro @ *define-struct-prelude*
+.synb
+.mets (define-struct-prelude < name < struct-name-or-list << clause *)
+.syne
+.desc
+The
+.code define-struct-prelude
+macro defines a
+.IR prelude .
+A prelude is a named entity which implicitly provides clauses to
+.code defstruct
+macro invocations. Preludes are processed during the macroexpansion of
+.codn defstruct ;
+prelude definitions have no effect on previously compiled
+.code defstruct
+forms loaded from a file.
+
+A prelude has a
+.meta name
+which must be a bindable symbol. The purpose of this name is that
+if multiple
+.code define-struct-prelude
+forms are evaluated which specify the same
+.metn name ,
+they replace each others' definition. Only the most recent prelude of
+a given
+.meta name
+is retained; the previous definitions are overwritten.
+
+The
+.meta struct-name-or-list
+argument is either a symbol or a list of symbols, which are valid
+for use as structure names. The prelude being defined shall be
+applicable to each of the structures whose names are given by
+this argument.
+
+The zero or more
+.meta clause
+arguments give the clauses which comprise the prelude. In the future, when a
+.code defstruct
+form is macroexpanded which targets any of the structures given by the
+.meta struct-name-or-list
+argument, the specified clauses will be inserted into that definition, as
+if they appeared in the
+.code defstruct
+form literally.
+
+Multiple preludes may be defined with different names, which each target
+the same structure. When the structure is defined, or redefined, it will
+receive all those preludes, in the order in which they were defined.
+
+.TP* Example:
+
+.verb
+  ;; define init-fini-log prelude which targets fox and bear structs
+
+  (define-struct-prelude init-fini-log (fox bear)
+    (:init (me) (put-line `@me created`))
+    (:fini (me) (put-line `@me finalized`)))
+
+  ;; The behavior is as if the following defstruct forms included
+  ;; the above :init and :fini clauses
+
+  (defstruct fox ())
+
+  (defstruct bear ())
+
+  (with-object ((f (new fox))
+                (b (new bear)))
+    (put-line "inside with-object"))
+.brev
+
+Output:
+
+.verb
+  #S(fox) created
+  #S(bear) created
+  inside with-object
+  #S(bear) finalized
+  #S(fox) finalized
+.brev
 
 .SS* Special Structure Functions
 

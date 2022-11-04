@@ -220,6 +220,7 @@ static val struct_set_entries(val fun)
     lit("defstruct"), lit("qref"), lit("uref"), lit("new"), lit("lnew"),
     lit("new*"), lit("lnew*"),
     lit("meth"), lit("umeth"), lit("usl"), lit("defmeth"), lit("rslot"),
+    lit("define-struct-prelude"),
     lit("define-struct-clause"), lit("macroexpand-struct-clause"), nil
   };
   val vname[] = {

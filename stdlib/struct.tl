@@ -27,6 +27,9 @@
 
 (defvar *struct-clause-expander* (hash))
 
+(defvar *struct-prelude* (hash))
+(defvar *struct-prelude-alists* (hash))
+
 (defun sys:bad-slot-syntax (form arg)
   (compile-error form "bad slot syntax ~s" arg))
 
@@ -50,6 +53,7 @@
       (compile-warning form "~s is a built-in type" name))
     (unless (proper-listp slot-specs)
       (compile-error form "bad syntax: dotted form"))
+    (set slot-specs (append [*struct-prelude* name] slot-specs))
     (let ((instance-init-forms nil)
           (instance-postinit-forms nil)
           (instance-fini-forms nil)
@@ -428,6 +432,20 @@
   (iflet ((xfun (and (consp clause) [*struct-clause-expander* (car clause)])))
     [xfun clause form]
     (cons clause nil)))
+
+(defmacro define-struct-prelude (:form form prelude-name struct-names . clauses)
+  (unless (bindable prelude-name)
+    (compile-error form "~s isn't a valid prelude name" prelude-name))
+  (when (bindable struct-names)
+    (set struct-names (list struct-names)))
+  (each ((sname struct-names))
+    (unless (bindable sname)
+      (compile-error form "~s isn't a valid struct name" sname))
+    (let* ((cell (inhash *struct-prelude-alists* sname nil))
+           (alist (aconsql-new prelude-name clauses (cdr cell))))
+      (rplacd cell alist)
+      (set [*struct-prelude* sname] [mappend cdr (reverse alist)]))
+    nil))
 
 (compile-only
   (load-for (struct sys:param-parser-base "param")))
