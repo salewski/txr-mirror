@@ -129,13 +129,14 @@
   [sys:r-s-let-expander bindings body e 'let constantp])
 
 (defmacro slet (bindings :env e . body)
-  (sys:r-s-let-expander bindings body e 'let [orf constantp bindable]))
+  (sys:r-s-let-expander bindings body e 'let [orf constantp
+                                                  (op lexical-var-p e)]))
 
 (defmacro alet (bindings :env e . body)
   (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
     (if [some exp-bindings constantp second]
       [sys:r-s-let-expander exp-bindings body e 'alet constantp]
-      ^(,(if [all exp-bindings bindable second]
+      ^(,(if [all exp-bindings (op lexical-var-p e) second]
            'symacrolet 'let)
          ,exp-bindings ,*body))))
 

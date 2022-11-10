@@ -28,32 +28,36 @@
       (slot (slot (slot a 'b)
                   'c) 'd))
 
-(test (expand 's.a)
+(defmacro get-current-menv (:env e) e)
+(defvarl menv (let (s a b c d) (macro-time (get-current-menv))))
+
+(test (expand 's.a menv)
       (slot s 'a))
-(test (expand 's.[a])
+(test (expand 's.[a] menv)
       [(slot s 'a) s])
-(test (expand 's.[a b c])
+(test (expand 's.[a b c] menv)
       [(slot s 'a) s b c])
 
 (set *gensym-counter* 0)
-(stest (ignwarn (expand 's.(a)))
+
+(stest (ignwarn (expand 's.(a) menv))
        "(call (slot s 'a)\n                     \
        \      s)")
 (set *gensym-counter* 0)
-(stest (ignwarn (expand 's.(a b c)))
+(stest (ignwarn (expand 's.(a b c) menv))
        "(call (slot s 'a)\n                     \
        \      s b c)")
-(test (expand 's.[a].b)
+(test (expand 's.[a].b menv)
       (slot [(slot s 'a) s] 'b))
-(test (expand 's.[a b c].b)
+(test (expand 's.[a b c].b menv)
       (slot [(slot s 'a) s b c] 'b))
 (set *gensym-counter* 0)
-(stest (ignwarn (expand 's.(a).d))
+(stest (ignwarn (expand 's.(a).d menv))
        "(slot (call (slot s 'a)\n               \
        \            s)\n                        \
        \      'd)")
 (set *gensym-counter* 0)
-(stest (ignwarn (expand 's.(a b c).d))
+(stest (ignwarn (expand 's.(a b c).d menv))
        "(slot (call (slot s 'a)\n               \
        \            s b c)\n                    \
        \      'd)")

@@ -44223,8 +44223,30 @@ reduces bindings initialized by constant expressions
 to symbol macros. In addition, unlike
 .codn rlet ,
 .code slet
-also reduces to symbol macros those bindings which
-are initialized by symbol expressions (values of variables).
+also reduces to symbol macros those bindings whose initializing
+expressions are simple references to lexical variables.
+
+.TP* Examples:
+
+.verb
+   ;; reduces to let
+   (slet ((a (list x y)))
+     a)
+
+   ;; b is a free variable, so this is also let
+   (slet ((a b))
+     a)
+
+   ;; b is lexical, so a becomes a symbol macro
+   ;; the (slet ...) form becomes b.
+   (let (b)
+     (slet ((a b))
+       a))
+
+   ;; a becomes symbol macro; form transforms to 1.
+   (slet ((a 1))
+     a)
+.brev
 
 .coNP Macro @ alet
 .synb
@@ -44237,7 +44259,7 @@ The macro
 .code slet
 macro. All bindings initialized by constant expressions are
 turned to symbol macros. Then, if all of the remaining bindings are
-all initialized by symbol expressions, they are also turned to
+all initialized by lexical variables, they are also turned to
 symbol macros. Otherwise, none of the remaining bindings
 are turned to symbol macros.
 
@@ -44249,7 +44271,7 @@ others' evaluations. In this situation
 .code alet
 still propagates constants via symbol macros, and can eliminate the
 remaining temporaries if they can all be made symbol macros for
-existing variables: i.e. there doesn't exist any initialization form
+existing lexicals: i.e. there doesn't exist any initialization form
 with interfering side effects.
 
 .coNP Macro @ define-accessor
