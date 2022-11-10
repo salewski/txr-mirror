@@ -74306,9 +74306,22 @@ and
 arguments are reversed with respect to the C language interface.
 They are both optional;
 .meta flags
-defaults to zero, and
+defaults to the value of
+.code ftw-phys
+and
 .meta nopenfd
 defaults to 20.
+If an argument is given to
+.metn flags ,
+then the presence of the
+.code ftw-phys
+is no longer implied; the flag must be explicitly
+included in the argument in order to be present.
+
+Compatibility Note: the
+.meta flags
+parameter defaults to an argument value of zero in \*(TX
+versions 283 or lower.
 
 The
 .meta path-or-list
@@ -89972,6 +89985,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 283
+In \*(TX 283 and older versions, the
+.meta flags
+parameter of the
+.code ftw
+function defaults to zero, rather than
+.codn ftw-phys .
 .IP 275
 In \*(TX 275 and older versions, the FFI type operator
 .code align

@@ -43,6 +43,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "sysif.h"
+#include "txr.h"
 #include "ftw.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -111,7 +112,8 @@ val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
     return ret;
   } else {
     int nopenfd = c_num(default_arg(nopenfd_in, num_fast(20)), self);
-    int flags = c_num(default_arg(flags_in, zero), self);
+    val flags_dfl = if3(opt_compat && opt_compat <= 283, zero, num(FTW_PHYS));
+    int flags = c_num(default_arg(flags_in, flags_dfl), self);
     char *dirpath_u8 = utf8_dup_to(c_str(dirpath, self));
     int res = (s_callback = fn,
                nftw(dirpath_u8, ftw_callback, nopenfd, flags));
@@ -144,9 +146,7 @@ void ftw_init(void)
   prot1(&s_callback);
 
   /* ftw flags */
-#ifdef FTW_PHYS
   reg_varl(intern(lit("ftw-phys"), user_package), num_fast(FTW_PHYS));
-#endif
 #ifdef FTW_MOUNT
   reg_varl(intern(lit("ftw-mount"), user_package), num_fast(FTW_MOUNT));
 #endif
