@@ -275,7 +275,7 @@ static struct struct_inst *struct_handle(val obj, val ctx)
 {
   if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
     return coerce(struct struct_inst *, obj->co.handle);
-  uw_throwf(error_s, lit("~a: ~s isn't a structure"),
+  uw_throwf(type_error_s, lit("~a: ~s isn't a structure"),
             ctx, obj, nao);
 }
 
@@ -300,7 +300,7 @@ static struct struct_type *stype_handle_impl(val *pobj, val obj_ok, val ctx)
       return struct_handle(obj, ctx)->type;
     /* fallthrough */
   default:
-    uw_throwf(error_s, lit("~a: ~s isn't a struct type"),
+    uw_throwf(type_error_s, lit("~a: ~s isn't a struct type"),
               ctx, obj, nao);
   }
 }
@@ -952,7 +952,7 @@ static struct struct_inst *struct_handle_for_slot(val obj, val ctx, val slot)
 {
   if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
     return coerce(struct struct_inst *, obj->co.handle);
-  uw_throwf(error_s, lit("~a: attempt to access slot ~s of non-structure ~s"),
+  uw_throwf(type_error_s, lit("~a: attempt to access slot ~s of non-structure ~s"),
             ctx, slot, obj, nao);
 }
 
@@ -1705,7 +1705,7 @@ static val umethod_fun(val sym, struct args *args)
   val self = lit("umethod");
 
   if (!args_more(args, 0)) {
-    uw_throwf(error_s, lit("~a: object argument required to call ~s"),
+    uw_throwf(type_error_s, lit("~a: object argument required to call ~s"),
               self, sym, nao);
   } else {
     val strct = args_at(args, 0);
@@ -1729,7 +1729,7 @@ static val umethod_args_fun(val dargs, struct args *args)
   struct args *da = dargs->a.args;
 
   if (!args_more(args, 0)) {
-    uw_throwf(error_s, lit("~a: object argument required to call ~s"),
+    uw_throwf(type_error_s, lit("~a: object argument required to call ~s"),
               self, sym, nao);
   } else {
     cnum da_nargs = da->fill + c_num(length(da->list), self);
