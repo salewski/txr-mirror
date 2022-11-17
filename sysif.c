@@ -2072,8 +2072,8 @@ static val crypt_wrap(val wkey, val wsalt)
   char *key = utf8_dup_to(cwkey);
   char *salt = utf8_dup_to(cwsalt);
 #if HAVE_CRYPT_R
-  struct crypt_data cd;
-  char *hash = (cd.initialized = 0, crypt_r(key, salt, &cd));
+  struct crypt_data *cd = coerce(struct crypt_data *, chk_malloc(sizeof *cd));
+  char *hash = (cd->initialized = 0, crypt_r(key, salt, cd));
 #else
   char *hash = crypt(key, salt);
 #endif
@@ -2081,8 +2081,13 @@ static val crypt_wrap(val wkey, val wsalt)
   free(key);
   free(salt);
 
-  if (hash != 0)
-    return string_utf8(hash);
+  if (hash != 0) {
+    val ret = string_utf8(hash);
+    free(cd);
+    return ret;
+  }
+
+  free(cd);
 
   uw_ethrowf(error_s, lit("crypt failed: ~d/~s"), num(errno),
              errno_to_str(errno), nao);
