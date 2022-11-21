@@ -2468,6 +2468,8 @@ tail:
       cnum a = c_n(anum);
       double b = c_flo(bnum, self);
 
+      if (b == 0.0)
+        return flo(1.0);
       if (a == 0 && b < 0)
         goto divzero;
       return flo(pow(a, b));
@@ -2477,6 +2479,8 @@ tail:
       double a = c_flo(anum, self);
       cnum b = c_n(bnum);
 
+      if (b == 0)
+        return flo(1.0);
       if (a == 0 && b < 0)
         goto divzero;
       return flo(pow(a, b));
@@ -2486,6 +2490,8 @@ tail:
     {
       double a = c_flo(anum, self);
       double b = c_flo(bnum, self);
+      if (b == 0.0)
+        return flo(1.0);
       if (a == 0 && b < 0)
         goto divzero;
       return flo(pow(a, b));

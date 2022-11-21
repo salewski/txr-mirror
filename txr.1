@@ -48549,6 +48549,9 @@ operand is converted to a float, and a floating point exponentiation
 is performed. Exponentiation that would produce a complex number is
 not supported.
 
+If the exponent is zero, then the return value is 1.0 if at least one operand
+is floating-point, otherwise 1.
+
 The
 .code sqrt
 function produces a floating-point square root of
