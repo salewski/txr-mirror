@@ -291,10 +291,12 @@ static ucnum hash_double(double n)
   ucnum h = 0;
   unsigned i;
 
-  u.d = n;
+  if (n != 0.0) {
+    u.d = n;
 
-  for (i = 0; i < sizeof u.a / sizeof u.a[0]; i++)
-    h += u.a[i];
+    for (i = 0; i < sizeof u.a / sizeof u.a[0]; i++)
+      h += u.a[i];
+  }
 
   return h;
 }
