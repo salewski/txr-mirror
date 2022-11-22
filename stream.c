@@ -2089,7 +2089,7 @@ static struct strm_ops byte_in_ops =
 val make_string_byte_input_stream(val string)
 {
   val self = lit("make-string-byte-input-stream");
-  type_assert (stringp(string), (lit("~a is not a string"), string, nao));
+  type_assert (stringp(string), (lit("~a: ~s is not a string"), self, string, nao));
 
   {
     const wchar_t *wstring = c_str(string, self);
@@ -2405,7 +2405,7 @@ val get_string_from_stream(val stream)
     return out;
   } else {
     type_assert (stream->co.ops == &string_in_ops.cobj_ops,
-                 (lit("~a is not a string stream"), stream, nao));
+                 (lit("~a: ~s is not a string stream"), self, stream, nao));
     {
       struct string_in *si = coerce(struct string_in *, stream->co.handle);
       return si->string;
@@ -2514,7 +2514,7 @@ val get_list_from_stream(val stream)
     return nreverse(lines);
   }
 
-  type_mismatch(lit("~s is not a string list stream"), stream);
+  type_mismatch(lit("~a: ~s is not a string list stream"), self, stream, nao);
 }
 
 struct cat_strm {
@@ -2702,10 +2702,12 @@ val catenated_stream_p(val obj)
 
 val catenated_stream_push(val new_stream, val cat_stream)
 {
+  val self = lit("catenated-stream-push");
+
   type_assert (streamp(new_stream),
-               (lit("~a is not a stream"), new_stream, nao));
+               (lit("~a: ~s is not a stream"), self, new_stream, nao));
   type_assert (catenated_stream_p(cat_stream),
-               (lit("~a is not a stream"), cat_stream, nao));
+               (lit("~a: ~s is not a stream"), self, cat_stream, nao));
 
   {
     struct cat_strm *s = coerce(struct cat_strm *, cat_stream->co.handle);
