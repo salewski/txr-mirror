@@ -1391,7 +1391,10 @@
                   (let ((op (safe-const-eval (car args))))
                     (or [%const-foldable% op]
                         (not (bindable op)))))
-             me.(compile oreg env (safe-const-reduce form)))
+             (let ((crform (safe-const-reduce form)))
+               (if (eq crform form)
+                 me.(comp-fun-form oreg env crform)
+                 me.(compile oreg env crform))))
             (t (tree-case (car args)
                  ((op arg . more)
                   (caseq op
