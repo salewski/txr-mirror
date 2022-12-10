@@ -102,6 +102,7 @@
     "TXR Lisp has dark mode now: global *dark-mode* and lexical with-dark-mode."
     "Merry GNUsmas, dear FSF friends! ... Crap, wait. That's 'Samsung' backwards!"
     "Truly future-proof systems are rare; future-resistant ones are everywhere."
+    "Lack of personality is not an effective defense against impersonation."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
