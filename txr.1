@@ -26658,6 +26658,18 @@ consists only of the characters in string
 .metn set ,
 in any combination.
 
+If both arguments are strings, the function returns
+an integer between 0 and the length of
+.metn str .
+
+.TP* Examples:
+.verb
+  (span-str "abcde" "ab") -> 2
+  (span-str "abcde" "z") -> 0
+  (span-str "abcde" "") -> 0
+  (span-str "abcde" "edcba") -> 5
+.brev
+
 .coNP Function @ compl-span-str
 .synb
 .mets (compl-span-str < str << set )
@@ -26671,6 +26683,19 @@ which
 consists only of the characters which do not appear in
 .metn set ,
 in any combination.
+
+If both arguments are strings, the function returns
+an integer between 0 and the length of
+.metn str .
+
+.TP* Examples:
+.verb
+  (compl-span-str "abc,def" ",") -> 3
+  (compl-span-str "abc," ",") -> 3
+  (compl-span-str "abc" ",") -> 3
+  (compl-span-str "abc3" "0123456789") -> 3
+  (compl-span-str "3" "0123456789") -> 0
+.brev
 
 .coNP Function @ break-str
 .synb
@@ -26688,6 +26713,13 @@ which appears in string
 If there is no such character, then
 .code nil
 is returned.
+
+.TP* Examples:
+.verb
+  (break-str "abc,def.ghi" ",.:") -> 3
+  (break-str "abc,def.ghi" ".:") -> 6
+  (break-str "abc,def.ghi" ":") -> nil
+.brev
 
 .SS* Lazy Strings
 Lazy strings are objects that were developed for the \*(TX pattern-matching
