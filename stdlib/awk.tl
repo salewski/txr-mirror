@@ -520,8 +520,10 @@
 (defmacro awk (:env outer-env . clauses)
   (let ((awc (sys:awk-expander outer-env clauses)))
     (with-gensyms (aws-sym awk-begf-fun awk-fun awk-endf-fun awk-retval)
-      (let* ((p-actions-xform-unex (mapcar (aret ^(when (sys:awk-test ,@1 rec)
-                                                    ,*@rest))
+      (let* ((p-actions-xform-unex (mapcar (aret
+                                             ^(whenlet ((res (sys:awk-test ,@1
+                                                                           rec)))
+                                                ,*@rest))
                                            awc.cond-actions))
              (p-actions-xform (expand
                                 ^(sys:awk-mac-let ,awc ,aws-sym

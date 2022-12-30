@@ -68528,6 +68528,50 @@ and so the
 .code prn
 function prints lines.
 
+.coNP Variable @ res
+The
+.code awk
+variable
+.code res
+is implicitly bound over the scope of the action forms of every
+condition-action clause. It holds the result of the condition form.
+
+Because the action forms execute only if the condition yields true,
+it follows that
+.code res
+is never observed with a value of
+.code nil
+unless the program explicitly assigns that value.
+
+Note: this is an original feature in the \*(TL
+.code awk
+macro, which has no counterpart in POSIX or GNU Awk.
+
+.TP* Example:
+
+.verb
+  (awk
+    (:inputs '("carpet"))
+    (#/a.*p/ (prn res)))
+
+  Output:
+
+  arp
+.brev
+
+In this example, the result of the
+.code "#/a.*p/"
+regular expression being applied to the input
+.code carpet
+is the string
+.str arp
+and so over that clause,
+.code prn
+takes on that string as its value. Thus,
+thanks to
+.codn prn ,
+the action has access to the matching part of the record.
+
 .coNP Function @ prn
 .synb
 .mets (prn << form *)

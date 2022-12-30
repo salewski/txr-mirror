@@ -352,6 +352,7 @@ static val awk_set_entries(val fun)
     lit("<-"), lit("!>"), lit("<!"), lit("prn"),
     lit("i"), lit("o"), lit("x"), lit("b"), lit("c"), lit("r"),
     lit("iz"), lit("oz"), lit("xz"), lit("bz"), lit("cz"), lit("rz"),
+    lit("res"),
     nil
   };
   autoload_sys_set(al_struct, sys_sname, fun);

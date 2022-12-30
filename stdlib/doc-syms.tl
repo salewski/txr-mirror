@@ -1622,6 +1622,7 @@
       ("replace-tree-iter" "N-01225FF3")
       ("replace-vec" "N-01F59E62")
       ("require" "D-007F")
+      ("res" "N-03D33A57")
       ("reset-struct" "N-002A609F")
       ("rest" "N-02288559")
       ("ret" "N-033F39EF")
