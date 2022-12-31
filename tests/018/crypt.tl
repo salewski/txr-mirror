@@ -1,5 +1,8 @@
 (load "../common")
 
+(if (meq (os-symbol) :android :cygwin)
+  (exit))
+
 (mtest
   (crypt nil nil) :error
   (crypt "a" "bc") "bcshMw5X24ayQ"
