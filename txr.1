@@ -5933,13 +5933,23 @@ The
 .code repeat
 symbol may be specified instead of
 .codn collect ,
-which changes the meaning, see below:
+which changes the meaning:
 
 .verb
   @(repeat)
   ... lines of subquery
   @(end)
 .brev
+
+The
+.code @(repeat)
+syntax is equivalent to
+.code "@(collect :vars nil)"
+and doesn't take the
+.code :vars
+clause. It accepts other
+.code collect
+parameters.
 
 The subquery is matched repeatedly, starting at the current line.
 If it fails to match, it is tried starting at the subsequent line.
