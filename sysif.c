@@ -2083,11 +2083,15 @@ static val crypt_wrap(val wkey, val wsalt)
 
   if (hash != 0) {
     val ret = string_utf8(hash);
+#if HAVE_CRYPT_R
     free(cd);
+#endif
     return ret;
   }
 
+#if HAVE_CRYPT_R
   free(cd);
+#endif
 
   uw_ethrowf(error_s, lit("crypt failed: ~d/~s"), num(errno),
              errno_to_str(errno), nao);

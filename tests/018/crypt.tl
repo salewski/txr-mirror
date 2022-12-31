@@ -2,12 +2,12 @@
 
 (mtest
   (crypt nil nil) :error
-  (crypt "a" "b") :error
   (crypt "a" "bc") "bcshMw5X24ayQ"
   (crypt "a" "bcd") "bcshMw5X24ayQ")
 
 (if (eq :linux (os-symbol))
   (mtest
+    (crypt "a" "b") :error
     (crypt "a" "$0$") :error
     (crypt "a" "$9$") :error
     (crypt "a" "$1$") "$1$$Ij31LCAysPM23KuPlm1wA/"
