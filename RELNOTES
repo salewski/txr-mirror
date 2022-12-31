@@ -1,3 +1,58 @@
+                                    TXR 284
+                                   2022-12-30
+
+  Features
+
+  - OOP:
+    - new :inherit clause in defstruct so that inheritance
+      bases can be specified by clauses.
+      - Motivated by clauses being programmable.
+      - Allows defstruct clause macro to bring in bases.
+    - new feature: struct preludes.
+      - preludes can specify clauses to inject into specific
+        defstruct definitions (that have not yet been processed),
+        without those definitions mentioning anything.
+      - purely a macro-expansion-time feature.
+
+  - Lib:
+    - cat-str/join/join-with now allow nested sequences.
+
+  - System Functions:
+    - ftw function: the flags argument now defaults to ftw-phys
+      if omitted (do not follow symbolic links).
+
+  - compiler:
+    - optimizations around catch
+
+  - Awk macro:
+    - result of condition in condition-action clause is avaialble
+      via a new Awk variable named res.
+
+  Bugs
+
+  - Compilation from command line via --compile now
+    sets the self-path variable.
+  - Listener: drop security checks on Windows, where they
+    don't work and generate false positives.
+    - They are geared toward a multi-user system with
+      a bona fide POSIX security and file permission model.
+  - crypt: remove dubious validator.
+    - cannot reproduce the crash issue it was supposed to work around.
+  - read-once: now supports global variables properly.
+  - crypt: fix ridiculous stack usage, caused by giant context
+    structure for glibc's crypt_r.
+  - hashing: negative floating-point zero handled.
+  - math: expt with a zero exponent yields 1.0. 
+    - though works that way already on all platforms, it is now documented and
+      assured.
+  - compiler:
+    - some functions were constant folded that must not be, because
+      they are required to allocate fresh objects each time they are called.
+    - an instance of runaway recursion in the compiler was fixed in
+      constant-folding code.
+
+
+
                                     TXR 283
                                    2022-10-16
 
