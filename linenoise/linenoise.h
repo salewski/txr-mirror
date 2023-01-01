@@ -9,7 +9,7 @@
  *
  * Copyright (c) 2010-2015, Salvatore Sanfilippo <antirez at gmail dot com>
  * Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>
- * Copyright (c) 2015-2022, Kaz Kylheku <kaz at kylheku dot com>
+ * Copyright (c) 2015-2023, Kaz Kylheku <kaz at kylheku dot com>
  *
  * All rights reserved.
  *

@@ -4196,7 +4196,7 @@ goto find_rule; \
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "parser.l"
-/* Copyright 2009-2022
+/* Copyright 2009-2023
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
