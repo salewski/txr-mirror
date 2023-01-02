@@ -67922,14 +67922,22 @@ is other than a function or regular expression, it is taken directly
 to be the truth value.
 If the condition is true, then its associated
 .meta action
-forms are evaluated. Either way, processing passes to the next condition
-clause (unless an explicit step is taken in one of the
-.metn action s
-to prevent this, for instance by invoking the
+forms are evaluated. These forms have access to the truth value via the
+.code res
+variable, which is freshly bound for each execution of the
+.meta action
+forms of that specific clause.
+For each input record, all condition-action clauses are processed in the order
+they appear, regardless of which of them have a true action,
+except in cases when some
+.meta action
+invokes the
 .code next
-and
+or
 .code next-file
-macros).
+macro, or abandons the execution of the
+.code awk
+macro entirely via a non-local exit.
 When an input source runs out of records,
 .code awk
 switches to the next input source. When there are no more input sources,
