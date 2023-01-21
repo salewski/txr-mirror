@@ -74,6 +74,7 @@ void debug_dump_backtrace(val stream, val prefix);
 
 #else
 
+#define debug_init() ((void) 0)
 #define debug_clear(mask) 0
 #define debug_set(mask) 0
 #define debug_restore(state) ((void) 0)

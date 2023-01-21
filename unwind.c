@@ -70,7 +70,9 @@ static val sys_cont_free_s, sys_capture_cont_s;
 val catch_frame_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
+#if CONFIG_DEBUG_SUPPORT
 static val fcall_frame_type, eval_frame_type, expand_frame_type;
+#endif
 
 static val deferred_warnings, tentative_defs;
 

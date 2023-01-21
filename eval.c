@@ -1609,13 +1609,17 @@ static val do_eval(val form, val env, val ctx,
                    val (*lookup)(val env, val sym))
 {
   val self = lit("eval");
+#if CONFIG_DEBUG_SUPPORT
   uw_frame_t *ev = 0;
+#endif
   val ret = nil;
 
+#if CONFIG_DEBUG_SUPPORT
   if (dbg_backtrace) {
     ev = coerce(uw_frame_t *, alloca(sizeof *ev));
     uw_push_eval(ev, form, env);
   }
+#endif
 
   sig_check_fast();
 
@@ -1669,8 +1673,10 @@ static val do_eval(val form, val env, val ctx,
     ret = form;
   }
 
+#if CONFIG_DEBUG_SUPPORT
   if (ev != 0)
     uw_pop_frame(ev);
+#endif
 
   return ret;
 }
