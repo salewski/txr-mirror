@@ -411,18 +411,18 @@ INLINE loc mkloc_fun(val *ptr, val obj)
 #define valptr(lo) ((lo).ptr)
 #define set(lo, val) (gc_set(lo, val))
 #define setcheck(tgt, src) (gc_assign_check(tgt, src))
-#define mut(obj) (gc_mutated(obj));
+#define mut(obj) (gc_mutated(obj))
 #define mpush(val, lo) (gc_push(val, lo))
 #else
 typedef val *loc;
-#define mkloc(expr, obj) (&(expr))
+#define mkloc(expr, obj) ((void) (obj), &(expr))
 #define mkcloc(expr) (&(expr))
 #define nulloc ((loc) 0)
 #define nullocp(lo) (!(lo))
 #define deref(lo) (*(lo))
 #define valptr(lo) (lo)
 #define set(lo, val) (*(lo) = (val))
-#define setcheck(tgt, src) ((void) 0)
+#define setcheck(tgt, src) ((void) (tgt))
 #define mut(obj) ((void) (obj))
 #define mpush(val, lo) (push(val, lo))
 #endif

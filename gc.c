@@ -1053,6 +1053,8 @@ static val gc_wrap(val full)
 #if CONFIG_GEN_GC
     if (!null_or_missing_p(full))
       full_gc = 1;
+#else
+    (void) full;
 #endif
     gc();
     return t;
