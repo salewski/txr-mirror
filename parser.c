@@ -782,6 +782,8 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
     return error_return_val;
   }
 
+  gc_hint(parser);
+
   return pi->syntax_tree;
 }
 
