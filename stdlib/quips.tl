@@ -103,6 +103,7 @@
     "Merry GNUsmas, dear FSF friends! ... Crap, wait. That's 'Samsung' backwards!"
     "Truly future-proof systems are rare; future-resistant ones are everywhere."
     "Lack of personality is not an effective defense against impersonation."
+    "TXR kind of supports IEEE 754.00000000000003 floating-point."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
