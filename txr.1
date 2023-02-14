@@ -66896,6 +66896,22 @@ Note: the availability of these three functions
 depends on the availability of
 .codn strptime .
 
+Note: on some platforms, like the GNU C Library, the
+.code strptime
+function supports the parsing of numeric and symbolic time zones. The
+.code gmtoff
+slot of the structure ends up being set accordingly.
+The
+.code time-local
+and
+.code time-utc
+functions take the
+.code gmtoff
+field into account, adjusting the returned time accordingly.
+
+
+If these are specified.
+
 .coNP Methods @ time-local and @ time-utc
 .synb
 .mets << time-struct .(time-local)
@@ -66930,6 +66946,12 @@ which are applied to
 .code make-time
 or
 .codn make-time-utc .
+
+Note: if the
+.code gmtoff
+slot is not
+.codn nil ,
+its value is added to the returned result.
 
 .coNP Method @ time-string
 .synb

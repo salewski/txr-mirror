@@ -408,9 +408,15 @@ static val time_meth(val utc_p, val time_struct)
   val min = slot(time_struct, min_s);
   val sec = slot(time_struct, sec_s);
   val dst = slot(time_struct, dst_s);
+  val gmtoff = slot(time_struct, gmtoff_s);
 
-  return (utc_p ? make_time_utc : make_time)(year, month, day,
-                                             hour, min, sec, dst);
+  val out = (utc_p ? make_time_utc : make_time)(year, month, day,
+                                                hour, min, sec, dst);
+
+  if (gmtoff)
+    out = plus(out, gmtoff);
+
+  return out;
 }
 
 static val time_string_meth(val time_struct, val format)
@@ -462,9 +468,17 @@ static val time_parse_meth(val time_struct, val format, val string)
 val time_parse_local(val format, val string)
 {
   struct tm tms = epoch_tm();
+
   if (!strptime_wrap(string, format, &tms))
     return nil;
+#if HAVE_TM_GMTOFF
+  {
+    long gmtoff = tms.TM_GMTOFF;
+    return num(mktime(&tms) + gmtoff);
+  }
+#else
   return num(mktime(&tms));
+#endif
 }
 
 val time_parse_utc(val format, val string)
@@ -472,7 +486,17 @@ val time_parse_utc(val format, val string)
   struct tm tms = epoch_tm();
   if (!strptime_wrap(string, format, &tms))
     return nil;
-#if HAVE_TIMEGM
+#if HAVE_TIMEGM && HAVE_TM_GMTOFF
+  {
+    long gmtoff = tms.TM_GMTOFF;
+    return num_time(timegm(&tms) + gmtoff);
+  }
+#elif HAVE_TM_GMTOFF
+  {
+    long gmtoff = tms.TM_GMTOFF;
+    return num_time(timegm_hack(&tms) + tms.gmtoff);
+  }
+#elif HAVE_TIMEGM
   return num_time(timegm(&tms));
 #else
   return num_time(timegm_hack(&tms));
