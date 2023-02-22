@@ -104,6 +104,7 @@
     "Truly future-proof systems are rare; future-resistant ones are everywhere."
     "Lack of personality is not an effective defense against impersonation."
     "TXR kind of supports IEEE 754.00000000000003 floating-point."
+    "TXR's sound system features 120 dB separation between quarreling audiophiles."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
