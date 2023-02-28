@@ -3874,7 +3874,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       if (slot) {
         if (align > most_align)
           most_align = align;
-        if ((ucnum) mtft->oalign > most_align)
+        if (convert(ucnum, mtft->oalign) > most_align)
           most_align = mtft->oalign;
       }
     } else {
@@ -4013,7 +4013,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
         mtft->shift = bits_int - bits;
 
 #if HAVE_I64
-      if (mtft->size > (int) sizeof (int)) {
+      if (mtft->size > convert(int, sizeof (int))) {
         if (bits == bits_llint)
           mtft->m.fmask = convert(u64_t, -1);
         else
@@ -4564,7 +4564,7 @@ val ffi_type_compile(val syntax)
           (tft_cp->bigendian && !HAVE_LITTLE_ENDIAN))
       {
 #if HAVE_I64
-        if (tft->size > (int) sizeof (int)) {
+        if (tft->size > convert(int, sizeof (int))) {
           tft_cp->put = if3(unsgnd,
                             ffi_generic_fat_ubit_put,
                             ffi_generic_fat_sbit_put);
@@ -4579,7 +4579,7 @@ val ffi_type_compile(val syntax)
         }
       } else {
 #if HAVE_I64
-        if (tft->size > (int) sizeof (int)) {
+        if (tft->size > convert(int, sizeof (int))) {
           tft_cp->put = if3(unsgnd,
                             ffi_generic_swap_fat_ubit_put,
                             ffi_generic_swap_fat_sbit_put);
