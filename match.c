@@ -1752,6 +1752,7 @@ static val do_match_line(match_line_ctx *c)
 
     switch (type(elem)) {
     case CONS: /* directive */
+    case LCONS:
       {
         val directive = first(elem);
 
