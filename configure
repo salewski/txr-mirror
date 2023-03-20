@@ -413,7 +413,9 @@ cc [$cc]
   compiling C sources to object files, and for linking object files to
   executables. This becomes the TXR_CC variable in config.make.
   Note that cross and compiler_prefix are empty by default and
-  and so this expands to just ccname.
+  and so this expands to just ccname. Note also that if cc is specified in a
+  way that doesn't include \$(ccname), then that variable is not used,
+  even though it continues to be defined in config.make.
 
 intptr [$intptr]
 
