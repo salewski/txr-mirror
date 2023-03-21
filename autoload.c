@@ -652,19 +652,29 @@ static val compiler_set_entries(val fun)
     lit("compiler"), lit("*in-compilation-unit*"),
     nil
   };
+  val sname[] = {
+    lit("compile-opts"),
+    nil
+  };
   val name[] = {
     lit("compile-toplevel"), lit("compile"), lit("compile-file"),
     lit("compile-update-file"),
     lit("with-compilation-unit"), lit("dump-compiled-objects"),
+    lit("with-compile-opts"),
     nil
   };
   val vname[] = {
-    lit("*opt-level*"),
+    lit("*opt-level*"), lit("*compile-opts*"),
     nil
   };
+  val slname[] = {
+    lit("shadow-fun"), lit("shadow-var"), lit("shadow-cross"), nil
+  };
   autoload_sys_set(al_struct, sys_name, fun);
+  autoload_set(al_struct, sname, fun);
   autoload_set(al_fun, name, fun);
   autoload_set(al_var, vname, fun);
+  autoload_set(al_slot, slname, fun);
   return nil;
 }
 

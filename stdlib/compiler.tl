@@ -32,6 +32,27 @@
 (compile-only
   (load-for (struct sys:param-parser-base "param")))
 
+(defstruct usr:compile-opts ()
+  usr:shadow-fun
+  usr:shadow-var
+  usr:shadow-cross)
+
+(defsymacro %warning-syms% '(usr:shadow-fun usr:shadow-var usr:shadow-cross))
+
+(defvar usr:*compile-opts* (new compile-opts))
+
+(defmacro when-opt (compile-opt . forms)
+  (with-gensyms (optval)
+    ^(whenlet ((,optval *compile-opts*.,compile-opt))
+       (macrolet ((diag (. args)
+                    ^(opt-controlled-diag ,',optval ,*args)))
+         ,*forms))))
+
+(defun opt-controlled-diag (optval . args)
+  (caseq optval
+    (:error (compile-error . args))
+    (:warn (compile-warning . args))))
+
 (defstruct (frag oreg code : fvars ffuns pars) nil
   oreg
   code
@@ -115,11 +136,21 @@
   (:method extend-var (me sym : (loc me.(get-loc)))
     (when (assoc sym me.vb)
       (compile-error me.co.last-form "duplicate variable: ~s" sym))
-    (let ((bn (new vbinding sym sym loc loc env me)))
-      (set me.vb (acons sym bn me.vb))
-      bn))
+    me.(extend-var* sym loc))
 
   (:method extend-var* (me sym : (loc me.(get-loc)))
+    (when-opt shadow-var
+      (cond
+        ((and me.up me.(lookup-var sym))
+         (diag me.co.last-form "variable ~s shadows local variable" sym))
+        ((boundp sym)
+         (diag me.co.last-form "variable ~s shadows global variable" sym))))
+    (when-opt shadow-cross
+      (cond
+        ((and me.up me.(lookup-fun sym))
+         (diag me.co.last-form "variable ~s shadows local function" sym))
+        ((fboundp sym)
+         (diag me.co.last-form "variable ~s shadows global function" sym))))
     (let ((bn (new vbinding sym sym loc loc env me)))
       (set me.vb (acons sym bn me.vb))
       bn))
@@ -127,6 +158,18 @@
   (:method extend-fun (me sym)
     (when (assoc sym me.fb)
       (compile-error me.co.last-form "duplicate function ~s" sym))
+    (when-opt shadow-fun
+      (cond
+        ((and me.up me.(lookup-fun sym))
+         (diag me.co.last-form "function ~s shadows local function" sym))
+        ((fboundp sym)
+         (diag me.co.last-form "function ~s shadows global function" sym))))
+    (when-opt shadow-cross
+      (cond
+        ((and me.up me.(lookup-var sym))
+         (diag me.co.last-form "function ~s shadows local variable" sym))
+        ((boundp sym)
+         (diag me.co.last-form "function ~s shadows global variable" sym))))
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
            (bn (new fbinding sym sym loc loc env me)))
       (set me.fb (acons sym bn me.fb))))
@@ -2481,3 +2524,17 @@
                (comp-fun (vm-execute-toplevel vm-desc)))
           (set (symbol-function obj) comp-fun))))
     (@else (error "~s: cannot compile ~s" 'compile obj))))
+
+(defmacro usr:with-compile-opts (:form form . clauses)
+  (with-gensyms (co)
+    ^(let* ((,co (copy *compile-opts*))
+            (*compile-opts* ,co))
+       ,*(collect-each ((cl clauses))
+           (match-case cl
+             ((@(as op @(or nil t :warn :error)) . @syms)
+              (each ((s syms))
+                (unless (member s %warning-syms%)
+                  (compile-error form "~s isn't a recognized warning option" s)))
+              ^(set ,*(mappend (ret ^((qref ,co ,@1) ,op)) syms)))
+             (@(or @(atom) (@(not @(keywordp)) . @nil)) cl)
+             (@else (compile-error form "uncrecognized clause syntax: ~s" cl)))))))
