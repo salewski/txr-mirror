@@ -41,7 +41,7 @@
     caadaar caadadr caaddar caadddr cadaaar cadaadr cadadar cadaddr caddaar
     caddadr cadddar caddddr cdaaaar cdaaadr cdaadar cdaaddr cdadaar cdadadr
     cdaddar cdadddr cddaaar cddaadr cddadar cddaddr cdddaar cdddadr cddddar
-    cdddddr first rest identity typeof atom null false true have
+    cdddddr first rest identity use typeof atom null false true have
     consp listp endp proper-listp length-list second third fourth fifth
     sixth seventh eighth ninth tenth nthcdr nth tailp
     memq memql memqual rmemq rmemql rmemqual countq countql countqual
