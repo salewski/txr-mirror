@@ -252,7 +252,7 @@
 
 (eval-only
   (defmacro compile-in-toplevel (me . body)
-    (with-gensyms (saved-tregs saved-treg-cntr saved-nlev saved-discards)
+    (with-gensyms (saved-tregs saved-treg-cntr saved-discards)
       ^(let* ((,saved-tregs (qref ,me tregs))
               (,saved-treg-cntr (qref ,me treg-cntr))
               (,saved-discards (qref ,me discards)))
@@ -569,6 +569,7 @@
            (t (compile-error form "invalid operator")))))))
 
 (defmeth compiler comp-atom (me oreg form)
+  (use oreg)
   (cond
     ((null form) (new (frag '(t 0) nil)))
     (t (let ((dreg me.(get-dreg form)))
@@ -673,7 +674,7 @@
      me.(compile oreg env (if (safe-const-eval test) then else)))
     ((@(safe-constantp @test) @then)
      me.(compile oreg env (if (safe-const-eval test) then)))
-    ((@(safe-constantp @test))
+    ((@(safe-constantp))
      me.(compile oreg env nil))
     (((@(member @op %test-funs%) @a @b) . @rest)
      me.(compile oreg env ^(ift ,op ,a ,b ,*rest)))
@@ -720,7 +721,7 @@
                   te-frag.fvars
                   te-frag.ffuns))))
     (() me.(compile oreg env nil))
-    (@else (compile-error form "excess argument forms"))))
+    (@nil (compile-error form "excess argument forms"))))
 
 (defmeth compiler comp-ift (me oreg env form)
   (mac-param-bind form (op fun left right : then else) form
@@ -872,8 +873,8 @@
                    nil
                    me.(get-dreg name)))
            (opcode (if (eq op 'return-from) 'ret 'abscsr))
-           (vfrag me.(compile oreg env value))
-           (binfo env.(lookup-block name t)))
+           (vfrag me.(compile oreg env value)))
+      env.(lookup-block name t)
       (new (frag oreg
                  ^(,*vfrag.code
                    (,opcode ,nreg ,vfrag.oreg))
@@ -980,11 +981,11 @@
             (push treg tregs))))
       (let ((ncode (append-each ((insns (conses code)))
                      (match-case insns
-                       (((frame @lev @size) . @rest)
+                       (((frame @lev @size) . @nil)
                         ^((frame ,(pred lev) ,size)))
-                       (((dframe @lev @size) . @rest)
+                       (((dframe @lev @size) . @nil)
                         ^((dframe ,(pred lev) ,size)))
-                       (((@op . @args) . @rest)
+                       (((@op . @args) . @nil)
                         (let ((nargs (mapcar (lambda-match
                                                ((@(as arg (v @lev @idx)))
                                                 (or [trhash arg]
@@ -994,7 +995,7 @@
                                                ((@arg) arg))
                                              args)))
                           ^((,op ,*nargs))))
-                       ((@else . @rest) (list else))))))
+                       ((@else . @nil) (list else))))))
         (dohash (loc treg trhash)
           (let ((vb [vbhash loc]))
             (set vb.loc treg)))
@@ -1007,7 +1008,6 @@
 (defmeth compiler comp-let (me oreg env form)
   (mac-param-bind form (sym raw-vis . body) form
     (let* ((vis (mapcar [iffi atom list] raw-vis))
-           (specials [keep-if special-var-p vis car])
            (lexsyms [remove-if special-var-p [mapcar car vis]])
            allsyms
            (specials-occur [find-if special-var-p vis car])
@@ -1215,7 +1215,7 @@
                                ,lskip)))
                   me.(free-treg btreg)
                   (when (and cspy (plusp frsize) (null cspy.cap-vars))
-                    (when-match ((close @reg @frsize @nreg . @irest) . @crest)
+                    (when-match ((close @reg @frsize @nil . @irest) . @crest)
                                 me.(eliminate-frame code nenv)
                       (set code ^((close ,reg 0 ,me.treg-cntr ,*irest)
                                   ,*crest))))
@@ -1283,7 +1283,6 @@
     ((op . args)
      (let* (ffuns fvars
             (nargs (len args))
-            lastfrag
             (lout (gensym "l"))
             (treg me.(maybe-alloc-treg oreg))
             (code (build
@@ -1291,8 +1290,6 @@
                            (n (range 1)))
                       (let ((islast (eql n nargs)))
                         (let ((frag me.(compile treg env form)))
-                          (when islast
-                            (set lastfrag frag))
                           (pend frag.code
                                 me.(maybe-mov treg frag.oreg))
                           (unless islast
@@ -1359,7 +1356,7 @@
     ((typep @exp @(require @(constantp @type)
                            (null (safe-const-eval type))))
      me.(compile oreg env ^(progn ,exp nil)))
-    (@else
+    (@nil
      me.(comp-fun-form oreg env form))))
 
 (defmeth compiler comp-fun-form (me oreg env form)
@@ -1387,7 +1384,7 @@
           ((not (@(and @(or eq eql equal) @op) @a @b))
            (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
              (return-from comp-fun-form me.(compile oreg env ^(,nop ,a ,b)))))
-          ((@(or append cons list list*) . @args)
+          ((@(or append cons list list*) . @nil)
            (set form (reduce-lisp form)))
           ((@(@bin [%bin-op% @sym]) @a @b)
            (set form (rlcp ^(,bin ,a ,b) form)))
@@ -1518,12 +1515,14 @@
     (let* ((treg me.(alloc-treg))
            (ifrag me.(comp-progn treg env inits))
            (*load-time* nil)
-           (dummy (inc me.loop-nest))
-           (tfrag (if test-p me.(compile treg env test)))
+           (tfrag (progn
+                    (inc me.loop-nest)
+                    (if test-p me.(compile treg env test))))
            (rfrag me.(comp-progn oreg env rets))
            (nfrag me.(comp-progn treg env incs))
-           (bfrag me.(comp-progn treg env body))
-           (dummy (dec me.loop-nest))
+           (bfrag (prog1
+                    me.(comp-progn treg env body)
+                    (dec me.loop-nest)))
            (lback (gensym "l"))
            (lskip (gensym "l"))
            (frags (build
@@ -1583,8 +1582,7 @@
 
 (defmeth compiler comp-tree-case (me oreg env form)
   (mac-param-bind form (op obj . cases) form
-    (let* ((ncases (len cases))
-           (nenv (new env up env co me))
+    (let* ((nenv (new env up env co me))
            (obj-immut-var nenv.(extend-var (gensym)))
            (obj-var nenv.(extend-var (gensym)))
            (err-blk (gensym))
@@ -1604,8 +1602,6 @@
                                                  params nil obj-var.sym :
                                                  err-blk
                                                  body))))
-                              (lerrtest (gensym "l"))
-                              (lnext (gensym "l"))
                               (cfrag me.(compile treg nenv src)))
                          (new (frag treg
                                     ^(,*cfrag.code
@@ -1743,7 +1739,7 @@
     ((and) t)
     ((and @a) a)
     ((and @(true-const-p) . @rest) (expand-and ^(and ,*rest)))
-    ((and nil . @rest) nil)
+    ((and nil . @nil) nil)
     ((and @a . @rest) ^(if ,a ,(expand-and ^(and ,*rest))))
     (@else else)))
 
@@ -1755,9 +1751,9 @@
 (defun reduce-or (form)
   (match-case form
     ((or) form)
-    ((or @a) form)
+    ((or @nil) form)
     ((or nil . @rest) (reduce-or ^(or ,*rest)))
-    ((or @(true-const-p @c) . @rest) ^(or ,c))
+    ((or @(true-const-p @c) . @nil) ^(or ,c))
     ((or @a . @rest) ^(or ,a ,*(cdr (reduce-or ^(or ,*rest)))))
     (@else else)))
 
@@ -2224,10 +2220,8 @@
         reduced-form))))
 
 (defun safe-const-eval (form)
-  (let* ((reduced-form (safe-const-reduce form))
-         (ece [%eval-cache% form]))
-    (unless ece.?throws
-      (eval form))))
+  (unless [%eval-cache% form].?throws
+    (eval form)))
 
 (defun safe-constantp (form)
   (if (constantp form)
@@ -2299,7 +2293,7 @@
                \ then defined as vars`)
         (continue ()))))
   (each ((uc (zap *unchecked-calls*)))
-    (when-match (@(as form (@sym . @args)) . @nargs) uc
+    (when-match (@(as form (@sym . @nil)) . @nargs) uc
       (whenlet ((fun (symbol-function sym)))
         (param-check form nargs (get-param-info sym))))))
 
@@ -2540,7 +2534,7 @@
                (vm-desc (compile-toplevel form t))
                (comp-fun (vm-execute-toplevel vm-desc)))
           (set (symbol-function obj) comp-fun))))
-    (@else (error "~s: cannot compile ~s" 'compile obj))))
+    (@else (error "~s: cannot compile ~s" 'compile else))))
 
 (defmacro usr:with-compile-opts (:form form . clauses)
   (with-gensyms (co)
@@ -2554,4 +2548,4 @@
                   (compile-error form "~s isn't a recognized warning option" s)))
               ^(set ,*(mappend (ret ^((qref ,co ,@1) ,op)) syms)))
              (@(or @(atom) (@(not @(keywordp)) . @nil)) cl)
-             (@else (compile-error form "uncrecognized clause syntax: ~s" cl)))))))
+             (@nil (compile-error form "uncrecognized clause syntax: ~s" cl)))))))
