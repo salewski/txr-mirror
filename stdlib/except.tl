@@ -34,7 +34,8 @@
                                      (tree-bind (args-ex . body-ex)
                                                 (sys:expand-params args body
                                                                    e nil form)
-                                       ^(,type (,(gensym) ,*args-ex) ,*body-ex)))
+                                       (rlcp ^(,type (,(gensym) ,*args-ex) ,*body-ex)
+                                             @1)))
                                    catch-clauses)))
     ^(sys:catch ,catch-syms ,try-form nil ,*sys-catch-clauses)))
 

@@ -920,8 +920,9 @@
                (cfrags (collect-each ((cl clauses)
                                       (i (range 1)))
                          (mac-param-bind form (sym params . body) cl
-                           (let* ((cl-src ^(apply (lambda ,params ,*body)
-                                                  ,ex-sym-var ,ex-args-var))
+                           (let* ((cl-src (rlcp-tree ^(apply (lambda ,params ,*body)
+                                                             ,ex-sym-var ,ex-args-var)
+                                                     form))
                                   (cfrag me.(compile oreg nenv (expand cl-src)))
                                   (lskip (gensym "l")))
                              (new (frag oreg
@@ -1550,8 +1551,8 @@
     (with-gensyms (obj-var)
       (let ((expn (expand ^(let ((,obj-var ,obj))
                              ,(expand-bind-mac-params ^',form
-                                                      ^',(rlcp ^(,(car form))
-                                                               form)
+                                                      (rlcp-tree ^'(,(car form))
+                                                                 form)
                                                       params nil
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
@@ -1562,7 +1563,8 @@
       (let ((expn (expand ^(let* ((,obj-var ,obj)
                                   (,form-var ,context))
                              ,(expand-bind-mac-params form-var
-                                                      form-var
+                                                      (rlcp-tree ^'(,(car form))
+                                                                 form)
                                                       params nil
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
@@ -1573,7 +1575,8 @@
       (let ((expn (expand ^(let* ((,obj-var ,obj)
                                   (,form-var ,context))
                              ,(expand-bind-mac-params form-var
-                                                      form-var
+                                                      (rlcp-tree ^'(,(car form))
+                                                                 form)
                                                       params menv
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
@@ -1587,7 +1590,7 @@
            (err-blk (gensym))
            (lout (gensym "l"))
            (ctx-form ^',form)
-           (err-form ^',(rlcp ^(,(car form)) form))
+           (err-form (rlcp-tree ^'(,(car form)) form))
            (treg me.(maybe-alloc-treg oreg))
            (objfrag me.(compile treg env obj))
            (cfrags (collect-each ((c cases)
@@ -2038,8 +2041,9 @@
       (expand-rec params obj-var nil)
       (when stmt
         (push ^(,(gensym) (progn ,*(nreverse stmt))) vars))
-      ^(let* (,*gen-stk ,*(nreverse vars))
-         ,*body))))
+      (rlcp ^(let* (,*gen-stk ,*(nreverse vars))
+               ,*body)
+            err-form))))
 
 (defun expand-defvarl (form)
   (mac-param-bind form (op sym : value) form
@@ -2111,85 +2115,86 @@
                                                (if pars.rest (list pars.rest)))))
                          (or (isecp all-vars fix-arg-iter)
                              (member apply-list-expr all-vars)))))
-        ^(,(if shadow-p 'let 'alet) ,(zip fix-vals fix-arg-iter)
-           (let* ,(build
-                    (if apply-list-expr
-                      (add ^(,al-val ,apply-list-expr)))
-                    (while (and fix-vals pars.req)
-                      (add ^(,(pop pars.req) ,(pop fix-vals)))
-                      (pop fix-arg-iter))
-                    (while (and fix-vals pars.opt)
-                      (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
-                        (add ^(,var-sym ,(car fix-vals)))
-                        (if have-sym
-                          (add ^(,have-sym t)))
-                        (unless (and (safe-constantp (car fix-arg-iter))
-                                     (neq (safe-const-eval (car fix-arg-iter))
-                                          :))
-                          (push (list* var-sym have-sym init-form) check-opts)))
-                      (pop fix-vals)
-                      (pop fix-arg-iter))
-                    (cond
-                      ((and (null pars.req)
-                            (null pars.opt))
-                       (if fix-vals
-                         (if pars.rest
-                           (add ^(,pars.rest
-                                   (list*
-                                     ,*(nthcdr pars.nfix
-                                               ^(,*fix-arg-exprs ,apply-list-expr)))))
-                           (lambda-too-many-args lm-expr))
-                         (cond
-                           ((and pars.rest apply-list-expr)
-                            (add ^(,pars.rest ,al-val)))
-                           (pars.rest
-                             (add ^(,pars.rest nil)))
-                           (apply-list-expr
-                             (add ^(,ign-2 (if ,al-val
-                                             (lambda-excess-apply-list))))))))
-                      ((and fix-vals apply-list-expr)
-                       (lambda-too-many-args lm-expr))
-                      (apply-list-expr
-                        (when pars.req
-                          (add ^(,ign-1 (if (< (len ,al-val) ,(len pars.req))
-                                            (lambda-short-apply-list)))))
-                        (while pars.req
-                          (add ^(,(pop pars.req) (pop ,al-val))))
-                        (while pars.opt
-                          (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
-                            (cond
-                              (have-sym
-                                (add ^(,var-sym (if ,al-val
-                                                  (car ,al-val)
-                                                  ,init-form)))
-                                (add ^(,have-sym (when ,al-val
-                                                   (pop ,al-val)
-                                                   t))))
-                              (t (add ^(,var-sym (if ,al-val
-                                                   (pop ,al-val)
-                                                   ,init-form)))))
-                          (push (list* var-sym have-sym init-form) check-opts)))
-                        (if pars.rest
-                          (add ^(,pars.rest ,al-val))
-                          (add ^(,ign-2 (if ,al-val
-                                          (lambda-excess-apply-list))))))
-                      (pars.req
-                        (lambda-too-few-args lm-expr))
-                      (pars.opt
-                        (while pars.opt
-                          (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
-                            (add ^(,var-sym ,init-form))
-                            (if have-sym
-                              (add ^(,have-sym)))))
-                        (when pars.rest
-                          (add ^(,pars.rest))))))
-             ,*(mapcar (tb ((var-sym have-sym . init-form))
-                         ^(when (eq ,var-sym :)
-                            (set ,var-sym ,init-form)
-                            ,*(if have-sym
-                                ^((set ,have-sym nil)))))
-                       (nreverse check-opts))
-             ,*lm-body))))))
+        (rlcp ^(,(if shadow-p 'let 'alet) ,(zip fix-vals fix-arg-iter)
+                 (let* ,(build
+                          (if apply-list-expr
+                            (add ^(,al-val ,apply-list-expr)))
+                          (while (and fix-vals pars.req)
+                            (add ^(,(pop pars.req) ,(pop fix-vals)))
+                            (pop fix-arg-iter))
+                          (while (and fix-vals pars.opt)
+                            (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                              (add ^(,var-sym ,(car fix-vals)))
+                              (if have-sym
+                                (add ^(,have-sym t)))
+                              (unless (and (safe-constantp (car fix-arg-iter))
+                                           (neq (safe-const-eval (car fix-arg-iter))
+                                                :))
+                                (push (list* var-sym have-sym init-form) check-opts)))
+                            (pop fix-vals)
+                            (pop fix-arg-iter))
+                          (cond
+                            ((and (null pars.req)
+                                  (null pars.opt))
+                             (if fix-vals
+                               (if pars.rest
+                                 (add ^(,pars.rest
+                                         (list*
+                                           ,*(nthcdr pars.nfix
+                                                     ^(,*fix-arg-exprs ,apply-list-expr)))))
+                                 (lambda-too-many-args lm-expr))
+                               (cond
+                                 ((and pars.rest apply-list-expr)
+                                  (add ^(,pars.rest ,al-val)))
+                                 (pars.rest
+                                   (add ^(,pars.rest nil)))
+                                 (apply-list-expr
+                                   (add ^(,ign-2 (if ,al-val
+                                                   (lambda-excess-apply-list))))))))
+                            ((and fix-vals apply-list-expr)
+                             (lambda-too-many-args lm-expr))
+                            (apply-list-expr
+                              (when pars.req
+                                (add ^(,ign-1 (if (< (len ,al-val) ,(len pars.req))
+                                                  (lambda-short-apply-list)))))
+                              (while pars.req
+                                (add ^(,(pop pars.req) (pop ,al-val))))
+                              (while pars.opt
+                                (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                                  (cond
+                                    (have-sym
+                                      (add ^(,var-sym (if ,al-val
+                                                        (car ,al-val)
+                                                        ,init-form)))
+                                      (add ^(,have-sym (when ,al-val
+                                                         (pop ,al-val)
+                                                         t))))
+                                    (t (add ^(,var-sym (if ,al-val
+                                                         (pop ,al-val)
+                                                         ,init-form)))))
+                                (push (list* var-sym have-sym init-form) check-opts)))
+                              (if pars.rest
+                                (add ^(,pars.rest ,al-val))
+                                (add ^(,ign-2 (if ,al-val
+                                                (lambda-excess-apply-list))))))
+                            (pars.req
+                              (lambda-too-few-args lm-expr))
+                            (pars.opt
+                              (while pars.opt
+                                (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                                  (add ^(,var-sym ,init-form))
+                                  (if have-sym
+                                    (add ^(,have-sym)))))
+                              (when pars.rest
+                                (add ^(,pars.rest))))))
+                   ,*(mapcar (tb ((var-sym have-sym . init-form))
+                               ^(when (eq ,var-sym :)
+                                  (set ,var-sym ,init-form)
+                                  ,*(if have-sym
+                                      ^((set ,have-sym nil)))))
+                             (nreverse check-opts))
+                   ,*lm-body))
+              lm-expr)))))
 
 (defun orig-form (form)
   (whilet ((anc (macro-ancestor form)))
