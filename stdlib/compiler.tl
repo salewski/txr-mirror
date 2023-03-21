@@ -35,9 +35,11 @@
 (defstruct usr:compile-opts ()
   usr:shadow-fun
   usr:shadow-var
-  usr:shadow-cross)
+  usr:shadow-cross
+  usr:unused)
 
-(defsymacro %warning-syms% '(usr:shadow-fun usr:shadow-var usr:shadow-cross))
+(defsymacro %warning-syms% '(usr:shadow-fun usr:shadow-var usr:shadow-cross
+                             usr:unused))
 
 (defvar usr:*compile-opts* (new compile-opts))
 
@@ -92,11 +94,13 @@
       (set me.co me.up.co))
     me.co.(new-env me))
 
-  (:method lookup-var (me sym)
+  (:method lookup-var (me sym : mark-used)
     (condlet
       (((cell (assoc sym me.vb)))
-       (cdr cell))
-      (((up me.up)) up.(lookup-var sym))
+       (let ((bi (cdr cell)))
+         (if mark-used (set bi.used t))
+         bi))
+      (((up me.up)) up.(lookup-var sym mark-used))
       (t nil)))
 
   (:method lookup-fun (me sym : mark-used)
@@ -181,7 +185,13 @@
 
   (:method extend-block (me sym)
     (let* ((bn (new blockinfo sym sym env me)))
-      (set me.bb (acons sym bn me.bb)))))
+      (set me.bb (acons sym bn me.bb))))
+ 
+  (:method unused-check (me form nuance)
+    (when-opt unused
+      (each-match ((@sym . @bn) me.vb)
+        (if (and (symbol-package sym) (not bn.used))
+          (diag form "~a ~s unused" nuance sym))))))
 
 (defstruct closure-spy ()
   env
@@ -565,7 +575,7 @@
          (new (frag dreg nil))))))
 
 (defmeth compiler comp-var (me oreg env sym)
-  (let ((vbin env.(lookup-var sym)))
+  (let ((vbin env.(lookup-var sym t)))
     (cond
       (vbin
         (each ((spy me.access-spies))
@@ -1056,6 +1066,7 @@
             (set code me.(eliminate-frame [code 1..-1] nenv)))
           (when treg
             me.(free-treg treg))
+          nenv.(unused-check form "variable")
           (new (frag boreg
                      code
                      (uni (diff bfrag.fvars allsyms) fvars)
@@ -1207,6 +1218,7 @@
                                 me.(eliminate-frame code nenv)
                       (set code ^((close ,reg 0 ,me.treg-cntr ,*irest)
                                   ,*crest))))
+                  nenv.(unused-check form "parameter")
                   (new (frag oreg code
                              (uni fvars (diff bfrag.fvars lexsyms))
                              (uni [reduce-left uni ifrags nil .ffuns]
