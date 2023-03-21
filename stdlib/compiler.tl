@@ -53,7 +53,7 @@
 (defun opt-controlled-diag (optval . args)
   (caseq optval
     (:error (compile-error . args))
-    (:warn (compile-warning . args))))
+    ((t :warn) (compile-warning . args))))
 
 (defstruct (frag oreg code : fvars ffuns pars) nil
   oreg
