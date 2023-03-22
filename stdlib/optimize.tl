@@ -42,13 +42,14 @@
     nojoin
 
     (:method print (bl stream pretty-p)
-       (put-string "#S" stream)
-       (print ^(basic-block live ,bl.live
-                            label ,bl.label
-                            insns ,bl.insns
-                            links ,(mapcar .label bl.links)
-                            rlinks ,(mapcar .label bl.rlinks)
-                            next ,bl.next.?label) stream)))
+      (use pretty-p)
+      (put-string "#S" stream)
+      (print ^(basic-block live ,bl.live
+                           label ,bl.label
+                           insns ,bl.insns
+                           links ,(mapcar .label bl.links)
+                           rlinks ,(mapcar .label bl.rlinks)
+                           next ,bl.next.?label) stream)))
 
   (defstruct (basic-blocks insns lt-dregs symvec) nil
     insns
@@ -207,7 +208,7 @@
                     (refs li insn reg))
                    ((@(or apply call) @def . @refs)
                     (def-ref li insn def . refs))
-                   ((@(or gapply gcall) @def @fidx . @refs)
+                   ((@(or gapply gcall) @def @nil . @refs)
                     (def-ref li insn def . refs))
                    ((mov @def @ref)
                     (def-ref li insn def ref))
@@ -238,7 +239,7 @@
                         getvb getfb getl1b getlx getf setl1 setlx bindv close)
                        (error `wrongly handled @insn instruction`))
                       (t (set [bb.li-hash insn] li))))
-                   (@else (set [bb.li-hash insn] li)))))))
+                   (@else (set [bb.li-hash else] li)))))))
     (let ((li (liveness bl.insns)))
       (set bl.used li.used
            bl.defined li.defined))))
@@ -257,7 +258,7 @@
                         (clear-mask live lif.defined)
                         (set-mask lif.used live)
                         live))
-                     (else live)))
+                     (t live)))
                  (visit (bl)
                    (unless [visited bl]
                      (set [visited bl] t)
@@ -285,7 +286,7 @@
     (while* (nequal ninsn insn)
       (set insn ninsn
            ninsn (match-case insn
-                   (@(require (if @(as reg (d @dn)) @jlabel)
+                   (@(require (if @(as reg (d @nil)) @nil)
                               (not (memqual reg bb.lt-dregs)))
                     nil)
                    ((if (t 0) @jlabel)
@@ -296,7 +297,7 @@
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(jmp ,jjlabel))
-                        (@jelse insn))))
+                        (@nil insn))))
                    ((if @reg @jlabel)
                     (let* ((jbl [bb.hash jlabel]))
                       (match-case jbl.insns
@@ -307,13 +308,13 @@
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(if ,reg ,jjlabel))
-                        ((@jlabel
-                           (ifq @reg (t 0) @jjlabel) . @nil)
+                        ((@nil
+                           (ifq @reg (t 0) @nil) . @nil)
                          (let ((xbl jbl.next))
                            (if xbl
                              ^(if ,reg ,xbl.label)
                              insn)))
-                        (@jelse insn))))
+                        (@nil insn))))
                    ((ifq @reg @creg @jlabel)
                     (let ((jbl [bb.hash jlabel]))
                       (match-case jbl.insns
@@ -322,23 +323,22 @@
                                 @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(ifq ,reg ,creg ,jjlabel))
                         ((@(require @jlabel (equal creg '(t 0)))
-                           (if @reg
-                                @(and @jjlabel @(not @jlabel))) . @nil)
+                           (if @reg @(not @jlabel)) . @nil)
                          (let ((xbl jbl.next))
                            (if xbl
                              ^(ifq ,reg ,creg ,xbl.label)
                              insn)))
-                        ((@jlabel
+                        ((@nil
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(ifq ,reg ,creg ,jjlabel))
-                        (@jelse insn))))
+                        (@nil insn))))
                    ((close @reg @frsize @ntregs @jlabel . @cargs)
                     (let ((jbl [bb.hash jlabel]))
                       (match-case jbl.insns
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(close ,reg ,frsize ,ntregs ,jjlabel ,*cargs))
-                        (@jelse insn))))
+                        (@nil insn))))
                    (@else else))))
     (cond
       ((null ninsn) (ldiff code tail))
@@ -389,7 +389,7 @@
         (set bb.recalc t)
         (labels ((rename (insns n dst src)
                    (tree-case insns
-                     ((fi . re)
+                     ((fi . t)
                       (cons (subst-preserve dst src bb [bb.li-hash fi] fi)
                             (rename (cdr insns) n dst src)))
                      (else else))))
@@ -402,7 +402,7 @@
        (set bb.recalc t)
        ^(,(car insns) ,*rest))
       ;; frame reduction
-      (((@(or frame dframe) @lev @size)
+      (((@(or frame dframe) @lev @nil)
         (@(or call gcall mov)
           . @(require @(coll (v @vlev @nil))
                       (none vlev (op eql (ppred lev)))))
@@ -413,7 +413,7 @@
        (let* ((jbl [bb.hash jlabel])
               (jinsns jbl.insns))
          (match-case jinsns
-           ((@jlabel
+           ((@nil
               (end (t @reg)) . @jrest)
             (let* ((ybl bl.next)
                    (xbl (if ybl
@@ -429,16 +429,16 @@
                   (set bb.links (list ybl xbl))
                   ^((if (t ,reg) ,xbl.label)))
                 (t insns))))
-           (@jelse insns))))
-      (@(require ((if @(as reg (d @dn)) @jlabel) . @nil)
+           (@nil insns))))
+      (@(require ((if @(as reg (d @nil)) @nil) . @nil)
                  (not (memqual reg bb.lt-dregs)))
         (push bl bb.tryjoin)
         (push bl bb.rescan)
         (pushnew bl.next bb.rescan)
         (set bb.recalc t)
         nil)
-      (@(require @(or ((@(or ifq ifql) @(as reg (d @dn)) (t 0) @jlabel) . @nil)
-                      ((@(or ifq ifql) (t 0) @(as reg (d @dn)) @jlabel) . @nil))
+      (@(require @(or ((@(or ifq ifql) @(as reg (d @nil)) (t 0) @jlabel) . @nil)
+                      ((@(or ifq ifql) (t 0) @(as reg (d @nil)) @jlabel) . @nil))
                  (not (memqual reg bb.lt-dregs)))
         (pushnew bl.next bb.rescan)
         (set bb.recalc t
@@ -469,14 +469,14 @@
                          ^(,(car jinsns)))
                         ((@nil (jend @nil) . @nil)
                          ^(,(car jinsns) ,(cadr jinsns)))
-                        (@else insns))))
+                        (@nil insns))))
          (when (neq insns oinsns)
            (pushnew bl bb.rescan)
            (set bb.recalc t
                 bl.next nil
                 bl.links nil))
          oinsns))
-      (@else insns))))
+      (@nil insns))))
 
 (defmeth basic-blocks peephole (bb)
   (each ((bl bb.list))
@@ -501,27 +501,6 @@
 (defmeth basic-blocks thread-jumps (bb)
   (each ((bl bb.list))
     (set bl.insns bb.(thread-jumps-block bl.insns))))
-
-(defmeth basic-blocks check-bypass-empty (bb bl nx)
-  (unless (cdr bl.insns)
-    (upd nx.rlinks (remq bl))
-    (each ((pb bl.rlinks))
-      (if (eq pb.next bl)
-        (set pb.next nx))
-      (upd pb.links (subst bl nx))
-      (upd pb.insns (mapcar [iffi consp (op subst bl.label nx.label)]))
-      (push pb nx.rlinks))
-    bl))
-
-(defmeth basic-blocks elim-next-jump (bb bl nx)
-  (let* ((tail (last bl.insns))
-         (linsn (car tail)))
-    (match-case linsn
-      (@(or (jmp @jlabel)
-            (if @nil @jlabel)
-            (@(or ifq ifql) @nil @nil @jlabel))
-       (when (eql nx.label jlabel)
-         (set bl.insns (butlast bl.insns)))))))
 
 (defmeth basic-blocks join-blocks (bb)
   (labels ((joinbl (list)
@@ -557,7 +536,7 @@
     (let (flg)
       (each ((bl bb.list)
              (nx (cdr bb.list)))
-        (when bb.(check-bypass-empty bl nx)
+        (when bl.(check-bypass-empty nx)
           (set flg t)
           (del [visited bl])))
       (if flg
@@ -566,8 +545,8 @@
       (let (rep)
         (each ((bl bb.list)
                (nx (cdr bb.list)))
-          bb.(elim-next-jump bl nx)
-          (when bb.(check-bypass-empty bl nx)
+          bl.(elim-next-jump nx)
+          (when bl.(check-bypass-empty nx)
             (set rep t)
             (del [visited bl])))
         (if rep
@@ -619,13 +598,13 @@
          ^((ifq ,reg (t 0) ,lab3)
            ,lab1
            ,*rest))))
-    (((mov (t @tn) (d @dn))
+    (((mov (t @tn) (d @nil))
       (jmp @lab3)
-      @lab2
+      @nil
       (mov (t @tn) (t 0))
       @(symbolp @lab3)
       (ifq (t @tn) (t 0) @lab4)
-      . @rest)
+      . @nil)
      ^(,(car insns)
        (jmp ,lab4)
        ,*(cddr insns)))
@@ -633,9 +612,9 @@
       (mov (t @tn) (t 0))
       @lab2
       (ifq (t @tn) (t 0) @lab4)
-      @(symbolp @lab3)
-      (gcall (t @tn) . @grest)
-      . @rest)
+      @(symbolp)
+      (gcall (t @tn) . @nil)
+      . @nil)
      ^(,lab2
        (ifq (t ,tn) (t 0) ,lab4)
        ,lab1
@@ -686,14 +665,14 @@
       (match-case insn
         ((close @reg . @nil)
          (add-treg reg))
-        ((@op . @args)
+        ((@nil . @args)
          (add-tregs args))))))
 
 (defmeth basic-block apply-treg-compacting-map (bl map)
   (labels ((fix (arg) [map arg arg])
            (fix-tregs (args) [mapcar fix args]))
     (iflet ((cl bl.closer))
-      (match ((close @reg @frsize @ntregs . @rest)) (last cl.insns)
+      (match ((close @reg @frsize @nil . @rest)) (last cl.insns)
         (set (last cl.insns)
              ^((close ,reg ,frsize ,(len map) ,*(fix-tregs rest))))))
     (set bl.insns (collect-each ((insn bl.insns))
@@ -703,6 +682,27 @@
                       ((@op . @args)
                        ^(,op ,*(fix-tregs args)))
                       (@else else))))))
+
+(defmeth basic-block check-bypass-empty (bl nx)
+  (unless (cdr bl.insns)
+    (upd nx.rlinks (remq bl))
+    (each ((pb bl.rlinks))
+      (if (eq pb.next bl)
+        (set pb.next nx))
+      (upd pb.links (subst bl nx))
+      (upd pb.insns (mapcar [iffi consp (op subst bl.label nx.label)]))
+      (push pb nx.rlinks))
+    bl))
+
+(defmeth basic-block elim-next-jump (bl nx)
+  (let* ((tail (last bl.insns))
+         (linsn (car tail)))
+    (match-case linsn
+      (@(or (jmp @jlabel)
+            (if @nil @jlabel)
+            (@(or ifq ifql) @nil @nil @jlabel))
+       (when (eql nx.label jlabel)
+         (set bl.insns (butlast bl.insns)))))))
 
 (defmeth basic-blocks compact-tregs (bb)
   bb.(identify-closures)
@@ -728,7 +728,7 @@
      (set insns (mapcar [iffi listp (op subst label1 label0)]
                         (remq label1 insns)))
      (cons label0 rest))
-    (@else tail))
+    (@nil tail))
   insns)
 
 (defun early-peephole (code)
