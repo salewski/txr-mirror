@@ -47,7 +47,7 @@
     memq memql memqual rmemq rmemql rmemqual countq countql countqual
     posq posql posqual rposq rposql rposqual eq eql equal meq meql mequal
     neq neql nequal max min clamp bracket take drop if or and progn
-    prog1 prog2 nilf tf display-width sys:fmt-simple
+    prog1 prog2 nilf ignore tf display-width sys:fmt-simple
     sys:fmt-flex sys:fmt-join packagep
     symbolp keywordp bindable stringp length-str
     coded-length cmp-str string-lt str= str< str> str<= str>= int-str

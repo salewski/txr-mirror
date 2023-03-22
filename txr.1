@@ -58769,10 +58769,11 @@ with both optional arguments omitted:
   [iff a]  <--->  [iff a identity nilf]  <--->  a
 .brev
 
-.coNP Functions @ tf and @ nilf
+.coNP Functions @, tf @ nilf and @ ignore
 .synb
 .mets (tf << arg *)
 .mets (nilf << arg *)
+.mets (ignore << arg *)
 .syne
 .desc
 The
@@ -58788,6 +58789,11 @@ and the
 .code nilf
 function returns
 .codn nil .
+
+The
+.code ignore
+function is a synonym of
+.codn nilf .
 
 Note: the following equivalences hold between these functions and the
 .code ret
@@ -58812,6 +58818,11 @@ and
 .verb
   [mapcar (ret nil) list] <--> [mapcar nilf list]
 .brev
+
+Note: the
+.code ignore
+function can be used for suppressing unused variable
+warnings.
 
 .TP* Example:
 
@@ -58850,6 +58861,16 @@ is even, then iff passes it into the
 .code nilf
 function, which ignores the value and returns
 .codn nil .
+
+The following example shows how
+.code ignore
+may be used to suppress compiler warnings about unused parameters
+or other variables:
+
+.verb
+  (defun (x y)
+    (ignore x y))
+.brev
 
 .coNP Function @ retf
 .synb

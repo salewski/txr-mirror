@@ -7160,7 +7160,12 @@ void eval_init(void)
   reg_fun(intern(lit("callf"), user_package), func_n1v(callf));
   reg_fun(intern(lit("mapf"), user_package), func_n1v(mapf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
-  reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
+
+  {
+    val nilf_f = func_n0v(nilf);
+    reg_fun(intern(lit("nilf"), user_package), nilf_f);
+    reg_fun(intern(lit("ignore"), user_package), nilf_f);
+  }
 
   reg_fun(intern(lit("print"), user_package), func_n3o(print, 1));
   reg_fun(intern(lit("pprint"), user_package), func_n2o(pprint, 1));
