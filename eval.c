@@ -118,6 +118,7 @@ val iter_item_f, iter_step_f;
 
 val origin_hash;
 
+static val unused_arg_s;
 static val const_foldable_hash;
 
 val make_env(val vbindings, val fbindings, val up_env)
@@ -4414,7 +4415,7 @@ static val me_ignerr(val form, val menv)
 {
   (void) menv;
   return list(catch_s, cons(progn_s, rest(form)),
-              list(error_s, error_s, nao), nao);
+              list(error_s, unused_arg_s, nao), nao);
 }
 
 static val me_whilet(val form, val env)
@@ -6635,7 +6636,8 @@ void eval_init(void)
           &op_table, &pm_table, &last_form_evaled,
           &call_f, &iter_begin_f, &iter_from_binding_f, &iter_more_f,
           &iter_item_f, &iter_step_f,
-          &unbound_s, &origin_hash, &const_foldable_hash, convert(val *, 0));
+          &unbound_s, &origin_hash, &const_foldable_hash,
+          &unused_arg_s, convert(val *, 0));
   top_fb = make_hash(hash_weak_and, nil);
   top_vb = make_hash(hash_weak_and, nil);
   top_mb = make_hash(hash_weak_and, nil);
@@ -7520,6 +7522,11 @@ void eval_init(void)
 
   atexit(run_load_hooks_atexit);
   autoload_init();
+}
+
+void eval_late_init(void)
+{
+  unused_arg_s = gensym(lit("unused-arg"));
 }
 
 void eval_compat_fixup(int compat_ver)

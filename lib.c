@@ -14935,6 +14935,7 @@ void init(val *stack_bottom)
   parse_init();
   uw_late_init();
   less_tab_init();
+  eval_late_init();
 #if HAVE_SYSLOG
   syslog_init();
 #endif
