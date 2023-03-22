@@ -43,6 +43,7 @@
                  n syntax)))
 
   (:method backpatch (me asm at offs)
+    (ignore asm at offs)
     (asm-error `@{me.symbol} doesn't backpatch`)))
 
 (compile-only
@@ -217,9 +218,9 @@
              (q me.(cur-pos)))
         (inc c)
         me.(set-pos p)
-        (format t "~,5d: ~,08X ~a\n" (trunc p 4) me.(get-word) dis-txt)
+        (format stream "~,5d: ~,08X ~a\n" (trunc p 4) me.(get-word) dis-txt)
         (while (< (inc p 4) q)
-          (format t "~,5d: ~,08X\n" (trunc p 4) me.(get-word)))
+          (format stream "~,5d: ~,08X\n" (trunc p 4) me.(get-word)))
         me.(set-pos q)
         (set p q)))
     c))
@@ -317,13 +318,15 @@
 
 (defstruct backpatch-low16 nil
   (:method backpatch (me asm at offs)
-    (tree-bind (hi lo) asm.(get-pair)
+    (ignore me)
+    (tree-bind (hi t) asm.(get-pair)
       asm.(set-pos at)
       asm.(put-pair hi offs))))
 
 (defstruct backpatch-high16 nil
   (:method backpatch (me asm at offs)
-    (tree-bind (hi lo) asm.(get-pair)
+    (ignore me)
+    (tree-bind (t lo) asm.(get-pair)
       asm.(set-pos at)
       asm.(put-pair offs lo))))
 
@@ -352,11 +355,13 @@
 
 (defopcode op-label label nil
   (:method asm (me asm syntax)
+    (ignore me)
     (unless (is-label syntax)
       asm.(synerr "label must be keyword or gensym"))
     asm.(define-label syntax))
 
-  (:method dis (me asm extension operand)))
+  (:method dis (me asm extension operand)
+    (ignore me asm extension operand)))
 
 (defopcode op-noop noop auto
   (:method asm (me asm syntax)
@@ -364,6 +369,7 @@
     asm.(put-insn me.code 0 0))
 
   (:method dis (me asm extension operand)
+    (ignore asm extension operand)
     ^(,me.symbol)))
 
 (defopcode op-frame frame auto
@@ -378,6 +384,7 @@
                    %lev-size%))
       asm.(put-insn me.code lev size)))
   (:method dis (me asm lev size)
+    (ignore asm)
     ^(,me.symbol ,lev ,size)))
 
 (defopcode-derived op-sframe sframe auto op-frame)
@@ -390,6 +397,7 @@
     (let ((res (car asm.(parse-args me syntax '(r)))))
       asm.(put-insn me.code 0 res)))
   (:method dis (me asm extension res)
+    (ignore asm extension)
     ^(,me.symbol ,(operand-to-sym res))))
 
 (defopcode-alias jend end)
@@ -460,6 +468,7 @@
       asm.(put-insn me.code (enc-small-op src) dst)))
 
   (:method dis (me asm src dst)
+    (ignore asm)
     ^(,me.symbol ,(operand-to-sym dst) ,(small-op-to-sym src))))
 
 (defopcode op-movsr movsr auto
@@ -469,6 +478,7 @@
       asm.(put-insn me.code (enc-small-op dst) src)))
 
   (:method dis (me asm dst src)
+    (ignore asm)
     ^(,me.symbol ,(small-op-to-sym dst) ,(operand-to-sym src))))
 
 (defopcode op-movrr movrr auto
@@ -479,6 +489,7 @@
       asm.(put-pair 0 src)))
 
   (:method dis (me asm extension dst)
+    (ignore asm extension)
     (let ((src (cadr asm.(get-pair))))
       ^(,me.symbol ,(operand-to-sym dst) ,(operand-to-sym src)))))
 
@@ -498,9 +509,11 @@
       asm.(put-insn me.code (ash dst -16) (logtrunc dst 16))))
 
   (:method backpatch (me asm at dst)
+    (ignore at)
     asm.(put-insn me.code (ash dst -16) (logtrunc dst 16)))
 
   (:method dis (me asm high16 low16)
+    (ignore asm)
     ^(,me.symbol ,(logior (ash high16 16) low16))))
 
 (defopcode op-if if auto
@@ -511,9 +524,11 @@
       asm.(put-pair 0 reg)))
 
   (:method backpatch (me asm at dst)
+    (ignore at)
     asm.(put-insn me.code (ash dst -16) (logtrunc dst 16)))
 
   (:method dis (me asm high16 low16)
+    (ignore asm)
     (let ((dst (logior (ash high16 16) low16))
           (reg (cadr asm.(get-pair))))
       ^(,me.symbol ,(operand-to-sym reg) ,dst))))
@@ -526,6 +541,7 @@
       asm.(put-pair lreg rreg)))
 
   (:method backpatch (me asm at dst)
+    (ignore at)
     asm.(put-insn me.code (ash dst -16) (logtrunc dst 16)))
 
   (:method dis (me asm high16 low16)
@@ -570,6 +586,7 @@
       asm.(put-pair outreg blname)))
 
   (:method backpatch (me asm at exitpt)
+    (ignore at)
     asm.(put-insn me.code (ash exitpt -16) (logtrunc exitpt 16)))
 
  (:method dis (me asm high16 low16)
@@ -585,6 +602,7 @@
       asm.(put-insn me.code (enc-small-op name) reg)))
 
   (:method dis (me asm name reg)
+    (ignore asm)
     ^(,me.symbol ,(small-op-to-sym name) ,(operand-to-sym reg))))
 
 (defopcode op-retrs retrs auto
@@ -594,6 +612,7 @@
       asm.(put-insn me.code (enc-small-op reg) name)))
 
   (:method dis (me asm reg name)
+    (ignore asm)
     ^(,me.symbol ,(operand-to-sym name) ,(small-op-to-sym reg))))
 
 (defopcode op-retrr retrr auto
@@ -604,6 +623,7 @@
       asm.(put-pair 0 name)))
 
   (:method dis (me asm extension reg)
+    (ignore asm extension)
     (let ((name (cadr asm.(get-pair))))
       ^(,me.symbol ,(operand-to-sym name) ,(operand-to-sym reg)))))
 
@@ -629,9 +649,11 @@
       asm.(put-pair desc catch-syms)))
 
   (:method backpatch (me asm at dst)
+    (ignore at)
     asm.(put-insn me.code (ash dst -16) (logtrunc dst 16)))
 
  (:method dis (me asm high16 low16)
+   (ignore asm)
    (let ((dst (logior (ash high16 16) low16)))
      (tree-bind (sym args) asm.(get-pair)
        (tree-bind (desc catch-syms) asm.(get-pair)
@@ -647,8 +669,9 @@
       asm.(put-pair fun handle-syms)))
 
  (:method dis (me asm extension fun)
-     (let ((handle-syms (cadr asm.(get-pair))))
-       ^(,me.symbol ,(operand-to-sym fun) ,(operand-to-sym handle-syms)))))
+   (ignore asm extension)
+   (let ((handle-syms (cadr asm.(get-pair))))
+     ^(,me.symbol ,(operand-to-sym fun) ,(operand-to-sym handle-syms)))))
 
 (defopcode op-getv getv auto
   (:method asm (me asm syntax)
@@ -659,6 +682,7 @@
         (set name 1))
       asm.(put-insn me.code (enc-small-op name) reg)))
   (:method dis (me asm name reg)
+    (ignore asm)
     ^(,me.symbol ,(operand-to-sym reg) ,(small-op-to-sym name))))
 
 (defopcode-derived op-oldgetf oldgetf auto op-getv)
@@ -680,6 +704,7 @@
         (set name 1))
       asm.(put-insn me.code (enc-small-op name) reg)))
   (:method dis (me asm name reg)
+    (ignore asm)
     ^(,me.symbol ,(operand-to-sym reg) ,(small-op-to-sym name))))
 
 (defopcode-derived op-setl1 setl1 auto op-setv)
@@ -706,14 +731,16 @@
             asm.(put-pair y x))))))
 
   (:method backpatch (me asm at dst)
+    (ignore at)
     asm.(put-insn me.code (ash dst -16) (logtrunc dst 16)))
 
   (:method dis (me asm high16 low16)
+    (ignore asm)
     (let ((dst (logior (ash high16 16) low16)))
       (tree-bind (vari-frsize reg) asm.(get-pair)
         (let ((vari (bit vari-frsize %lev-bits%)))
           (tree-bind (req fix) asm.(get-pair)
-            (tree-bind (ign ntreg) asm.(get-pair)
+            (tree-bind (t ntreg) asm.(get-pair)
               (build
                 (add me.symbol (operand-to-sym reg)
                      (logtrunc vari-frsize %lev-bits%)
@@ -737,6 +764,7 @@
         (t asm.(put-insn me.code (enc-small-op 1) idx)
            asm.(asm-one ^(mov ,(operand-to-exp dst) t1))))))
   (:method dis (me asm dst idx)
+    (ignore asm)
     ^(,me.symbol ,(small-op-to-sym dst) ,idx)))
 
 (defopcode op-setlx setlx auto
@@ -749,6 +777,7 @@
         (t asm.(asm-one ^(mov t1 ,(operand-to-exp src)))
            asm.(put-insn me.code (enc-small-op 1) idx)))))
   (:method dis (me asm src idx)
+    (ignore asm)
     ^(,me.symbol ,(small-op-to-sym src) ,idx)))
 
 (defopcode-derived op-getf getf auto op-getlx)
