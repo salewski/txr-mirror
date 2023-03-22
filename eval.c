@@ -1072,6 +1072,8 @@ static val expand_opt_params_rec(val params, val menv,
 {
   if (!params) {
     return params;
+  } else if (params == t && macro_style_p) {
+    return params;
   } else if (atom(params)) {
     if (!bindable(params))
       not_bindable_error(form, params);
@@ -1091,13 +1093,13 @@ static val expand_opt_params_rec(val params, val menv,
         if (pair == env_k && !bindable(cadr(params)))
           expand_error(form, lit("~s: ~s parameter requires bindable symbol"),
                        car(form), pair, nao);
-      } else if (!bindable(pair)) {
+      } else if (!bindable(pair) && (!macro_style_p || pair != t)) {
         if (pair == colon_k)
           expand_error(form, lit("~s: multiple colons in parameter list"),
                        car(form), nao);
         not_bindable_error(form, pair);
-      } else {
-        new_menv = make_var_shadowing_env(menv, pair);
+      } else if (pair != t) {
+          new_menv = make_var_shadowing_env(menv, pair);
       }
 
       {
@@ -1130,7 +1132,7 @@ static val expand_opt_params_rec(val params, val menv,
                      car(form), pair, cdddr(pair), nao);
 
       if (opt_sym) {
-        if (!bindable(opt_sym))
+        if (!bindable(opt_sym) && (!macro_style_p || opt_sym != t))
           not_bindable_error(form, opt_sym);
       }
 
@@ -1147,7 +1149,7 @@ static val expand_params_rec(val params, val menv,
   if (!params) {
     return params;
   } else if (atom(params)) {
-    if (!bindable(params))
+    if (!bindable(params) && (!macro_style_p || params != t))
       not_bindable_error(form, params);
     return params;
   } else if (car(params) == colon_k) {
@@ -1175,7 +1177,9 @@ static val expand_params_rec(val params, val menv,
         expand_error(form, lit("~s: ~s parameter requires bindable symbol"),
                      car(form), param, nao);
       param_ex = param;
-    } else if (bindable(param) || (macro_style_p && listp(param))) {
+    } else if (bindable(param) || (macro_style_p &&
+                                   (listp(param) || param == t)))
+    {
       param_ex = expand_params_rec(param, menv, t, form);
       new_menv = make_var_shadowing_env(menv, get_param_syms(param_ex));
     } else {
@@ -1400,7 +1404,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
 
       if (atom(nparam)) {
         lex_or_dyn_bind(&dyn_env_made, new_env, nparam, bform);
-      } else {
+      } else if (param != t) {
         new_env = bind_macro_params(new_env, menv, nparam, bform,
                                     loose_p, ctx_form, error_fn);
         if (!new_env)
@@ -1424,7 +1428,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
 
       if (!listp(param)) {
         lex_or_dyn_bind(&dyn_env_made, new_env, param, car(form));
-      } else {
+      } else if (param != t) {
         if (optargs) {
           val nparam = pop(&param);
           val initform = pop(&param);
@@ -1467,7 +1471,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
 noarg:
     if (!listp(param)) {
       lex_or_dyn_bind(&dyn_env_made, new_env, param, nil);
-    } else {
+    } else if (param != t) {
       val nparam = pop(&param);
       val initform = pop(&param);
       val presentsym = pop(&param);
@@ -1487,6 +1491,9 @@ noarg:
 
     params = cdr(params);
   }
+
+  if (params == t)
+    goto out;
 
   if (params) {
     lex_or_dyn_bind(&dyn_env_made, new_env, params, form);

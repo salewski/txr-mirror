@@ -39715,6 +39715,21 @@ and
 .codn "(d e)" .
 These compounds express nested macro parameter lists.
 
+Starting in \*(TX 285, the symbol
+.code t
+can be used in a macro parameter list in place of a parameter name.
+This indicates that an object is expected at that position in the
+corresponding structure, but no variable will be bound.
+For completeness, the
+.code t
+symbol may also be used for a presence-indicating variable.
+When the name of an optional parameter is specified as
+.codn t ,
+and the corresponding structure is missing, the
+.meta init-val
+expression, if present, is still evaluated under the same
+circumstances as it would if a variable were present.
+
 Nested macro parameter lists recursively match the corresponding structure
 in the argument object.  For instance if a simple argument would capture
 the structure
@@ -39845,6 +39860,11 @@ This parameter is also supported in
 and binds to the entire
 .code tree-bind
 form.
+
+ANSI CL doesn't support the convention that the
+.code t
+symbol may appear instead of a parameter symbol to
+suppress the binding of a variable.
 
 .NP* The Macro Expansion Process
 

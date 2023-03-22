@@ -1945,17 +1945,19 @@
                               (push ^(when ,check-var ,form) stmt)
                               (push form stmt))))
                         (emit-var (sym init-form)
-                          (push (if stmt
-                                  (prog1
-                                    ^(,sym (progn ,*(nreverse stmt)
-                                             ,(if check-var
-                                                ^(when ,check-var ,init-form)
-                                                init-form)))
-                                    (set stmt nil))
-                                  ^(,sym ,(if check-var
-                                            ^(when ,check-var ,init-form)
-                                            init-form)))
-                            vars)))
+                          (if (eq sym t)
+                            (emit-stmt init-form)
+                            (push (if stmt
+                                    (prog1
+                                      ^(,sym (progn ,*(nreverse stmt)
+                                               ,(if check-var
+                                                  ^(when ,check-var ,init-form)
+                                                  init-form)))
+                                      (set stmt nil))
+                                    ^(,sym ,(if check-var
+                                              ^(when ,check-var ,init-form)
+                                              init-form)))
+                              vars))))
                  (let ((pars (new (mac-param-parser par-syntax ctx-form))))
                    (progn
                      (cond
@@ -1989,9 +1991,9 @@
                              (emit-stmt ^(set ,obj-var (cdr ,obj-var)))
                              (expand-rec p curs check-var)
                              (put-gen curs)))
-                         (t
-                           (emit-var p ^(car ,obj-var))
-                           (emit-stmt ^(set ,obj-var (cdr ,obj-var))))))
+                         (t (if (neq p t)
+                              (emit-var p ^(car ,obj-var)))
+                            (emit-stmt ^(set ,obj-var (cdr ,obj-var))))))
                      (each ((o pars.opt))
                        (tree-bind (p : init-form pres-p) o
                          (cond
@@ -2019,13 +2021,16 @@
                                  (emit-var pres-p
                                            ^(cond
                                               (,obj-var
-                                                (set ,p (car ,obj-var))
+                                                ,(if (neq p t)
+                                                   ^(set ,p (car ,obj-var)))
                                                 (set ,obj-var (cdr ,obj-var))
-                                                ,(if pres-p t))
+                                                t)
                                               (t
-                                                ,(if init-form
-                                                   ^(set ,p ,init-form))
-                                                ,(if pres-p nil)))))
+                                                ,(cond
+                                                   ((and (neq p t) init-form)
+                                                    ^(set ,p ,init-form))
+                                                   (init-form))
+                                                nil))))
                                (t
                                  (emit-var p ^(if ,obj-var
                                                 (prog1
