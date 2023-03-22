@@ -588,7 +588,7 @@
       (t (new (frag oreg ^((getlx ,oreg ,me.(get-sidx sym))) (list sym)))))))
 
 (defmeth compiler comp-setq (me oreg env form)
-  (mac-param-bind form (op sym value) form
+  (mac-param-bind form (t sym value) form
     (let* ((bind env.(lookup-var sym))
            (spec (special-var-p sym))
            (vloc (cond
@@ -610,7 +610,7 @@
                  vfrag.ffuns)))))
 
 (defmeth compiler comp-lisp1-setq (me oreg env form)
-  (mac-param-bind form (op sym val) form
+  (mac-param-bind form (t sym val) form
     (let ((bind env.(lookup-lisp1 sym)))
       (cond
         ((typep bind 'fbinding)
@@ -628,7 +628,7 @@
           me.(compile oreg env ^(sys:setq ,sym ,val)))))))
 
 (defmeth compiler comp-setqf (me oreg env form)
-  (mac-param-bind form (op sym val) form
+  (mac-param-bind form (t sym val) form
     (if env.(lookup-fun sym)
       (compile-error form "assignment to lexical function binding")
       (let ((vfrag me.(compile oreg env val))
@@ -645,15 +645,15 @@
 
 (defmeth compiler comp-cond (me oreg env form)
   (tree-case form
-    ((op) me.(comp-atom oreg nil))
-    ((op (test) . more) me.(compile oreg env ^(or ,test (cond ,*more))))
-    ((op (test . forms) . more) me.(compile oreg env
-                                            ^(if ,test
-                                               (progn ,*forms)
-                                               (cond ,*more))))
-    ((op atom . more)
+    ((t) me.(comp-atom oreg nil))
+    ((t (test) . more) me.(compile oreg env ^(or ,test (cond ,*more))))
+    ((t (test . forms) . more) me.(compile oreg env
+                                           ^(if ,test
+                                              (progn ,*forms)
+                                              (cond ,*more))))
+    ((t t . t)
      (compile-error form "atom in cond syntax; pair expected"))
-    ((op . atom)
+    ((t . t)
      (compile-error form "trailing atom in cond syntax"))))
 
 (defmeth compiler comp-if (me oreg env form)
@@ -724,7 +724,7 @@
     (@nil (compile-error form "excess argument forms"))))
 
 (defmeth compiler comp-ift (me oreg env form)
-  (mac-param-bind form (op fun left right : then else) form
+  (mac-param-bind form (t fun left right : then else) form
     (when (member fun %test-funs-neg%)
       (set fun [%test-inv% fun])
       (swap then else))
@@ -761,7 +761,7 @@
                         (uni th-frag.ffuns el-frag.ffuns))))))))
 
 (defmeth compiler comp-switch (me oreg env form)
-  (mac-param-bind form (op idx-form cases-vec) form
+  (mac-param-bind form (t idx-form cases-vec) form
     (let* ((ncases (len cases-vec))
            (cs (and (plusp ncases) (conses [cases-vec 0])))
            (shared (and cs
@@ -812,7 +812,7 @@
                  (uni ifrag.ffuns [reduce-left uni cfrags nil .ffuns]))))))
 
 (defmeth compiler comp-unwind-protect (me oreg env form)
-  (mac-param-bind form (op prot-form . cleanup-body) form
+  (mac-param-bind form (t prot-form . cleanup-body) form
     (let* ((treg me.(alloc-treg))
            (pfrag me.(compile oreg env prot-form))
            (cfrag me.(comp-progn treg env cleanup-body))
@@ -882,11 +882,11 @@
                  vfrag.ffuns)))))
 
 (defmeth compiler comp-return (me oreg env form)
-  (mac-param-bind form (op : value) form
+  (mac-param-bind form (t : value) form
     me.(comp-return-from oreg env ^(return-from nil ,value))))
 
 (defmeth compiler comp-handler-bind (me oreg env form)
-  (mac-param-bind form (op func-form ex-syms . body) form
+  (mac-param-bind form (t func-form ex-syms . body) form
     (let* ((freg me.(maybe-alloc-treg oreg))
            (ffrag me.(compile freg env func-form))
            (sreg me.(get-dreg ex-syms))
@@ -901,7 +901,7 @@
                  (uni ffrag.ffuns bfrag.ffuns))))))
 
 (defmeth compiler comp-catch (me oreg env form)
-  (mac-param-bind form (op symbols try-expr desc-expr . clauses) form
+  (mac-param-bind form (t symbols try-expr desc-expr . clauses) form
     (if (and (plusp *opt-level*)
              (or (null symbols)
                  (safe-constantp try-expr)))
@@ -974,7 +974,7 @@
           (vlev (ppred env.lev))
           (tregs nil))
       (each ((cell env.vb))
-        (tree-bind (sym . vbind) cell
+        (tree-bind (t . vbind) cell
           (let ((treg me.(alloc-new-treg)))
             (set [trhash vbind.loc] treg)
             (set [vbhash vbind.loc] vbind)
@@ -1116,7 +1116,7 @@
                         (if rec (diff ffuns lexfuns) ffuns))))))))
 
 (defmeth compiler comp-lambda-impl (me oreg env form)
-  (mac-param-bind form (op par-syntax . body) form
+  (mac-param-bind form (t par-syntax . body) form
     (with-access-spy me me.closure-spies
                      spy (new access-spy
                               closure-spies me.closure-spies)
@@ -1166,7 +1166,7 @@
                        (ifrags [mapcar cadr opt-pars])
                        (opt-code (append-each ((op opt-pars)
                                                (ifrg ifrags))
-                                   (tree-bind (var-sym init-form have-sym) op
+                                   (tree-bind (var-sym t have-sym) op
                                      (let ((vbind nenv.(lookup-var var-sym))
                                            (have-bind nenv.(lookup-var have-sym))
                                            (lskip (gensym "l")))
@@ -1244,7 +1244,7 @@
         (t lambda-frag)))))
 
 (defmeth compiler comp-fun (me oreg env form)
-  (mac-param-bind form (op arg) form
+  (mac-param-bind form (t arg) form
     (let ((fbin env.(lookup-fun arg t)))
       (cond
         (fbin (new (frag fbin.loc nil nil (list arg))))
@@ -1278,9 +1278,9 @@
 
 (defmeth compiler comp-or (me oreg env form)
   (tree-case (simplify-or form)
-    ((op) me.(compile oreg env nil))
-    ((op arg) me.(compile oreg env arg))
-    ((op . args)
+    ((t) me.(compile oreg env nil))
+    ((t arg) me.(compile oreg env arg))
+    ((t . args)
      (let* (ffuns fvars
             (nargs (len args))
             (lout (gensym "l"))
@@ -1304,21 +1304,21 @@
 
 (defmeth compiler comp-prog1 (me oreg env form)
   (tree-case form
-    ((prog1 fi . re) (let* ((igreg me.(alloc-discard-treg))
-                            (fireg me.(maybe-alloc-treg oreg))
-                            (fi-frag me.(compile fireg env fi))
-                            (re-frag me.(comp-progn igreg env
-                                                    (append re '(nil)))))
-                       me.(maybe-free-treg fireg oreg)
-                       me.(free-treg igreg)
-                       (new (frag fireg
-                                  (append fi-frag.code
-                                          me.(maybe-mov fireg fi-frag.oreg)
-                                          re-frag.code)
-                                  (uni fi-frag.fvars re-frag.fvars)
-                                  (uni fi-frag.ffuns re-frag.ffuns)))))
-    ((prog1 fi) me.(compile oreg env fi))
-    ((prog1) me.(compile oreg env nil))))
+    ((t fi . re) (let* ((igreg me.(alloc-discard-treg))
+                        (fireg me.(maybe-alloc-treg oreg))
+                        (fi-frag me.(compile fireg env fi))
+                        (re-frag me.(comp-progn igreg env
+                                                (append re '(nil)))))
+                   me.(maybe-free-treg fireg oreg)
+                   me.(free-treg igreg)
+                   (new (frag fireg
+                              (append fi-frag.code
+                                      me.(maybe-mov fireg fi-frag.oreg)
+                                      re-frag.code)
+                              (uni fi-frag.fvars re-frag.fvars)
+                              (uni fi-frag.ffuns re-frag.ffuns)))))
+    ((t fi) me.(compile oreg env fi))
+    ((t) me.(compile oreg env nil))))
 
 (defmeth compiler comp-quasi (me oreg env form)
   (let ((qexp (expand-quasi form)))
@@ -1336,7 +1336,7 @@
                                  (rlcp ^(,op ,*pa) form)))
                          pa))))
          me.(comp-fun-form oreg env (rlcp ^(,op ,*fargs) form))))
-      (else me.(compile oreg env form)))
+      (form me.(compile oreg env form)))
     me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-arith-neg-form (me oreg env form)
@@ -1346,7 +1346,7 @@
             (sform (rlcp ^(,op ,a2 ,a3 ,*args) form)))
        me.(comp-fun-form oreg env
                          (rlcp ^(,nop ,a1 ,sform) form))))
-    (else me.(comp-fun-form oreg env form))))
+    (form me.(comp-fun-form oreg env form))))
 
 (defmeth compiler comp-typep (me oreg env form)
   (match-case form
@@ -1395,7 +1395,7 @@
 
       (when (plusp olev)
         (tree-case form
-          ((sym . args)
+          ((t . t)
            (set form (reduce-constant env form)))))
 
       (when (or (atom form) (special-operator-p (car form)))
@@ -1464,8 +1464,8 @@
                     (lambda me.(comp-inline-lambda oreg env opcode
                                                    (car args) (cdr args)))
                     (t :)))
-                 (arg me.(comp-call oreg env
-                                    (if (eq sym 'usr:apply) 'apply sym) args))))))))))
+                 (t me.(comp-call oreg env
+                                  (if (eq sym 'usr:apply) 'apply sym) args))))))))))
 
 (defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
@@ -1511,7 +1511,7 @@
                                                          nil)))))
 
 (defmeth compiler comp-for (me oreg env form)
-  (mac-param-bind form (op inits (: (test nil test-p) . rets) incs . body) form
+  (mac-param-bind form (t inits (: (test nil test-p) . rets) incs . body) form
     (let* ((treg me.(alloc-treg))
            (ifrag me.(comp-progn treg env inits))
            (*load-time* nil)
@@ -1546,7 +1546,7 @@
                    [reduce-left uni frags nil .ffuns])))))
 
 (defmeth compiler comp-tree-bind (me oreg env form)
-  (tree-bind (op params obj . body) form
+  (tree-bind (t params obj . body) form
     (with-gensyms (obj-var)
       (let ((expn (expand ^(let ((,obj-var ,obj))
                              ,(expand-bind-mac-params ^',form
@@ -1557,7 +1557,7 @@
         me.(compile oreg env expn)))))
 
 (defmeth compiler comp-mac-param-bind (me oreg env form)
-  (mac-param-bind form (op context params obj . body) form
+  (mac-param-bind form (t context params obj . body) form
     (with-gensyms (obj-var form-var)
       (let ((expn (expand ^(let* ((,obj-var ,obj)
                                   (,form-var ,context))
@@ -1569,7 +1569,7 @@
         me.(compile oreg env expn)))))
 
 (defmeth compiler comp-mac-env-param-bind (me oreg env form)
-  (mac-param-bind form (op context menv params obj . body) form
+  (mac-param-bind form (t context menv params obj . body) form
     (with-gensyms (obj-var form-var)
       (let ((expn (expand ^(let* ((,obj-var ,obj)
                                   (,form-var ,context))
@@ -1581,7 +1581,7 @@
         me.(compile oreg env expn)))))
 
 (defmeth compiler comp-tree-case (me oreg env form)
-  (mac-param-bind form (op obj . cases) form
+  (mac-param-bind form (t obj . cases) form
     (let* ((nenv (new env up env co me))
            (obj-immut-var nenv.(extend-var (gensym)))
            (obj-var nenv.(extend-var (gensym)))
@@ -1624,7 +1624,7 @@
                  [reduce-left uni allfrags nil .ffuns])))))
 
 (defmeth compiler comp-lisp1-value (me oreg env form)
-  (mac-param-bind form (op arg) form
+  (mac-param-bind form (t arg) form
     (cond
       ((bindable arg)
        (let ((bind env.(lookup-lisp1 arg t)))
@@ -1654,7 +1654,9 @@
       (t me.(compile oreg env arg)))))
 
 (defmeth compiler comp-dwim (me oreg env form)
-  (mac-param-bind form (op obj . args) form
+  (mac-param-bind form (t obj . args) form
+    (use obj)
+    (use args)
     (let* ((l1-exprs (cdr form))
            (fun (car l1-exprs))
            (bind env.(lookup-lisp1 fun nil)))
@@ -1668,7 +1670,7 @@
                     ^(call ,*(mapcar [iffi bindable (op list 'sys:lisp1-value)] l1-exprs)))))))
 
 (defmeth compiler comp-prof (me oreg env form)
-  (mac-param-bind form (op . forms) form
+  (mac-param-bind form (t . forms) form
     (let ((bfrag me.(comp-progn oreg env forms)))
       (new (frag oreg
                  ^((prof ,oreg)
@@ -1685,7 +1687,7 @@
       (compile-warning form "cannot refer to lexical function ~s" f))))
 
 (defmeth compiler comp-load-time-lit (me oreg env form)
-  (mac-param-bind form (op loaded-p exp) form
+  (mac-param-bind form (t loaded-p exp) form
     (cond
       (loaded-p me.(compile oreg env ^(quote ,exp)))
       ((or *load-time* (constantp exp)) me.(compile oreg env exp))
@@ -1879,7 +1881,7 @@
     (cond
       ((consp el)
        (caseq (car el)
-         (sys:var (mac-param-bind form (sym exp : mods) el
+         (sys:var (mac-param-bind form (t exp : mods) el
                     (list (expand-quasi-mods exp mods))))
          (sys:quasi (expand-quasi-args el))
          (t (list ^(sys:fmt-simple ,el)))))
@@ -1896,7 +1898,7 @@
       (t '(mkstring 0)))))
 
 (defun expand-dohash (form)
-  (mac-param-bind form (op (key-var val-var hash-form : res-form) . body) form
+  (mac-param-bind form (t (key-var val-var hash-form : res-form) . body) form
     (with-gensyms (iter-var cell-var)
       ^(let (,key-var ,val-var (,iter-var (hash-begin ,hash-form)) ,cell-var)
          (block nil
@@ -1908,7 +1910,7 @@
               ,*body))))))
 
 (defun expand-each (form env)
-  (mac-param-bind form (op each-type vars . body) form
+  (mac-param-bind form (t each-type vars . body) form
     (when (eq vars t)
       (set vars [mapcar car env.vb]))
     (let* ((gens (mapcar (ret (gensym)) vars))
@@ -2047,7 +2049,7 @@
             err-form))))
 
 (defun expand-defvarl (form)
-  (mac-param-bind form (op sym : value) form
+  (mac-param-bind form (t sym : value) form
     (with-gensyms (cell)
       (if value
         ^(let ((,cell (sys:rt-defv ',sym)))
@@ -2057,7 +2059,7 @@
         ^(progn (sys:rt-defv ',sym) ',sym)))))
 
 (defun expand-defun (form)
-  (mac-param-bind form (op name args . body) form
+  (mac-param-bind form (t name args . body) form
     (flet ((mklambda (block-name block-sym)
              ^(lambda ,args (,block-sym ,block-name ,*body))))
       (cond
@@ -2066,17 +2068,17 @@
         ((consp name)
          (caseq (car name)
            (meth
-             (mac-param-bind form (meth type slot) name
+             (mac-param-bind form (t type slot) name
                ^(sys:define-method ',type ',slot ,(mklambda slot 'block))))
            (macro
-             (mac-param-bind form (macro sym) name
+             (mac-param-bind form (t sym) name
                ^(sys:rt-defmacro ',sym ',name ,(mklambda sym 'sys:blk))))
            (t (compile-error form "~s isn't a valid compound function name"
                              name))))
         (t (compile-error form "~s isn't a valid function name" name))))))
 
 (defun expand-defmacro (form)
-  (mac-param-bind form (op name mac-args . body) form
+  (mac-param-bind form (t name mac-args . body) form
     (with-gensyms (form menv spine-iter)
       (let ((exp-lam ^(lambda (,form ,menv)
                         (let ((,spine-iter (cdr ,form)))
@@ -2091,7 +2093,7 @@
            ',name)))))
 
 (defun expand-defsymacro (form)
-  (mac-param-bind form (op name def) form
+  (mac-param-bind form (t name def) form
     ^(sys:rt-defsymacro ',name ',def)))
 
 (defun lambda-apply-transform (lm-expr fix-arg-exprs apply-list-expr recursed)
@@ -2104,7 +2106,7 @@
       (lambda-apply-transform lm-expr (append fix-arg-exprs
                                               (mapcar (ret ^',@1) apply-fixed))
                               ^',apply-atom t))
-    (mac-param-bind lm-expr (lambda lm-args . lm-body) lm-expr
+    (mac-param-bind lm-expr (t lm-args . lm-body) lm-expr
       (let* ((pars (new (fun-param-parser lm-args lm-expr)))
              (fix-vals (mapcar (ret (gensym)) fix-arg-exprs))
              (fix-arg-iter fix-arg-exprs)
@@ -2215,6 +2217,7 @@
                                           ^(quote ,result)
                                           result))
                              (t (exc)
+                                (use exc)
                                 (set throws t)
                                 form)))
              (ece (new eval-cache-entry
@@ -2317,7 +2320,7 @@
                            use-sym unuse-sym))
 
 (defmacro ign-notfound (form)
-  ^(usr:catch ,form (path-not-found (. rest))))
+  ^(usr:catch ,form (path-not-found (. rest) (use rest) nil)))
 
 (defun open-compile-streams (in-path out-path test-fn)
   (if (and (nullify in-path)
@@ -2525,7 +2528,7 @@
 (defun usr:compile (obj)
   (match-case obj
     (@(functionp)
-     (tree-bind (indicator args . body) (func-get-form obj)
+     (tree-bind (t args . body) (func-get-form obj)
        (let* ((form (sys:env-to-let (func-get-env obj)
                                     ^(lambda ,args ,*body)))
               (vm-desc (compile-toplevel form t)))
@@ -2533,7 +2536,7 @@
     ((lambda . @nil)
      [(compile-toplevel obj nil)])
     (@(@fun (symbol-function))
-      (tree-bind (indicator args . body) (func-get-form fun)
+      (tree-bind (t args . body) (func-get-form fun)
         (let* ((form (sys:env-to-let (func-get-env fun)
                                      ^(lambda ,args ,*body)))
                (vm-desc (compile-toplevel form t))
