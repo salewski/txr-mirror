@@ -44,6 +44,13 @@
 #include "eval.h"
 #include "time.h"
 
+#if HAVE_TM_ZONE
+struct tm_wrap {
+  struct tm tm;
+  const char *zone;
+};
+#endif
+
 val time_s, time_local_s, time_utc_s, time_string_s, time_parse_s;
 val year_s, month_s, day_s, hour_s, min_s, sec_s, wday_s, yday_s;
 val dst_s, gmtoff_s, zone_s;
@@ -233,13 +240,14 @@ val time_struct_utc(val time)
   return broken_time_struct(&tms);
 }
 
-static void time_fields_to_tm(struct tm *ptm,
+static void time_fields_to_tm(struct tm_wrap *ptmw,
                               val year, val month, val day,
                               val hour, val min, val sec,
                               val wday, val yday,
                               val dst, val gmtoff, val zone,
                               val self)
 {
+  struct tm *ptm = &ptmw->tm;
   uses_or2;
   ptm->tm_year = c_num(or2(year, zero), self) - 1900;
   ptm->tm_mon = c_num(or2(month, zero), self) - 1;
@@ -261,18 +269,18 @@ static void time_fields_to_tm(struct tm *ptm,
   ptm->TM_GMTOFF = c_num(or2(gmtoff, zero), self);
 #endif
 #if HAVE_TM_ZONE
-  ptm->TM_ZONE = if3(zone, utf8_dup_to(c_str(zone, self)), 0);
+  ptmw->zone = ptm->TM_ZONE = if3(zone, utf8_dup_to(c_str(zone, self)), 0);
 #endif
 }
 
-static void time_fields_cleanup(struct tm *ptm)
+static void time_fields_cleanup(struct tm_wrap *ptm)
 {
 #if HAVE_TM_ZONE
-  free(strip_qual(char *, ptm->TM_ZONE));
+  free(strip_qual(char *, ptm->zone));
 #endif
 }
 
-static void time_struct_to_tm(struct tm *ptm, val time_struct, val self)
+static void time_struct_to_tm(struct tm_wrap *ptmw, val time_struct, val self)
 {
   val year = slot(time_struct, year_s);
   val month = slot(time_struct, month_s);
@@ -286,7 +294,7 @@ static void time_struct_to_tm(struct tm *ptm, val time_struct, val self)
   val gmtoff = slot(time_struct, gmtoff_s);
   val zone = slot(time_struct, zone_s);
 
-  time_fields_to_tm(ptm, year, month, day, hour, min, sec,
+  time_fields_to_tm(ptmw, year, month, day, hour, min, sec,
                     wday, yday, dst, gmtoff, zone, self);
 }
 
@@ -295,12 +303,12 @@ static val make_time_impl(time_t (*pmktime)(struct tm *),
                           val hour, val minute, val second,
                           val isdst, val self)
 {
-  struct tm local = all_zero_init;
+  struct tm_wrap local = all_zero_init;
   time_t time;
 
   time_fields_to_tm(&local, year, month, day,
                     hour, minute, second, nil, nil, isdst, nil, nil, self);
-  time = pmktime(&local);
+  time = pmktime(&local.tm);
   time_fields_cleanup(&local);
 
   return time == -1 ? nil : num_time(time);
@@ -421,13 +429,13 @@ static val time_meth(val utc_p, val time_struct)
 static val time_string_meth(val time_struct, val format)
 {
   val self = lit("(meth time-string)");
-  struct tm tms = all_zero_init;
+  struct tm_wrap tms = all_zero_init;
   char buffer[512] = "";
   char *fmt = utf8_dup_to(c_str(format, self));
 
   time_struct_to_tm(&tms, time_struct, self);
 
-  if (strftime(buffer, sizeof buffer, fmt, &tms) == 0)
+  if (strftime(buffer, sizeof buffer, fmt, &tms.tm) == 0)
     buffer[0] = 0;
 
   free(fmt);
@@ -441,7 +449,7 @@ static val time_string_meth(val time_struct, val format)
 static val time_parse_meth(val time_struct, val format, val string)
 {
   val self = lit("(meth time-parse)");
-  struct tm tms = all_zero_init;
+  struct tm_wrap tms = all_zero_init;
   val ret = nil;
 
   time_struct_to_tm(&tms, time_struct, self);
@@ -451,10 +459,10 @@ static val time_parse_meth(val time_struct, val format, val string)
     const wchar_t *w_fmt = c_str(format, self);
     char *str = utf8_dup_to(w_str);
     char *fmt = utf8_dup_to(w_fmt);
-    char *ptr = strptime(str, fmt, &tms);
+    char *ptr = strptime(str, fmt, &tms.tm);
 
     if (ptr != 0) {
-      tm_to_time_struct(time_struct, &tms);
+      tm_to_time_struct(time_struct, &tms.tm);
       ret = string_utf8(ptr);
     }
 
