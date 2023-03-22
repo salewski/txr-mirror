@@ -397,7 +397,7 @@
       ;; wasteful moves
       (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
        (cdr insns))
-      (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
+      (((mov @reg0 @reg1) (mov @reg1 @reg0) . @rest)
        (pushnew bl bb.rescan)
        (set bb.recalc t)
        ^(,(car insns) ,*rest))
