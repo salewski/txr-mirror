@@ -350,7 +350,7 @@
 
 (defvarl %functional-funs%
   '(chain chand juxt andf orf notf iff iffi dup flipargs if or and
-    progn prog1 prog2 retf apf ipf callf mapf tf nilf umethod uslot))
+    progn prog1 prog2 retf apf ipf callf mapf tf umethod uslot))
 
 (defvarl %functional% (hash-list %functional-funs% :eq-based))
 
@@ -1390,7 +1390,14 @@
            (set form (rlcp ^(,bin ,a ,b) form)))
           ((- @a)
            (set form (rlcp ^(neg ,a) form)))
-          ((@(or identity + * min max logior logand) @a)
+          ((@(or ignore nilf) . @args)
+           (if (eql sym 'ignore)
+             (each ((a args))
+               (if (bindable a)
+                 env.(lookup-var a t))))
+           (return-from comp-fun-form me.(compile oreg env
+                                                  ^(progn ,*args nil))))
+          ((@(or identity use + * min max logior logand) @a)
            (return-from comp-fun-form me.(compile oreg env a)))))
 
       (when (plusp olev)
