@@ -42,7 +42,7 @@
     nojoin
 
     (:method print (bl stream pretty-p)
-      (use pretty-p)
+      (ignore pretty-p)
       (put-string "#S" stream)
       (print ^(basic-block live ,bl.live
                            label ,bl.label

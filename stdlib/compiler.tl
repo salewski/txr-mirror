@@ -569,7 +569,7 @@
            (t (compile-error form "invalid operator")))))))
 
 (defmeth compiler comp-atom (me oreg form)
-  (use oreg)
+  (ignore oreg)
   (cond
     ((null form) (new (frag '(t 0) nil)))
     (t (let ((dreg me.(get-dreg form)))
@@ -1662,8 +1662,7 @@
 
 (defmeth compiler comp-dwim (me oreg env form)
   (mac-param-bind form (t obj . args) form
-    (use obj)
-    (use args)
+    (ignore obj args)
     (let* ((l1-exprs (cdr form))
            (fun (car l1-exprs))
            (bind env.(lookup-lisp1 fun nil)))
@@ -2224,7 +2223,7 @@
                                           ^(quote ,result)
                                           result))
                              (t (exc)
-                                (use exc)
+                                (ignore exc)
                                 (set throws t)
                                 form)))
              (ece (new eval-cache-entry
@@ -2327,7 +2326,7 @@
                            use-sym unuse-sym))
 
 (defmacro ign-notfound (form)
-  ^(usr:catch ,form (path-not-found (. rest) (use rest) nil)))
+  ^(usr:catch ,form (path-not-found (. rest) (ignore rest))))
 
 (defun open-compile-streams (in-path out-path test-fn)
   (if (and (nullify in-path)

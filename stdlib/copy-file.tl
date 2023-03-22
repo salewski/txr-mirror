@@ -85,10 +85,10 @@
         (return (copy-file path (path-cat dest-dir (base-name path))
                            preserve-perms preserve-times))
         (skip `skip copying @path` (exc . args)
-          (use args) (use exc)
+          (ignore args exc)
           (return))
         (retry `retry copying @path` (exc . args)
-          (use args) (use exc))))))
+          (ignore args exc))))))
 
 (defun cat-files (to-path . from-paths)
   (let ((buf (make-buf copy-size)))
@@ -146,7 +146,7 @@
     (unwind-protect
       (ftw from-dir
            (lambda (path type stat . rest)
-             (use rest)
+             (ignore rest)
              (while t
                (catch**
                  (let* ((rel-path (rel-path from-dir path))
@@ -172,10 +172,10 @@
                         (do-copy-obj path tgt-path stat opts)))
                    (return))
                  (skip `skip copying @path` (exc . args)
-                   (use exc) (use args)
+                   (ignore exc args)
                    (return))
                  (retry `retry copying @path` (exc . args)
-                   (use exc) (use args)))))
+                   (ignore exc args)))))
            ftw-phys)
       (whilet ((top (pop dir-stack)))
         (do-tweak-obj top.path top.stat opts nil)))))
@@ -183,7 +183,7 @@
 (defun remove-path-rec (path)
   (ftw path
        (lambda (path type . rest)
-         (use rest)
+         (ignore rest)
          (while t
            (catch**
              (return
@@ -193,16 +193,16 @@
                  (ftw-dp (rmdir path))
                  (t (remove-path path))))
              (skip `skip removing @path` (exc . args)
-               (use exc) (use args)
+               (ignore exc args)
                (return))
              (retry `retry copying @path` (exc . args)
-               (use exc) (use args)))))
+               (ignore exc args)))))
        (logior ftw-phys ftw-depth)))
 
 (defun chmod-rec (path perm)
   (ftw path
        (lambda (path type . rest)
-         (use rest)
+         (ignore rest)
          (while t
            (catch**
              (return
@@ -212,16 +212,16 @@
                  (ftw-sl)
                  (t (chmod path perm))))
              (skip `skip chmod @path` (exc . args)
-               (use exc) (use args)
+               (ignore exc args)
                (return))
              (retry `retry chmod @path` (exc . args)
-               (use exc) (use args)))))
+               (ignore exc args)))))
        (logior ftw-phys)))
 
 (defun chown-rec (path uid gid)
   (ftw path
        (lambda (path type . rest)
-         (use rest)
+         (ignore rest)
          (while t
            (catch**
              (return
@@ -230,10 +230,10 @@
                                           'remove-rec path))
                  (t (lchown path uid gid))))
              (skip `skip chown @path` (exc . args)
-               (use exc) (use args)
+               (ignore exc args)
                (return))
              (retry `retry chown @path` (exc . args)
-               (use exc) (use args)))))
+               (ignore exc args)))))
        (logior ftw-phys)))
 
 (defun touch (path : ref-path)
