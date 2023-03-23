@@ -1906,14 +1906,16 @@
 (defun expand-dohash (form)
   (mac-param-bind form (t (key-var val-var hash-form : res-form) . body) form
     (with-gensyms (iter-var cell-var)
-      ^(let (,key-var ,val-var (,iter-var (hash-begin ,hash-form)) ,cell-var)
-         (block nil
-           (sys:for-op ((sys:setq ,cell-var (hash-next ,iter-var)))
-                       (,cell-var ,res-form)
-                       ((sys:setq ,cell-var (hash-next ,iter-var)))
-              (sys:setq ,key-var (car ,cell-var))
-              (sys:setq ,val-var (cdr ,cell-var))
-              ,*body))))))
+      (rlcp
+        ^(let (,key-var ,val-var (,iter-var (hash-begin ,hash-form)) ,cell-var)
+           (block nil
+             (sys:for-op ((sys:setq ,cell-var (hash-next ,iter-var)))
+                         (,cell-var ,res-form)
+                         ((sys:setq ,cell-var (hash-next ,iter-var)))
+                (sys:setq ,key-var (car ,cell-var))
+                (sys:setq ,val-var (cdr ,cell-var))
+                ,*body)))
+        form))))
 
 (defun expand-each (form env)
   (mac-param-bind form (t each-type vars . body) form
