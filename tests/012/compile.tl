@@ -10,5 +10,6 @@
     (when (path-exists-p exf)
       (file-append-string %expected-file%
                           (file-get-string exf))))
-  (compile-file `@f.tl` "temp.tlo")
+  (with-compile-opts (nil unused)
+    (compile-file `@f.tl` "temp.tlo"))
   (remove-path "temp.tlo"))

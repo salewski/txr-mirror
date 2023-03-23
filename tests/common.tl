@@ -9,26 +9,27 @@
   (if-match (quote @(as sym @(or :error :warning))) expected
     (set expected sym))
   (if *compile-test*
-    (if (meq expected :error :warning)
-      (with-gensyms (code)
-        ^(let ((,code (catch
-                        (compile-toplevel ',expr)
-                        (error (exc)
-                          (if (eq ,expected :warning)
-                            (error "test case ~s produced error during compilation, expected ~s"
-                                   ',expr ,expected)))
-                        (warning (exc)
-                          (if (eq ,expected :error)
-                            (error "test case ~s warned during compilation, expected ~s"
-                                   ',expr ,expected))))))
-           (ifa (not (equal (error-to-sym (call ,code)) ,expected))
-             (error "test case ~s failed: produced ~s; expected ~s"
-                    ',expr it ,expected))))
-      (with-gensyms (expval)
-        ^(let ((,expval ,expected))
-           (ifa (not (equal (call (compile-toplevel ',expr)) ,expval))
-             (error "test case ~s failed: produced ~s; expected ~s"
-                    ',expr it ,expval)))))
+    (with-compile-opts (nil unused)
+      (if (meq expected :error :warning)
+        (with-gensyms (code)
+          ^(let ((,code (catch
+                          (compile-toplevel ',expr)
+                          (error (exc)
+                            (if (eq ,expected :warning)
+                              (error "test case ~s produced error during compilation, expected ~s"
+                                     ',expr ,expected)))
+                          (warning (exc)
+                            (if (eq ,expected :error)
+                              (error "test case ~s warned during compilation, expected ~s"
+                                     ',expr ,expected))))))
+             (ifa (not (equal (error-to-sym (call ,code)) ,expected))
+               (error "test case ~s failed: produced ~s; expected ~s"
+                      ',expr it ,expected))))
+        (with-gensyms (expval)
+          ^(let ((,expval ,expected))
+             (ifa (not (equal (call (compile-toplevel ',expr)) ,expval))
+               (error "test case ~s failed: produced ~s; expected ~s"
+                      ',expr it ,expval))))))
     (if (meq expected :error :warning)
       (catch
         (let ((expr-expn (expand expr env)))

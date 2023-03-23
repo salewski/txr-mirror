@@ -37,5 +37,6 @@
 
 (compile-only
   (eval-only
-    (compile-file (base-name *load-path*) "temp.tlo")
+    (with-compile-opts (nil unused)
+      (compile-file (base-name *load-path*) "temp.tlo"))
     (remove-path "temp.tlo")))
