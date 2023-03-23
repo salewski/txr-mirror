@@ -3791,6 +3791,8 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   sethash(ffi_struct_tag_hash, cadr(syntax), obj);
 
+  tft->memb = memb;
+
   for (i = 0; i < nmemb; i++) {
     val slot_syntax = pop(&slot_exprs);
     val slot = car(slot_syntax);
@@ -3893,8 +3895,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     if (mtft->by_value_in)
       tft->by_value_in = 1;
   }
-
-  tft->memb = memb;
 
   if (bit_offs > 0) {
     bug_unless (bit_offs < 8);
