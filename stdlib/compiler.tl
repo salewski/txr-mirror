@@ -2067,7 +2067,7 @@
 (defun expand-defun (form)
   (mac-param-bind form (t name args . body) form
     (flet ((mklambda (block-name block-sym)
-             ^(lambda ,args (,block-sym ,block-name ,*body))))
+             (rlcp ^(lambda ,args (,block-sym ,block-name ,*body)) form)))
       (cond
         ((bindable name)
          ^(sys:rt-defun ',name ,(mklambda name 'sys:blk)))
@@ -2075,7 +2075,8 @@
          (caseq (car name)
            (meth
              (mac-param-bind form (t type slot) name
-               ^(sys:define-method ',type ',slot ,(mklambda slot 'block))))
+               (rlcp ^(sys:define-method ',type ',slot ,(mklambda slot 'block))
+                     form)))
            (macro
              (mac-param-bind form (t sym) name
                ^(sys:rt-defmacro ',sym ',name ,(mklambda sym 'sys:blk))))
@@ -2085,15 +2086,18 @@
 
 (defun expand-defmacro (form)
   (mac-param-bind form (t name mac-args . body) form
-    (with-gensyms (form menv spine-iter)
-      (let ((exp-lam ^(lambda (,form ,menv)
-                        (let ((,spine-iter (cdr ,form)))
-                          ,(expand (expand-bind-mac-params form form mac-args
-                                                           menv spine-iter
-                                                           t nil
-                                     ^((sys:set-macro-ancestor
-                                         (block ,name ,*body)
-                                         ,form))))))))
+    (with-gensyms (mform menv spine-iter)
+      (let ((exp-lam (rlcp ^(lambda (,mform ,menv)
+                              (let ((,spine-iter (cdr ,mform)))
+                                ,(expand (expand-bind-mac-params mform
+                                                                 (rlcp ^',form form)
+                                                                 mac-args
+                                                                 menv spine-iter
+                                                                 t nil
+                                           ^((sys:set-macro-ancestor
+                                               (block ,name ,*body)
+                                               ,mform))))))
+                           form)))
         ^(progn
            (sys:rt-defmacro ',name '(macro ,name) ,exp-lam)
            ',name)))))
