@@ -275,21 +275,27 @@
     (if (and (consp head) (eq (car head) 'sys:var))
       (tree-case exp
         (((t rvar) (op . args))
-         (let* ((avar
+         (let* ((arg-var (gensym "obj-"))
+                (avar
                   (condlet
                     (((vm (member-if [andf consp (op eq (car @1) 'sys:var)]
                                      args)))
                      (let ((sym (cadar vm)))
+                       (if (null sym)
+                         (set sym arg-var)
+                         (set arg-var sym))
                        (set args (append (ldiff args vm)
                                          (list sym)
                                          (cdr vm)))
                        sym))
                     (((vm (memq 'sys:var args)))
                      (let ((sym (cadr vm)))
+                       (if (null sym)
+                         (set sym arg-var)
+                         (set arg-var sym))
                        (set args (append (ldiff args vm) sym))
                        sym))))
-                (res-var (gensym "res-"))
-                (arg-var (if avar avar (gensym "obj-"))))
+                (res-var (gensym "res-")))
            (unless avar
              (set args (append args (list arg-var))))
            (let* ((guard (new match-guard

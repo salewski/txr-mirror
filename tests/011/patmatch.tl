@@ -560,3 +560,11 @@
   (match @`foo-@a` "foo-abc" a) "abc"
   (match ^(,`foo-@a`) '("foo-abc") a) "abc"
   (match  ^#J[~`foo-@a`] #("foo-abc") a) "abc")
+
+(mtest
+  (match @(< @nil 0) -1 42) 42
+  (match @(> 0 @nil) -1 42) 42
+  (if-match @(< @nil 0) 1 :y :n) :n
+  (if-match @(< @nil 2) 1 :y :n) :y
+  (match @(@nil (< @x 0)) -1 x) -1
+  (match @(@nil (< @nil 0)) -1 t) t)

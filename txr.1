@@ -46207,8 +46207,10 @@ The first form of the predicate pattern consists of a compound form consisting
 of an operator and arguments. Exactly one of the arguments may be a pattern
 variable
 .meta avar
-("argument variable") which must be a bindable symbol. The pattern variable
-may also appear in the dot position, rather than as an argument.  The role of
+("argument variable") which must be a bindable symbol or else
+.codn nil .
+The pattern variable may also appear in the dot position, rather than as an
+argument.  The role of
 .meta avar
 and the consequences of omitting it are described below.
 
@@ -46297,6 +46299,14 @@ The form
 is a standard \*(TL notation with the same meaning as
 .codn "(apply (fun f) x)" .
 
+If
+.meta avar
+is the
+.code nil
+symbol, then no variable is bound. The matched object is substituted
+into the predicate expression at the position indicated by
+.codn @nil .
+
 .TP* Examples:
 
 .verb
@@ -46321,6 +46331,12 @@ is a standard \*(TL notation with the same meaning as
   ;; apply (1 2 3) to < using dot position
   (when-match @(@x (< . @sym)) '(1 2 3) (list x sym))
   -> (t (1 2 3))
+
+  ;; Match three-element list whose middle element
+  ;; is a number in the range 10 20, without
+  ;; binding any variables:
+  (when-match (@nil @(<= 10 @nil 20) @nil) obj
+    (prinl "obj matches"))
 .brev
 
 .coNP Pattern macro @ sme
