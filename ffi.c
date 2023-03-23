@@ -335,6 +335,7 @@ static void ffi_enum_type_mark(val obj)
   ffi_type_common_mark(tft);
   gc_mark(tft->sym_num);
   gc_mark(tft->num_sym);
+  gc_mark(tft->eltype);
 }
 
 static struct cobj_ops ffi_type_builtin_ops =
