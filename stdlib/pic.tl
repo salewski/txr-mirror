@@ -34,7 +34,6 @@
          (exc (pos #\! fmt))
          (dot (or exc (pos #\. fmt)))
          (fmt (if (and exc (eq #\! [fmt -1])) [fmt 0..-1] fmt))
-         (int (if dot [fmt 0..dot] fmt))
          (fra (if dot [fmt (succ dot)..:] "")))
     (let ((code (if (or minus plus (not zero))
                   ^(fmt ,`~@(len fmt),@(if plus "+")@(if zero "0")@(len fra)f`
@@ -154,7 +153,7 @@
     ([m^$ #/\|+/ fmt] (expand-pic-align "^" fmt val))
     (t (compile-error f "unrecognized format string ~s" fmt))))
 
-(defmacro pic (:form f :env e bigfmt . args)
+(defmacro pic (:form f bigfmt . args)
   (let* ((regex #/[+\-]?(0,?)?#+(,#+)*([.!]#+(,#+)*|!)?| \
                   \((0,?)?#+(,#+)*([.!]#+(,#+)*|!)?\)| \
                   <+| \

@@ -46,7 +46,7 @@
         (with-resources ,rest ,*body)))
     (nil
       ^(progn ,*body))
-    (other (compile-error f "bad syntax"))))
+    (t (compile-error f "bad syntax"))))
 
 (defmacro with-objects (var-init-forms . body)
   (let ((gens (mapcar (ret (gensym)) var-init-forms)))

@@ -24,7 +24,7 @@
               (exit* (let ((*stdout* *stdnull*))
                        (run program args)))
               (exit* 0)))
-    (@(< @res 0) (error "fork failed"))))
+    (@(> 0) (error "fork failed"))))
 
 (caseql os-symbol
   ((:linux :macos :openbsd :solaris :solaris10 :android)
@@ -53,7 +53,9 @@
          (if (> (int-cptr hinst) 32)
            t
            (error `~s: failed to open ~s` 'open-url url))))))
-  (t (defun open-url (url) (error "~s: not implemented" 'open-url))))
+  (t (defun open-url (url)
+       (ignore url)
+       (error "~s: not implemented" 'open-url))))
 
 (defun usr:doc (: sym)
   (iflet ((str (typecase sym

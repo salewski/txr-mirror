@@ -31,7 +31,7 @@
   (whenlet ((bad (find-if [notf consp] vars)))
     (compile-error form "~s isn't a var-initform pair" bad)))
 
-(defmacro sys:arith-each (:form f fn iv short-circ vars . body)
+(defmacro sys:arith-each (fn iv short-circ vars . body)
   (let* ((gens (mapcar (ret (gensym)) vars))
          (syms [mapcar car vars])
          (accum (gensym)))

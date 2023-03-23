@@ -72,7 +72,7 @@
                                                                (<= 161 sys:compat)))
                                                     ^(,exc-sym))
                                                 ,exc-args)))
-                            (else (sys:handle-bad-syntax hc))))))
+                            (else (sys:handle-bad-syntax else))))))
     ^(handler-bind (lambda (,exc-sym . ,exc-args)
                      (cond
                        ,*(mapcar (aret ^((exception-subtype-p ,exc-sym ',@1) ,@2))

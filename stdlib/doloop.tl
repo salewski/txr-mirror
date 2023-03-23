@@ -27,7 +27,7 @@
 
 (defun sys:expand-doloop (f vars cexp body)
   (let ((xvars (mapcar (tc
-                         (((:whole w v i s . r))
+                         (((:whole w t t t . r))
                           (if r (compile-error f "excess elements in ~s" w) w))
                          (((:whole w v i . r))
                           (if r

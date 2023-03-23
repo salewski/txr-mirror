@@ -45,7 +45,8 @@
          (syms (mac-env-flatten (symbol-value env))))
     (list (cadr explam) syms)))
 
-(defun defset-expander-simple (macform get-fun set-fun)
+(defun defset-expander-simple (get-fun set-fun)
+  (ignore set-fun)
   (with-gensyms (getter setter params)
     ^(defplace (,get-fun . ,params) body
        (,getter ,setter
@@ -106,10 +107,11 @@
 (defmacro usr:defset (:env e :form mf . args)
   (tree-case args
     ((name (. params) newval setform)
+     (ignore name params newval setform)
      (defset-expander e mf . args))
     ((get-fun set-fun)
-     (defset-expander-simple mf get-fun set-fun))
-    (x (compile-error mf "invalid syntax"))))
+     (defset-expander-simple get-fun set-fun))
+    (t (compile-error mf "invalid syntax"))))
 
 (defset sub-list (list : (from 0) (to t)) items
   ^(progn (set ,list (replace-list ,list ,items ,from ,to)) ,items))

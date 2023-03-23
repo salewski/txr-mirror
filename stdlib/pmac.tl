@@ -38,5 +38,4 @@
   (tree-case prototype-form
     ((name params . body)
        (cons name (sys:expand-param-macro params body env prototype-form)))
-    (else (error "~s: invalid prototype-form argument ~s"
-                 %fun% prototype-form))))
+    (else (error "~s: invalid prototype-form argument ~s" %fun% else))))

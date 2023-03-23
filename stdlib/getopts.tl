@@ -79,7 +79,7 @@
     ((indicator btype) (and (eq indicator 'list)
                             (neq btype :bool)
                             me.(basic-type-p btype)))
-    (x nil)))
+    (t nil)))
 
 (defmeth opt-desc cumul-type-p (me type)
   (tree-case type
@@ -87,7 +87,7 @@
                             (neq btype :bool)
                             (or me.(basic-type-p btype)
                                 me.(list-type-p btype))))
-    (x nil)))
+    (t nil)))
 
 (defmeth opt-desc check (me)
   (unless (or me.(basic-type-p me.type)
@@ -232,7 +232,7 @@
         opts.(add-opt (new (sys:opt-parsed o arg od))))
       (sys:opt-err "unrecognized option: -~a" o))))
 
-(defmeth sys:opt-processor parse-opts (me args)
+(defmeth sys:opt-processor parse-opts (me)
   (let ((opts me.opts))
     (whilet ((arg (pop opts.out-args)))
       (cond
@@ -273,7 +273,7 @@
 (defun getopts (opt-desc-list args)
   (let* ((opts (new opts in-args args out-args args))
          (opr (new sys:opt-processor od-list opt-desc-list opts opts)))
-    opr.(parse-opts args)))
+    opr.(parse-opts)))
 
 (defun opthelp (opt-desc-list : (*stdout* *stdout*))
   (let ((sorted [nsort (copy-list (remove-if (op null @1.helptext)
@@ -428,7 +428,7 @@
   (:method getopts (me args)
     (set me.in-args args me.out-args args)
     (let ((opr (new sys:opt-processor od-list me.opt-desc-list opts me)))
-      opr.(parse-opts args)))
+      opr.(parse-opts)))
   (:method opthelp (me : (stream *stdout*))
     (opthelp me.opt-desc-list stream))
   (:method opthelp-conventions (me : (stream *stdout*))
@@ -437,7 +437,7 @@
     (opthelp-types me.opt-desc-list stream)))
 
 (defmacro define-option-struct (name super-spec . opts)
-  (let* ((slots (mapcar (tb ((short long . rest))
+  (let* ((slots (mapcar (tb ((short long . t))
                           (or long short))
                         opts))
          (supers (if (and super-spec (atom super-spec))

@@ -137,7 +137,7 @@
                         "internal error: bad guard ~s" g)))))
 
 (defun compile-struct-match (struct-pat obj-var var-list)
-  (mac-param-bind *match-form* (op required-type . pairs) struct-pat
+  (mac-param-bind *match-form* (t required-type . pairs) struct-pat
     (let* ((loose-p (not (bindable required-type)))
            (slot-pairs (plist-to-alist pairs))
            (required-slots [mapcar car slot-pairs])
@@ -274,7 +274,7 @@
   (let ((head (car exp)))
     (if (and (consp head) (eq (car head) 'sys:var))
       (tree-case exp
-        (((sv rvar) (op . args))
+        (((t rvar) (op . args))
          (let* ((avar
                   (condlet
                     (((vm (member-if [andf consp (op eq (car @1) 'sys:var)]
@@ -305,7 +305,8 @@
                   guard-chain  (append avar-match.guard-chain
                                        (list guard)
                                        rvar-match.guard-chain)))))
-        (els (compile-error *match-form* "invalid predicate syntax: ~s" exp)))
+        (else (compile-error *match-form*
+                             "invalid predicate syntax: ~s" else)))
       (compile-predicate-match (list '@nil exp) obj-var var-list))))
 
 (defun compile-cons-structure (cons-pat obj-var var-list)
@@ -336,14 +337,14 @@
                                            cdr-match.guard-chain))))))
 
 (defun compile-require-match (exp obj-var var-list)
-  (mac-param-bind *match-form* (op match . conditions) exp
+  (mac-param-bind *match-form* (t match . conditions) exp
     (let ((match (compile-match match obj-var var-list)))
       match.(add-guards-post (new match-guard
                                   guard-expr ^(and ,*conditions)))
       match)))
 
 (defun compile-as-match (exp obj-var var-list)
-  (mac-param-bind *match-form* (op sym pat) exp
+  (mac-param-bind *match-form* (t sym pat) exp
     (let ((var-match (compile-new-var-match sym obj-var var-list))
           (pat-match (compile-match pat obj-var var-list)))
       (new compiled-match
@@ -354,7 +355,7 @@
 
 (defun compile-with-match (exp obj-var var-list)
   (tree-case exp
-    ((op main-pat side-pat-var side-expr)
+    ((t main-pat side-pat-var side-expr)
        (let* ((side-var (gensym))
               (side-pat (if (or (null side-pat-var) (bindable side-pat-var))
                           ^(sys:var ,side-pat-var)
@@ -372,7 +373,7 @@
                                   side-match.guard-chain))))
     ((op side-pat-var side-expr)
        (compile-with-match ^(,op @nil ,side-pat-var ,side-expr) obj-var var-list))
-    (x (compile-error *match-form* "bad syntax: ~s" exp))))
+    (else (compile-error *match-form* "bad syntax: ~s" else))))
 
 (defun compile-loop-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match) exp
@@ -434,7 +435,7 @@
            guard-chain (list guard0 guard1)))))
 
 (defun compile-or-match (par-pat obj-var var-list)
-  (mac-param-bind *match-form* (op . pats) par-pat
+  (mac-param-bind *match-form* (t . pats) par-pat
     (let* ((var-lists (mapcar (ret (copy var-list)) pats))
            (par-matches (mapcar (op compile-match @1 obj-var @2)
                                 pats var-lists))
@@ -449,7 +450,7 @@
            guard-chain (list dj-guard)))))
 
 (defun compile-and-match (and-pat obj-var var-list)
-  (mac-param-bind *match-form* (op . pats) and-pat
+  (mac-param-bind *match-form* (t . pats) and-pat
     (let* ((par-matches (mapcar (lop compile-match obj-var var-list) pats)))
       (new compiled-match
            pattern and-pat
@@ -457,7 +458,7 @@
            guard-chain (mappend .guard-chain par-matches)))))
 
 (defun compile-not-match (pattern obj-var var-list)
-  (mac-param-bind *match-form* (op pattern) pattern
+  (mac-param-bind *match-form* (t pattern) pattern
     (let* ((pm (compile-match pattern obj-var var-list))
            (guard (new match-guard
                        guard-expr ^(not (let ,pm.(get-vars)
@@ -468,7 +469,7 @@
            guard-chain (list guard)))))
 
 (defun compile-hash-match (hash-expr obj-var var-list)
-  (mac-param-bind *match-form* (op . pairs) hash-expr
+  (mac-param-bind *match-form* (t . pairs) hash-expr
     (let* ((hash-alist-var (gensym "hash-alist-"))
            (hash-alt-val ^',(gensym "alt"))
            (need-alist-p nil)
@@ -546,7 +547,7 @@
            guard-chain (cons guard (mappend .guard-chain hash-matches))))))
 
 (defun compile-scan-match (scan-syntax obj-var var-list)
-  (mac-param-bind *match-form* (op pattern) scan-syntax
+  (mac-param-bind *match-form* (t pattern) scan-syntax
     (with-gensyms (iter found-p cont-p success-p)
       (let* ((cm (compile-match pattern iter var-list))
              (loop ^(for ((,iter ,obj-var) (,cont-p t) ,found-p)
@@ -568,9 +569,9 @@
 (defun compile-exprs-match (exprs-syntax uexprs var-list)
   (let ((upats (cdr exprs-syntax))
         (utemps (mapcar (ret (gensym)) uexprs)))
-    (tree-bind (pats temps exprs) (multi-sort (list upats utemps uexprs)
-                                              [list less]
-                                              [list non-triv-pat-p])
+    (tree-bind (pats temps t) (multi-sort (list upats utemps uexprs)
+                                          [list less]
+                                          [list non-triv-pat-p])
       (let* ((matches (mapcar (op compile-match @1 @2 var-list)
                               pats temps)))
         (new compiled-match
@@ -671,17 +672,15 @@
 (defmacro match-case (:form *match-form* :env e obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
     (compile-error *match-form* "bad clause syntax"))
-  (let* ((matched-p-temp (gensym "matched-p-"))
-         (result-temp (gensym "result-"))
+  (let* ((result-temp (gensym "result-"))
          (objvar (gensym "obj-"))
          (var-list (get-var-list e))
          (clause-matches [mapcar (op compile-match (car @1)
                                      objvar (copy var-list))
                                  clauses])
-         (nclauses (len clauses))
          (clause-code (collect-each ((cl clauses)
                                      (cm clause-matches))
-                        (mac-param-bind *match-form* (match . forms) cl
+                        (mac-param-bind *match-form* (t . forms) cl
                           ^(let (,*cm.(get-vars))
                              ,cm.(wrap-guards ^(set ,result-temp
                                                     (progn ,*forms))
@@ -697,7 +696,7 @@
        ,*clauses
        ((var ,else) (match-error 'match-ecase ,else)))))
 
-(defmacro while-match-case (:form *match-form* :env e obj . clauses)
+(defmacro while-match-case (:form *match-form* obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
     (compile-error *match-form* "bad clause syntax"))
   ^(for ()
@@ -705,7 +704,7 @@
            ,*(mapcar (ret ^(,(car @1) ,*(cdr @1) t)) clauses)))
         ()))
 
-(defmacro while-true-match-case (:form *match-form* :env e obj . clauses)
+(defmacro while-true-match-case (:form *match-form* obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
     (compile-error *match-form* "bad clause syntax"))
   ^(for ()
@@ -766,7 +765,6 @@
          (present-vec (vec-list (append (repeat '(t) min-args)
                                         present-p-temps)))
          (result-temp (gensym "result"))
-         (nclauses (len parsed-clauses))
          (ex-clauses (collect-each ((pc parsed-clauses))
                        (let* ((vp pc.variadic-pattern)
                               (exp ^(when-exprs-match
@@ -802,10 +800,11 @@
   (expand-lambda-match clauses))
 
 (defmacro defun-match (:form *match-form* name . clauses)
-  (tree-bind (lambda args . body) (expand-lambda-match clauses)
+  (tree-bind (t args . body) (expand-lambda-match clauses)
     ^(defun ,name ,args . ,body)))
 
 (define-param-expander :match (params clauses menv form)
+  (ignore menv)
   (let ((*match-form* form))
     (unless (proper-list-p params)
       (compile-error form
@@ -815,7 +814,7 @@
       (compile-error form
                      "~s is incompatible with optional parameters"
                      :match))
-    (tree-bind (lambda lparams . body) (expand-lambda-match clauses)
+    (tree-bind (t lparams . body) (expand-lambda-match clauses)
       (let ((dashdash (member '-- params)))
         (cons (append (ldiff params dashdash)
                       (butlastn 0 lparams)
@@ -824,11 +823,11 @@
               body)))))
 
 (defmacro defmatch (name destructuring-args . body)
-  (with-gensyms (name-dummy args)
+  (with-gensyms (name-dummy args vars-env)
     ^(progn
        (sethash *match-macro* ',name
-                (lambda (,args vars-env)
-                  (mac-env-param-bind *match-form* vars-env
+                (lambda (,args ,vars-env)
+                  (mac-env-param-bind *match-form* ,vars-env
                                      (,name-dummy ,*destructuring-args)
                                      ,args ,*body)))
        ',name)))
@@ -856,12 +855,12 @@
     ((and (null sym) nil-ok) sym)
     (t (compile-error f "~s: bindable symbol expected, not ~s" op sym))))
 
-(defun loosen (f pat)
+(defun loosen (pat)
   (if (proper-list-p pat)
     (append pat '@nil)
     pat))
 
-(defun pat-len (f pat)
+(defun pat-len (pat)
   (if (consp pat)
     (let ((var-op-pos (pos-if (op meq 'sys:var 'sys:expr 'sys:quasi)
                               (butlastn 0 pat))))
@@ -869,12 +868,12 @@
     0))
 
 (defmatch sme (:form f sta mid end : (mvar (gensym)) eobj)
-  (let* ((psta (loosen f (check f 'sme sta)))
-         (pmid (loosen f (check f 'sme mid)))
+  (let* ((psta (loosen (check f 'sme sta)))
+         (pmid (loosen (check f 'sme mid)))
          (pend (check-end f 'sme end))
-         (lsta (pat-len f psta))
-         (lmid (pat-len f pmid))
-         (lend (pat-len f pend))
+         (lsta (pat-len psta))
+         (lmid (pat-len pmid))
+         (lend (pat-len pend))
          (obj (gensym)))
     ^@(as ,(check-sym f 'sme obj)
           @(and ,psta
@@ -885,13 +884,15 @@
 
 (defmatch end (:form f end : evar)
   (let* ((pend (check-end f 'end end))
-         (lend (pat-len f pend))
+         (lend (pat-len pend))
          (obj (gensym)))
     ^@(as ,(check-sym f 'end obj)
           @(with @(as ,(check-sym f 'end evar t) ,pend)
                  (nthlast ,lend ,obj)))))
 
-(defun non-triv-pat-p (syntax) t)
+(defun non-triv-pat-p (syntax)
+  (ignore syntax)
+  t)
 
 (defun non-triv-pat-p (syntax)
   (match-case syntax
@@ -944,12 +945,12 @@
                          ^@(require @nil (equal ,sym (sub-str ,str ,pos ,npos)))
                          (quasi-match vlist rest vars str npos))))
                ;; `@var` (existing binding)
-               (((@(eq 'sys:var) @(bound-p vlist vars @sym) . @nil))
+               (((@(eq 'sys:var) @(bound-p vlist vars) . @nil))
                 (list ^@(require @nil (eql (len ,str)
                                            (match-str ,str (sys:quasi ,(car args))
                                                       ,pos)))))
                ;; `@var@...` (existing binding)
-               ((@(as avar (@(eq 'sys:var) @(bound-p vlist vars @sym) . @nil))
+               ((@(as avar (@(eq 'sys:var) @(bound-p vlist vars) . @nil))
                  . @rest)
                 (with-gensyms (txt len npos)
                   (list* ^@(with ,txt (sys:quasi ,avar))
@@ -999,13 +1000,13 @@
                          (quasi-match vlist rest (cons sym vars) str npos))))
                ;; `@{var}txt` (new binding)
                (((@(eq 'sys:var) @sym) @(stringp @txt))
-                (with-gensyms (len end)
+                (with-gensyms (end)
                   (list ^@(require @(with ,end (search-str ,str ,txt ,pos))
                            ,end (eql (+ ,end ,(len txt)) (len ,str)))
                         ^@(with ,sym (sub-str ,str ,pos ,end)))))
                ;; `@{var}txt...` (new binding)
                (((@(eq 'sys:var) @sym) @(stringp @txt) . @rest)
-                (with-gensyms (len end npos)
+                (with-gensyms (end npos)
                   (list* ^@(require @(with ,end (search-str ,str ,txt ,pos))
                             ,end)
                          ^@(with ,npos (+ ,end ,(len txt)))
@@ -1013,7 +1014,8 @@
                          (quasi-match vlist rest (cons sym vars) str npos))))
                ;; `@var0@var1` (unbound followed by bound)
                (((@(eq 'sys:var) @sym)
-                 @(as bvar (@(eq 'sys:var) @(bound-p vlist vars @bsym) . @mods)))
+                 @(as bvar (@(eq 'sys:var) @(bound-p vlist vars) . @mods)))
+                (ignore mods)
                 (with-gensyms (txt end)
                   (list ^@(with ,txt (sys:quasi ,bvar))
                         ^@(require @(with ,end (search-str ,str ,txt ,pos))
@@ -1021,8 +1023,9 @@
                         ^@(with ,sym (sub-str ,str ,pos ,end)))))
                ;; `@var0@var1...` (unbound followed by bound)
                (((@(eq 'sys:var) @sym)
-                 @(as bvar (@(eq 'sys:var) @(bound-p vlist vars @bsym) . @mods))
+                 @(as bvar (@(eq 'sys:var) @(bound-p vlist vars) . @mods))
                  . @rest)
+                (ignore mods)
                 (with-gensyms (txt end npos)
                   (list* ^@(with ,txt (sys:quasi ,bvar))
                          ^@(require @(with ,end (search-str ,str ,txt ,pos))
@@ -1031,22 +1034,22 @@
                          ^@(with ,sym (sub-str ,str ,pos ,end))
                          (quasi-match vlist rest (cons sym vars) str npos))))
                ;; `@{var whatever}@...`(new binding, unsupported modifiers)
-               (((@(eq 'sys:var) @sym @mods . @nil) . @rest)
+               (((@(eq 'sys:var) @sym @mods . @nil) . @nil)
                 (compile-error *match-form*
                                "variable ~s: unsupported modifiers ~s"
                                sym mods))
 
                ;; `@var0@var1` (unbound followed by unbound)
                (((@(eq 'sys:var) @sym0)
-                 (@(eq 'sys:var) @sym1 . @mods)
-                 . @rest)
+                 (@(eq 'sys:var) @sym1 . @nil)
+                 . @nil)
                 (compile-error *match-form*
                                "consecutive unbound variables ~s and ~s"
                                sym0 sym1))
-               ((@bad . @rest) (compile-error *match-form*
+               ((@bad . @nil) (compile-error *match-form*
                                               "unsupported syntax ~s"
                                               ^(sys:quasi ,bad)))
-               (@else (compile-error *match-form* "bad quasiliteral syntax")))))
+               (@nil (compile-error *match-form* "bad quasiliteral syntax")))))
 
     (with-gensyms (str pos)
       ^@(and @(require (sys:var ,str)

@@ -79,7 +79,8 @@
         (return-from macroexpand-place place))
       (sys:setq unex-place place))))
 
-(defun macroexpand-1-place (unex-place : env-unused)
+(defun macroexpand-1-place (unex-place : env)
+  (ignore env)
   (let ((pm-expander (if (consp unex-place)
                        (sys:get-place-macro (car unex-place)))))
     (if pm-expander
@@ -215,13 +216,15 @@
                                  (list a b (gensym) (gensym) (gensym)))
                                (tuples 2 place-value-pairs)))
                 (ls (reduce-left (tb ((lets stores) (place value temp getter setter))
-                                     (list ^((,temp ,value) ,*lets)
-                                           ^((,setter ,temp) ,*stores)))
+                                   (ignore place getter)
+                                   (list ^((,temp ,value) ,*lets)
+                                         ^((,setter ,temp) ,*stores)))
                                  pvtgs '(nil nil)))
                 (lets (first ls))
                 (stores (second ls))
                 (body-form ^(rlet (,*lets) ,*stores)))
            (reduce-left (tb (accum-form (place value temp getter setter))
+                          (ignore place value temp)
                           (call-update-expander getter setter
                                                 place env accum-form))
                         pvtgs body-form))))))
@@ -307,7 +310,7 @@
 (defmacro shift (:form f :env env . places)
   (tree-case places
     (() (compile-error f "need at least two arguments"))
-    ((place) (compile-error f "need at least two arguments"))
+    ((t) (compile-error f "need at least two arguments"))
     ((place newvalue)
      (with-update-expander (getter setter) place env
         ^(prog1 (,getter) (,setter ,newvalue))))
@@ -530,6 +533,7 @@
 (defplace (vecref vector index :whole args) body
   (getter setter
     (with-gensyms (vec-sym ind-sym)
+      (ignore args)
       ^(alet ((,vec-sym ,vector)
               (,ind-sym ,index))
          (macrolet ((,getter () ^(vecref ,',vec-sym ,',ind-sym))
@@ -537,9 +541,11 @@
             ,body))))
   (ssetter
     ^(macrolet ((,ssetter (val) ^(refset ,*',args ,val)))
+       ,(ignore vector index)
        ,body))
   (deleter
     (with-gensyms (vec-sym ind-sym)
+      (ignore args)
       ^(alet ((,vec-sym ,vector)
               (,ind-sym ,index))
          (macrolet ((,deleter ()
@@ -551,6 +557,7 @@
 (defplace (chr-str string index :whole args) body
   (getter setter
     (with-gensyms (str-sym ind-sym)
+      (ignore args)
       ^(alet ((,str-sym ,string)
               (,ind-sym ,index))
          (macrolet ((,getter () ^(chr-str ,',str-sym ,',ind-sym))
@@ -558,9 +565,11 @@
             ,body))))
   (ssetter
     ^(macrolet ((,ssetter (val) ^(chr-str-set ,*',args ,val)))
+       ,(ignore string index)
        ,body))
   (deleter
     (with-gensyms (str-sym ind-sym)
+      (ignore args)
       ^(alet ((,str-sym ,string)
               (,ind-sym ,index))
          (macrolet ((,deleter ()
@@ -572,6 +581,7 @@
 (defplace (ref seq index :whole args) body
   (getter setter
     (with-gensyms (seq-sym ind-sym)
+      (ignore args)
       ^(alet ((,seq-sym ,seq)
               (,ind-sym ,index))
          (macrolet ((,getter () ^(ref ,',seq-sym ,',ind-sym))
@@ -579,9 +589,11 @@
             ,body))))
   (ssetter
     ^(macrolet ((,ssetter (val) ^(refset ,*',args ,val)))
+       ,(ignore seq index)
        ,body))
   (deleter
     (with-gensyms (seq-sym ind-sym)
+      (ignore args)
       ^(alet ((,seq-sym ,seq)
               (,ind-sym ,index))
          (macrolet ((,deleter ()
@@ -590,7 +602,7 @@
                                         ,',ind-sym (succ ,',ind-sym)))))
            ,body)))))
 
-(defplace (sub seq :whole args : (from 0) (to t)) body
+(defplace (sub seq : (from 0) (to t)) body
   (getter setter
     (with-gensyms (seq-sym from-sym to-sym v-sym)
       (with-update-expander (seq-getter seq-setter) seq sys:*pl-env*
@@ -632,6 +644,7 @@
 (defplace (gethash hash key : (default nil have-default-p)) body
   (getter setter
     (with-gensyms (entry-sym)
+      (ignore have-default-p)
       ^(let ((,entry-sym (inhash ,hash ,key ,default)))
          (macrolet ((,getter () ^(cdr ,',entry-sym))
                     (,setter (val) ^(sys:rplacd ,',entry-sym ,val)))
@@ -662,9 +675,9 @@
                   ^(set-hash-userdata ,',hash ,val)))
       ,body)))
 
-(defplace (dwim obj-place :env env . args) body
+(defplace (dwim obj-place . args) body
   (getter setter
-    (with-gensyms (ogetter-sym osetter-sym obj-sym newval-sym)
+    (with-gensyms (obj-sym newval-sym)
       (let ((arg-syms (mapcar (ret (gensym)) args)))
         (if (place-form-p obj-place sys:*pl-env*)
           (with-update-expander (ogetter-sym osetter-sym)
@@ -691,7 +704,7 @@
                              ,',newval-sym)))
                ,body))))))
   (ssetter
-    (with-gensyms (osetter-sym ogetter-sym obj-sym newval-sym)
+    (with-gensyms (obj-sym newval-sym)
       (let ((arg-syms (mapcar (ret (gensym)) args)))
         (if (place-form-p obj-place sys:*pl-env*)
           (with-update-expander (ogetter-sym osetter-sym)
@@ -719,7 +732,7 @@
                ,body)))))
 
   (deleter
-    (with-gensyms (osetter-sym ogetter-sym obj-sym oldval-sym)
+    (with-gensyms (obj-sym oldval-sym)
       (let ((arg-syms (mapcar (ret (gensym)) args)))
         (if (place-form-p obj-place sys:*pl-env*)
           (with-update-expander (ogetter-sym osetter-sym)
@@ -805,13 +818,13 @@
           (cons (op cdr)
                 (op sys:rplacd cell)))
         :))
-    ((op . rest)
+    ((op . t)
      (if (eq op 'lambda)
        (compile-error f "cannot assign to lambda")
        (compile-error f "invalid function syntax ~s" sym)))
     (else
       (let ((cell (or (gethash sys:top-fb sym)
-                      (sethash sys:top-fb sym (cons sym nil)))))
+                      (sethash sys:top-fb sym (cons else nil)))))
         (cons (op cdr)
               (op sys:rplacd cell))))))
 
@@ -875,7 +888,7 @@
 
 (defplace (read-once place) body
   (getter setter
-    (with-gensyms (cache-var pgetter psetter)
+    (with-gensyms (cache-var)
       (with-update-expander (pgetter psetter) place sys:*pl-env*
         ^(slet ((,cache-var (,pgetter)))
            (macrolet ((,getter () ',cache-var)
@@ -885,7 +898,7 @@
 (defmacro define-modify-macro (name lambda-list function)
   (let ((cleaned-lambda-list (mapcar [iffi consp car]
                                      (remql : lambda-list))))
-    (with-gensyms (place-sym args-sym)
+    (with-gensyms (place-sym)
       ^(defmacro ,name (:env env ,place-sym ,*lambda-list)
          (with-update-expander (getter setter) ,place-sym env
            ^(,setter (,',function (,getter) ,,*cleaned-lambda-list)))))))
@@ -908,6 +921,7 @@
         ;; uses of sym as a place will fail due to get-foo not being a place.
        (sethash *place-update-expander* tmp-place
                  (lambda (tmp-getter tmp-setter tmp-place tmp-body)
+                   (ignore tmp-place)
                    ^(macrolet ((,tmp-getter () ^(,',pl-getter))
                                (,tmp-setter (val) ^(,',pl-setter ,val)))
                       ,tmp-body)))

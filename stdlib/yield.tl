@@ -95,8 +95,6 @@
          (nvars (len vis))
          (syms [mapcar car vis])
          (inits [mapcar cadr vis])
-         (letop (if (eq op 'hlet*) 'let* 'let))
-         (gens (mapcar (ret (gensym)) vis))
          (vec (gensym))
          (macs (mapcar (ret ^(,@1 (vecref ,vec ,@2)))
                        syms (range 0)))

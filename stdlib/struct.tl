@@ -35,6 +35,7 @@
 
 (defun sys:prune-missing-inits (slot-init-forms)
   (remove-if (tb ((kind name : (init-form nil init-form-present)))
+               (ignore name init-form)
                (and (member kind '(:static :instance :function))
                     (not init-form-present)))
              slot-init-forms))
@@ -61,7 +62,7 @@
           (additional-supers nil))
       (labels ((expand-slot (form slot)
                  (tree-case slot
-                   ((op . args)
+                   ((op . t)
                     (iflet ((expander [*struct-clause-expander* op]))
                       (append-each ((exslot [expander slot form]))
                         [expand-slot form exslot])
@@ -249,7 +250,7 @@
                ^(slet ((,s ,b))
                   (if ,s (qref ,s ,*refs))))
              :))
-    (x (tree-case refs
+    (t (tree-case refs
          (() ())
          (((pref sym) . more)
            (if (eq pref t)
@@ -291,7 +292,7 @@
          ((sym . more)
           (sys:check-slot form sym)
           ^(qref (slot ,obj ',sym) ,*more))
-         (obj (throwf 'eval-error "~s: bad syntax: ~s" 'qref refs))))))
+         (else (throwf 'eval-error "~s: bad syntax: ~s" 'qref else))))))
 
 (defmacro uref (. args)
   (cond
@@ -393,7 +394,7 @@
     (slotset struct sym val)
     (call (umethod meth-sym) struct)))
 
-(defmacro usr:rslot (struct sym meth-sym)
+(defmacro usr:rslot (struct sym t)
   ^(slot ,struct ,sym))
 
 (define-place-macro usr:rslot (struct sym meth-sym)
@@ -465,8 +466,8 @@
                   (cons : (collect-each ((o pp.opt))
                             (tree-case o
                               ((sym) ^(,sym :))
-                              ((sym init) o)
-                              ((sym init sym-p)
+                              ((t t) o)
+                              ((t t t)
                                (compile-error form
                                               "~s: three-element optional \ \
                                               parameter ~s not supported"

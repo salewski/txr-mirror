@@ -166,11 +166,13 @@
 
 (eval-only
   (defmacro if-windows (then : else)
+    (use then)
     (if (eql 2 (sizeof wchar))
       then
       else))
 
   (defmacro if-native-windows (then : else)
+    (use then)
     (if-windows
       ^(if (find #\\ path-sep-chars) ,then ,else)
       else)))

@@ -59,7 +59,7 @@
 
 (defun sys:op-rec-p (exp)
   (or (tree-case exp
-        ((x (y . r)) (and (eq x 'sys:expr) (eq y 'usr:rec))))
+        ((x (y . t)) (and (eq x 'sys:expr) (eq y 'usr:rec))))
       (equal exp '(sys:var usr:rec))))
 
 (defun sys:op-ensure-rec (ctx : recvar)
@@ -72,7 +72,7 @@
                                 (sys:setq more nil)))
     (sys:setq ctx (slot ctx 'up))))
 
-(defun sys:op-alpha-rename (f e op-args do-nested-metas)
+(defun sys:op-alpha-rename (e op-args do-nested-metas)
   (let* ((ctx sys:*op-ctx*)
          (code ^(macrolet ((sys:expr (:form f arg)
                              (let* ((ctx ,ctx)
@@ -105,7 +105,7 @@
 
 (eval-only
   (defmacro op-ignerr (x)
-    ^(sys:catch (error) ,x () (error (. args)))))
+    ^(sys:catch (error) ,x () (error (. args) (ignore args)))))
 
 (defun sys:op-expand (f e args)
   (unless args
@@ -118,9 +118,9 @@
          (syntax-0 (if (eq sym 'do) args ^[,*args]))
          (syntax-1 (if (or (null syntax-0) (neq sym 'do) compat)
                      ;; Not do, or empty do syntax, or compat mode.
-                     (sys:op-alpha-rename f e syntax-0 nil)
+                     (sys:op-alpha-rename e syntax-0 nil)
                      ;; Try to expand args as-is, catching errors.
-                     (let ((syn (op-ignerr (sys:op-alpha-rename f e
+                     (let ((syn (op-ignerr (sys:op-alpha-rename e
                                                                 syntax-0
                                                                 nil))))
                        (if syn
@@ -130,15 +130,15 @@
                            syn
                            ;; No metas: add do-gen at the end and expand
                            ;; again, without catching errors.
-                           (sys:op-alpha-rename f e
+                           (sys:op-alpha-rename e
                                                 (append syntax-0
                                                         (list do-gen))
                                                 nil))
                          ;; Args didn't expand, so let's try it with
                          ;; do-gen added.
                          (let ((syn (sys:op-alpha-rename
-                                      f e (append syntax-0
-                                                  (list do-gen))
+                                      e (append syntax-0
+                                                (list do-gen))
                                       nil)))
                            ;; It didn't blow up with the do-gen. However, if
                            ;; there are metas, we must not be adding this
@@ -147,19 +147,19 @@
                            ;; Thus we just expand it again without the do-gen,
                            ;; without op-ignerr, to let the error propagate.
                            (when (or (slot ctx 'gens) (slot ctx 'nested))
-                             (sys:op-alpha-rename f e syntax-0 nil)
+                             (sys:op-alpha-rename e syntax-0 nil)
                              ;; Just in case: we don't expect to reach this:
                              ['compile-error f "internal error"])
                            ;; There were no metas. Let's return the
                            ;; form augmented with do-gen.
                            syn)))))
-         (syntax-2 (sys:op-alpha-rename f e syntax-1 t))
+         (syntax-2 (sys:op-alpha-rename e syntax-1 t))
          (metas (slot ctx 'gens))
          (rec (slot ctx 'rec))
          (recvar (slot ctx 'recvar))
          (rest-sym (sys:ensure-op-arg ctx 0))
          (lambda-interior (let ((fargs (tree-case syntax-2
-                                         ((a b . fa) fa))))
+                                         ((t t . fa) fa))))
                             (cond
                               ((and (eq sym 'lop) fargs)
                                (let ((fargs-l1 (mapcar (lambda (farg)

@@ -19,7 +19,7 @@
   [(lambda ())] nil
   [(lambda (a) a)] :error
   [(lambda (a) a) 1] 1
-  [(lambda (a b) a) 1] :error
+  [(lambda (a b) (list a b)) 1] :error
   [(lambda (a b) (list a b)) 1 2] (1 2)
   [(lambda (a b c) (list a b c)) 1 2] :error
   [(lambda (a b c) (list a b c)) 1 2 3] (1 2 3))
@@ -32,11 +32,11 @@
   [(lambda (: (a 1 a-p)) (list a a-p)) 2] (2 t))
 
 (mltest
-  [(lambda (x : a) a)] :error
-  [(lambda (x : (a 1)) a)] :error
-  [(lambda (x : (a 1)) a) 2] 1
-  [(lambda (x : (a 1 a-p)) (list a a-p))] :error
-  [(lambda (x : (a 1 a-p)) (list a a-p)) 2] (1 nil))
+  [(lambda (x : a) (list x a))] :error
+  [(lambda (x : (a 1)) (list x a))] :error
+  [(lambda (x : (a 1)) (list x a)) 2] (2 1)
+  [(lambda (x : (a 1 a-p)) (list x a a-p))] :error
+  [(lambda (x : (a 1 a-p)) (list x a a-p)) 2] (2 1 nil))
 
 (mltest
   [(lambda (x : a) (list x a)) 0] (0 nil)

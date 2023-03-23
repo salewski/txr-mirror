@@ -43,6 +43,7 @@
                   ,*(if sym-p ^((set ,sym-p t)))))))))))
 
 (define-param-expander :key (param body menv form)
+  (ignore menv)
   (let* ((excluding-rest (butlastn 0 param))
          (key-start (memq '-- excluding-rest))
          (rest-param (or (nthlast 0 param) (gensym)))
@@ -52,7 +53,7 @@
          (eff-param (append before-key rest-param)))
     (each ((key-spec key-params))
       (tree-case key-spec
-        ((sym init var-p . junk)
+        ((t t var-p . junk)
          (when (consp junk)
            (compile-error form "superfluous forms in ~s" key-spec))
          (when junk
@@ -60,7 +61,7 @@
          (unless (bindable var-p)
            (compile-error form "~s isn't a bindable symbol" var-p))
          :)
-        ((sym init . more)
+        ((t t . more)
          (unless (listp more)
            (compile-error form "invalid dotted form ~s" key-spec))
          :)

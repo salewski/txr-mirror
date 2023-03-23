@@ -38,7 +38,7 @@
                             (t :)))
                          (else (compile-error form
                                               "~s: bad clause syntax: ~s"
-                                              'typecase cl))))))
+                                              'typecase else))))))
     ^(let ((,val ,obj))
        (cond ,*cond-pairs
          ,*(if (eq (car form) 'etypecase)

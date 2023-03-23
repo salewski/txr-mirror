@@ -76,7 +76,7 @@
                                (op where (op eq :)))
     (let ((nl (length lead))
           (nt (length trail)))
-      (with-gensyms (i nm lfl mfl tfl)
+      (with-gensyms (nm lfl mfl tfl)
         (sys:conv-let
           ^(let* ((,nm (- (length ,list-sym) ,(+ nl nt)))
                   (,lfl (list ,*lead))

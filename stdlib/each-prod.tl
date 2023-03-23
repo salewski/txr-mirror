@@ -57,8 +57,7 @@
                          (append-each-prod* 'append-each-prod)
                          (sum-each-prod* 'sum-each-prod)
                          (mul-each-prod* 'mul-each-prod)))
-         (syms [mapcar car vars])
-         (inits [mapcar cadr vars]))
+         (syms [mapcar car vars]))
     ^(let* ,vars
        (,each-prod-op ,(zip syms syms) ,*body))))
 

@@ -401,3 +401,7 @@
 (gcd-grind '(2 3 5 7 11 13 17 19 23))
 
 (gcd-grind '(2 3 5 4294967291 4294967311 4294967357 4294967371))
+
+(test
+  (build (each-prod* ((i '(b c)) (j (cons 'a i))) (add (list i j))))
+  ((b a) (b b) (b c) (c a) (c b) (c c)))

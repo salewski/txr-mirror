@@ -45,9 +45,11 @@
 (defun debugger-help ()
   (mapdo (ap pprinl `@{@1 15} @3`) %dbg-commands%))
 
-(defmeth fcall-frame loc (fr))
+(defmeth fcall-frame loc (fr)
+  (ignore fr))
 
 (defmeth fcall-frame print-trace (fr pr-fr nx-fr prefix)
+  (ignore pr-fr)
   (let* ((fun fr.fun)
          (args fr.args)
          (name (if (functionp fun)
@@ -80,6 +82,7 @@
                  ^(,sym)))))))
 
 (defmeth expand-frame print-trace (fr pr-fr nx-fr prefix)
+  (ignore pr-fr nx-fr)
   (let* ((form fr.form)
          (loc (source-loc-str form)))
     (put-string `@prefix X:@(if loc `(@loc):`)`)

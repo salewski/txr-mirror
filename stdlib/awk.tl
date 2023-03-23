@@ -44,7 +44,7 @@
   par-mode par-mode-fs par-mode-prev-fs
   (streams (hash :equal-based))
   (:fini (self)
-    (dohash (k v self.streams)
+    (dohash (#:k v self.streams)
       (close-stream v)))
   (:postinit (self)
     (set self.inputs (or self.inputs (zap *args*) (list *stdin*)))
@@ -331,7 +331,7 @@
                                          (collect-each ((fn actions))
                                            (match-case fn
                                              (@(bindable @sym) (list sym))
-                                             ((@(bindable @sym) @(bindable @fun))
+                                             ((@(bindable @sym) @(bindable))
                                               (if (eq sym '-)
                                                 (awk-error "type given for unnamed field"))
                                               fn)
@@ -356,8 +356,7 @@
          awc.cond-actions (nreverse awc.cond-actions))
     awc))
 
-(defun sys:awk-code-move-check (awc aws-sym mainform subform
-                                suspicious-vars kind)
+(defun sys:awk-code-move-check (mainform subform suspicious-vars kind)
   (when suspicious-vars
     (compile-warning mainform "~!form ~s\n\
                                is moved out of the apparent scope\n\
@@ -413,20 +412,16 @@
                                  (expand-with-free-refs from-expr e ,awc.outer-env)
                                  (expand-with-free-refs to-expr e ,awc.outer-env)
                                  (list (cadr form) (caddr form)))
-                      (sys:awk-code-move-check ,awc ',aws-sym
-                                               form from-expr-orig
+                      (sys:awk-code-move-check form from-expr-orig
                                                (diff fe-ev fe-fv)
                                                'variables)
-                      (sys:awk-code-move-check ,awc ',aws-sym
-                                               form from-expr-orig
+                      (sys:awk-code-move-check form from-expr-orig
                                                (diff fe-ef fe-ff)
                                                'functions)
-                      (sys:awk-code-move-check ,awc ',aws-sym
-                                               form to-expr-orig
+                      (sys:awk-code-move-check form to-expr-orig
                                                (diff te-ev te-fv)
                                                'variables)
-                      (sys:awk-code-move-check ,awc ',aws-sym
-                                               form to-expr-orig
+                      (sys:awk-code-move-check form to-expr-orig
                                                (diff te-ef te-ff)
                                                'functions)
                       (push rng-temp (qref ,awc rng-expr-temps))

@@ -74,7 +74,7 @@
     (((test . forms) . rest) ^(,if-oper ,test (progn ,*forms)
                                         (,cond-oper ,*rest)))
     (() ())
-    (else (compile-error f "bad syntax: ~s" pairs))))
+    (else (compile-error f "bad syntax: ~s" else))))
 
 (defmacro conda (:form f . pairs)
   (sys:if-to-cond f 'ifa 'conda pairs))

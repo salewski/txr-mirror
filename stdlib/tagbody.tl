@@ -25,7 +25,7 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 
-(defmacro tagbody (:env env . forms)
+(defmacro tagbody (. forms)
   (when forms
     (let* ((tb-id (gensym "tb-id-"))
            (next-var (gensym "next-"))
@@ -43,6 +43,7 @@
                (threaded-1 (mapcar (op member-if true) (conses forms)))
                (threaded-2 [apply nconc forms]) ;; important side effect
                (codes [mapcar car threaded-1]))
+          (ignore threaded-2)
           (unless (eql (length (uniq lbls)) (length lbls))
             (throwf 'eval-error "~s: duplicate labels occur" 'tagbody))
           (let* ((basic-code ^(let ((,tb-id (gensym "tb-dyn-id-"))

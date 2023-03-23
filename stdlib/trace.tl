@@ -36,7 +36,7 @@
 (defun sys:trace-enter (name args)
   [sys:trfm *trace-output* "~*a(~s ~s\n" [sys:tr* sys:*trace-level* 2] "" name args])
 
-(defun sys:trace-leave (name val)
+(defun sys:trace-leave (val)
   [sys:trfm *trace-output* "~*a  ~s)\n" [sys:tr* sys:*trace-level* 2] "" val])
 
 (defun sys:trace-canonicalize-name (name)
@@ -77,11 +77,11 @@
                              (progn
                                (sys:trace-enter lex-n args)
                                (let ((val (apply prev args)))
-                                 (sys:trace-leave lex-n val)
+                                 (sys:trace-leave val)
                                  (set abandoned nil)
                                  val))
                              (if abandoned
-                               (sys:trace-leave lex-n :abandoned)))))))
+                               (sys:trace-leave :abandoned)))))))
             (set (symbol-function n) hook
                  [sys:*trace-hash* n] prev)))))))
 
@@ -99,7 +99,7 @@
       (each ((n-orig names)
              (n [mapcar sys:trace-canonicalize-name names]))
         (disable n-orig n))
-      (dohash (n v sys:*trace-hash*)
+      (dohash (n #:v sys:*trace-hash*)
         (disable n n)))))
 
 (defun sys:trace-redefine-check (orig-name)
