@@ -14211,6 +14211,9 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         } else if (structp(obj)) {
           put_string(lit("#S(...)"), out);
           return obj;
+        } else if (treep(obj)) {
+          put_string(lit("#T(...)"), out);
+          return obj;
         }
       default:
         break;
