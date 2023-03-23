@@ -14349,8 +14349,10 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         if (sym == dwim_s) {
           put_char(chr('['), out);
           if (!have_args) {
-            put_string(lit(". "), out);
-            obj_print_impl(args, out, pretty, ctx);
+            if (args) {
+              put_string(lit(". "), out);
+              obj_print_impl(args, out, pretty, ctx);
+            }
             put_char(chr(']'), out);
             break;
           }
