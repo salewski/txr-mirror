@@ -41,7 +41,7 @@
 (defsymacro %warning-syms% '(usr:shadow-fun usr:shadow-var usr:shadow-cross
                              usr:unused))
 
-(defvar usr:*compile-opts* (new compile-opts))
+(defvar usr:*compile-opts* (new compile-opts usr:unused t))
 
 (defmacro when-opt (compile-opt . forms)
   (with-gensyms (optval)
@@ -167,7 +167,9 @@
         ((and me.up me.(lookup-fun sym))
          (diag me.co.last-form "function ~s shadows local function" sym))
         ((fboundp sym)
-         (diag me.co.last-form "function ~s shadows global function" sym))))
+         (diag me.co.last-form "function ~s shadows global function" sym))
+        ((mboundp sym)
+         (diag me.co.last-form "function ~s shadows global macro" sym))))
     (when-opt shadow-cross
       (cond
         ((and me.up me.(lookup-var sym))

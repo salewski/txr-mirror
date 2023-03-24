@@ -87648,6 +87648,157 @@ Macros definitions may be treated with
 if the intent is only to make the expanded code available in the compiled file,
 and not to propagate compiled versions of the macros which produced it.
 
+.coNP Structure @ compile-opts
+.synb
+.mets (defstruct compile-opts ()
+.mets \ \ shadow-fun shadow-var shadow-cross unused)
+.syne
+.desc
+The
+.code compile-opts
+structure represents compiler options: its slots are variables which affect
+compiler behavior.
+The compiler expects the special variable
+.code *compiler-opts*
+to hold a
+.code compiler-opts
+structure. It is recommended to manipulate options using the
+.code with-compiler-opts
+macro.
+
+Currently, all of the options are diagnostic. In the future, there may be other
+kinds of options.
+
+Diagnostic options take on the values
+.codn nil ,
+.codn t ,
+.code :warn
+and
+.codn :error .
+The
+.code t
+and
+.code :warn
+value are synonyms. A value of
+.code nil
+means that the option is disabled.
+The
+.code t
+and
+.code :warn
+values mean that the diagnostic controlled by the option will be emitted as a warning.
+The
+.code :error
+value indicates that the diagnostic will be an error.
+
+The slots of
+.code compile-opts
+are as follows:
+
+.RS
+.coIP shadow-fun
+Diagnostic option, off by default. This option controls whether a diagnostic is
+emitted whenever a lexical function shadows another lexical function,
+a global function or a global macro. Note: shadowing of local macros is not
+diagnosed, because the compiler operates on code in which macros no longer exist.
+.coIP shadow-var
+Diagnostic option, off by default. This option controls whether a diagnostic is
+emitted whenever a lexical variable shadows another lexical variable,
+a global variable, or a global macro. Note: shadowing of local
+macros is not diagnosed, because the compiler operates on code in which macros
+no longer exist. Note: special variables are not diagnosed for shadowing.
+.coIP shadow-cross
+Diagnostic option, off by default. This option controls whether a diagnostic is
+emitted whenever a lexical function shadows a variable, or vice versa: whether
+a lexical variable shadows a function.
+.coIP unused
+Diagnostic option, set to warn by default. This option controls whether a
+diagnostic is emitted whenever a lexical variable is defined whose
+value is not used. Variables whose names are uninterned symbols
+are exempt from this diagnostic. The rationale is that uninterned
+symbols are used for naming machine-generated variables, in generated
+code such as macro expansions. Situation in which a machine-generated
+variable is unused arise fairly often, and are and are not the result of a
+programming error.  For the purpose of this diagnostic, what constitutes use of
+a variable is an access to its value, which isn't optimized away before being
+noted.  Storing a value isn't use. An example of an access which is optimized
+away before being noted is an access which occurs in trivially dead code: for
+instance
+.code "(if nil a)"
+does not access
+.code a
+because the compiler discards the
+.meta then
+expression of an
+.code if
+whose
+.meta test
+expression is constantly false. The discarded expression is never
+traversed in a way that would cause it to be noted as accessing the
+.code a
+variable.
+.RE
+
+.coNP Special variable @ *compiler-opts*
+.desc
+The special variable
+.code *compiler-opts*
+holds a value of type
+.code compiler-opts
+which is a structure type. It is recommended to manipulate options using the
+.code with-compiler-opts
+macro.
+
+.coNP Macro @ with-compile-opts
+.synb
+.mets (with-compile-opts >> {( value << option *) | << form }*)
+.syne
+.desc
+The
+.code with-compile-opts
+macro takes zero or more arguments. Each argument is either a clause
+which affects compiler options or else an ordinary
+.meta form
+which is evaluated in a context in which the
+.code *compile-options*
+variable has been affected by all of the previous clauses.
+
+The
+.code with-compile-opts
+macro arranges for
+.code *compile-options*
+to be freshly bound, as if by the
+.code let
+operator. The variable is then given a value which is a copy of the
+previous binding.
+The option-affecting clauses then operate destructively on this copy.
+When the macro terminates, the binding is undone and thus the
+prior value of
+.code *compile-options*
+is restored.
+
+The clauses which operate on options have the syntax of a value followed by one
+or more symbols which must be the names of options which are compatible with
+that value. The clause indicates that all those options take on that value.
+
+.TP* Example:
+
+The following expression specifies that the file
+.str foo.tl
+is to be compiled with function and variable shadowing
+treated as error, but unused variable checking disabled. Then compile
+.str bar.tl
+with unused variable checking enabled.
+
+.verb
+  (with-compile-opts
+     (:error shadow-var shadow-fun)
+     (nil unused)
+     (compile-file "foo.tl")
+     (:warn unused)
+     (compile-file "bar.tl"))
+.brev
+
 .coNP Macro @ load-time
 .synb
 .mets (load-time << form )
