@@ -44124,7 +44124,7 @@ these functions expand the place macro form and return the expanded form.
 Otherwise, they return
 .metn form .
 
-.code macroexpand-place-1
+.code macroexpand-1-place
 performs a single expansion, expanding only the place the macro
 that is referenced by the symbol in the first position of
 .metn form ,
@@ -44151,7 +44151,7 @@ This process is iterated until a fixed point is reached.
 The optional
 .meta env
 parameter is a macro environment.  Note: the
-.code macroexpand-place-1
+.code macroexpand-1-place
 function ignores the
 .meta env
 parameter, which could change in the future.
