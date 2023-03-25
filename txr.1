@@ -86908,6 +86908,149 @@ Version 261 introduces JSON
 syntax. Compiled code which contains embedded JSON literals
 is not loadable by \*(TX 260 and older.
 
+.SS* Recommendations for Unused Variable Diagnostics
+
+By default, the
+.code unused
+diagnostic option is enabled in
+.codn *compiler-opts* ,
+causing unused variables to be diagnosed.
+
+The first step in resolving an unused variable diagnostic is to determine
+whether it is caused by a bug in the code. If so, the resolution is
+to address the bug.
+
+If the situation isn't a bug, then the diagnostic is a false positive,
+and may be silenced. There are multiple ways to do that, six of
+which are given here:
+
+.IP 1.
+.BR "Disable the diagnostic" :
+for instance, compile
+.str foo.tl
+with unused warnings disabled:
+
+.verb
+  (with-compiler-opts (nil unused)
+     (compile-file "foo.tl"))
+.brev
+
+.IP 2.
+.B "Use the"
+.code ignore
+.BR function :
+the compiler specially recognizes the
+.code ignore
+function such that when any of its arguments are lexical variables,
+they are marked used:
+
+.verb
+   (defun stub-function (arg1 arg2)
+     (ignore arg1 arg2))
+.brev
+
+Note that an
+.code ignore
+call may be elided if it occurs in dead code, in which case it
+won't have the right effect:
+
+.verb
+  (defun unused-arg (arg)   ;; diagnosed as unused
+    (when (= (+ 2 2) 5)
+      (ignore arg)          ;; wrongly placed
+      (dead-code)))
+
+  (defun unused-arg (arg)   ;; no diagnostic
+    (ignore arg)            ;; correctly placed
+    (when (= (+ 2 2) 5)
+      (dead-code)))
+.brev
+
+.IP 3.
+.B "Use the"
+.code use
+.BR function .
+In the following code, parameter
+.code arg
+is diagnosed as unused on platforms in which the
+equality being tested is false, since the
+expression is constant. In situations like this,
+the variable is not unused, but only conditionally so.
+Therefore the name of the
+.code ignore
+function doesn't express the intent very well.
+The
+.code use
+function may be stylistically preferred:
+
+.verb
+   (defun platform-specific-action (arg)
+      (use arg)
+      (if (eql (sizeof wchar) 2)
+         (do-something arg)))
+.brev
+
+However, unlike
+.codn ignore ,
+.code use
+takes exactly one argument, and returns that
+argument rather than
+.codn nil .
+
+.IP 4.
+.BR "Use an uninterned symbol: "
+unused variable diagnostics are not reported against variables
+named by uninterned symbols.
+
+.verb
+  (lambda (x y) y)    ;; unused x diagnosed
+  (lambda (#:x y) y)  ;; no diagnostic
+.brev
+
+.IP 5.
+.BR "In pattern matching, put catch-all variable to use" :
+
+Examples:
+
+.verb
+   (tree-case obj
+      ((a b) (calculate-something a b))
+      (else (transform obj))) ;; unused else
+
+   (tree-case obj
+      ((a b) (calculate-something a b))
+      (else (transform else))) ;; diagnostic gone
+
+   (match-case obj
+      ((@a @b) (calculate-something a b))
+      (@else (transform obj))) ;; unused else
+
+   (match-case obj
+      ((@a @b) (calculate-something a b))
+      (@else (transform else))) ;; diagnostic gone
+.brev
+
+.IP 6.
+.B "In macro parameter lists use t symbol" :
+in macro-style parameter lists, any variable may be replaced by the
+.code t
+symbol to consume a value without binding a variable. This is
+intended for suppressing unused variable warnings:
+
+.verb
+   (defmacro foo (x y)  ;; y unused
+     ^(a b c ,x))
+
+   (defmacro foo (x t)  ;; no diagnostic
+     ^(a b c ,x))
+
+   (tree-bind (a . (b . c)) obj ;; a, b, unused
+     c)
+
+   (tree-bind (t . (t . c)) obj ;; no diagnostic
+     c)
+.brev
+
 .SS* Semantic Differences between Compilation and Interpretation
 
 The
