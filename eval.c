@@ -5991,38 +5991,29 @@ static val range(val from_in, val to_in, val step_in)
   val from = default_arg(from_in, zero);
   val to = default_null_arg(to_in);
 
-  switch (type(from)) {
-  case NUM:
-  case BGNUM:
-  case FLNUM:
-  case CHR:
-  case RNG:
-    {
-      val step = default_arg(step_in, if3(to && gt(from, to), negone, one));
-      val env = cons(from, cons(to, step));
-      return make_lazy_cons(func_f1(env, range_func));
-    }
-  default:
-    {
-      val step = default_arg(step_in, one);
+  if (arithp(from)) {
+    val step = default_arg(step_in, if3(to && gt(from, to), negone, one));
+    val env = cons(from, cons(to, step));
+    return make_lazy_cons(func_f1(env, range_func));
+  } else {
+    val step = default_arg(step_in, one);
 
-      if (functionp(step)){
-        if (missingp(to_in)) {
-          val env = cons(from, step);
-          return make_lazy_cons(func_f1(env, range_func_fstep_inf));
-        } else {
-          val env = cons(from, cons(to, step));
-          return make_lazy_cons(func_f1(env, range_func_fstep));
-        }
-      } else if (integerp(step) && plusp(step)) {
-        val iter = iter_begin(rcons(from, to));
-        val env = cons(iter, step);
-        return if2(iter_more(iter),
-                   make_lazy_cons(func_f1(env, range_func_iter)));
+    if (functionp(step)){
+      if (missingp(to_in)) {
+        val env = cons(from, step);
+        return make_lazy_cons(func_f1(env, range_func_fstep_inf));
       } else {
-        uw_throwf(error_s, lit("~s: step must be positive integer, not ~s"),
-                  self, step, nao);
+        val env = cons(from, cons(to, step));
+        return make_lazy_cons(func_f1(env, range_func_fstep));
       }
+    } else if (integerp(step) && plusp(step)) {
+      val iter = iter_begin(rcons(from, to));
+      val env = cons(iter, step);
+      return if2(iter_more(iter),
+                 make_lazy_cons(func_f1(env, range_func_iter)));
+    } else {
+      uw_throwf(error_s, lit("~s: step must be positive integer, not ~s"),
+                self, step, nao);
     }
   }
 }
@@ -6100,44 +6091,35 @@ static val range_star(val from_in, val to_in, val step_in)
   val from = default_arg(from_in, zero);
   val to = default_null_arg(to_in);
 
-  if (eql(from, to)) {
+  if (equal(from, to)) {
     return nil;
-  } else switch (type(from)) {
-  case NUM:
-  case BGNUM:
-  case FLNUM:
-  case CHR:
-  case RNG:
-    {
-      val step = default_arg(step_in, if3(to && gt(from, to), negone, one));
-      val env = cons(from, cons(to, step));
-      return make_lazy_cons(func_f1(env, range_star_func));
-    }
-  default:
-    {
-      val step = default_arg(step_in, one);
+  } else if (arithp(from)) {
+    val step = default_arg(step_in, if3(to && gt(from, to), negone, one));
+    val env = cons(from, cons(to, step));
+    return make_lazy_cons(func_f1(env, range_star_func));
+  } else {
+    val step = default_arg(step_in, one);
 
-      if (functionp(step)){
-        if (missingp(to_in)) {
-          val env = cons(from, step);
-          return make_lazy_cons(func_f1(env, range_func_fstep_inf));
-        } else {
-          val env = cons(from, cons(to, step));
-          return make_lazy_cons(func_f1(env, range_star_func_fstep));
-        }
-      } else if (integerp(step) && plusp(step)) {
-        val iter = iter_begin(rcons(from, to));
-        if (iter_more(iter)) {
-          val next = iter_item(iter);
-          val nxiter = iter_step(iter);
-          val env = cons(nxiter, cons(next, step));
-          return make_lazy_cons(func_f1(env, range_star_func_iter));
-        }
-        return nil;
+    if (functionp(step)){
+      if (missingp(to_in)) {
+        val env = cons(from, step);
+        return make_lazy_cons(func_f1(env, range_func_fstep_inf));
       } else {
-        uw_throwf(error_s, lit("~s: step must be positive integer, not ~s"),
-                  self, step, nao);
+        val env = cons(from, cons(to, step));
+        return make_lazy_cons(func_f1(env, range_star_func_fstep));
       }
+    } else if (integerp(step) && plusp(step)) {
+      val iter = iter_begin(rcons(from, to));
+      if (iter_more(iter)) {
+        val next = iter_item(iter);
+        val nxiter = iter_step(iter);
+        val env = cons(nxiter, cons(next, step));
+        return make_lazy_cons(func_f1(env, range_star_func_iter));
+      }
+      return nil;
+    } else {
+      uw_throwf(error_s, lit("~s: step must be positive integer, not ~s"),
+                self, step, nao);
     }
   }
 }
