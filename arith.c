@@ -4362,6 +4362,23 @@ val numberp(val num)
   }
 }
 
+val arithp(val obj)
+{
+  switch (type(obj)) {
+  case NUM:
+  case BGNUM:
+  case FLNUM:
+  case CHR:
+  case RNG:
+    return t;
+  default:
+    if (obj_struct_p(obj) && get_special_slot(obj, plus_m))
+      return t;
+  }
+
+  return nil;
+}
+
 val nary_op(val self, val (*bfun)(val, val),
             val (*ufun)(val self, val),
             struct args *args, val emptyval)
@@ -4918,7 +4935,7 @@ void arith_init(void)
   reg_fun(intern(lit("floatp"), user_package), func_n1(floatp));
   reg_fun(intern(lit("integerp"), user_package), func_n1(integerp));
   reg_fun(intern(lit("numberp"), user_package), func_n1(numberp));
-
+  reg_fun(intern(lit("arithp"), user_package), func_n1(arithp));
 
   reg_fun(signum_s, func_n1(signum));
 

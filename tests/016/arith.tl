@@ -405,3 +405,10 @@
 (test
   (build (each-prod* ((i '(b c)) (j (cons 'a i))) (add (list i j))))
   ((b a) (b b) (b c) (c a) (c b) (c c)))
+
+(mtest
+  (arithp #\a) t
+  (arithp 42) t
+  (arithp 3.14) t
+  (arithp (expt 2 200)) t
+  (arithp #R(nil nil)) t)

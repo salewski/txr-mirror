@@ -48806,6 +48806,28 @@ a
 or
 .codn float .
 
+.coNP Function @ arithp
+.synb
+.mets (arithp << object )
+.syne
+.desc
+The
+.code arithp
+function returns true if
+.met object
+is a character, integer, floating-point number, range or a user-defined arithmetic object.
+For a range,
+.code t
+is returned without examining the values of the
+.code from
+and
+.code to
+fields.
+A user-defined arithmetic object is identified as a struct type which
+implements the
+.code +
+method as a static slot.
+
 .coNP Functions @ zerop and @ nzerop
 .synb
 .mets (zerop << number )

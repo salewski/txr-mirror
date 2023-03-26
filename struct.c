@@ -114,7 +114,8 @@ val iter_begin_s, iter_more_s, iter_item_s, iter_step_s, iter_reset_s;
 static val *special_sym[num_special_slots] = {
   &equal_s, &nullify_s, &from_list_s, &lambda_s, &lambda_set_s,
   &length_s, &car_s, &cdr_s, &rplaca_s, &rplacd_s,
-  &iter_begin_s, &iter_more_s, &iter_item_s, &iter_step_s, &iter_reset_s
+  &iter_begin_s, &iter_more_s, &iter_item_s, &iter_step_s, &iter_reset_s,
+  &plus_s
 };
 
 static struct cobj_class *struct_type_cls;

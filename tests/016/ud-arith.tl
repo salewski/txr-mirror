@@ -138,3 +138,5 @@
 (test (ash n 0) (ash 1 0))
 (test (width n) (width 1))
 (test (logcount n) (logcount 1))
+
+(test (arithp n) t)

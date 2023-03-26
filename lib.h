@@ -689,6 +689,7 @@ extern val warning_s, defr_warning_s, restart_s, continue_s;
 extern val gensym_counter_s, length_s;
 extern val rplaca_s, rplacd_s, seq_iter_s;
 extern val lazy_streams_s;
+extern val plus_s;
 
 #define gensym_counter (deref(lookup_var_l(nil, gensym_counter_s)))
 
@@ -919,6 +920,7 @@ val bignump(val num);
 val floatp(val num);
 val integerp(val num);
 val numberp(val num);
+val arithp(val obj);
 val nary_op(val self, val (*bfun)(val, val),
             val (*ufun)(val self, val),
             struct args *args, val emptyval);

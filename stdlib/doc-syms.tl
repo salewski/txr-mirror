@@ -125,6 +125,7 @@
       ("apply" "N-026C3723")
       ("aret" "N-008216A8")
       ("arg" "N-02133AA5")
+      ("arithp" "N-03DAA473")
       ("array" "N-0117BE95")
       ("arraysize" "N-002129D6")
       ("as" "N-028B26DD")
