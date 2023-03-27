@@ -164,6 +164,7 @@ syn match txr_pnum "#[xob][+\-]\?[@alnum,]\+" contains=txr_xnum,txr_bnum,txr_onu
 syn match txr_xnum "#x[+\-]\?@hexsep" containedin=txr_pnum contained
 syn match txr_onum "#o[+\-]\?@octsep" containedin=txr_pnum contained
 syn match txr_bnum "#b[+\-]\?@binsep" containedin=txr_pnum contained
+syn match txr_num "[+\-]\?@digsep"@(if txr-p " contained")
 syn match txr_num "[+\-]\?@digsep\?[.]@digsep\([eE][+\-]\?[@dig]\+\)\?"@(if txr-p " contained")
 syn match txr_num "[+\-]\?@digsep[.]\?\([eE][+\-]\?[@dig]\+\)"@(if txr-p " contained")
 syn match txr_badnum "[+\-]\?@digsep\?[.]@digsep\([@{alpha-noe}@glyph^/#]\|[eE][^+\-@dig]\|[eE][+/-]\?$\|[eE][+\-][^0-9]\)"@(if txr-p " contained")
