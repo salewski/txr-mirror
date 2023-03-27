@@ -24834,11 +24834,19 @@ The
 .code range
 and
 .code range*
-functions generate a lazy sequence of integers, with a
-fixed step between successive values.
+functions generate a lazy, potentially infinite list, according to
+several disciplines.
+
+There is a major division in behavior
+depending on whether or not the
+.code from
+argument, which specifies the initial item, is an arithmetic type
+according to the
+.code arithp
+function. The following remarks describe the arithmetic case. A
+description of the non-arithmetic behavior follows.
 
 The difference between
-.code range
 and
 .code range*
 is that
@@ -24856,17 +24864,38 @@ generates
 All arguments are optional. If the
 .meta step
 argument is omitted, then it defaults
-to
-.codn 1 :
-each value in the sequence is greater than the previous one by
-.codn 1 .
-Positive or negative step sizes are allowed. There is no check for a step size
-of zero, or for a step direction which cannot meet the endpoint.
+to 1 if the
+.meta to
+argument is omitted, or else if it is greater than or equal to
+.meta from
+according to the
+.code >
+function.
+If
+.meta to
+is given, and is less than
+.metn from ,
+then a missing
+.code step
+argument defaults to -1.
+
+Each value in the list is obtained from the previous by adding the
+.meta step
+value.  Positive or negative
+.meta step
+values are allowed. There is no check for a step size of zero, or for a step
+direction which cannot meet the endpoint.
+
+The
+.meta step
+argument may be a function. The function must accept one argument.
+That argument is an element of the list, from which the function
+calculates the next element.
 
 The
 .meta to
 argument specifies the endpoint value, which, if it occurs in the
-sequence, is excluded from it by the
+list, is excluded from it by the
 .code range*
 function, but included by the range
 function. If
@@ -24874,27 +24903,115 @@ function. If
 is missing, or specified as
 .codn nil ,
 then there is no endpoint,
-and the sequence which is generated is infinite, regardless of
+and the list which is generated is infinite, regardless of
 .metn step .
 
 If
 .meta from
-is omitted, then the sequence begins at zero, otherwise
+is omitted, then the list begins at zero, otherwise
 .meta from
-must be an integer which specifies the initial value.
+must be an arithmetic object which specifies the initial value.
 
-The sequence stops if it reaches the endpoint value (which is included in the
+The list stops if it reaches the endpoint value (which is included in the
 case of
 .codn range ,
 and excluded in the case of
 .codn range *).
-However, a sequence with a stepsize greater than
-.code 1
-or less than
-.code -1
-might step over the endpoint value, and
-therefore never attain it. In this situation, the sequence also stops, and the
-excess value which surpasses the endpoint is excluded from the sequence.
+However, depending on the arguments, it is possible that the generated list
+doesn't contain the endpoint value, yet steps over it. This occurs when
+the previous value of the list is less than the endpoint value, but
+the next value is greater, or vice versa.  In this situation, the list also
+stops, and the excess value which surpasses the endpoint is excluded from the
+list.
+
+The rest of the description applies to the case when the
+.code from
+argument is a non-arithmetic type.
+
+In the non-arithmetic case, the
+.meta step
+argument unconditionally defaults to 1. If it is given, it must either be a
+function, or else a positive integer.
+
+If
+.meta step
+is a function, that function is used to determine each successive
+value from the previous similarly to the arithmetic case.
+If the
+.meta to
+value is omitted, an infinite list is generated this way.
+If the
+.meta to
+argument is present, the list stops if it attains the endpoint value.  No
+provision is made for the endpoint value being skipped, like in the arithmetic
+case. When the endpoint value is reached,
+.code range*
+function omits that value from the list.
+
+If
+.meta step
+is a positive integer, then range iteration is used. A range value is
+constructed from the
+.meta from
+and
+.meta to
+arguments as if by the
+.mono
+.meti (rcons* < from << to )
+.onom
+expression. Here, the
+.code to
+argument defaults to
+.code nil
+if it is missing. An iterator is created for the resulting range
+object as if by
+.code iter-begin
+and this iterator is then used to obtain values for the
+lazy list returned by
+.code range
+or
+.codn range* .
+The list ends when the iterator indicates that no more items
+are available. In the case of the
+.code range*
+function, the last value produced by the iterator is omitted
+from the list. The
+.meta step
+size is used to skip items from the iterator. For instance, if 
+the value is 3, then the sequence begins with the
+.meta from
+value. The next two values from the sequence are omitted,
+The fourth item from the sequence is included in the list,
+(unless there either is no such item, or the function is
+.codn range* ,
+and that item is the last one).
+
+.TP* Examples:
+
+.verb
+  (range 1 1) -> (1)
+  (range 0 4) -> (0 1 2 3 4)
+  (range 4 0) -> (4 3 2 1 0)
+  (range 0.0 2.0 0.5) (0.0 0.5 1.0 1.5 2.0)
+  (range #R(0 1) #R(3 4)) (#R(0 1) #R(1 2) #R(3 4))
+  (range 0 4 2) -> (0 2 4)
+  (range #\ea #\ee 2) (#\ea #\ec #\ee)
+  (range 1 32 (op * 2)) -> (1 2 4 8 16 32))
+
+  (range* 1 1) -> nil
+  (range* 0 4) -> (0 1 2 3)
+
+  (range* 4 0 -2) -> (4 2)
+
+  (range 0 1.25 0.5) -> (0 0.5 1.0)
+  (range* 0 1.25 0.5) -> (0 0.5 1.0))
+
+  (range "A" "A") -> nil
+  (range "AA" "BC") -> ("AA" "AB" "AC" "BA" "BB" "BC")
+  (range "AA" "BC" 2) -> ("AA" "AC" "BB")
+
+  [range* "ABCD" nil rest] -> ("ABCD" "BCD" "CD" "D")
+.brev
 
 .coNP Functions @ rlist and @ rlist*
 .synb
@@ -48814,7 +48931,7 @@ or
 The
 .code arithp
 function returns true if
-.met object
+.meta object
 is a character, integer, floating-point number, range or a user-defined arithmetic object.
 For a range,
 .code t
