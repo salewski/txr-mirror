@@ -9,7 +9,7 @@
       ("*args-eff*" "N-03DEE18A")
       ("*args-full*" "N-03DEE18A")
       ("*child-env*" "N-01BB2097")
-      ("*compiler-opts*" "N-005A796B")
+      ("*compile-opts*" "N-03E15FAA")
       ("*doc-url*" "N-0003D10B")
       ("*filters*" "N-00E6A902")
       ("*gensym-counter*" "N-0387B1B1")

@@ -87052,7 +87052,7 @@ is not loadable by \*(TX 260 and older.
 By default, the
 .code unused
 diagnostic option is enabled in
-.codn *compiler-opts* ,
+.codn *compile-opts* ,
 causing unused variables to be diagnosed.
 
 The first step in resolving an unused variable diagnostic is to determine
@@ -87070,7 +87070,7 @@ for instance, compile
 with unused warnings disabled:
 
 .verb
-  (with-compiler-opts (nil unused)
+  (with-compile-opts (nil unused)
      (compile-file "foo.tl"))
 .brev
 
@@ -87941,11 +87941,11 @@ The
 structure represents compiler options: its slots are variables which affect
 compiler behavior.
 The compiler expects the special variable
-.code *compiler-opts*
+.code *compile-opts*
 to hold a
-.code compiler-opts
+.code compile-opts
 structure. It is recommended to manipulate options using the
-.code with-compiler-opts
+.code with-compile-opts
 macro.
 
 Currently, all of the options are diagnostic. In the future, there may be other
@@ -88021,14 +88021,14 @@ traversed in a way that would cause it to be noted as accessing the
 variable.
 .RE
 
-.coNP Special variable @ *compiler-opts*
+.coNP Special variable @ *compile-opts*
 .desc
 The special variable
-.code *compiler-opts*
+.code *compile-opts*
 holds a value of type
-.code compiler-opts
+.code compile-opts
 which is a structure type. It is recommended to manipulate options using the
-.code with-compiler-opts
+.code with-compile-opts
 macro.
 
 .coNP Macro @ with-compile-opts
