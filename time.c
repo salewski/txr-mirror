@@ -44,12 +44,12 @@
 #include "eval.h"
 #include "time.h"
 
-#if HAVE_TM_ZONE
 struct tm_wrap {
   struct tm tm;
+#if HAVE_TM_ZONE
   const char *zone;
-};
 #endif
+};
 
 val time_s, time_local_s, time_utc_s, time_string_s, time_parse_s;
 val year_s, month_s, day_s, hour_s, min_s, sec_s, wday_s, yday_s;

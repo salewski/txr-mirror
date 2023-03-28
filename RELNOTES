@@ -1,3 +1,70 @@
+                                    TXR 285
+                                   2023-03-28
+
+
+  Features
+
+  - Lib:
+    - time (on platforms that have a timezone field in struct tm):
+      - functions which convert a destructured time into a
+        numeric time, like time-parse-utc, now take the time zone into
+        account, and add a displacement.
+      - functions which format time now via strftime now set the time
+        zone field in the underlying struct tm, so that the %z specifier
+        featured in glibc's strftime can be meaningfully used.
+    - New function: ignore: synonym of nilf, intended for suppressing
+      unbound variable warnings
+    - New function: arithp: tests for arithmetic objects, including
+      ranges and structures with + method.
+    - range/range*: these functions now support non-arithmetic
+      types: e.g (range "AAA" "ZZZ" 2) generates ("AAA" "AAC" ...
+      "ZZW" "ZZY").
+
+  - TXR Pattern Language:
+    - fix exception being thrown in matching a bound variable whose
+      value is a lazy list of strings rather than ordinary list.
+      - e.g. value captured with @(data ...)
+
+  - Structural Pattern Matching:
+    - @nil is now supported in predicates.
+      - @(< @nil 42) is like @(< @a 42) but no variable is bound.
+
+  - Syntax:
+    - The symbol t can be used in macro parameter lists and tree-bind,
+      to specify a pseud-variable which just throws away the
+      corresponding value.
+
+  - Compiler:
+    - New options mechanism:
+      - compile-options struct type
+      - *compile-options* special variable.
+      - with-compile-options macro
+    - New unused variable warnings are on by default.
+
+  Bugs
+
+  - build: fixed regression in building without CONFIG_GEN_GC
+    or CONFIG_DEBUG_SUPPORT, which are 1 by default.
+  - gc:
+    - premature reclamation bug in lisp_parse_impl which is used
+      internally and as the implementation for functions that parse
+      Lisp, regex and JSON.
+    - premature reclamation bug in implementation of FFI enum types:
+      neglect to traverse a struct member during gc marking.
+    - premature bug in constructor for FFI structs: neglect
+      to protect member types from gc in the loop that processes struct
+      members.
+  - printer:
+    - [] object now prints as [] rather than [. nil],
+      which isn't incorrect, just ugly.
+    - search tree objects now print as #T(...) beyond the maximum
+      printing depth, just like #H(...) and others.
+  - Vim:
+    - Fixed syntax highlighting for decimal integers and
+      uninterned symbols.
+
+
+
                                     TXR 284
                                    2022-12-30
 
