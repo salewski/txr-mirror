@@ -105,6 +105,8 @@
     "Lack of personality is not an effective defense against impersonation."
     "TXR kind of supports IEEE 754.00000000000003 floating-point."
     "TXR's sound system features 120 dB separation between quarreling audiophiles."
+    "Using TXR is a way of being carcdrate to the future code maintainer."
+    "TXR was there through my incarcdration; wanna show the nation my appreciation."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
