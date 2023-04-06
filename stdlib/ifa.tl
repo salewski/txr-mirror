@@ -69,15 +69,16 @@
 (defmacro whena (test . body)
   ^(ifa ,test (progn ,*body)))
 
-(defun sys:if-to-cond (f if-oper cond-oper pairs)
-  (tree-case pairs
-    (((test . forms) . rest) ^(,if-oper ,test (progn ,*forms)
-                                        (,cond-oper ,*rest)))
-    (() ())
-    (else (compile-error f "bad syntax: ~s" else))))
+(defun sys:if-to-cond (f if-oper pairs)
+  (with-gensyms (res)
+    ^(let (,res)
+       (or ,*(collect-each ((c pairs))
+               (mac-param-bind f (test . forms) c
+                  ^(,if-oper ,test (progn (set ,res (progn ,*forms)) t)))))
+       ,res)))
 
 (defmacro conda (:form f . pairs)
-  (sys:if-to-cond f 'ifa 'conda pairs))
+  (sys:if-to-cond f 'ifa pairs))
 
 (defmacro condlet (:form f . pairs)
-  (sys:if-to-cond f 'iflet 'condlet pairs))
+  (sys:if-to-cond f 'iflet pairs))
