@@ -680,14 +680,15 @@ static void invoke_handler(uw_frame_t *fr, struct args *args)
 val uw_rthrow(val sym, val args)
 {
   uw_frame_t *ex;
+  val errorp = uw_exception_subtype_p(sym, error_s);
 
-  if (++reentry_count > 1) {
+  if (++reentry_count > 1 && errorp) {
     fprintf(stderr, "txr: invalid re-entry of exception handling logic\n");
     abort();
   }
 
 #if CONFIG_EXTRA_DEBUGGING
-  if (uw_break_on_error && uw_exception_subtype_p(sym, error_s))
+  if (uw_break_on_error && errorp)
     breakpt();
 #endif
 
@@ -737,7 +738,7 @@ val uw_rthrow(val sym, val args)
     }
 
     if (!opt_compat || opt_compat >= 234) {
-      if (!uw_exception_subtype_p(sym, error_s)) {
+      if (!errorp) {
         --reentry_count;
         return nil;
       }
