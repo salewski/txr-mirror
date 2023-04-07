@@ -357,7 +357,9 @@
                (and li (not (bit li.used n)))))
            (only-locally-used-treg (insn n)
              (let ((li [bb.li-hash insn]))
-               (and li (bit li.used n) (not (bit bl.live n))))))
+               (and li (bit li.used n) (not (bit bl.live n)))))
+           (rename (insns dst src)
+             (mapcar (op subst-preserve dst src bb [bb.li-hash @1] @1) insns)))
     (rewrite-case insns code
       ;; dead t-reg
       (@(require ((@(or mov getlx getv getf getfb) (t @n) . @nil) . @nil)
@@ -387,13 +389,7 @@
                  (not (find src rest : [chain bb.li-hash .def])))
         (pushnew bl bb.rescan)
         (set bb.recalc t)
-        (labels ((rename (insns n dst src)
-                   (tree-case insns
-                     ((fi . t)
-                      (cons (subst-preserve dst src bb [bb.li-hash fi] fi)
-                            (rename (cdr insns) n dst src)))
-                     (else else))))
-          (rename (cdr insns) n dst src)))
+        (rename rest dst src))
       ;; wasteful moves
       (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
        (cdr insns))
