@@ -87740,8 +87740,8 @@ provides control over compiler optimizations.
 The variable takes on integer
 values. If the value is
 .codn nil ,
-it is interpreted as zero.  The meaningful range is from 0 to 6.
-The initial value of the variable is 6.
+it is interpreted as zero.  The meaningful range is from 0 to 7.
+The initial value of the variable is 7.
 
 The meanings of the values are as follows:
 
@@ -87774,6 +87774,8 @@ Data flow optimizations are applied, such as elimination of dead register
 moves, or useless propagations of values from one register to another.
 More peephole optimizations are applied.
 .IP 6
+Another pass of the levels 4 and 5 optimizations is performed.
+.IP 7
 Certain more rarely applicable optimizations are applied which reduce code size
 by merging some identical code blocks, or improving some more rarely
 occurring instruction patterns.

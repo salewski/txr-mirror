@@ -378,8 +378,9 @@
 ;; 3 - lambda/combinator lifting
 ;; 4 - control-flow: jump-threading, dead code
 ;; 5 - data-flow: dead registers, useless regisers
-;; 6 - more expensive size or speed optimizations
-(defvar usr:*opt-level* 6)
+;; 6 - iterate on 4-5 optimizations.
+;; 7 - more expensive size or speed optimizations
+(defvar usr:*opt-level* 7)
 
 (defun dedup (obj)
   (cond
@@ -1724,9 +1725,15 @@
         (when (>= olev 5)
           bb.(calc-liveness)
           bb.(peephole)
-          bb.(elim-dead-code))
+          (when (>= olev 6)
+             bb.(link-graph)
+             bb.(thread-jumps))
+          bb.(elim-dead-code)
+          (when (>= olev 6)
+            bb.(calc-liveness)
+            bb.(peephole)))
         (cond
-          ((>= olev 6)
+          ((>= olev 7)
            bb.(merge-jump-thunks)
            bb.(compact-tregs)
            bb.(late-peephole bb.(get-insns)))

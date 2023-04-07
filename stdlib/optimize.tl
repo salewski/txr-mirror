@@ -351,15 +351,20 @@
       ((equal sub list) list)
       (t (set [bb.li-hash sub] li) sub))))
 
-(defmeth basic-blocks peephole-block (bb bl code)
+(defmeth basic-blocks rename (bb insns dst src)
+  (mapcar (op subst-preserve dst src bb [bb.li-hash @1] @1) insns))
+
+(defmeth basic-blocks peephole-block (bb bl)
+  (let ((code bb.(do-peephole-block bl bl.insns)))
+    (set bl.insns code)))
+
+(defmeth basic-blocks do-peephole-block (bb bl code)
   (labels ((dead-treg (insn n)
              (let ((li [bb.li-hash insn]))
                (and li (not (bit li.used n)))))
            (only-locally-used-treg (insn n)
              (let ((li [bb.li-hash insn]))
-               (and li (bit li.used n) (not (bit bl.live n)))))
-           (rename (insns dst src)
-             (mapcar (op subst-preserve dst src bb [bb.li-hash @1] @1) insns)))
+               (and li (bit li.used n) (not (bit bl.live n))))))
     (rewrite-case insns code
       ;; dead t-reg
       (@(require ((@(or mov getlx getv getf getfb) (t @n) . @nil) . @nil)
@@ -389,7 +394,7 @@
                  (not (find src rest : [chain bb.li-hash .def])))
         (pushnew bl bb.rescan)
         (set bb.recalc t)
-        (rename rest dst src))
+        bb.(rename rest dst src))
       ;; wasteful moves
       (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
        (cdr insns))
@@ -476,7 +481,7 @@
 
 (defmeth basic-blocks peephole (bb)
   (each ((bl bb.list))
-    (set bl.insns bb.(peephole-block bl bl.insns)))
+    bb.(peephole-block bl))
   (whilet ((rescan (zap bb.rescan)))
     (whilet ((bl (pop bb.tryjoin)))
       (let ((nxbl bl.next))
@@ -490,7 +495,7 @@
     (when (zap bb.recalc)
       bb.(calc-liveness rescan))
     (each ((bl rescan))
-      (set bl.insns bb.(peephole-block bl bl.insns))))
+      bb.(peephole-block bl)))
  (when bb.reelim
    bb.(elim-dead-code)))
 
