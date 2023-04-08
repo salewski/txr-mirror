@@ -85,6 +85,9 @@
         (mapdo (do set [bb.hash @1.label] @1) bb.list))
       bb.(link-graph))
 
+    (:method num-blocks (bb)
+      (len bb.list))
+
     (:method get-insns (bb)
       [mappend .insns bb.list])
 

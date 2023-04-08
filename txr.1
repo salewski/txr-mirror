@@ -87774,7 +87774,9 @@ Data flow optimizations are applied, such as elimination of dead register
 moves, or useless propagations of values from one register to another.
 More peephole optimizations are applied.
 .IP 6
-Another pass of the levels 4 and 5 optimizations is performed.
+Additional iterations of the levels 4 and 5 optimizations are performed,
+if the previous iterations have coalesced some basic blocks of the program
+graph.
 .IP 7
 Certain more rarely applicable optimizations are applied which reduce code size
 by merging some identical code blocks, or improving some more rarely
