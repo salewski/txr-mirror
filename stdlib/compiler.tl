@@ -224,7 +224,6 @@
     (nlev 2)
     (loop-nest 0)
     (tregs nil)
-    (discards nil)
     (dreg (hash :eql-based))
     (data (hash :eql-based))
     (sidx (hash :eql-based))
@@ -254,38 +253,32 @@
 
 (eval-only
   (defmacro compile-in-toplevel (me . body)
-    (with-gensyms (saved-tregs saved-treg-cntr saved-discards)
+    (with-gensyms (saved-tregs saved-treg-cntr)
       ^(let* ((,saved-tregs (qref ,me tregs))
-              (,saved-treg-cntr (qref ,me treg-cntr))
-              (,saved-discards (qref ,me discards)))
+              (,saved-treg-cntr (qref ,me treg-cntr)))
          (unwind-protect
            (progn
              (set (qref ,me tregs) nil
-                  (qref ,me treg-cntr) 2
-                  (qref ,me discards) nil)
+                  (qref ,me treg-cntr) 2)
              (prog1
                (progn ,*body)
                (qref ,me (check-treg-leak))))
            (set (qref ,me tregs) ,saved-tregs
-                (qref ,me treg-cntr) ,saved-treg-cntr
-                (qref ,me discards) ,saved-discards)))))
+                (qref ,me treg-cntr) ,saved-treg-cntr)))))
 
   (defmacro compile-with-fresh-tregs (me . body)
-    (with-gensyms (saved-tregs saved-treg-cntr saved-discards)
+    (with-gensyms (saved-tregs saved-treg-cntr)
       ^(let* ((,saved-tregs (qref ,me tregs))
-              (,saved-treg-cntr (qref ,me treg-cntr))
-              (,saved-discards (qref ,me discards)))
+              (,saved-treg-cntr (qref ,me treg-cntr)))
          (unwind-protect
            (progn
              (set (qref ,me tregs) nil
-                  (qref ,me treg-cntr) 2
-                  (qref ,me discards) nil)
+                  (qref ,me treg-cntr) 2)
              (prog1
                (progn ,*body)
                (qref ,me (check-treg-leak))))
            (set (qref ,me tregs) ,saved-tregs
-                (qref ,me treg-cntr) ,saved-treg-cntr
-                (qref ,me discards) ,saved-discards)))))
+                (qref ,me treg-cntr) ,saved-treg-cntr)))))
 
   (defun with-spy (me flag spy spy-expr body push-meth pop-meth)
     ^(let ((,spy (if ,flag ,spy-expr)))
@@ -393,6 +386,10 @@
 (defun null-reg (reg)
   (equal reg '(t 0)))
 
+(defun maybe-mov (to-reg from-reg)
+  (if (nequal to-reg from-reg)
+    ^((mov ,to-reg ,from-reg))))
+
 (defmeth compiler get-dreg (me obj)
   (let ((dobj (dedup obj)))
     (condlet
@@ -437,15 +434,8 @@
     ((< me.treg-cntr %lev-size%) ^(t ,(pinc me.treg-cntr)))
     (t (compile-error me.last-form "code too complex: out of registers"))))
 
-(defmeth compiler alloc-discard-treg (me)
-  (let ((treg me.(alloc-treg)))
-    (push treg me.discards)
-    treg))
-
 (defmeth compiler free-treg (me treg)
   (when (and (eq t (car treg)) (neq 0 (cadr treg)))
-    (when me.discards
-      (set me.discards (remqual treg me.discards)))
     (push treg me.tregs)))
 
 (defmeth compiler free-tregs (me tregs)
@@ -455,7 +445,7 @@
   (- %lev-size% me.treg-cntr))
 
 (defmeth compiler maybe-alloc-treg (me given)
-  (if (and (eq t (car given)) (not (member given me.discards)))
+  (if (eq t (car given))
     given
     me.(alloc-treg)))
 
@@ -467,10 +457,6 @@
   (let ((balance (- (ppred me.treg-cntr) (len me.tregs))))
     (unless (zerop balance)
       (error "t-register leak in compiler: ~s outstanding" balance))))
-
-(defmeth compiler maybe-mov (me to-reg from-reg)
-  (if (and (nequal to-reg from-reg) (not (member to-reg me.discards)))
-    ^((mov ,to-reg ,from-reg))))
 
 (defmeth compiler new-env (me env)
   (when (>= env.lev me.nlev)
@@ -605,7 +591,7 @@
       (new (frag vfrag.oreg
                  ^(,*vfrag.code
                    ,*(if bind
-                       me.(maybe-mov vloc vfrag.oreg)
+                       (maybe-mov vloc vfrag.oreg)
                        (if spec
                          ^((setv ,vfrag.oreg ,vloc))
                          ^((setlx ,vfrag.oreg ,me.(get-sidx sym))))))
@@ -693,11 +679,11 @@
                   ^(,*te-frag.code
                      (if ,te-frag.oreg ,lelse)
                      ,*th-frag.code
-                     ,*me.(maybe-mov oreg th-frag.oreg)
+                     ,*(maybe-mov oreg th-frag.oreg)
                      (jmp ,lskip)
                      ,lelse
                      ,*el-frag.code
-                     ,*me.(maybe-mov oreg el-frag.oreg)
+                     ,*(maybe-mov oreg el-frag.oreg)
                      ,lskip)
                   (uni te-frag.fvars (uni th-frag.fvars el-frag.fvars))
                   (uni te-frag.ffuns (uni th-frag.ffuns el-frag.ffuns))))))
@@ -709,10 +695,10 @@
        me.(maybe-free-treg te-oreg oreg)
        (new (frag oreg
                   ^(,*te-frag.code
-                     ,*me.(maybe-mov oreg te-frag.oreg)
+                     ,*(maybe-mov oreg te-frag.oreg)
                      (if ,te-frag.oreg ,lskip)
                      ,*th-frag.code
-                     ,*me.(maybe-mov oreg th-frag.oreg)
+                     ,*(maybe-mov oreg th-frag.oreg)
                      ,lskip)
                   (uni te-frag.fvars th-frag.fvars)
                   (uni te-frag.ffuns th-frag.ffuns)))))
@@ -752,11 +738,11 @@
                      ,*ri-frag.code
                      (,opcode ,le-frag.oreg ,ri-frag.oreg ,lelse)
                      ,*th-frag.code
-                     ,*me.(maybe-mov oreg th-frag.oreg)
+                     ,*(maybe-mov oreg th-frag.oreg)
                       (jmp ,lskip)
                      ,lelse
                      ,*el-frag.code
-                     ,*me.(maybe-mov oreg el-frag.oreg)
+                     ,*(maybe-mov oreg el-frag.oreg)
                      ,lskip)
                    (uni (uni le-frag.fvars ri-frag.fvars)
                         (uni th-frag.fvars el-frag.fvars))
@@ -799,7 +785,7 @@
                                     ^(,lb
                                        ,*cfrag.code
                                        ,*(unless shared
-                                           ^(,*me.(maybe-mov oreg cfrag.oreg)
+                                           ^(,*(maybe-mov oreg cfrag.oreg)
                                               ,*(unless (= i ncases)
                                                   ^((jmp ,lend))))))
                                     cfrag.fvars cfrag.ffuns)))))))
@@ -809,7 +795,7 @@
                    (swtch ,ifrag.oreg ,*(list-vec clabels))
                    ,*(mappend .code cfrags)
                    ,*(when (and shared last-cfrag)
-                       me.(maybe-mov oreg last-cfrag.oreg))
+                       (maybe-mov oreg last-cfrag.oreg))
                    ,lend)
                  (uni ifrag.fvars [reduce-left uni cfrags nil .fvars])
                  (uni ifrag.ffuns [reduce-left uni cfrags nil .ffuns]))))))
@@ -864,7 +850,7 @@
                    ^(,*(if nfrag nfrag.code)
                       (block ,oreg ,nreg ,lskip)
                       ,*bfrag.code
-                      ,*me.(maybe-mov oreg bfrag.oreg)
+                      ,*(maybe-mov oreg bfrag.oreg)
                       (end ,oreg)
                       ,lskip)
                    bfrag.fvars
@@ -934,7 +920,7 @@
                                           ((and have-one-symbol
                                                 (exception-subtype-p one-symbol sym))
                                            ^(,*cfrag.code
-                                              ,*me.(maybe-mov oreg cfrag.oreg)
+                                              ,*(maybe-mov oreg cfrag.oreg)
                                               ,*(unless (eql i nclauses)
                                                   ^((jmp ,lhend)))))
                                           (have-one-symbol
@@ -947,7 +933,7 @@
                                                       ,me.(get-dreg sym))
                                                (if ,treg ,lskip)
                                                ,*cfrag.code
-                                               ,*me.(maybe-mov oreg cfrag.oreg)
+                                               ,*(maybe-mov oreg cfrag.oreg)
                                                ,*(unless (eql i nclauses)
                                                    ^((jmp ,lhend)))
                                                ,lskip)))
@@ -960,7 +946,7 @@
                        (catch ,esvb.loc ,eavb.loc
                               ,me.(get-dreg symbols) ,dfrag.oreg ,lhand)
                        ,*tfrag.code
-                       ,*me.(maybe-mov oreg tfrag.oreg)
+                       ,*(maybe-mov oreg tfrag.oreg)
                        (jmp ,lhend)
                        ,lhand
                        ,*(mappend .code cfrags)
@@ -1053,7 +1039,7 @@
                                    nenv.(extend-var* sym loc))
                                  (pend frag.code)
                                  (unless (null-reg frag.oreg)
-                                   (pend me.(maybe-mov loc frag.oreg)))
+                                   (pend (maybe-mov loc frag.oreg)))
                                  (set ffuns (uni ffuns frag.ffuns)
                                       fvars (uni fvars
                                                  (if seq
@@ -1064,7 +1050,7 @@
                (bfrag me.(comp-progn oreg nenv body))
                (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg))
                (code (append code bfrag.code
-                             me.(maybe-mov boreg bfrag.oreg)
+                             (maybe-mov boreg bfrag.oreg)
                              ^((end ,boreg)))))
           (when (and cspy (null cspy.cap-vars))
             (set code me.(eliminate-frame [code 1..-1] nenv)))
@@ -1097,7 +1083,7 @@
                            (list bind
                                  (new (frag frag.oreg
                                             (append frag.code
-                                                    me.(maybe-mov bind.loc frag.oreg))
+                                                    (maybe-mov bind.loc frag.oreg))
                                             frag.fvars
                                             frag.ffuns)))))))
              (bfrag me.(comp-progn oreg nenv body))
@@ -1112,7 +1098,7 @@
                    (append ^((frame ,nenv.lev ,frsize))
                            (mappend .code ffrags)
                            bfrag.code
-                           me.(maybe-mov boreg bfrag.oreg)
+                           (maybe-mov boreg bfrag.oreg)
                            ^((end ,boreg)))
                    (uni fvars bfrag.fvars)
                    (uni (diff bfrag.ffuns lexfuns)
@@ -1179,7 +1165,7 @@
                                           ,*(if have-sym
                                               ^((mov ,have-bind.loc nil)))
                                           ,*ifrg.code
-                                          ,*me.(maybe-mov vbind.loc ifrg.oreg)
+                                          ,*(maybe-mov vbind.loc ifrg.oreg)
                                           ,lskip
                                           ,*(whenlet ((spec-sub [find var-sym specials : cdr]))
                                               (set specials [remq var-sym specials cdr])
@@ -1213,7 +1199,7 @@
                                ,*bfrag.code
                                ,*(if need-dframe
                                    ^((end ,boreg)))
-                               ,*me.(maybe-mov boreg bfrag.oreg)
+                               ,*(maybe-mov boreg bfrag.oreg)
                                (jend ,boreg)
                                ,lskip)))
                   me.(free-treg btreg)
@@ -1264,7 +1250,7 @@
          (forms (append eff-lead-forms last-form))
          (nargs (len forms))
          lastfrag
-         (oreg-discard me.(alloc-discard-treg))
+         (oreg-discard me.(alloc-treg))
          (code (build
                  (each ((form forms)
                         (n (range 1)))
@@ -1294,7 +1280,7 @@
                       (let ((islast (eql n nargs)))
                         (let ((frag me.(compile treg env form)))
                           (pend frag.code
-                                me.(maybe-mov treg frag.oreg))
+                                (maybe-mov treg frag.oreg))
                           (unless islast
                             (add ^(ifq ,treg (t 0) ,lout)))
                           (set fvars (uni fvars frag.fvars))
@@ -1302,12 +1288,12 @@
        me.(maybe-free-treg treg oreg)
        (new (frag oreg
                   (append code ^(,lout
-                                 ,*me.(maybe-mov oreg treg)))
+                                 ,*(maybe-mov oreg treg)))
                   fvars ffuns))))))
 
 (defmeth compiler comp-prog1 (me oreg env form)
   (tree-case form
-    ((t fi . re) (let* ((igreg me.(alloc-discard-treg))
+    ((t fi . re) (let* ((igreg me.(alloc-treg))
                         (fireg me.(maybe-alloc-treg oreg))
                         (fi-frag me.(compile fireg env fi))
                         (re-frag me.(comp-progn igreg env
@@ -1316,7 +1302,7 @@
                    me.(free-treg igreg)
                    (new (frag fireg
                               (append fi-frag.code
-                                      me.(maybe-mov fireg fi-frag.oreg)
+                                      (maybe-mov fireg fi-frag.oreg)
                                       re-frag.code)
                               (uni fi-frag.fvars re-frag.fvars)
                               (uni fi-frag.ffuns re-frag.ffuns)))))
@@ -1615,7 +1601,7 @@
                               (cfrag me.(compile treg nenv src)))
                          (new (frag treg
                                     ^(,*cfrag.code
-                                       ,*me.(maybe-mov treg cfrag.oreg)
+                                       ,*(maybe-mov treg cfrag.oreg)
                                        (ifq ,treg ,me.(get-dreg :) ,lout))
                                     cfrag.fvars
                                     cfrag.ffuns))))))
@@ -1624,11 +1610,11 @@
       (new (frag oreg
                  ^(,*objfrag.code
                    (frame ,nenv.lev ,nenv.v-cntr)
-                   ,*me.(maybe-mov obj-immut-var.loc objfrag.oreg)
+                   ,*(maybe-mov obj-immut-var.loc objfrag.oreg)
                    ,*(mappend .code cfrags)
                    (mov ,treg nil)
                    ,lout
-                   ,*me.(maybe-mov oreg treg)
+                   ,*(maybe-mov oreg treg)
                    (end ,oreg))
                  [reduce-left uni allfrags nil .fvars]
                  [reduce-left uni allfrags nil .ffuns])))))
@@ -1706,7 +1692,7 @@
                   (exp me.(compile dreg (new env co me) exp))
                   (lt-frag (new (frag dreg
                                       ^(,*exp.code
-                                         ,*me.(maybe-mov dreg exp.oreg))
+                                         ,*(maybe-mov dreg exp.oreg))
                                       exp.fvars
                                       exp.ffuns
                                       exp.pars))))
