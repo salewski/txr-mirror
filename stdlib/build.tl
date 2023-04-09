@@ -25,6 +25,34 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 
+(defun sys:list-builder-flets (lb-form)
+  (nconc
+    (collect-each ((op '(add add* pend pend* ncon ncon* oust)))
+      ^(,op (. args)
+         (qref ,lb-form (,op . args))
+         nil))
+    ^((get ()
+        (qref ,lb-form (get)))
+      (del* ()
+        (qref ,lb-form (del*)))
+      (do-del ()
+        (qref ,lb-form (del))))))
+
+(defun sys:build-expander (forms return-get)
+  (with-gensyms (name)
+    ^(let ((,name (new list-builder)))
+       (flet ,(sys:list-builder-flets name)
+         (macrolet ((del (:form f : (expr nil expr-p))
+                      (if expr-p f '(do-del))))
+           ,*forms
+           ,*(if return-get ^((qref ,name (get)))))))))
+
+(defmacro build (. forms)
+  (sys:build-expander forms t))
+
+(defmacro buildn (. forms)
+  (sys:build-expander forms nil))
+
 (defstruct list-builder ()
   head tail
 
@@ -117,33 +145,5 @@
           (usr:rplacd hd nil)
           (set self.tail hd))))))
 
-(defun sys:list-builder-flets (lb-form)
-  (nconc
-    (collect-each ((op '(add add* pend pend* ncon ncon* oust)))
-      ^(,op (. args)
-         (qref ,lb-form (,op . args))
-         nil))
-    ^((get ()
-        (qref ,lb-form (get)))
-      (del* ()
-        (qref ,lb-form (del*)))
-      (do-del ()
-        (qref ,lb-form (del))))))
-
 (defun build-list (: init)
   (new list-builder head init))
-
-(defun sys:build-expander (forms return-get)
-  (with-gensyms (name)
-    ^(let ((,name (new list-builder)))
-       (flet ,(sys:list-builder-flets name)
-         (macrolet ((del (:form f : (expr nil expr-p))
-                      (if expr-p f '(do-del))))
-           ,*forms
-           ,*(if return-get ^((qref ,name (get)))))))))
-
-(defmacro build (. forms)
-  (sys:build-expander forms t))
-
-(defmacro buildn (. forms)
-  (sys:build-expander forms nil))
