@@ -999,11 +999,14 @@ static val autoload_try(al_ns_t ns, val sym)
     if (check) {
       unsigned ds = debug_clear(opt_dbg_autoload ? 0 : DBG_ENABLE);
       val saved_dyn_env = dyn_env;
+      int saved_compat = opt_compat;
       remhash(autoload_reg_hash, fun);
       dyn_env = make_env(nil, nil, dyn_env);
       env_vbind(dyn_env, package_s, system_package);
       env_vbind(dyn_env, package_alist_s, packages);
+      opt_compat = 0;
       funcall(fun);
+      opt_compat = saved_compat;
       dyn_env = saved_dyn_env;
       debug_restore(ds);
       return t;
