@@ -570,7 +570,7 @@
       (vbin
         (each ((spy me.access-spies))
           spy.(accessed vbin sym))
-        (new (frag vbin.loc nil (list sym))))
+        (new (frag oreg (maybe-mov oreg vbin.loc) (list sym))))
       ((special-var-p sym)
        (let ((dreg me.(get-dreg sym)))
          (new (frag oreg ^((getv ,oreg ,dreg)) (list sym)))))
@@ -584,7 +584,7 @@
                    (bind bind.loc)
                    (spec me.(get-dreg sym))
                    (t me.(get-sidx sym))))
-           (vfrag me.(compile (if bind vloc oreg) env value)))
+           (vfrag me.(compile oreg env value)))
       (when bind
         (each ((spy me.access-spies))
           spy.(assigned bind sym)))
