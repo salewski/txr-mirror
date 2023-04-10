@@ -390,9 +390,7 @@
       ;; unnecessary copying t-reg
       (@(require ((mov @(as dst (t @n)) @src) . @rest)
                  (only-locally-used-treg (car insns) n)
-                 (or (neq (car src) 'v)
-                     (none rest [andf [chain car (op eq 'end)]
-                                      [chain bb.li-hash .used (lop bit n)]]))
+                 (neq (car src) 'v)
                  (not (find dst rest : [chain bb.li-hash .def]))
                  (not (find src rest : [chain bb.li-hash .def])))
         (pushnew bl bb.rescan)
