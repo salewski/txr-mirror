@@ -355,7 +355,15 @@
       (t (set [bb.li-hash sub] li) sub))))
 
 (defmeth basic-blocks rename (bb insns dst src)
-  (mapcar (op subst-preserve dst src bb [bb.li-hash @1] @1) insns))
+  (build
+    (whilet ((insn (pop insns)))
+      (let ((li [bb.li-hash insn]))
+        (cond
+          ((mequal li.def dst src)
+           (add insn)
+           (pend insns)
+           (set insns nil))
+          (t (add (subst-preserve dst src bb li insn))))))))
 
 (defmeth basic-blocks peephole-block (bb bl)
   (let ((code bb.(do-peephole-block bl bl.insns)))
@@ -390,12 +398,15 @@
       ;; unnecessary copying t-reg
       (@(require ((mov @(as dst (t @n)) @src) . @rest)
                  (only-locally-used-treg (car insns) n)
-                 (neq (car src) 'v)
-                 (not (find dst rest : [chain bb.li-hash .def]))
-                 (not (find src rest : [chain bb.li-hash .def])))
-        (pushnew bl bb.rescan)
-        (set bb.recalc t)
-        bb.(rename rest dst src))
+                 (nequal dst src)
+                 (neq (car src) 'v))
+        (let ((ren bb.(rename rest dst src)))
+          (cond
+            ((nequal rest ren)
+             (pushnew bl bb.rescan)
+             (set bb.recalc t)
+             (cons (car insns) ren))
+            (t insns))))
       ;; wasteful moves
       (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
        (cdr insns))
