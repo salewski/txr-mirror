@@ -226,7 +226,10 @@
                    ((@(or ret abscsr) @nreg @reg)
                     (refs li insn reg nreg))
                    ((catch @esreg @eareg @syreg @descreg . @nil)
-                    (refs li insn esreg eareg syreg descreg))
+                    ;; Not quite correct: a live-info has only one def
+                    (def li insn esreg)
+                    (def li insn eareg)
+                    (refs li insn syreg descreg))
                    ((handle @funreg @syreg)
                     (refs li insn funreg syreg))
                    ((@(or getv getvb getfb getl1b getlx getf) @def . @nil)
