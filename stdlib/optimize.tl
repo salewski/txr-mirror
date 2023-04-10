@@ -29,7 +29,7 @@
   (defstruct live-info nil
     (defined 0)
     (used 0)
-    def)
+    def0 def1)
 
   (defstruct basic-block (live-info)
     (live 0)
@@ -167,18 +167,24 @@
            (regnums (regs)
              (mappend (do when-match
                         (t @num) @1 (list num)) regs))
-           (def (li insn def)
+           (defs (li insn def0 : def1)
              (set [bb.li-hash insn] li)
-             (let* ((dn (regnum def))
-                    (dmask (if dn (mask dn))))
+             (let* ((dn0 (regnum def0))
+                    (dn1 (regnum def1))
+                    (dmask0 (if dn0 (mask dn0) 0))
+                    (dmask1 (if dn1 (mask dn1) 0))
+                    (dmask (logior dmask0 dmask1)))
                (cond
-                 (dn (set li.def def)
-                     (new live-info
-                          used (logand li.used (lognot dmask))
-                          defined (logior li.defined dmask)))
+                 ((nzerop dmask)
+                  (set li.def0 def0)
+                  (set li.def1 def1)
+                  (new live-info
+                       used (logand li.used (lognot dmask))
+                       defined (logior li.defined dmask)))
                  (t (prog1
                       (copy li)
-                      (set li.def def))))))
+                      (set li.def0 def0)
+                      (set li.def1 def1))))))
            (refs (li insn . refs)
              (set [bb.li-hash insn] li)
              (let* ((rn (regnums refs))
@@ -187,7 +193,7 @@
                     used (logior li.used rmask)
                     defined (logand li.defined (lognot rmask)))))
            (def-ref (li insn def . refs)
-             (set li.def def
+             (set li.def0 def
                   [bb.li-hash insn] li)
              (let* ((rn (regnums refs))
                     (dn (regnum def))
@@ -225,18 +231,16 @@
                    ((@(or ret abscsr) @nreg @reg)
                     (refs li insn reg nreg))
                    ((catch @esreg @eareg @syreg @descreg . @nil)
-                    ;; Not quite correct: a live-info has only one def
-                    (def li insn esreg)
-                    (def li insn eareg)
-                    (refs li insn syreg descreg))
+                    (let ((ili (defs li insn esreg eareg)))
+                      (refs ili insn syreg descreg)))
                    ((handle @funreg @syreg)
                     (refs li insn funreg syreg))
                    ((@(or getv getvb getfb getl1b getlx getf) @def . @nil)
-                    (def li insn def))
+                    (defs li insn def))
                    ((@(or setv setl1 setlx bindv) @reg . @nil)
                     (refs li insn reg))
                    ((close @reg . @nil)
-                    (def li insn reg))
+                    (defs li insn reg))
                    ((@op . @nil)
                     (caseq op
                       ((end jend xend prof or apply call or gapply gcall mov if
@@ -361,7 +365,8 @@
     (whilet ((insn (pop insns)))
       (let ((li [bb.li-hash insn]))
         (cond
-          ((mequal li.def dst src)
+          ((or (mequal li.def0 dst src)
+               (mequal li.def1 dst src))
            (add insn)
            (pend insns)
            (set insns nil))
