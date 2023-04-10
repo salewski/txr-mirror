@@ -168,16 +168,17 @@
              (mappend (do when-match
                         (t @num) @1 (list num)) regs))
            (def (li insn def)
-             (set li (copy li)
-                  li.def def
-                  [bb.li-hash insn] li)
+             (set [bb.li-hash insn] li)
              (let* ((dn (regnum def))
                     (dmask (if dn (mask dn))))
                (cond
-                 (dn (new live-info
+                 (dn (set li.def def)
+                     (new live-info
                           used (logand li.used (lognot dmask))
                           defined (logior li.defined dmask)))
-                 (t (set [bb.li-hash insn] li)))))
+                 (t (prog1
+                      (copy li)
+                      (set li.def def))))))
            (refs (li insn . refs)
              (set [bb.li-hash insn] li)
              (let* ((rn (regnums refs))
@@ -186,8 +187,7 @@
                     used (logior li.used rmask)
                     defined (logand li.defined (lognot rmask)))))
            (def-ref (li insn def . refs)
-             (set li (copy li)
-                  li.def def
+             (set li.def def
                   [bb.li-hash insn] li)
              (let* ((rn (regnums refs))
                     (dn (regnum def))
@@ -197,8 +197,7 @@
                  (dn (new live-info
                           used (logior (logand li.used (lognot dmask)) rmask)
                           defined (logior (logand li.defined (lognot rmask)) dmask)))
-                 (t (set [bb.li-hash insn] li)
-                    (new live-info
+                 (t (new live-info
                          used (logior li.used rmask)
                          defined (logand li.defined (lognot rmask)))))))
            (liveness (insns)
