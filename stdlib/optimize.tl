@@ -241,14 +241,14 @@
                     (refs li insn reg))
                    ((close @reg . @nil)
                     (defs li insn reg))
-                   ((@op . @nil)
-                    (caseq op
-                      ((end jend xend prof or apply call or gapply gcall mov if
-                        ifq ifql swtch block ret abscsr catch handle getv
-                        getvb getfb getl1b getlx getf setl1 setlx bindv close)
-                       (error `wrongly handled @insn instruction`))
-                      (t (set [bb.li-hash insn] li))))
-                   (@else (set [bb.li-hash else] li)))))))
+                   ((@(or jmp frame dframe uwprot) . @nil)
+                    (set [bb.li-hash insn] li)
+                    (copy li))
+                   ((@nil . @nil)
+                    (error `unhandled/mishandled @insn instruction`))
+                   (@else
+                     (set [bb.li-hash else] li)
+                     (copy li)))))))
     (let ((li (liveness bl.insns)))
       (set bl.used li.used
            bl.defined li.defined))))
