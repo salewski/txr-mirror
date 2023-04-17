@@ -362,17 +362,20 @@
 
 (defmeth basic-blocks rename (bb insns dst src)
   (build
-    (whilet ((insn (pop insns)))
-      (let ((close (if-match (close . @nil) insn t))
-            (li [bb.li-hash insn]))
-        (cond
-          (close (add insn))
-          ((or (mequal li.def0 dst src)
-               (mequal li.def1 dst src))
-           (add insn)
-           (pend insns)
-           (set insns nil))
-          (t (add (subst-preserve dst src bb li insn))))))))
+    (let ((vreg (eq (car src) 'v)))
+      (whilet ((insn (pop insns)))
+        (let ((end (if-match (end . @nil) insn t))
+              (close (if-match (close . @nil) insn t))
+              (li [bb.li-hash insn]))
+          (cond
+            (close (add insn))
+            ((or (and vreg end)
+                 (mequal li.def0 dst src)
+                 (mequal li.def1 dst src))
+             (add insn)
+             (pend insns)
+             (set insns nil))
+            (t (add (subst-preserve dst src bb li insn)))))))))
 
 (defmeth basic-blocks peephole-block (bb bl)
   (let ((code bb.(do-peephole-block bl bl.insns)))
@@ -407,8 +410,7 @@
       ;; unnecessary copying t-reg
       (@(require ((mov @(as dst (t @n)) @src) . @rest)
                  (only-locally-used-treg (car insns) n)
-                 (nequal dst src)
-                 (neq (car src) 'v))
+                 (nequal dst src))
         (let ((ren bb.(rename rest dst src)))
           (cond
             ((nequal rest ren)
