@@ -354,10 +354,25 @@
       ((nequal ninsn oinsn) (append (ldiff code tail) (list ninsn)))
       (t code))))
 
-(defun subst-preserve (x y bb li list)
-  (let ((sub (subst x y list)))
+(defun subst-preserve (x y bb li insn)
+  (let ((sub (subst x y insn)))
     (cond
-      ((equal sub list) list)
+      ((equal sub insn) insn)
+      (t (set [bb.li-hash sub] li) sub))))
+
+(defun careful-subst-preserve (x y bb li insn)
+  (let ((sub (match-case insn
+               ((@(or apply call) @def . @refs)
+                ^(,(car insn) ,def ,*(subst x y refs)))
+               ((@(or gapply gcall) @def @fn . @refs)
+                ^(,(car insn) ,def ,fn ,*(subst x y refs)))
+               ((mov @def @x)
+                ^(mov ,def ,y))
+               ((catch @esreg @eareg . @refs)
+                ^(catch ,esreg ,eareg ,*(subst x y refs)))
+               (@else else))))
+    (cond
+      ((equal sub insn) insn)
       (t (set [bb.li-hash sub] li) sub))))
 
 (defmeth basic-blocks rename (bb insns dst src)
@@ -369,10 +384,13 @@
               (li [bb.li-hash insn]))
           (cond
             (close (add insn))
-            ((or (and vreg end)
-                 (mequal li.def0 dst src)
-                 (mequal li.def1 dst src))
+            ((and vreg end)
              (add insn)
+             (pend insns)
+             (set insns nil))
+            ((or (mequal dst li.def0 li.def1)
+                 (mequal src li.def0 li.def1))
+             (add (careful-subst-preserve dst src bb li insn))
              (pend insns)
              (set insns nil))
             (t (add (subst-preserve dst src bb li insn)))))))))
