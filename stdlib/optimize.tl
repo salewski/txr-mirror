@@ -363,8 +363,10 @@
 (defmeth basic-blocks rename (bb insns dst src)
   (build
     (whilet ((insn (pop insns)))
-      (let ((li [bb.li-hash insn]))
+      (let ((close (if-match (close . @nil) insn t))
+            (li [bb.li-hash insn]))
         (cond
+          (close (add insn))
           ((or (mequal li.def0 dst src)
                (mequal li.def1 dst src))
            (add insn)
