@@ -60,7 +60,9 @@
   code
   pars
   fvars
-  ffuns)
+  ffuns
+  vbin
+  alt-oreg)
 
 (defstruct binding nil
   sym
@@ -215,6 +217,15 @@
     (each ((spy me.closure-spies))
       (when (neq spy me)
         spy.(captured vbin sym)))))
+
+(defstruct simplify-var-spy ()
+  mutated-vars
+  (:method accessed (me vbin sym)
+    (ignore me vbin sym))
+
+  (:method assigned (me vbin sym)
+    (ignore sym)
+    (pushnew vbin me.mutated-vars)))
 
 (compile-only
   (defstruct compiler nil
@@ -570,7 +581,9 @@
       (vbin
         (each ((spy me.access-spies))
           spy.(accessed vbin sym))
-        (new (frag oreg (maybe-mov oreg vbin.loc) (list sym))))
+        (new (frag vbin.loc nil (list sym))
+             vbin vbin
+             alt-oreg oreg))
       ((special-var-p sym)
        (let ((dreg me.(get-dreg sym)))
          (new (frag oreg ^((getv ,oreg ,dreg)) (list sym)))))
@@ -584,8 +597,10 @@
                    (bind bind.loc)
                    (spec me.(get-dreg sym))
                    (t me.(get-sidx sym))))
-           (vfrag me.(compile oreg env value)))
+           (vfrag me.(compile (if bind vloc oreg) env value)))
       (when bind
+        (set vfrag.vbin bind
+             vfrag.alt-oreg oreg)
         (each ((spy me.access-spies))
           spy.(assigned bind sym)))
       (new (frag vfrag.oreg
@@ -1476,23 +1491,25 @@
                  (uni ffrag.ffuns cfrag.ffuns))))))
 
 (defmeth compiler comp-call-impl (me oreg env opcode freg args : extra-ffun)
-  (let* ((aoregs nil)
-         (afrags (collect-each ((arg args))
-                   (let* ((aoreg me.(alloc-treg))
-                          (afrag me.(compile aoreg env arg)))
-                     (if (nequal afrag.oreg aoreg)
-                       me.(free-treg aoreg)
-                       (push aoreg aoregs))
-                     afrag)))
-         (fvars [reduce-left uni afrags nil .fvars])
-         (ffuns [reduce-left uni afrags nil .ffuns]))
-    me.(free-tregs aoregs)
-    (when extra-ffun
-      (pushnew extra-ffun ffuns))
-    (new (frag oreg
-               ^(,*(mappend .code afrags)
-                 (,opcode ,oreg ,freg ,*(mapcar .oreg afrags)))
-               fvars ffuns))))
+  (with-access-spy me t spy (new simplify-var-spy)
+    (let* ((aoregs nil)
+           (afrags0 (collect-each ((arg args))
+                      (let* ((aoreg me.(alloc-treg))
+                             (afrag me.(compile aoreg env arg)))
+                        (if (nequal afrag.oreg aoreg)
+                          me.(free-treg aoreg)
+                          (push aoreg aoregs))
+                        afrag)))
+           (afrags (handle-mutated-var-args afrags0 spy.mutated-vars))
+           (fvars [reduce-left uni afrags nil .fvars])
+           (ffuns [reduce-left uni afrags nil .ffuns]))
+      me.(free-tregs aoregs)
+      (when extra-ffun
+        (pushnew extra-ffun ffuns))
+      (new (frag oreg
+                 ^(,*(mappend .code afrags)
+                   (,opcode ,oreg ,freg ,*(mapcar .oreg afrags)))
+                 fvars ffuns)))))
 
 (defmeth compiler comp-inline-lambda (me oreg env opcode lambda args)
   (let ((reg-args args) apply-list-arg)
@@ -1672,6 +1689,18 @@
                    ,*bfrag.code
                    (xend ,bfrag.oreg))
                  bfrag.fvars bfrag.ffuns)))))
+
+(defun handle-mutated-var-args (frags mutated-vars)
+  (if mutated-vars
+    (build
+      (each ((frag frags))
+        (let* ((vbin frag.vbin)
+               (oreg frag.alt-oreg))
+          (add (if (and vbin (memq vbin mutated-vars))
+                 (new (frag oreg (append frag.code (maybe-mov oreg vbin.loc))
+                            frag.fvars frag.ffuns frag.pars))
+                 frag)))))
+    frags))
 
 (defun misleading-ref-check (frag env form)
   (each ((v frag.fvars))
