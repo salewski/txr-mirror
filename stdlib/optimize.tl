@@ -384,10 +384,7 @@
 (defmeth basic-blocks do-peephole-block (bb bl code)
   (labels ((dead-treg (insn n)
              (let ((li [bb.li-hash insn]))
-               (and li (not (bit li.used n)))))
-           (only-locally-used-treg (insn n)
-             (let ((li [bb.li-hash insn]))
-               (and li (bit li.used n) (not (bit bl.live n))))))
+               (and li (not (bit li.used n))))))
     (rewrite-case insns code
       ;; dead t-reg
       (@(require ((@(or mov getlx getv getf getfb) (t @n) . @nil) . @nil)
@@ -407,17 +404,6 @@
         (pushnew bl bb.rescan)
         (set bb.recalc t)
         (cdr insns))
-      ;; unnecessary copying t-reg
-      (@(require ((mov @(as dst (t @n)) @src) . @rest)
-                 (only-locally-used-treg (car insns) n)
-                 (nequal dst src))
-        (let ((ren bb.(rename rest dst src)))
-          (cond
-            ((nequal rest ren)
-             (pushnew bl bb.rescan)
-             (set bb.recalc t)
-             (cons (car insns) ren))
-            (t insns))))
       ;; wasteful moves
       (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
        (cdr insns))
@@ -500,6 +486,16 @@
                 bl.next nil
                 bl.links nil))
          oinsns))
+      ;; unnecessary copying t-reg
+      (@(require ((mov @(as dst (t @nil)) @src) . @rest)
+                 (nequal dst src))
+        (let ((ren bb.(rename rest dst src)))
+          (cond
+            ((nequal rest ren)
+             (pushnew bl bb.rescan)
+             (set bb.recalc t)
+             (cons (car insns) ren))
+            (t insns))))
       (@nil insns))))
 
 (defmeth basic-blocks peephole (bb)
