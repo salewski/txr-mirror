@@ -385,7 +385,7 @@
           (cond
             (close (add insn))
             ((and vreg end)
-             (add insn)
+             (add (subst-preserve dst src bb li insn))
              (pend insns)
              (set insns nil))
             ((or (mequal dst li.def0 li.def1)
