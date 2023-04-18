@@ -180,7 +180,7 @@
                   (set li.def1 def1)
                   (new live-info
                        used (logand li.used (lognot dmask))
-                       defined (logior li.defined dmask)))
+                       defined dmask))
                  (t (prog1
                       (copy li)
                       (set li.def0 def0)
@@ -190,8 +190,7 @@
              (let* ((rn (regnums refs))
                     (rmask (mask . rn)))
                (new live-info
-                    used (logior li.used rmask)
-                    defined (logand li.defined (lognot rmask)))))
+                    used (logior li.used rmask))))
            (def-ref (li insn def . refs)
              (set li.def0 def
                   [bb.li-hash insn] li)
@@ -202,10 +201,9 @@
                (cond
                  (dn (new live-info
                           used (logior (logand li.used (lognot dmask)) rmask)
-                          defined (logior (logand li.defined (lognot rmask)) dmask)))
+                          defined dmask))
                  (t (new live-info
-                         used (logior li.used rmask)
-                         defined (logand li.defined (lognot rmask)))))))
+                         used (logior li.used rmask))))))
            (liveness (insns)
              (if (null insns)
                (new live-info used 0)
