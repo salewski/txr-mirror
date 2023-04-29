@@ -568,3 +568,9 @@
   (if-match @(< @nil 2) 1 :y :n) :y
   (match @(@nil (< @x 0)) -1 x) -1
   (match @(@nil (< @nil 0)) -1 t) t)
+
+(mtest
+  (match ^(foo) '(foo) t) t
+  (match ^#H() #H(() (a b)) t) t
+  (match ^#H(()) #H(() (a b)) t) t
+  (match ^#S(time) #S(time year 2023) t) t)

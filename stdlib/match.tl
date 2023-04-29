@@ -1065,9 +1065,11 @@
 
 (defun transform-qquote (syn)
   (match-case syn
-    ((sys:hash-lit nil . @(coll (@key @val)))
+    ((sys:hash-lit nil . @(all (@key @val)))
      ^@(hash ,*(zip [mapcar transform-qquote key]
                     [mapcar transform-qquote val])))
+    ((sys:hash-lit)
+     '@(hash))
     ((sys:struct-lit @type . @args)
      ^@(struct ,(transform-qquote type)
                ,*[mapcar transform-qquote args]))

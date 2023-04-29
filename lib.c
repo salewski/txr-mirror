@@ -14260,10 +14260,13 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
-        obj_print_impl(rest(obj), out, pretty, ctx);
+        if (!args)
+          put_string(lit("()"), out);
+        else
+          obj_print_impl(args, out, pretty, ctx);
       } else if (sym == struct_lit_s) {
         put_string(lit("#S"), out);
-        obj_print_impl(rest(obj), out, pretty, ctx);
+        obj_print_impl(args, out, pretty, ctx);
       } else if (sym == json_s && have_args &&
                  consp(cdr(args)) && nilp(cddr(args)))
       {

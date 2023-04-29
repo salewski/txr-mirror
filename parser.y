@@ -59,7 +59,6 @@ static val repeat_rep_helper(val sym, val args, val main, val parts);
 static void process_catch_exprs(val exprs);
 static val define_transform(parser_t *parser, val define_form);
 static val optimize_text(val text_form);
-static val unquotes_occur(val quoted_form, int level);
 static val rlrec(parser_t *, val form, val line);
 static val rlcp_parser(parser_t *parser, val to, val from);
 static wchar_t char_from_name(const wchar_t *name);
@@ -888,7 +887,7 @@ q_var : '@' '{' n_expr n_exprs_opt '}'
       ;
 
 
-vector : '#' list               { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
+vector : '#' list               { if (parser->quasi_level > 0)
                                     $$ = rlc(cons(vector_lit_s,
                                                    cons($2, nil)), $2);
                                   else
@@ -899,8 +898,7 @@ vector : '#' list               { if (parser->quasi_level > 0 && unquotes_occur(
 
 hash : HASH_H list              { if (parser->ignore)
                                     $$ = nil;
-                                  else if (parser->quasi_level > 0 &&
-                                           unquotes_occur($2, 0))
+                                  else if (parser->quasi_level > 0)
                                     $$ = rl(cons(hash_lit_s, $2), num($1));
                                   else
                                     $$ = rl(hash_construct(first($2),
@@ -912,8 +910,7 @@ hash : HASH_H list              { if (parser->ignore)
 
 struct : HASH_S list            {  if (parser->ignore)
                                    { $$ = nil; }
-                                   else if ((parser->quasi_level > 0 &&
-                                            unquotes_occur($2, 0)) ||
+                                   else if ((parser->quasi_level > 0) ||
                                            (parser->read_unknown_structs &&
                                             !find_struct_type(first($2))))
                                   { $$ = rl(cons(struct_lit_s, $2), num($1)); }
@@ -944,8 +941,7 @@ tnode : HASH_N list             { if (gt(length($2), three))
 
 tree : HASH_T list             { if (parser->ignore)
                                  { $$ = nil; }
-                                 else if (parser->quasi_level > 0 &&
-                                          unquotes_occur($2, 0))
+                                 else if (parser->quasi_level > 0)
                                  { $$ = rl(cons(tree_lit_s, $2), num($1)); }
                                  else
                                  { val opts = first($2);
@@ -1014,14 +1010,12 @@ opt_comma : ','                 { if (!parser->read_bad_json)
           |
           ;
 
-json_vals : json_val                    { $$ = if3(parser->quasi_level > 0 &&
-                                                   unquotes_occur($1, 0),
+json_vals : json_val                    { $$ = if3(parser->quasi_level > 0,
                                                    cons($1, nil),
                                                    vector(one, $1)); }
           | json_vals ',' json_val      { if (consp($1))
                                           { $$ = cons($3, $1); }
-                                          else if (parser->quasi_level > 0 &&
-                                                   unquotes_occur($3, 0))
+                                          else if (parser->quasi_level > 0)
                                           { val li = list_vec($1);
                                             $$ = cons($3, li); }
                                           else
@@ -1033,9 +1027,7 @@ json_vals : json_val                    { $$ = if3(parser->quasi_level > 0 &&
                                           $$ = $1; }
           ;
 
-json_pairs : json_val json_col json_val { if (parser->quasi_level > 0 &&
-                                              (unquotes_occur($1, 0) ||
-                                               unquotes_occur($3, 0)))
+json_pairs : json_val json_col json_val { if (parser->quasi_level > 0)
                                           { $$ = cons(list($1, $3, nao), nil); }
                                           else
                                           { $$ = make_hash(hash_weak_none, t);
@@ -1043,9 +1035,7 @@ json_pairs : json_val json_col json_val { if (parser->quasi_level > 0 &&
            | json_pairs ','
              json_val json_col json_val { if (consp($1))
                                           { $$ = cons(list($3, $5, nao), $1); }
-                                          else if (parser->quasi_level > 0 &&
-                                                   ((unquotes_occur($3, 0)) ||
-                                                    unquotes_occur($5, 0)))
+                                          else if (parser->quasi_level > 0)
                                           { val pa = hash_pairs($1);
                                             $$ = cons(list($3, $5, nao), pa); }
                                           else
@@ -1826,23 +1816,6 @@ static val optimize_text(val text_form)
   if (all_satisfy(rest(text_form), func_n1(stringp), nil))
     return cat_str(rest(text_form), lit(""));
   return text_form;
-}
-
-static val unquotes_occur(val quoted_form, int level)
-{
-  uses_or2;
-
-  if (atom(quoted_form)) {
-    return nil;
-  } else {
-    val sym = car(quoted_form);
-    if (sym == sys_unquote_s || sym == sys_splice_s)
-      return (level == 0) ? t : unquotes_occur(cdr(quoted_form), level - 1);
-    if (sym == sys_qquote_s)
-      return unquotes_occur(cdr(quoted_form), level + 1);
-    return or2(unquotes_occur(sym, level),
-               unquotes_occur(cdr(quoted_form), level));
-  }
 }
 
 val expand_meta(val form, val menv)
