@@ -82,6 +82,7 @@ val hashl(val args);
 val hash_construct(val hashl_args, val pairs);
 val hash_from_pairs_v(val pairs, struct args *hashv_args);
 val hash_from_alist_v(val alist, struct args *hashv_args);
+val hash_props(struct args *plist);
 val hash_list(val keys, struct args *hashv_args);
 val hash_zip(val keys, val vals, struct args *hashv_args);
 val group_by(val func, val seq, struct args *hashv_args);

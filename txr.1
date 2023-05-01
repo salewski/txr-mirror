@@ -55442,6 +55442,27 @@ is longer than
 .metn value-seq ,
 then the excess keys are ignored, and vice versa.
 
+.coNP Function @ hash-props
+.synb
+.mets (hash-props >> { key << value }*)
+.syne
+.desc
+The
+.code hash-props
+function constructs a populated hash table without requiring
+the caller to construct a list of entries. The hash table
+contents are specified as direct arguments.
+
+The
+.code hash-props
+function requires an even number of arguments, which
+are interleaved key-value pairs.
+
+The returned hash table is
+.codn equal -based,
+and no parameters are available for customizing any of
+its properties, such as weakness.
+
 .coNP Function @ hash-update
 .synb
 .mets (hash-update < hash << function )

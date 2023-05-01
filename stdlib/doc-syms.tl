@@ -953,6 +953,7 @@
       ("hash-pairs" "N-00C9B125")
       ("hash-peek" "N-0225209D")
       ("hash-proper-subset" "N-024ACBBB")
+      ("hash-props" "N-026628B3")
       ("hash-reset" "N-0225209D")
       ("hash-revget" "N-02FBE776")
       ("hash-subset" "N-024ACBBB")

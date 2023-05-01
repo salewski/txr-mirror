@@ -20,3 +20,10 @@
                                                      (#\s 3) (#\u 1) (#\v 1)
                                                      (#\y 1))
   [group-reduce (hash) evenp + (range 1 10) 0] #H(() (t 30) (nil 25)))
+
+(mtest
+  (hash-props) #H(())
+  (hash-props 1 2) #H(() (1 2))
+  (hash-props 1 2 'a 'b) #H(() (1 2) (a b))
+  (hash-props 1) :error
+  (hash-props 1 2 'a) :error)

@@ -1613,6 +1613,26 @@ val hash_from_alist_v(val alist, struct args *hashv_args)
   return hash;
 }
 
+val hash_props(struct args *plist)
+{
+  val self = lit("hash-props");
+  args_decl_constsize(args, ARGS_MIN);
+  val hash = hashv(args);
+  cnum index = 0;
+
+  while (args_two_more(plist, index)) {
+    val key = args_get(plist, &index);
+    val value = args_get(plist, &index);
+    sethash(hash, key, value);
+  }
+
+  if (args_more(plist, index))
+    uw_throwf(error_s, lit("~a: unpaired ~s argument"),
+              self, args_get(plist, &index), nao);
+
+  return hash;
+}
+
 val hash_list(val keys, struct args *hashv_args)
 {
   val hash = hashv(hashv_args);
@@ -2121,6 +2141,7 @@ void hash_init(void)
   reg_fun(hash_construct_s, func_n2(hash_construct));
   reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs_v));
   reg_fun(intern(lit("hash-from-alist"), user_package), func_n1v(hash_from_alist_v));
+  reg_fun(intern(lit("hash-props"), user_package), func_n0v(hash_props));
   reg_fun(intern(lit("hash-list"), user_package), func_n1v(hash_list));
   reg_fun(intern(lit("hash-zip"), user_package), func_n2v(hash_zip));
   reg_fun(intern(lit("gethash"), user_package), func_n3o(gethash_n, 2));
