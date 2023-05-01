@@ -10791,7 +10791,7 @@ static void swap(val vec, val i, val j)
   }
 }
 
-static cnum med_of_three(val vec, val lessfun, val keyfun, cnum from, cnum to,
+static void med_of_three(val vec, val lessfun, val keyfun, cnum from, cnum to,
                          val *pkval)
 {
   cnum mid = from + (to - from) / 2;
@@ -10803,62 +10803,67 @@ static cnum med_of_three(val vec, val lessfun, val keyfun, cnum from, cnum to,
   val tkval = funcall1(keyfun, tval);
 
   if (funcall2(lessfun, fkval, mkval)) {
-    if (funcall2(lessfun, mkval, tval)) {
+    if (funcall2(lessfun, mkval, tval))
       *pkval = mkval;
-      return mid;
-    } else if (funcall2(lessfun, fkval, tkval)) {
+    else if (funcall2(lessfun, fkval, tkval))
       *pkval = tkval;
-      return to - 1;
-    } else {
+    else
       *pkval = fkval;
-      return from;
-    }
   } else {
-    if (funcall2(lessfun, fkval, tval)) {
+    if (funcall2(lessfun, fkval, tval))
       *pkval = fkval;
-      return from;
-    } else if (funcall2(lessfun, mkval, tkval)) {
+    else if (funcall2(lessfun, mkval, tkval))
       *pkval = tkval;
-      return to - 1;
-    } else {
+    else
       *pkval = mkval;
-      return mid;
-    }
   }
 }
 
-static cnum middle_pivot(val vec, val keyfun, cnum from, cnum to,
+static void middle_pivot(val vec, val keyfun, cnum from, cnum to,
                          val *pkval)
 {
   cnum pivot = from + (to - from) / 2;
   val pval = ref(vec, num_fast(pivot));
   *pkval = funcall1(keyfun, pval);
-  return pivot;
 }
 
 static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 {
   while (to - from >= 2) {
+    cnum i = from - 1;
+    cnum j = to;
     val pkval;
-    cnum i, j;
-    cnum pivot = if3(to - from > 15,
-                     med_of_three(vec, lessfun, keyfun, from, to, &pkval),
-                     middle_pivot(vec, keyfun, from, to, &pkval));
 
-    swap(vec, num_fast(pivot), num_fast(to - 1));
+    if (to - from > 15)
+      med_of_three(vec, lessfun, keyfun, from, to, &pkval);
+    else
+      middle_pivot(vec, keyfun, from, to, &pkval);
 
-    for (j = from, i = from; i < to - 1; i++)
-      if (funcall2(lessfun, funcall1(keyfun, ref(vec, num_fast(i))), pkval))
-        swap(vec, num_fast(i), num_fast(j++));
+    for (;;) {
+      do {
+        i++;
+      } while (funcall2(lessfun,
+                        funcall1(keyfun, ref(vec, num_fast(i))),
+                        pkval));
 
-    swap(vec, num_fast(j), num_fast(to - 1));
+      do {
+        j--;
+      } while (i < j && funcall2(lessfun,
+                                 pkval,
+                                 funcall1(keyfun, ref(vec, num_fast(j)))));
+
+      if (i >= j)
+        break;
+
+      swap(vec, num_fast(i), num_fast(j));
+    }
 
     if (j - from > to - j) {
-      quicksort(vec, lessfun, keyfun, j + 1, to);
-      to = j;
+      quicksort(vec, lessfun, keyfun, i, to);
+      to = i;
     } else {
-      quicksort(vec, lessfun, keyfun, from, j);
-      from = j + 1;
+      quicksort(vec, lessfun, keyfun, from, i);
+      from = i;
     }
   }
 }
