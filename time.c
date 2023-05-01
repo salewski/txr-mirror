@@ -151,6 +151,19 @@ val time_string_utc(val time, val format)
   return timestr;
 }
 
+static val time_str_local(val format, val time_in)
+{
+  val time = default_arg_strict(time_in, time_sec());
+  return time_string_local(time, format);
+}
+
+static val time_str_utc(val format, val time_in)
+{
+  val time = default_arg_strict(time_in, time_sec());
+  return time_string_utc(time, format);
+}
+
+
 static val broken_time_list(struct tm *tms)
 {
   return list(num(tms->tm_year + 1900),
@@ -192,10 +205,11 @@ static val broken_time_struct(struct tm *tms)
   return ts;
 }
 
-val time_fields_local(val time)
+val time_fields_local(val time_in)
 {
   val self = lit("time-fields-local");
   struct tm tms;
+  val time = default_arg_strict(time_in, time_sec());
   time_t secs = c_time(time, self);
 
   if (localtime_r(&secs, &tms) == 0)
@@ -204,10 +218,11 @@ val time_fields_local(val time)
   return broken_time_list(&tms);
 }
 
-val time_fields_utc(val time)
+val time_fields_utc(val time_in)
 {
   val self = lit("time-fields-utc");
   struct tm tms;
+  val time = default_arg_strict(time_in, time_sec());
   time_t secs = c_time(time, self);
 
   if (gmtime_r(&secs, &tms) == 0)
@@ -216,10 +231,11 @@ val time_fields_utc(val time)
   return broken_time_list(&tms);
 }
 
-val time_struct_local(val time)
+val time_struct_local(val time_in)
 {
   val self = lit("time-struct-local");
   struct tm tms;
+  val time = default_arg_strict(time_in, time_sec());
   time_t secs = c_time(time, self);
 
   if (localtime_r(&secs, &tms) == 0)
@@ -228,10 +244,11 @@ val time_struct_local(val time)
   return broken_time_struct(&tms);
 }
 
-val time_struct_utc(val time)
+val time_struct_utc(val time_in)
 {
   val self = lit("time-struct-utc");
   struct tm tms;
+  val time = default_arg_strict(time_in, time_sec());
   time_t secs = c_time(time, self);
 
   if (gmtime_r(&secs, &tms) == 0)
@@ -552,15 +569,17 @@ void time_init(void)
   static_slot_set(time_st, time_parse_s, func_n3(time_parse_meth));
 #endif
 
-  reg_fun(intern(lit("time"), user_package), func_n0(time_sec));
+  reg_fun(time_s, func_n0(time_sec));
   reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
   reg_fun(intern(lit("time-nsec"), user_package), func_n0(time_sec_nsec));
   reg_fun(intern(lit("time-string-local"), user_package), func_n2(time_string_local));
   reg_fun(intern(lit("time-string-utc"), user_package), func_n2(time_string_utc));
-  reg_fun(intern(lit("time-fields-local"), user_package), func_n1(time_fields_local));
-  reg_fun(intern(lit("time-fields-utc"), user_package), func_n1(time_fields_utc));
-  reg_fun(intern(lit("time-struct-local"), user_package), func_n1(time_struct_local));
-  reg_fun(intern(lit("time-struct-utc"), user_package), func_n1(time_struct_utc));
+  reg_fun(intern(lit("time-str-local"), user_package), func_n2o(time_str_local, 1));
+  reg_fun(intern(lit("time-str-utc"), user_package), func_n2o(time_str_utc, 1));
+  reg_fun(intern(lit("time-fields-local"), user_package), func_n1o(time_fields_local, 0));
+  reg_fun(intern(lit("time-fields-utc"), user_package), func_n1o(time_fields_utc, 0));
+  reg_fun(intern(lit("time-struct-local"), user_package), func_n1o(time_struct_local, 0));
+  reg_fun(intern(lit("time-struct-utc"), user_package), func_n1o(time_struct_utc, 0));
   reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
 #if HAVE_TIMEGM || HAVE_SETENV
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));

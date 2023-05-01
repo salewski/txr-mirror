@@ -66900,20 +66900,49 @@ field of the cons returned by the
 .code time-usec
 function.
 
-.coNP Functions @ time-fields-local and @ time-fields-utc
+.coNP Functions @ time-str-local and @ time-str-utc
 .synb
-.mets (time-fields-local << time )
-.mets (time-fields-utc << time )
+.mets (time-str-local < format <> [ time ])
+.mets (time-str-utc < format <> [ time ])
 .syne
 .desc
-These functions take the numeric time returned by the time function,
-and convert it to a list of seven fields.
+The functions
+.code time-str-local
+and
+.code time-str-utc
+are equivalent, respectively, to
+.code time-string-local
+and
+.code time-string-utc
+with the arguments reversed. Thus the following
+equivalences hold:
+
+.verb
+  (time-str-local F T)   <-->  (time-string-local T F)
+  (time-str-utc F T)     <-->  (time-string-utc T F)
+.brev
+
+Additionally, if no argument is supplied to the
+.code time
+parameter, its value is obtained by invoking the
+.code time
+function.
+
+.coNP Functions @ time-fields-local and @ time-fields-utc
+.synb
+.mets (time-fields-local <> [ time ])
+.mets (time-fields-utc <> [ time ])
+.syne
+.desc
+These functions take numeric time in the format returned by the
+.code time
+function and convert it to a list of seven fields.
 
 The
-.code time-string-local
+.code time-fields-local
 function converts the time to the local timezone of
-the host system. The
-.code time-string-utc
+the host system, whereas the
+.code time-fields-utc
 function produces time in UTC.
 
 The fields returned as a list consist of six integers, and a Boolean value.
@@ -66926,11 +66955,11 @@ in the case of
 
 The
 .meta time
-argument is an integer representing seconds obtained from the
+parameter is an integer representing seconds obtained from the
 .code time
-function or from the
-.code time-usec
-function.
+function. If the argument is absent, the value is obtained by
+calling
+.codn time .
 
 .coNP Structure @ time
 .synb
@@ -67010,29 +67039,30 @@ structure as a source of input values.
 
 .coNP Functions @ time-struct-local and @ time-struct-utc
 .synb
-.mets (time-struct-local << time )
-.mets (time-struct-utc << time )
+.mets (time-struct-local <> [ time ])
+.mets (time-struct-utc <> [ time ])
 .syne
 .desc
-These functions take the numeric time returned by the time function,
-and convert it to an instance of the
+These functions take numeric time in the format returned by the
+.code time
+function and convert it to an instance of the
 .code time
 structure.
 
 The
 .code time-struct-local
 function converts the time to the local timezone of
-the host system. The
+the host system, whereas
 .code time-struct-utc
 function produces time in UTC.
 
 The
 .meta time
-argument is an integer representing seconds obtained from the
+parameter is an integer representing seconds obtained from the
 .code time
-function or from the
-.code time-usec
-function.
+function. If the argument is absent, the value is obtained by
+calling
+.codn time .
 
 .coNP Functions @, time-parse @ time-parse-local and @ time-parse-utc
 .synb

@@ -2010,6 +2010,8 @@
       ("time-parse" "D-0066")
       ("time-parse-local" "N-00207C99")
       ("time-parse-utc" "N-00207C99")
+      ("time-str-local" "N-01711783")
+      ("time-str-utc" "N-01711783")
       ("time-string" "N-007B1819")
       ("time-string-local" "N-00F192AD")
       ("time-string-utc" "N-00F192AD")
