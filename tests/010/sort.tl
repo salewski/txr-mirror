@@ -13,3 +13,11 @@
        (sp (uniq [mapcar sort (perm vec (len vec))])))
   (mvtest (len sp) 1
           (car sp) vec))
+
+(let* ((list (range* 0 1000))
+       (slist (shuffle list)))
+  (mvtest
+    (sort list) list
+    (sort slist) list
+    (sort list (fun greater)) (reverse list)
+    (sort slist (fun greater)) (reverse list)))
