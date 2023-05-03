@@ -10868,9 +10868,8 @@ static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
   }
 }
 
-static void sort_vec(val vec, val lessfun, val keyfun)
+static void sort_vec(val vec, val lessfun, val keyfun, val self)
 {
-  val self = lit("sort");
   cnum len = c_fixnum(length(vec), self);
   quicksort(vec, lessfun, keyfun, 0, len);
 }
@@ -10888,7 +10887,7 @@ val nsort(val seq, val lessfun, val keyfun)
     return nil;
   case SEQ_VECLIKE:
   case SEQ_HASHLIKE:
-    sort_vec(seq, lessfun, keyfun);
+    sort_vec(seq, lessfun, keyfun, self);
     return seq;
   case SEQ_LISTLIKE:
     return sort_list(seq, lessfun, keyfun);
@@ -10914,7 +10913,7 @@ val sort(val seq, val lessfun, val keyfun)
   case SEQ_VECLIKE:
   case SEQ_HASHLIKE:
     seq = copy(seq);
-    sort_vec(seq, lessfun, keyfun);
+    sort_vec(seq, lessfun, keyfun, self);
     return seq;
   case SEQ_LISTLIKE:
     return sort_list(copy_list(seq), lessfun, keyfun);
