@@ -10829,6 +10829,8 @@ static void middle_pivot(val vec, val keyfun, cnum from, cnum to,
 
 static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 {
+  int is_identity = keyfun == identity_f;
+
   while (to - from >= 2) {
     cnum i = from - 1;
     cnum j = to;
@@ -10840,17 +10842,23 @@ static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
       middle_pivot(vec, keyfun, from, to, &pkval);
 
     for (;;) {
+      val elem;
+
       do {
         i++;
-      } while (funcall2(lessfun,
-                        funcall1(keyfun, ref(vec, num_fast(i))),
-                        pkval));
+        elem = ref(vec, num_fast(i));
+        if (!is_identity)
+          elem = funcall1(keyfun, elem);
+      } while (funcall2(lessfun, elem, pkval));
 
       do {
         j--;
-      } while (i < j && funcall2(lessfun,
-                                 pkval,
-                                 funcall1(keyfun, ref(vec, num_fast(j)))));
+        if (i < j) {
+          elem = ref(vec, num_fast(j));
+          if (!is_identity)
+            elem = funcall1(keyfun, elem);
+        }
+      } while (i < j && funcall2(lessfun, pkval, elem));
 
       if (i >= j)
         break;
@@ -10877,33 +10885,55 @@ static void sort_vec(val vec, val lessfun, val keyfun, val self)
 static void mergesort(val vec, val lessfun, val keyfun, cnum from, cnum to,
                       val *aux)
 {
+  int is_identity = keyfun == identity_f;
+
   switch (to - from) {
   case 0:
   case 1:
     break;
   case 2:
-    if (funcall2(lessfun,
-                 funcall1(keyfun, ref(vec, num_fast(from + 1))),
-                 funcall1(keyfun, ref(vec, num_fast(from)))))
-      swap(vec, num_fast(from), num_fast(from + 1));
+    {
+      val el0 = ref(vec, num_fast(from));
+      val el1 = ref(vec, num_fast(from + 1));
+
+      if (is_identity) {
+        el0 = funcall1(keyfun, el0);
+        el1 = funcall1(keyfun, el1);
+      }
+      if (funcall2(lessfun, el1, el0))
+        swap(vec, num_fast(from), num_fast(from + 1));
+    }
     break;
   default:
     {
       cnum mid = from + (to - from) / 2;
       cnum i, j, k;
+      val iel, jel;
 
       mergesort(vec, lessfun, keyfun, from, mid, aux);
       mergesort(vec, lessfun, keyfun, mid, to, aux);
 
-      for (i = from, j = mid, k = 0; i < mid && j < to; )
+      for (i = from, j = mid, k = 0, iel = nao, jel = nao; i < mid && j < to; )
       {
-        if (funcall2(lessfun,
-                     funcall1(keyfun, ref(vec, num_fast(i))),
-                     funcall1(keyfun, ref(vec, num_fast(j)))))
-        {
+        if (iel == nao) {
+          iel = ref(vec, num_fast(i));
+          if (!is_identity)
+            iel = funcall1(keyfun, iel);
+        }
+
+
+        if (jel == nao) {
+          jel = ref(vec, num_fast(j));
+          if (!is_identity)
+            jel = funcall1(keyfun, jel);
+        }
+
+        if (funcall2(lessfun, iel, jel)) {
           aux[k++] = ref(vec, num_fast(i++));
+          iel = nao;
         } else {
           aux[k++] = ref(vec, num_fast(j++));
+          jel = nao;
         }
       }
 
