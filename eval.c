@@ -7509,6 +7509,8 @@ void eval_init(void)
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge_wrap, 2));
   reg_fun(intern(lit("nsort"), user_package), func_n3o(nsort, 1));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 1));
+  reg_fun(intern(lit("snsort"), user_package), func_n3o(snsort, 1));
+  reg_fun(intern(lit("ssort"), user_package), func_n3o(ssort, 1));
   reg_fun(intern(lit("nshuffle"), user_package), func_n2o(nshuffle, 1));
   reg_fun(intern(lit("shuffle"), user_package), func_n2o(shuffle, 1));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));

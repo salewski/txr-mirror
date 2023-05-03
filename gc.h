@@ -86,3 +86,6 @@ INLINE void gc_stack_check(void)
   if (&v < gc_stack_limit)
     gc_stack_overflow();
 }
+
+val *gc_prot_array_alloc(cnum size, val self);
+void gc_prot_array_free(val *);

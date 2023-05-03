@@ -1319,6 +1319,8 @@ val interpose(val sep, val seq);
 val merge(val list1, val list2, val lessfun, val keyfun);
 val nsort(val seq, val lessfun, val keyfun);
 val sort(val seq, val lessfun, val keyfun);
+val snsort(val seq, val lessfun, val keyfun);
+val ssort(val seq, val lessfun, val keyfun);
 val nshuffle(val seq, val randstate);
 val shuffle(val seq, val randstate);
 val multi_sort(val lists, val funcs, val key_funcs);

@@ -37716,10 +37716,12 @@ is a transformed list of rows which is reconstituted into a list of columns.
   ;; (op remove-if (ap eql @3 20))
 .brev
 
-.coNP Functions @ sort and @ nsort
+.coNP Functions @, sort @, nsort @ ssort and @ snsort
 .synb
 .mets (sort < sequence >> [ lessfun <> [ keyfun ]])
 .mets (nsort < sequence >> [ lessfun <> [ keyfun ]])
+.mets (ssort < sequence >> [ lessfun <> [ keyfun ]])
+.mets (snsort < sequence >> [ lessfun <> [ keyfun ]])
 .syne
 .desc
 The
@@ -37784,19 +37786,25 @@ For strings and vectors,
 is not stable.
 
 The
-.code sort
+.code ssort
 and
 .code nsort
-functions can be applied to hashes. It produces meaningful behavior
-for a hash table which contains
+functions have the same argument syntax and semantics as, respectively,
+.code sort
+and
+.codn nsort .
+These functions provide a stable sort for all sequences, not only
+lists, at the cost of temporarily allocating memory.
+
+All of these functions can be applied to hashes. They produce meaningful
+behavior for a hash table which contains
 .I N
 keys which are the integers from 0 to
 .IR "N - 1" .
 Such as hash is treated as if it were a vector. The values are sorted
 and reassigned to sorted order to the integer keys.
-The behavior of
-.code sort
-is not specified for hashes whose contents do not conform to this convention.
+The behavior is not specified for hashes whose contents do not conform to this
+convention.
 
 Note:
 .code nsort

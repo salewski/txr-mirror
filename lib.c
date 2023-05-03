@@ -10874,6 +10874,60 @@ static void sort_vec(val vec, val lessfun, val keyfun, val self)
   quicksort(vec, lessfun, keyfun, 0, len);
 }
 
+static void mergesort(val vec, val lessfun, val keyfun, cnum from, cnum to,
+                      val *aux)
+{
+  switch (to - from) {
+  case 0:
+  case 1:
+    break;
+  case 2:
+    if (funcall2(lessfun,
+                 funcall1(keyfun, ref(vec, num_fast(from + 1))),
+                 funcall1(keyfun, ref(vec, num_fast(from)))))
+      swap(vec, num_fast(from), num_fast(from + 1));
+    break;
+  default:
+    {
+      cnum mid = from + (to - from) / 2;
+      cnum i, j, k;
+
+      mergesort(vec, lessfun, keyfun, from, mid, aux);
+      mergesort(vec, lessfun, keyfun, mid, to, aux);
+
+      for (i = from, j = mid, k = 0; i < mid && j < to; )
+      {
+        if (funcall2(lessfun,
+                     funcall1(keyfun, ref(vec, num_fast(i))),
+                     funcall1(keyfun, ref(vec, num_fast(j)))))
+        {
+          aux[k++] = ref(vec, num_fast(i++));
+        } else {
+          aux[k++] = ref(vec, num_fast(j++));
+        }
+      }
+
+      while (i < mid)
+        aux[k++] = ref(vec, num_fast(i++));
+      while (j < to)
+        aux[k++] = ref(vec, num_fast(j++));
+
+      for (i = from, k = 0; i < to; i++, k++)
+        refset(vec, num_fast(i), aux[k]);
+    }
+    break;
+  }
+}
+
+static void ssort_vec(val vec, val lessfun, val keyfun, val self)
+{
+  cnum len = c_fixnum(length(vec), self);
+  val *aux = gc_prot_array_alloc(len, self);
+  mergesort(vec, lessfun, keyfun, 0, len, aux);
+  gc_prot_array_free(aux);
+}
+
+
 val nsort(val seq, val lessfun, val keyfun)
 {
   val self = lit("nsort");
@@ -10914,6 +10968,57 @@ val sort(val seq, val lessfun, val keyfun)
   case SEQ_HASHLIKE:
     seq = copy(seq);
     sort_vec(seq, lessfun, keyfun, self);
+    return seq;
+  case SEQ_LISTLIKE:
+    return sort_list(copy_list(seq), lessfun, keyfun);
+  case SEQ_TREELIKE:
+  case SEQ_NOTSEQ:
+    unsup_obj(self, seq);
+  }
+
+  abort();
+}
+
+val snsort(val seq, val lessfun, val keyfun)
+{
+  val self = lit("snsort");
+  seq_info_t si = seq_info(seq);
+
+  keyfun = default_arg(keyfun, identity_f);
+  lessfun = default_arg(lessfun, less_f);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_VECLIKE:
+  case SEQ_HASHLIKE:
+    ssort_vec(seq, lessfun, keyfun, self);
+    return seq;
+  case SEQ_LISTLIKE:
+    return sort_list(seq, lessfun, keyfun);
+  case SEQ_TREELIKE:
+  case SEQ_NOTSEQ:
+    unsup_obj(self, seq);
+  }
+
+  abort();
+}
+
+val ssort(val seq, val lessfun, val keyfun)
+{
+  val self = lit("ssort");
+  seq_info_t si = seq_info(seq);
+
+  keyfun = default_arg(keyfun, identity_f);
+  lessfun = default_arg(lessfun, less_f);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_VECLIKE:
+  case SEQ_HASHLIKE:
+    seq = copy(seq);
+    ssort_vec(seq, lessfun, keyfun, self);
     return seq;
   case SEQ_LISTLIKE:
     return sort_list(copy_list(seq), lessfun, keyfun);

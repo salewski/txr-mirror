@@ -136,6 +136,13 @@ int full_gc;
 val break_obj;
 #endif
 
+struct prot_array {
+  cnum size;
+  val *arr;
+};
+
+struct cobj_class *prot_array_cls;
+
 val prot1(val *loc)
 {
   assert (gc_prot_top < prot_stack_limit);
@@ -1132,6 +1139,8 @@ void gc_late_init(void)
           func_n1(gc_call_finalizers));
   reg_fun(intern(lit("set-stack-limit"), user_package), func_n1(set_stack_limit));
   reg_fun(intern(lit("get-stack-limit"), user_package), func_n0(get_stack_limit));
+
+  prot_array_cls = cobj_register(intern(lit("gc-prot-array"), system_package));
 }
 
 /*
@@ -1246,4 +1255,53 @@ void gc_free_all(void)
 void gc_stack_overflow(void)
 {
   uw_throwf(stack_overflow_s, lit("computation exceeded stack limit"), nao);
+}
+
+static void prot_array_mark(val obj)
+{
+  struct prot_array *pa = coerce(struct prot_array *, obj->co.handle);
+  cnum i;
+
+  if (pa->arr)
+    for (i = 0; i < pa->size; i++)
+      gc_mark(pa->arr[i]);
+}
+
+static void prot_array_free(val obj)
+{
+  struct prot_array *pa = coerce(struct prot_array *, obj->co.handle);
+
+  if (pa->arr) {
+    free(pa->arr - 1);
+    pa->arr = 0;
+  }
+}
+
+static struct cobj_ops prot_array_ops = cobj_ops_init(eq,
+                                                      cobj_print_op,
+                                                      prot_array_free,
+                                                      prot_array_mark,
+                                                      cobj_eq_hash_op);
+
+val *gc_prot_array_alloc(cnum size, val self)
+{
+  struct prot_array *pa = convert(struct prot_array *,
+                                  chk_malloc(sizeof *pa));
+
+  if (size >= INT_PTR_MAX)
+    uw_throwf(error_s, lit("~s: array too large"), self, nao);
+
+  pa->size = size;
+  pa->arr = convert(val *,
+                    chk_calloc(sizeof *pa->arr, (size + 1))) + 1;
+
+  pa->arr[-1] = cobj(convert(mem_t *, pa), prot_array_cls, &prot_array_ops);
+
+  return pa->arr;
+}
+
+void gc_prot_array_free(val *arr)
+{
+  if (arr)
+    prot_array_free(arr[-1]);
 }
