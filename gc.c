@@ -138,7 +138,8 @@ val break_obj;
 
 struct prot_array {
   cnum size;
-  val *arr;
+  val self;
+  val arr[FLEX_ARRAY];
 };
 
 struct cobj_class *prot_array_cls;
@@ -1260,48 +1261,37 @@ void gc_stack_overflow(void)
 static void prot_array_mark(val obj)
 {
   struct prot_array *pa = coerce(struct prot_array *, obj->co.handle);
-  cnum i;
 
-  if (pa->arr)
+  if (pa) {
+    cnum i;
     for (i = 0; i < pa->size; i++)
       gc_mark(pa->arr[i]);
-}
-
-static void prot_array_free(val obj)
-{
-  struct prot_array *pa = coerce(struct prot_array *, obj->co.handle);
-
-  if (pa->arr) {
-    free(pa->arr - 1);
-    pa->arr = 0;
   }
 }
 
 static struct cobj_ops prot_array_ops = cobj_ops_init(eq,
                                                       cobj_print_op,
-                                                      prot_array_free,
+                                                      cobj_destroy_free_op,
                                                       prot_array_mark,
                                                       cobj_eq_hash_op);
 
-val *gc_prot_array_alloc(cnum size, val self)
+val *gc_prot_array_alloc(cnum size)
 {
   struct prot_array *pa = convert(struct prot_array *,
-                                  chk_malloc(sizeof *pa));
-
-  if (size >= INT_PTR_MAX)
-    uw_throwf(error_s, lit("~s: array too large"), self, nao);
-
+                                  chk_calloc(offsetof(struct prot_array, arr) +
+                                             size * sizeof(val), 1));
   pa->size = size;
-  pa->arr = convert(val *,
-                    chk_calloc(sizeof *pa->arr, (size + 1))) + 1;
-
-  pa->arr[-1] = cobj(convert(mem_t *, pa), prot_array_cls, &prot_array_ops);
+  pa->self = cobj(convert(mem_t *, pa), prot_array_cls, &prot_array_ops);
 
   return pa->arr;
 }
 
 void gc_prot_array_free(val *arr)
 {
-  if (arr)
-    prot_array_free(arr[-1]);
+  if (arr) {
+    struct prot_array *pa = container(arr, struct prot_array, arr);
+    val obj = pa->self;
+    obj->co.handle = 0;
+    free(pa);
+  }
 }

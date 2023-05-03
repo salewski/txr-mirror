@@ -87,5 +87,5 @@ INLINE void gc_stack_check(void)
     gc_stack_overflow();
 }
 
-val *gc_prot_array_alloc(cnum size, val self);
+val *gc_prot_array_alloc(cnum size);
 void gc_prot_array_free(val *);
