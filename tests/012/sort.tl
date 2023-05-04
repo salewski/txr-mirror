@@ -15,12 +15,19 @@
           (car sp) vec))
 
 (let* ((list (range* 0 1000))
-       (slist (shuffle list)))
+       (slist (shuffle list))
+       (vec (vec-list list))
+       (svec (vec-list slist)))
   (mvtest
     (sort list) list
     (sort slist) list
     (sort list (fun greater)) (reverse list)
-    (sort slist (fun greater)) (reverse list)))
+    (sort slist (fun greater)) (reverse list))
+  (mvtest
+    (sort vec) vec
+    (sort svec) vec
+    (sort vec (fun greater)) (reverse vec)
+    (sort svec (fun greater)) (reverse vec)))
 
 (test (ssort ()) nil)
 
@@ -37,9 +44,16 @@
           (car sp) vec))
 
 (let* ((list (range* 0 1000))
-       (slist (shuffle list)))
+       (slist (shuffle list))
+       (vec (vec-list list))
+       (svec (vec-list slist)))
   (mvtest
     (ssort list) list
     (ssort slist) list
     (ssort list (fun greater)) (reverse list)
-    (ssort slist (fun greater)) (reverse list)))
+    (ssort slist (fun greater)) (reverse list))
+  (mvtest
+    (ssort vec) vec
+    (ssort svec) vec
+    (ssort vec (fun greater)) (reverse vec)
+    (ssort svec (fun greater)) (reverse vec)))
