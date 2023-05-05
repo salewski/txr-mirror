@@ -213,10 +213,10 @@
                                   ,*(if opt-args
                                       (mapcar (ret ^(,@1 nil ,@2))
                                               o-gens p-gens)))
-                           ,*(mapcar (ret ^(slotset ,arg-sym ',@1 ,@2))
+                           ,*(mapcar (ret ^(set (qref  ,arg-sym ,@1) ,@2))
                                      req-args r-gens)
                            ,*(mapcar (ret ^(if ,@3
-                                             (slotset ,arg-sym ',@1 ,@2)))
+                                             (set (qref ,arg-sym ,@1) ,@2)))
                                      opt-args o-gens p-gens))))))
                ,(if instance-postinit-forms
                   ^(sys:meth-lambda ,name :postinit (,arg-sym)
