@@ -642,7 +642,7 @@
       @lab1
       . @rest)
      (let* ((bl [bb.hash lab2]))
-       (if (some bl.rlinks (op eq bb) .next)
+       (if (cdr bl.rlinks)
          insns
          ^((ifq ,reg (t 0) ,lab3)
            ,lab1
