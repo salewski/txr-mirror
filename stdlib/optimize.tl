@@ -35,6 +35,7 @@
     (live 0)
     label
     next
+    prev
     links
     rlinks
     insns
@@ -112,6 +113,8 @@
            bl.next nxbl.next
            bl.links nxbl.links
            bb.list (remq nxbl bb.list))
+      (if nxbl.next
+        (set nxbl.next.prev bl.prev))
       (del [bb.hash nxbl.label])
       (each ((nx bl.links))
         (upd nx.rlinks (remq nxbl))
@@ -140,7 +143,10 @@
          (set bl.links (list [bb.hash jlabel])))
         ((close @nil @nil @nil @jlabel . @nil)
          (set bl.links (list [bb.hash jlabel])
-              bl.next nxbl))
+              bl.next nxbl
+              link-next nil)
+         (if nxbl
+           (set nxbl.prev bl)))
         ((swtch @nil . @jlabels)
          (set bl.links [mapcar bb.hash (uniq jlabels)]
               link-next nil))
@@ -156,6 +162,8 @@
          (set bl.nojoin t)))
       (when (and nxbl link-next)
         (set bl.next nxbl)
+        (if nxbl
+          (set nxbl.prev bl))
         (pushnew nxbl bl.links))
       (each ((nx bl.links))
         (pushnew bl nx.rlinks)))))
@@ -467,6 +475,8 @@
                       ((@(or ifq ifql) (t 0) @(as reg (d @nil)) @jlabel) . @nil))
                  (not (memqual reg bb.lt-dregs)))
         (pushnew bl.next bb.rescan)
+        (if bl.next
+          (set bl.prev nil))
         (set bb.recalc t
              bl.next nil
              bl.links (list [bb.hash jlabel]))
@@ -498,6 +508,8 @@
                         (@nil insns))))
          (when (neq insns oinsns)
            (pushnew bl bb.rescan)
+           (if bl.next
+             (set bl.prev nil))
            (set bb.recalc t
                 bl.next nil
                 bl.links nil))
@@ -558,6 +570,7 @@
   (each ((bl bb.list))
     (set bl.links nil
          bl.next nil
+         bl.prev nil
          bl.rlinks nil))
   bb.(link-graph)
   (let* ((visited (hash :eq-based)))
@@ -722,9 +735,10 @@
 (defmeth basic-block check-bypass-empty (bl nx)
   (unless (cdr bl.insns)
     (upd nx.rlinks (remq bl))
+    (whenlet ((pb bl.prev))
+      (set pb.next nx)
+      (set nx.prev pb))
     (each ((pb bl.rlinks))
-      (if (eq pb.next bl)
-        (set pb.next nx))
       (upd pb.links (subst bl nx))
       (upd pb.insns (mapcar [iffi consp (op subst bl.label nx.label)]))
       (push pb nx.rlinks))
