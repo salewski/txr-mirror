@@ -1557,12 +1557,11 @@
                    [reduce-left uni frags nil .ffuns])))))
 
 (defmeth compiler comp-tree-bind (me oreg env form)
-  (tree-bind (t params obj . body) form
+  (tree-bind (op params obj . body) form
     (with-gensyms (obj-var)
-      (let ((expn (expand ^(let ((,obj-var ,obj))
-                             ,(expand-bind-mac-params ^',form
-                                                      (rlcp-tree ^'(,(car form))
-                                                                 form)
+      (let* ((simp-form (rlcp-tree ^'(,op) form))
+             (expn (expand ^(let ((,obj-var ,obj))
+                             ,(expand-bind-mac-params simp-form form
                                                       params nil
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
@@ -1570,11 +1569,9 @@
 (defmeth compiler comp-mac-param-bind (me oreg env form)
   (mac-param-bind form (t context params obj . body) form
     (with-gensyms (obj-var form-var)
-      (let ((expn (expand ^(let* ((,obj-var ,obj)
-                                  (,form-var ,context))
-                             ,(expand-bind-mac-params form-var
-                                                      (rlcp-tree ^'(,(car form))
-                                                                 form)
+      (let ((expn (expand ^(let ((,obj-var ,obj)
+                                 (,form-var ,context))
+                             ,(expand-bind-mac-params form-var form
                                                       params nil
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
@@ -1582,24 +1579,21 @@
 (defmeth compiler comp-mac-env-param-bind (me oreg env form)
   (mac-param-bind form (t context menv params obj . body) form
     (with-gensyms (obj-var form-var)
-      (let ((expn (expand ^(let* ((,obj-var ,obj)
-                                  (,form-var ,context))
-                             ,(expand-bind-mac-params form-var
-                                                      (rlcp-tree ^'(,(car form))
-                                                                 form)
+      (let ((expn (expand ^(let ((,obj-var ,obj)
+                                 (,form-var ,context))
+                             ,(expand-bind-mac-params form-var form
                                                       params menv
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
 
 (defmeth compiler comp-tree-case (me oreg env form)
-  (mac-param-bind form (t obj . cases) form
+  (mac-param-bind form (op obj . cases) form
     (let* ((nenv (new env up env co me))
            (obj-immut-var nenv.(extend-var (gensym)))
            (obj-var nenv.(extend-var (gensym)))
            (err-blk (gensym))
            (lout (gensym "l"))
-           (ctx-form ^',form)
-           (err-form (rlcp-tree ^'(,(car form)) form))
+           (ctx-form (rlcp-tree ^'(,op) form))
            (treg me.(maybe-alloc-treg oreg))
            (objfrag me.(compile treg env obj))
            (cfrags (collect-each ((c cases)
@@ -1609,7 +1603,7 @@
                                               (set ,obj-var.sym
                                                    ,obj-immut-var.sym)
                                               ,(expand-bind-mac-params
-                                                 ctx-form err-form
+                                                 ctx-form form
                                                  params nil obj-var.sym :
                                                  err-blk
                                                  body))))
@@ -1962,7 +1956,7 @@
                       (sys:setq ,accum (cdr ,accum))))
                  (t body))))))))
 
-(defun expand-bind-mac-params (ctx-form err-form params menv-var
+(defun expand-bind-mac-params (ctx-form rlcp-form params menv-var
                                obj-var strict err-block body)
   (let (gen-stk stmt vars)
     (labels ((get-gen ()
@@ -1989,12 +1983,12 @@
                                               ^(when ,check-var ,init-form)
                                               init-form)))
                               vars))))
-                 (let ((pars (new (mac-param-parser par-syntax ctx-form))))
+                 (let ((pars (new (mac-param-parser par-syntax rlcp-form))))
                    (progn
                      (cond
                        ((eq strict t)
                         (emit-stmt
-                          ^(sys:bind-mac-check ,err-form ',par-syntax
+                          ^(sys:bind-mac-check ,ctx-form ',par-syntax
                                                ,obj-var ,pars.nreq
                                                ,(unless pars.rest
                                                   pars.nfix))))
@@ -2075,7 +2069,7 @@
         (push ^(,(gensym) (progn ,*(nreverse stmt))) vars))
       (rlcp ^(let* (,*gen-stk ,*(nreverse vars))
                ,*body)
-            err-form))))
+            rlcp-form))))
 
 (defun expand-defvarl (form)
   (mac-param-bind form (t sym : value) form
@@ -2113,7 +2107,7 @@
       (let ((exp-lam (rlcp ^(lambda (,mform ,menv)
                               (let ((,spine-iter (cdr ,mform)))
                                 ,(expand (expand-bind-mac-params mform
-                                                                 (rlcp ^',form form)
+                                                                 form
                                                                  mac-args
                                                                  menv spine-iter
                                                                  t nil
