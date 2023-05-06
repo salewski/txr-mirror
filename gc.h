@@ -36,6 +36,7 @@ void gc(void);
 int gc_state(int);
 int gc_inprogress(void);
 void gc_mark(val);
+void gc_mark_norec(val obj);
 void gc_conservative_mark(val);
 void gc_mark_mem(val *low, val *high);
 int gc_is_reachable(val);

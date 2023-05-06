@@ -1357,11 +1357,15 @@ static void do_weak_tables(void)
 
   for (; h != 0; h = h->next) {
     ucnum i, c = 0;
+    val table = h->table;
+    val *vec = table->v.vec;
+    ucnum mask = h->mask;
+
     /* The table of a weak hash was spuriously reached by conservative GC;
        it's a waste of time doing weak processing, since all keys and
        values have been transitively marked as reachable; and so we
        won't find anything to remove. */
-    if (gc_is_reachable(h->table))
+    if (gc_is_reachable(table))
       continue;
 
     switch (h->wkopt) {
@@ -1371,8 +1375,8 @@ static void do_weak_tables(void)
     case hash_weak_keys:
       /* Sweep through all entries. Delete any which have keys
          that are garbage. */
-      for (i = 0; i <= h->mask; i++) {
-        val *pchain = &h->table->v.vec[i];
+      for (i = 0; i <= mask; i++) {
+        val *pchain = &vec[i];
         val *iter;
 
         for (iter = pchain; *iter; ) {
@@ -1384,6 +1388,8 @@ static void do_weak_tables(void)
               breakpt();
 #endif
           } else {
+            gc_mark(entry);
+            gc_mark_norec(*iter);
             iter = us_cdr_p(*iter);
             c++;
           }
@@ -1393,8 +1399,8 @@ static void do_weak_tables(void)
     case hash_weak_vals:
       /* Sweep through all entries. Delete any which have values
          that are garbage. */
-      for (i = 0; i <= h->mask; i++) {
-        val *pchain = &h->table->v.vec[i];
+      for (i = 0; i <= mask; i++) {
+        val *pchain = &vec[i];
         val *iter;
 
         for (iter = pchain; *iter; ) {
@@ -1406,6 +1412,8 @@ static void do_weak_tables(void)
               breakpt();
 #endif
           } else {
+            gc_mark(entry);
+            gc_mark_norec(*iter);
             iter = us_cdr_p(*iter);
             c++;
           }
@@ -1415,8 +1423,8 @@ static void do_weak_tables(void)
     case hash_weak_and:
       /* Sweep through all entries. Delete any which have keys
          and values that are garbage. */
-      for (i = 0; i <= h->mask; i++) {
-        val *pchain = &h->table->v.vec[i];
+      for (i = 0; i <= mask; i++) {
+        val *pchain = &vec[i];
         val *iter;
 
         for (iter = pchain; *iter; ) {
@@ -1430,6 +1438,8 @@ static void do_weak_tables(void)
               breakpt();
 #endif
           } else {
+            gc_mark(entry);
+            gc_mark_norec(*iter);
             iter = us_cdr_p(*iter);
             c++;
           }
@@ -1439,8 +1449,8 @@ static void do_weak_tables(void)
     case hash_weak_or:
       /* Sweep through all entries. Delete any which have keys
          or values that are garbage. */
-      for (i = 0; i <= h->mask; i++) {
-        val *pchain = &h->table->v.vec[i];
+      for (i = 0; i <= mask; i++) {
+        val *pchain = &vec[i];
         val *iter;
 
         for (iter = pchain; *iter; ) {
@@ -1454,6 +1464,8 @@ static void do_weak_tables(void)
               breakpt();
 #endif
           } else {
+            gc_mark(entry);
+            gc_mark_norec(*iter);
             iter = us_cdr_p(*iter);
             c++;
           }
@@ -1463,7 +1475,9 @@ static void do_weak_tables(void)
     }
 
     /* Garbage is gone now. Seal things by marking the vector. */
-    gc_mark(h->table);
+    gc_mark_norec(table);
+    gc_mark(vec[vec_alloc]);
+    gc_mark(vec[vec_length]);
     h->count = c;
   }
 

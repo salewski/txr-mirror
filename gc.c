@@ -497,6 +497,43 @@ tail_call:
   assert (0 && "corrupt type field");
 }
 
+static void mark_obj_norec(val obj)
+{
+  type_t t;
+
+  if (!is_ptr(obj))
+    return;
+
+  t = obj->t.type;
+
+  if ((t & REACHABLE) != 0)
+    return;
+
+#if CONFIG_GEN_GC
+  if (!full_gc && obj->t.gen > 0)
+    return;
+#endif
+
+  if ((t & FREE) != 0)
+    abort();
+
+#if CONFIG_GEN_GC
+  if (obj->t.gen == -1)
+    obj->t.gen = 0;  /* Will be promoted to generation 1 by sweep_one */
+#endif
+
+  obj->t.type = convert(type_t, t | REACHABLE);
+
+#if CONFIG_EXTRA_DEBUGGING
+  if (obj == break_obj) {
+#if HAVE_VALGRIND
+    VALGRIND_PRINTF_BACKTRACE("object %p marked\n", convert(void *, obj));
+#endif
+    breakpt();
+  }
+#endif
+}
+
 void cobj_mark_op(val obj)
 {
   (void) obj;
@@ -957,6 +994,11 @@ void gc_init(val *stack_bottom)
 void gc_mark(val obj)
 {
   mark_obj(obj);
+}
+
+void gc_mark_norec(val obj)
+{
+  mark_obj_norec(obj);
 }
 
 void gc_conservative_mark(val maybe_obj)
