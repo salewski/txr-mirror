@@ -706,11 +706,14 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
 static void hash_mark(val hash)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
+  val table = h->table;
+  val *vec = table->v.vec;
+  ucnum mask = h->mask;
 
   gc_mark(h->userdata);
 
   if (h->count == 0) {
-    gc_mark(h->table);
+    gc_mark(table);
     return;
   }
 
@@ -722,12 +725,12 @@ static void hash_mark(val hash)
     ucnum i;
     val iter;
   case hash_weak_none:
-    gc_mark(h->table);
+    gc_mark(table);
     return;
   case hash_weak_keys:
     /* Mark values only. Don't mark the table. */
-    for (i = 0; i <= h->mask; i++) {
-      for (iter = h->table->v.vec[i]; iter; iter = us_cdr(iter)) {
+    for (i = 0; i <= mask; i++) {
+      for (iter = vec[i]; iter; iter = us_cdr(iter)) {
         val entry = us_car(iter);
         gc_mark(us_cdr(entry));
       }
@@ -735,8 +738,8 @@ static void hash_mark(val hash)
     break;
   case hash_weak_vals:
     /* Mark keys only. Don't mark the table. */
-    for (i = 0; i <= h->mask; i++) {
-      for (iter = h->table->v.vec[i]; iter; iter = us_cdr(iter)) {
+    for (i = 0; i <= mask; i++) {
+      for (iter = vec[i]; iter; iter = us_cdr(iter)) {
         val entry = us_car(iter);
         gc_mark(us_car(entry));
       }
@@ -747,8 +750,8 @@ static void hash_mark(val hash)
     break;
   case hash_weak_and:
     /* Mark key if value is reachable and vice versa. */
-    for (i = 0; i <= h->mask; i++) {
-      for (iter = h->table->v.vec[i]; iter; iter = us_cdr(iter)) {
+    for (i = 0; i <= mask; i++) {
+      for (iter = vec[i]; iter; iter = us_cdr(iter)) {
         val entry = us_car(iter);
         if (gc_is_reachable(us_car(entry)))
           gc_mark(us_cdr(entry));
