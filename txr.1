@@ -13101,9 +13101,9 @@ may be understood according to the following transformations:
 .brev
 
 In addition to atoms, meta-expressions and meta-symbols can appear in the dot
-position, even though their underlying syntax is comprised of a compound
-expression. This appears to work according to a transformation pattern
-which superficially appears to be the same as that for atoms:
+position, even though their underlying syntax is actually a compound
+expression. This is made to work according to a transformation pattern
+which superficially resembles the above one for atoms:
 
 .verb
   (f a b c ... . @x)  -->  (apply (fun f) a b c ... @x)
@@ -13111,10 +13111,10 @@ which superficially appears to be the same as that for atoms:
 
 However, in this situation, the
 .code @x
-is actually the form
+is a notation denoting the expression
 .code "(sys:var x)"
-and the dotted form is actually a proper list. The transformation is
-in fact taking place over a proper list, like this:
+and thus the entire form is a proper list, not a dotted list.
+With the underlying syntax revealed, the transformation looks like this:
 
 .verb
   (f a b c ... sys:var x)  -->  (apply (fun f) a b c ... (sys:var @x))
@@ -17956,7 +17956,7 @@ produces a true value, then
 .metn result-form s
 are not evaluated. Instead, the implicit
 .code tagbody
-comprised of the
+consisting of the
 .metn tagbody-form s
 is evaluated.
 If that evaluation terminates normally, the loop variables are
