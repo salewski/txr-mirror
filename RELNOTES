@@ -1,3 +1,92 @@
+                                    TXR 286
+                                   2023-05-07
+
+
+  Features
+
+  - Hash tables:
+    - some internal code improvements/streamlining
+    - new hash-props function from instantiating a table from
+      alternating key/value arguments, requiring no temporary
+      list to be consed up.
+
+  - Sorting:
+    - New ssort and snsort functions: these are counterparts
+      of sort and nsort which are stable on vector-like
+      sequences.
+    - The nsort and sort function's quicksort
+      implementation now uses the Hoare partitioning
+      scheme instead of Lomuto:
+      - Observed a 21% improvement sorting a randomized
+        vector of a million items.
+      - The quadratic behavior on a sequence consisting
+        of a repeated item is gone.
+
+  - Time:
+    - New time-str-local and time-str-utc functions, which
+      reverse the arguments, for better
+      partial application.
+    - the time argument in time-{fields,struct}-{local,utc} is
+      now optional; if omitted, the current time is used as if
+      by calling (time).
+
+  - Structs:
+    - Small improvement in defstruct: if boa arguments are
+      defined referencing slots that don't exist in any
+      struct, this is now diagnosed.
+
+  - Compiler:
+    - Lots of new optimization work. There is now one more
+      optimization round, and *opt-level* now goes up to 6
+      rather than 7, 7 being the new default value. This
+      release makes 23 compiler commits.
+
+  Bugs
+
+  - Fixed incorrect scope in conda/condlet.
+  - Fixes for regressions preventing the source code of of
+    stdlib/ being used (.tl files, not .tlo), which is needed
+    for debugging some TXR problems.
+    - Fixed issue that happens when code is loaded that
+      generates warnings during error exception processing,
+      causing an "invalid re-entry of exception logic",
+      interfering with debugging TXR using an uncompiled
+      library (.tl files rather than .tlo).
+    - Fixed another issue using .tl files: interference
+      between library loading and the -C compat option.
+      Compatibility is temporarily disabled while
+      auto-loading.
+    - build macro: code rearranged to eliminate circular
+      dependency, preventing modules which depend on the macro
+      from loading.
+   - Pattern matching: ^#S() and ^H(()) quasiquote patterns
+     work now, thanks to a change in the parser.
+   - Compiler:
+     - Fixed incorrect evaluation order of function arguments
+       (when local variables are involved that are subject to
+       side effects during evaluation).
+     - Fixed issue with compiling defmacro:
+       - entire macro form was being retained
+       - yet errors not reported against the correct operator
+         name: e.g. (defstruct) says that defmacro has
+         insufficient arguments.
+       - fix also affects tree-bind and other operators.
+     - Fixes September 2022 regression in liveness
+       calculation, causing certain optimizations to be
+       forgone.
+     - Fixed incorrect blind register renaming across the
+       arguments of a close instruction, which are not
+       actually source operands of that instruction.
+       - Latent problem exposed when trying to replace V
+         register by T register more aggressively.
+     - Fixed incorrect live register calculation across catch
+       instruction.
+       - This has two clobber register operands.
+       - Representation of instruction live info was expanded
+         to handle two register defs.
+
+
+
                                     TXR 285
                                    2023-03-28
 
