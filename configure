@@ -1169,7 +1169,7 @@ fi
 
 printf "Checking for name clashes caused by nonconforming toolchains ... "
 
-for ident in trunc floorf random longlong_t ; do
+for ident in trunc floorf random longlong_t mergesort ; do
   cat > conftest.c <<!
 #include <assert.h>
 #include <ctype.h>
