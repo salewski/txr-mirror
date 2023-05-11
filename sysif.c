@@ -2539,8 +2539,10 @@ void sysif_init(void)
   path_s = intern(lit("path"), user_package);
   dir_s = intern(lit("dir"), user_package);
   dirent_s = intern(lit("dirent"), user_package);
-#if HAVE_PWUID
+#if HAVE_PWUID || HAVE_GRGID
   passwd_s = intern(lit("passwd"), user_package);
+#endif
+#if HAVE_PWUID
   gecos_s = intern(lit("gecos"), user_package);
   shell_s = intern(lit("shell"), user_package);
 #endif
