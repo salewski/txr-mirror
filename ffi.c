@@ -3316,9 +3316,9 @@ static val ffi_varray_null_term_get(struct txr_ffi_type *tft, mem_t *src,
     val vec = vector(zero, nil);
     struct txr_ffi_type *etft = ffi_type_struct(eltype);
     cnum elsize = etft->size;
-    cnum offs, i;
+    cnum offs = 0;
 
-    for (i = 0, offs = 0; ; i++) {
+    for (;;) {
       mem_t *el = src + offs, *p;
 
       for (p = el; p < el + elsize; p++)
