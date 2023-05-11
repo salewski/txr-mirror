@@ -1279,7 +1279,11 @@ void gc_free_all(void)
         finalize(block);
       }
 
+#if CONFIG_NAN_BOXING_STRIP_TAG
+      free(coerce(heap_t *, coerce(ucnum, iter) | (iter->tag << TAG_BIGSHIFT)));
+#else
       free(iter);
+#endif
       iter = next;
     }
   }
