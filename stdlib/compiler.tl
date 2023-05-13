@@ -2583,4 +2583,4 @@
                   (compile-error form "~s isn't a recognized warning option" s)))
               ^(set ,*(mappend (ret ^((qref ,co ,@1) ,op)) syms)))
              (@(or @(atom) (@(not @(keywordp)) . @nil)) cl)
-             (@nil (compile-error form "uncrecognized clause syntax: ~s" cl)))))))
+             (@nil (compile-error form "unrecognized clause syntax: ~s" cl)))))))
