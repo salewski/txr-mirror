@@ -588,7 +588,9 @@ val lookup_sym_lisp1(val env, val sym)
 loc lookup_var_l(val env, val sym)
 {
   val binding = lookup_var(env, sym);
-  return if3(binding, cdr_l(binding), nulloc);
+  if (binding)
+    return cdr_l(binding);
+  uw_throwf(error_s, lit("variable ~s unexpectedly unbound"), sym, nao);
 }
 
 static val lookup_mac(val menv, val sym);
