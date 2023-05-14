@@ -107,6 +107,7 @@
     "TXR's sound system features 120 dB separation between quarreling audiophiles."
     "Using TXR is a way of being carcdrate to the future code maintainer."
     "TXR was there through my incarcdration; wanna show the nation my appreciation."
+    "I've almost decided to wipe my kitchen floor. I feel ever so closer to mop!"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
