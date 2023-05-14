@@ -862,10 +862,10 @@
 
 (defplace (symbol-value sym-expr) body
   (getter setter
-    (with-gensyms (binding-sym)
-      ^(let ((,binding-sym (sys:get-vb ,sym-expr)))
-          (macrolet ((,getter () ^(cdr ,',binding-sym))
-                     (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
+    (with-gensyms (sym)
+      ^(let ((,sym ,sym-expr))
+          (macrolet ((,getter () ^(symbol-value ,',sym))
+                     (,setter (val) ^(sys:set-symbol-value ,',sym ,val)))
             ,body))))
   nil
   (deleter

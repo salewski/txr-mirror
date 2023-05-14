@@ -5832,6 +5832,18 @@ static val symbol_value(val sym)
                  lookup_symac(nil, sym)));
 }
 
+static val set_symbol_value(val sym, val value)
+{
+  val vbind = lookup_var(nil, sym);
+
+  if (vbind)
+    rplacd(vbind, value);
+  else
+    sethash(top_vb, sym, cons(sym, value));
+
+  return value;
+}
+
 static val symbol_function(val sym)
 {
   uses_or2;
@@ -7579,6 +7591,7 @@ void eval_init(void)
   reg_varl(intern(lit("top-fb"), system_package), top_fb);
   reg_varl(intern(lit("top-mb"), system_package), top_mb);
   reg_fun(intern(lit("symbol-value"), user_package), func_n1(symbol_value));
+  reg_fun(intern(lit("set-symbol-value"), system_package), func_n2(set_symbol_value));
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
   reg_fun(intern(lit("symbol-macro"), user_package), func_n1(symbol_macro));
   reg_fun(intern(lit("boundp"), user_package), func_n1(boundp));
