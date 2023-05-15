@@ -530,6 +530,11 @@ val lookup_global_var(val sym)
              if2(autoload_try_var(sym), gethash(top_vb, sym)));
 }
 
+val lookup_global_fun(val sym)
+{
+  return lookup_fun(nil, sym);
+}
+
 val lookup_var(val env, val sym)
 {
   if (env) {
@@ -591,6 +596,16 @@ loc lookup_var_l(val env, val sym)
   if (binding)
     return cdr_l(binding);
   uw_throwf(error_s, lit("variable ~s unexpectedly unbound"), sym, nao);
+}
+
+val lookup_dynamic_var(val sym)
+{
+  return lookup_var(nil, sym);
+}
+
+val lookup_dynamic_sym_lisp1(val sym)
+{
+  return lookup_sym_lisp1(nil, sym);
 }
 
 static val lookup_mac(val menv, val sym);
