@@ -108,6 +108,7 @@
     "Using TXR is a way of being carcdrate to the future code maintainer."
     "TXR was there through my incarcdration; wanna show the nation my appreciation."
     "I've almost decided to wipe my kitchen floor. I feel ever so closer to mop!"
+    "I'm confused; is this piano recital Rimsky-Korsakov or Wernicke–Korsakoff?"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
