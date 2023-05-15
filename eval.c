@@ -74,7 +74,7 @@ val op_table, pm_table;
 val dyn_env;
 
 val eval_error_s, case_error_s;
-val dwim_s, progn_s, prog1_s, prog2_s, sys_blk_s;
+val dwim_s, progn_s, prog1_s, prog2_s, progv_s, sys_blk_s;
 val let_s, let_star_s, lambda_s, call_s, dvbind_s;
 val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s, usr_var_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
@@ -1898,6 +1898,41 @@ static val op_progn(val form, val env)
 static val op_prog1(val form, val env)
 {
   return eval_prog1(rest(form), env, form);
+}
+
+static val op_progv(val form, val env)
+{
+  val args = cdr(form);
+  val vars_expr = pop(&args);
+  val vals_expr = pop(&args);
+  val body = args;
+  val vars = eval(vars_expr, env, form);
+  val vals = eval(vals_expr, env, form);
+  val saved_de = dyn_env;
+  val new_env = dyn_env = make_env(nil, nil, saved_de);
+  val ret, vari, vali;
+
+  for (vari = vars, vali = vals; vari && vali;
+       vari = cdr(vari), vali = cdr(vali))
+  {
+    val var = car(vari);
+    if (!bindable(var))
+      not_bindable_error(form, var);
+    env_vbind(new_env, var, car(vali));
+  }
+
+  for (; vari; vari = cdr(vari)) {
+    val var = car(vari);
+    if (!bindable(var))
+      not_bindable_error(form, var);
+    env_vbind(new_env, var, unbound_s);
+  }
+
+  ret = eval_progn(body, env, form);
+
+  dyn_env = saved_de;
+
+  return ret;
 }
 
 static val op_let(val form, val env)
@@ -5226,6 +5261,17 @@ again:
         return car(args_ex);
       }
       return expand(first(args), menv);
+    } else if (sym == progv_s) {
+      val body = (syn_check(form, sym, cddr, 0), cdddr(form));
+      val vars = cadr(form);
+      val vals = caddr(form);
+      val vars_ex = expand(vars, menv);
+      val vals_ex = expand(vals, menv);
+      val body_ex = expand_forms(body, menv);
+
+      if (vars_ex == vars && vals_ex == vals && body_ex == body)
+        return form;
+      return rlcp(cons(sym, cons(vars_ex, cons(vals_ex, body_ex))), form);
     } else if (sym == sys_lisp1_value_s) {
       return expand_lisp1_value(form, menv);
     } else if (sym == sys_lisp1_setq_s) {
@@ -5857,6 +5903,22 @@ static val set_symbol_value(val sym, val value)
     sethash(top_vb, sym, cons(sym, value));
 
   return value;
+}
+
+static val rt_progv(val syms, val values)
+{
+  val env = dyn_env;
+
+  for (; syms; syms = cdr(syms), values = cdr(values))
+  {
+    val sym = car(syms);
+    val value = if3(values, car(values), unbound_s);
+    if (!bindable(sym))
+      uw_throwf(error_s, lit("progv: ~s isn't a bindable symbol"), sym, nao);
+    env_vbind(env, sym, value);
+  }
+
+  return nil;
 }
 
 static val symbol_function(val sym)
@@ -6829,6 +6891,7 @@ void eval_init(void)
   progn_s = intern(lit("progn"), user_package);
   prog1_s = intern(lit("prog1"), user_package);
   prog2_s = intern(lit("prog2"), user_package);
+  progv_s = intern(lit("progv"), user_package);
   sys_blk_s = intern(lit("blk"), system_package);
   let_s = intern(lit("let"), user_package);
   let_star_s = intern(lit("let*"), user_package);
@@ -6965,6 +7028,7 @@ void eval_init(void)
   reg_op(sys_splice_s, op_unquote_error);
   reg_op(progn_s, op_progn);
   reg_op(prog1_s, op_prog1);
+  reg_op(progv_s, op_progv);
   reg_op(let_s, op_let);
   reg_op(each_op_s, op_each);
   reg_op(let_star_s, op_let);
@@ -7680,6 +7744,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("rt-defvarl"), system_package), func_n1(rt_defvarl));
   reg_fun(intern(lit("rt-defv"), system_package), func_n1(rt_defv));
+  reg_fun(intern(lit("rt-progv"), system_package), func_n2(rt_progv));
   reg_fun(intern(lit("rt-defun"), system_package), func_n2(rt_defun));
   reg_fun(intern(lit("rt-defmacro"), system_package), func_n3(rt_defmacro));
   reg_fun(intern(lit("rt-defsymacro"), system_package), func_n2(rt_defsymacro));

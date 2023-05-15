@@ -531,6 +531,7 @@
               (and me.(compile oreg env (expand-and form)))
               (or me.(comp-or oreg env form))
               (prog1 me.(comp-prog1 oreg env form))
+              (progv me.(comp-progv oreg env form))
               (sys:quasi me.(comp-quasi oreg env form))
               (dohash me.(compile oreg env (expand-dohash form)))
               (tree-bind me.(comp-tree-bind oreg env form))
@@ -1323,6 +1324,32 @@
                               (uni fi-frag.ffuns re-frag.ffuns)))))
     ((t fi) me.(compile oreg env fi))
     ((t) me.(compile oreg env nil))))
+
+(defmeth compiler comp-progv (me oreg env form)
+  (tree-case form
+    ((t syms vals)
+     me.(comp-progn oreg env ^(progn ,syms ,vals nil)))
+    ((t syms vals . body)
+     (let* ((denv (new env up env co me))
+            (sreg me.(alloc-treg))
+            (vreg me.(alloc-treg))
+            (sfrag me.(compile sreg env syms))
+            (vfrag me.(compile vreg env vals))
+            (bfrag me.(comp-progn oreg denv body)))
+       me.(free-treg sreg)
+       me.(free-treg vreg)
+       (new (frag bfrag.oreg
+                  (append sfrag.code
+                          vfrag.code
+                          ^((dframe ,denv.lev 0)
+                            (gcall ,oreg
+                                   ,me.(get-sidx 'sys:rt-progv)
+                                   ,sfrag.oreg
+                                   ,vfrag.oreg))
+                          bfrag.code
+                          '((end nil)))
+                  (uni sfrag.fvars (uni vfrag.fvars bfrag.fvars))
+                  (uni sfrag.ffuns (uni vfrag.ffuns bfrag.ffuns))))))))
 
 (defmeth compiler comp-quasi (me oreg env form)
   (let ((qexp (expand-quasi form)))

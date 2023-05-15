@@ -1504,6 +1504,7 @@
       ("prog1" "N-03F7A8B8")
       ("prog2" "N-03A0E48C")
       ("progn" "N-03F7A8B8")
+      ("progv" "N-033405DF")
       ("promisep" "N-00C7553F")
       ("prop" "N-01C6D406")
       ("proper-list-p" "N-03F70343")

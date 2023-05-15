@@ -15060,6 +15060,68 @@ closures, but are captured in delimited continuations.
   (let (:a nil)) -> error, :a and nil can't be used as variables
 .brev
 
+.coNP Operator @ progv
+.synb
+.mets (progv < symbols-expr < values-expr << body-form *)
+.syne
+.desc
+The
+.code progv
+operator binds dynamic variables, and evaluates the
+.metn body-form s
+in the dynamic scope of those bindings. The bindings are removed
+when the form terminates. The result value is that of the
+last
+.meta body-form
+or else
+.code nil
+if there are no forms.
+
+The
+.meta symbols-expr
+and
+.meta values-expr
+are expressions which are evaluated. Their values are expected
+to be lists, of bindable symbols and arbitrary values, respectively.
+The symbols coming from one list are bound to the values coming
+from the other list.
+
+If there are more symbols than values, then the extra symbols
+will appear unbound, as if they were first bound and then hidden
+using the
+.code makunbound
+function.
+
+If there are more values than symbols, the extra values are ignored.
+
+Note that dynamic binding takes place for the symbols even if they
+have not been introduced as special variables via
+.code defvar
+or
+.codn defparm .
+However, if those symbols appear as expressions denoting variables inside the
+.metn body-form s,
+they will not necessarily be treated as dynamic variables.
+If they have lexical definitions in scope, those will be referenced.
+Furthermore, the compiler treats undefined variables as global
+references, and not dynamic.
+
+.TP* Examples:
+
+.verb
+
+  (progv '(a b) '(1 2) (cons a b))  ->  (1 . 2)
+
+  (progv '(x) '(1) (let ((x 4)) (symbol-value 'x))) -> 1
+
+  (let ((x 'lexical)
+        (vars (list 'x))
+        (vals (list 'dynamic)))
+    (progv vars vals (list x (symbol-value 'x))))
+
+  --> (lexical dynamic)
+.brev
+
 .SS* Functions
 .coNP Operator @ defun
 .synb
