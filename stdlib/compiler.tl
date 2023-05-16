@@ -564,6 +564,7 @@
               ((+ *) me.(comp-arith-form oreg env form))
               ((- /) me.(comp-arith-neg-form oreg env form))
               (typep me.(comp-typep oreg env form))
+              (compiler-let me.(comp-compiler-let oreg env form))
               (t me.(comp-fun-form oreg env form))))
            ((and (consp sym)
                  (eq (car sym) 'lambda)) me.(compile oreg env ^(call ,*form)))
@@ -1389,6 +1390,12 @@
      me.(compile oreg env ^(progn ,exp nil)))
     (@nil
      me.(comp-fun-form oreg env form))))
+
+(defmeth compiler comp-compiler-let (me oreg env form)
+  (tree-bind (t bindings . body) form
+    (progv [mapcar car bindings]
+           [mapcar [chain cadr no-dvbind-eval] bindings]
+           me.(comp-progn oreg env body))))
 
 (defmeth compiler comp-fun-form (me oreg env form)
   (let* ((olev *opt-level*)
@@ -2305,6 +2312,9 @@
 (defun system-symbol-p (sym)
   (member (symbol-package sym)
           (load-time (list user-package system-package))))
+
+(defun no-dvbind-eval (form)
+  (eval (if-match (sys:dvbind @nil @exp) form exp form)))
 
 (defun usr:compile-toplevel (exp : (expanded-p nil))
   (let ((co (new compiler))

@@ -104,7 +104,7 @@ val defsymacro_s, symacrolet_s, prof_s, switch_s, struct_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val load_path_s, load_hooks_s, load_recursive_s, load_search_dirs_s;
 val load_time_s, load_time_lit_s;
-val eval_only_s, compile_only_s;
+val eval_only_s, compile_only_s, compiler_let_s;
 val const_foldable_s;
 val pct_fun_s;
 
@@ -1937,12 +1937,14 @@ static val op_progv(val form, val env)
 
 static val op_let(val form, val env)
 {
+  uses_or2;
   val let = first(form);
   val args = rest(form);
   val vars = first(args);
   val body = rest(args);
   val saved_de = dyn_env;
-  val new_env = bindings_helper(vars, env, eq(let, let_star_s), nil, form);
+  val sequential = or2(eq(let, let_star_s), eq(let, compiler_let_s));
+  val new_env = bindings_helper(vars, env, sequential, nil, form);
   val ret = eval_progn(body, new_env, form);
   dyn_env = saved_de;
   return ret;
@@ -5280,6 +5282,26 @@ again:
       return expand_setqf(form, menv);
     } else if (sym == var_s || sym == expr_s) {
       return form;
+    } else if (sym == compiler_let_s) {
+      val body = (syn_check(form, sym, cdr, 0), rest(rest(form)));
+      val vars = second(form);
+      val body_ex = expand_progn(body, menv);
+      val vars_ex = expand_vars(vars, nil, form, 0);
+      {
+        val var;
+        for (var = vars_ex; var; var = cdr(var)) {
+          val var_init = car(var);
+          if (!consp(var_init))
+            eval_warn(form, lit("~s: not a var-init form: ~s"),
+                      sym, var_init, nao);
+          else if (!special_var_p(car(var_init)))
+            eval_warn(form, lit("~s: ~s is required to be a special variable"),
+                      sym, car(var_init), nao);
+        }
+      }
+      if (body == body_ex)
+        return form;
+      return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
     } else {
       /* funtion call expansion also handles: prog1, call, if, and, or,
          unwind-protect, return and other special forms whose arguments
@@ -7010,6 +7032,7 @@ void eval_init(void)
   load_time_lit_s  = intern(lit("load-time-lit"), system_package);
   eval_only_s  = intern(lit("eval-only"), user_package);
   compile_only_s = intern(lit("compile-only"), user_package);
+  compiler_let_s = intern(lit("compiler-let"), user_package);
   const_foldable_s = intern(lit("%const-foldable%"), system_package);
   pct_fun_s = intern(lit("%fun%"), user_package);
 
@@ -7030,6 +7053,7 @@ void eval_init(void)
   reg_op(prog1_s, op_prog1);
   reg_op(progv_s, op_progv);
   reg_op(let_s, op_let);
+  reg_op(compiler_let_s, op_let);
   reg_op(each_op_s, op_each);
   reg_op(let_star_s, op_let);
   reg_op(fbind_s, op_fbind);

@@ -379,6 +379,7 @@
       ("compile-toplevel" "N-00DE8B13")
       ("compile-update-file" "N-0211BE68")
       ("compile-warning" "N-032EA7D7")
+      ("compiler-let" "N-0345D216")
       ("compl-span-str" "N-0171717F")
       ("cond" "N-016C9E24")
       ("conda" "N-025CC33C")

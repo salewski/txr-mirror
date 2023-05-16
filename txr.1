@@ -88206,6 +88206,55 @@ with unused variable checking enabled.
      (compile-file "bar.tl"))
 .brev
 
+.coNP Operator @ compiler-let
+.synb
+.mets (compiler-let >> ({ sym | >> ( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The
+.code compiler-let
+operator strongly resembles
+.code let*
+but has different semantics, relevant to compilation.
+
+Symbols bound using
+.code compiler-let
+are expected to be special variables. For every
+.metn sym ,
+the expression
+.mono
+.meti (special-var-p << sym )
+.onom
+should be true. The behavior is unspecified for any
+.meta sym
+which doesn't name a special variable.
+
+When the compiler encounters the
+.code compiler-let
+construct, the compiler itself establishes a dynamic scope in which the
+implied special variable bindings are in effect. This effect is not
+incorporated into the compiled code. The compiler then implicitly places the
+.metn body-form s,
+into a
+.code progn
+from, and compiles that form. While the implicit
+.code progn
+is being compiled, the dynamic bindings established by
+.code compiler-let
+are in scope.
+
+Thus
+.code compiler-let
+may be used to bind special variables which influence compiler behavior.
+
+The
+.code compiler-let
+form is treated like
+.code let*
+by the interpreter, provided that every
+.meta sym
+names a special variable.
+
 .coNP Macro @ load-time
 .synb
 .mets (load-time << form )

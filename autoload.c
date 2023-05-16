@@ -660,7 +660,7 @@ static val compiler_set_entries(val fun)
     lit("compile-toplevel"), lit("compile"), lit("compile-file"),
     lit("compile-update-file"),
     lit("with-compilation-unit"), lit("dump-compiled-objects"),
-    lit("with-compile-opts"),
+    lit("with-compile-opts"), lit("compiler-let"),
     nil
   };
   val vname[] = {
