@@ -88166,27 +88166,52 @@ The
 macro takes zero or more arguments. Each argument is either a clause
 which affects compiler options or else an ordinary
 .meta form
-which is evaluated in a context in which the
+which is processed in a context in which the
 .code *compile-options*
 variable has been affected by all of the previous clauses.
 
-The
-.code with-compile-opts
-macro arranges for
+It is unspecified whether the clauses operate destructively on
 .code *compile-options*
-to be freshly bound, as if by the
-.code let
-operator. The variable is then given a value which is a copy of the
-previous binding.
-The option-affecting clauses then operate destructively on this copy.
-When the macro terminates, the binding is undone and thus the
-prior value of
+or freshly bind it. However, the macro dynamically binds
 .code *compile-options*
-is restored.
+at least once, so that when it terminates, its previous value is restored.
+This binding is performed using
+.codn compiler-let .
 
-The clauses which operate on options have the syntax of a value followed by one
-or more symbols which must be the names of options which are compatible with
-that value. The clause indicates that all those options take on that value.
+When
+.code with-compile-opts
+occurs in code processed by the compiler, all of the clause-driven compile
+option manipulation is performed in the compiler's own context. The changes
+to the
+.code *compile-options*
+variable are not visible to the code being compiled.  Thus the macro may be
+used to transparently change compiler options over individual subexpressions in
+compiled code.
+
+When
+.code with-compile-opts
+occurs in interpreted code, the manipulations of
+.code *compile-options*
+are visible to the
+.metn form s.
+This allows interpreted build steps to configure compiler options
+around functions such as
+.codn compile-file .
+
+The clauses which operate on options have list syntax consisting of a value
+followed by one or more symbols which must be the names of options which are
+compatible with that value. The clause indicates that all those options take on
+that value.
+
+The possible values are:
+.codn nil ,
+.codn t ,
+.code :warn
+and
+.codn :error .
+These values are documented under the description of the
+.code compile-opts
+structure.
 
 .TP* Example:
 
@@ -88198,12 +88223,23 @@ treated as error, but unused variable checking disabled. Then compile
 with unused variable checking enabled.
 
 .verb
+  ;; this form must be interpreted in order for
+  ;; the compile-file call to "see" the effect of the
+  ;; option manipulation.
   (with-compile-opts
      (:error shadow-var shadow-fun)
      (nil unused)
      (compile-file "foo.tl")
      (:warn unused)
      (compile-file "bar.tl"))
+
+  ;; when the following form is compiled, the unused
+  ;; variable warning will be disabled just around
+  ;; the (let (y) x).
+  (lambda (x)
+    (with-compile-opts (nil unused)
+      (let (y) x)))
+
 .brev
 
 .coNP Operator @ compiler-let
