@@ -467,27 +467,71 @@ NOINLINE static void vm_call(struct vm *vm, vm_word_t insn)
   unsigned nargs = vm_insn_extra(insn);
   unsigned dest = vm_insn_operand(insn);
   vm_word_t argw = vm->code[vm->ip++];
-  unsigned fun = vm_arg_operand_lo(argw);
+  unsigned funidx = vm_arg_operand_lo(argw);
+  val fun = vm_getz(vm->dspl, funidx);
   val result;
-  args_decl (args, max(nargs, ARGS_MIN));
 
-  if (nargs--) {
-    args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
-
-    while (nargs >= 2) {
-      nargs -= 2;
-      argw = vm->code[vm->ip++];
-      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+  switch (nargs) {
+  case 0:
+    result = funcall(fun);
+    break;
+  case 1:
+    {
+      val arg1 = vm_getz(vm->dspl, vm_arg_operand_hi(argw));
+      result = funcall1(fun, z(arg1));
+    }
+    break;
+  case 2:
+    {
+      vm_word_t argx = vm->code[vm->ip++];
+      val arg1 = vm_getz(vm->dspl, vm_arg_operand_hi(argw));
+      val arg2 = vm_getz(vm->dspl, vm_arg_operand_lo(argx));
+      result = funcall2(fun, z(arg1), z(arg2));
+    }
+    break;
+  case 3:
+    {
+      vm_word_t argx = vm->code[vm->ip++];
+      val arg1 = vm_getz(vm->dspl, vm_arg_operand_hi(argw));
+      val arg2 = vm_getz(vm->dspl, vm_arg_operand_lo(argx));
+      val arg3 = vm_getz(vm->dspl, vm_arg_operand_hi(argx));
+      result = funcall3(fun, z(arg1), z(arg2), z(arg3));
+    }
+    break;
+  case 4:
+    {
+      vm_word_t argx = vm->code[vm->ip++];
+      vm_word_t argy = vm->code[vm->ip++];
+      val arg1 = vm_getz(vm->dspl, vm_arg_operand_hi(argw));
+      val arg2 = vm_getz(vm->dspl, vm_arg_operand_lo(argx));
+      val arg3 = vm_getz(vm->dspl, vm_arg_operand_hi(argx));
+      val arg4 = vm_getz(vm->dspl, vm_arg_operand_lo(argy));
+      result = funcall4(fun, z(arg1), z(arg2), z(arg3), z(arg4));
+    }
+    break;
+  default:
+    {
+      args_decl (args, max(nargs, ARGS_MIN));
       args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
-    }
+      nargs--;
 
-    if (nargs) {
-      argw = vm->code[vm->ip++];
-      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+      while (nargs >= 2) {
+        nargs -= 2;
+        argw = vm->code[vm->ip++];
+        args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+        args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
+      }
+
+      if (nargs) {
+        argw = vm->code[vm->ip++];
+        args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+      }
+
+      result = generic_funcall(fun, args);
     }
+    break;
   }
 
-  result = generic_funcall(vm_getz(vm->dspl, fun), args);
   vm_set(vm->dspl, dest, result);
 }
 
