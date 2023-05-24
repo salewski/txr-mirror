@@ -194,7 +194,7 @@
   (hash-update-1 self.streams
                  ^(,kind ,path)
                  (do or @1 (caseq kind
-                             ((:inf :outf) (open-file path mode))
+                             ((:inf :outf :apf) (open-file path mode))
                              ((:inp :outp) (open-command path mode))))
                  nil))
 
