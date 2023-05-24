@@ -2359,7 +2359,7 @@ static void builtin_reject_test(val op, val sym, val form, val def_kind)
 static val make_var_shadowing_env(val menv, val vars)
 {
   if (nilp(vars)) {
-    return menv;
+    return make_env(nil, nil, menv);
   } else if (atom(vars)) {
     return make_env(cons(cons(vars, special_s), nil), nil, menv);
   } else {

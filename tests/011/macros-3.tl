@@ -18,3 +18,8 @@
 (mtest s 1
        s 2
        s 3)
+
+(test (symacrolet ((a 42))
+        (labels ()
+          a))
+      42)
