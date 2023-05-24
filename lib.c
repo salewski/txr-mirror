@@ -8525,7 +8525,9 @@ val funcall1(val fun, val arg)
     case 4:
       return vm_funcall4(fun, z(arg), colon_k, colon_k, colon_k);
     default:
-      {
+      if (!fun->f.variadic && fun->f.fixparam == 0) {
+        wrongargs(fun);
+      } else {
         args_decl_constsize(args, ARGS_MIN);
         args_add(args, arg);
         return vm_execute_closure(fun, args);
@@ -8604,7 +8606,9 @@ val funcall2(val fun, val arg1, val arg2)
     case 4:
       return vm_funcall4(fun, z(arg1), z(arg2), colon_k, colon_k);
     default:
-      {
+      if (!fun->f.variadic && fun->f.fixparam < 2) {
+        wrongargs(fun);
+      } else {
         args_decl_constsize(args, ARGS_MIN);
         args_add2(args, arg1, arg2);
         return vm_execute_closure(fun, args);
@@ -8685,7 +8689,9 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     case 4:
       return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), colon_k);
     default:
-      {
+      if (!fun->f.variadic && fun->f.fixparam < 3) {
+        wrongargs(fun);
+      } else {
         args_decl_constsize(args, ARGS_MIN);
         args_add3(args, arg1, arg2, arg3);
         return vm_execute_closure(fun, args);
@@ -8761,12 +8767,14 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     wrongargs(fun);
 
   if (fun->f.functype == FVM) {
-    if (fun->f.fixparam == 4)
+    if (fun->f.fixparam == 4) {
       return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), z(arg4));
-    else {
+    } else if (fun->f.variadic || fun->f.fixparam > 4) {
       args_decl(args, ARGS_MIN);
       args_add4(args, arg1, arg2, arg3, arg4);
       return vm_execute_closure(fun, args);
+    } else {
+      wrongargs(fun);
     }
   }
 

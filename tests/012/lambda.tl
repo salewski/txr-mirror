@@ -3,12 +3,28 @@
 (defun call-lambda (fn . args)
   [fn . args])
 
+(defun call-lambda-fixed (fn . args)
+  (tree-case args
+    (() [fn])
+    ((a1) [fn a1])
+    ((a1 a2) [fn a1 a2])
+    ((a1 a2 a3) [fn a1 a2 a3])
+    ((a1 a2 a3 a4) [fn a1 a2 a3 a4])
+    ((a1 a2 a3 a4 a5) [fn a1 a2 a3 a4 a5])
+    ((a1 . r) [fn a1 . r])
+    ((a1 a2 . r) [fn a1 a2 . r])
+    ((a1 a2 a3 . r) [fn a1 a2 a3 . r])
+    ((a1 a2 a3 a4 . r) [fn a1 a2 a3 a4 . r])
+    ((a1 a2 a3 a4 a5 . r) [fn a1 a2 a3 a4 a5 . r])
+    (r [fn . r])))
+
 (defmacro ltest (:match :form f)
   (([(lambda . @rest) . @args] @expected)
    (if *compile-test*
      ^(progn
         (test [(lambda ,*rest) ,*args] ,expected)
-        (test (call-lambda (lambda ,*rest) ,*args) ,expected))
+        (test (call-lambda (lambda ,*rest) ,*args) ,expected)
+        (test (call-lambda-fixed (lambda ,*rest) ,*args) ,expected))
      ^(test [(lambda ,*rest) ,*args] ,expected)))
   ((@else . rest) (compile-error f "bad syntax")))
 
@@ -17,17 +33,22 @@
 
 (mltest
   [(lambda ())] nil
+  [(lambda ()) 1] :error
   [(lambda (a) a)] :error
   [(lambda (a) a) 1] 1
+  [(lambda (a) a) 1 2] :error
   [(lambda (a b) (list a b)) 1] :error
   [(lambda (a b) (list a b)) 1 2] (1 2)
+  [(lambda (a b) (list a b)) 1 2 3] :error
   [(lambda (a b c) (list a b c)) 1 2] :error
-  [(lambda (a b c) (list a b c)) 1 2 3] (1 2 3))
+  [(lambda (a b c) (list a b c)) 1 2 3] (1 2 3)
+  [(lambda (a b c) (list a b c)) 1 2 3 4] :error)
 
 (mltest
   [(lambda (: a) a)] nil
   [(lambda (: (a 1)) a)] 1
   [(lambda (: (a 1)) a) 2] 2
+  [(lambda (: (a 1)) a) 2 3] :error
   [(lambda (: (a 1 a-p)) (list a a-p))] (1 nil)
   [(lambda (: (a 1 a-p)) (list a a-p)) 2] (2 t))
 
@@ -35,6 +56,8 @@
   [(lambda (x : a) (list x a))] :error
   [(lambda (x : (a 1)) (list x a))] :error
   [(lambda (x : (a 1)) (list x a)) 2] (2 1)
+  [(lambda (x : (a 1)) (list x a)) 2 3] (2 3)
+  [(lambda (x : (a 1)) (list x a)) 2 3 4] :error
   [(lambda (x : (a 1 a-p)) (list x a a-p))] :error
   [(lambda (x : (a 1 a-p)) (list x a a-p)) 2] (2 1 nil))
 
