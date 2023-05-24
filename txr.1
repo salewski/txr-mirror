@@ -69716,6 +69716,14 @@ or
 string, direction and type, a new stream is not opened; rather, the
 previously associated stream is used.
 
+The scope of these macros is the entire containing
+.code awk
+form; they may be used in the
+.metn init-form s
+of the
+.code :let
+clause.
+
 The
 .code ->
 macro indicates that the file named

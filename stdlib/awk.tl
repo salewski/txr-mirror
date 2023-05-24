@@ -462,18 +462,21 @@
                   ^(symacrolet ((f (usr:rslot ,',aws-sym 'fields 'f-to-rec)))
                      (set f (mapcar (opip ,*opip-args) f))))
                 (fconv (. conv-args)
-                  ^(set f (sys:conv (,*conv-args) f)))
-                (-> (path . body)
-                  ^(sys:awk-redir ,',aws-sym *stdout* :outf "w" ,path ,body))
-                (->> (path . body)
-                  ^(sys:awk-redir ,',aws-sym *stdout* :apf "a" ,path ,body))
-                (<- (path . body)
-                  ^(sys:awk-redir ,',aws-sym *stdin* :inf "r" ,path ,body))
-                (!> (path . body)
-                  ^(sys:awk-redir ,',aws-sym *stdout* :outp "w" ,path ,body))
-                (<! (path . body)
-                  ^(sys:awk-redir ,',aws-sym *stdin* :inp "r" ,path ,body)))
+                  ^(set f (sys:conv (,*conv-args) f))))
        ,*body)))
+
+(defmacro sys:awk-mac-let-outer (aws-sym . body)
+  ^(macrolet ((-> (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdout* :outf "w" ,path ,body))
+              (->> (path . body)
+                   ^(sys:awk-redir ,',aws-sym *stdout* :apf "a" ,path ,body))
+              (<- (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdin* :inf "r" ,path ,body))
+              (!> (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdout* :outp "w" ,path ,body))
+              (<! (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdin* :inp "r" ,path ,body)))
+     ,*body))
 
 (defmacro sys:awk-fun-let (aws-sym . body)
   ^(flet ((prn (. args)
@@ -539,35 +542,37 @@
                   ,(sys:awk-field-name-code awc aws-sym)
                   ,p-actions-xform)))
         ^(block ,(or awc.name 'awk)
-           (let* (,*awc.lets ,awk-retval
-                  (,aws-sym (new sys:awk-state
-                                 ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
-                                 ,*(if awc.output ^(output ,awc.output))
-                                 rng-n (macro-time (qref ,awc nranges)))))
-             (sys:awk-mac-let ,awc ,aws-sym
-               (sys:awk-fun-let ,aws-sym
-                 (sys:awk-symac-let ,awc
-                   (let* (,*(if awc.output
-                              ^((*stdout* (qref ,aws-sym output))))
-                          ,*(if (and awc.cond-actions awc.begin-file-actions)
-                              ^((,awk-begf-fun (lambda (,aws-sym)
-                                   ,*awc.begin-file-actions))))
-                          ,*(if (and awc.cond-actions awc.end-file-actions)
-                              ^((,awk-endf-fun (lambda (,aws-sym)
-                                  ,*awc.end-file-actions))))
-                          ,*(if (or awc.cond-actions awc.begin-file-actions
+           (let (,awk-retval
+                 (,aws-sym (new sys:awk-state
+                                ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
+                                ,*(if awc.output ^(output ,awc.output))
+                                rng-n (macro-time (qref ,awc nranges)))))
+             (sys:awk-mac-let-outer ,aws-sym
+               (let* ,awc.lets
+                 (sys:awk-mac-let ,awc ,aws-sym
+                   (sys:awk-fun-let ,aws-sym
+                     (sys:awk-symac-let ,awc
+                       (let* (,*(if awc.output
+                                  ^((*stdout* (qref ,aws-sym output))))
+                               ,*(if (and awc.cond-actions awc.begin-file-actions)
+                                   ^((,awk-begf-fun (lambda (,aws-sym)
+                                                      ,*awc.begin-file-actions))))
+                               ,*(if (and awc.cond-actions awc.end-file-actions)
+                                   ^((,awk-endf-fun (lambda (,aws-sym)
+                                                      ,*awc.end-file-actions))))
+                               ,*(if (or awc.cond-actions awc.begin-file-actions
+                                         awc.end-file-actions awc.end-actions)
+                                   ^((,awk-fun (lambda (,aws-sym)
+                                                 ,p-actions-xform)))))
+                         ,*awc.begin-actions
+                         (unwind-protect
+                           ,(if (or awc.cond-actions awc.begin-file-actions
                                     awc.end-file-actions awc.end-actions)
-                              ^((,awk-fun (lambda (,aws-sym)
-                                            ,p-actions-xform)))))
-                     ,*awc.begin-actions
-                       (unwind-protect
-                         ,(if (or awc.cond-actions awc.begin-file-actions
-                                  awc.end-file-actions awc.end-actions)
-                            ^(qref ,aws-sym (loop ,awk-fun
-                                              ,(if awc.begin-file-actions
-                                                 awk-begf-fun)
-                                              ,(if awc.end-file-actions
-                                                 awk-endf-fun))))
-                         (set ,awk-retval (progn ,*awc.end-actions))
-                         (call-finalizers ,aws-sym))
-                       ,awk-retval))))))))))
+                              ^(qref ,aws-sym (loop ,awk-fun
+                                                    ,(if awc.begin-file-actions
+                                                       awk-begf-fun)
+                                                    ,(if awc.end-file-actions
+                                                       awk-endf-fun))))
+                           (set ,awk-retval (progn ,*awc.end-actions))
+                           (call-finalizers ,aws-sym))
+                         ,awk-retval))))))))))))
