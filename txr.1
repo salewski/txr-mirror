@@ -67897,6 +67897,31 @@ and ordinary clauses, it will be shadowed by the
 variable
 .codn fs ,
 which holds the field-separator regular expression or string.
+
+.meIP (:fun >> {( name < param-list << function-body-form *)}*)
+The
+.code :fun
+clause introduces named functions which are visible inside the
+.code awk
+form, as if bound by a
+.code labels
+operator. Variables defined by
+.code :let
+are visible to these named functions. The reverse is not true: the
+functions are not visible to the
+.metn init-form s
+of the
+.code :let
+clause. This is regardless of the order of appearance of the
+.code :let
+and
+.code :fun
+clauses in the
+.code awk
+macro. Furthermore, functions defined by
+.code :fun
+may refer to awk macros, functions and variables.
+
 .meIP (:inputs << source-form *)
 The
 .code :inputs
@@ -69719,10 +69744,10 @@ previously associated stream is used.
 The scope of these macros is the entire containing
 .code awk
 form; they may be used in the
-.metn init-form s
-of the
 .code :let
-clause.
+and
+.code :fun
+clauses.
 
 The
 .code ->

@@ -56,7 +56,7 @@
              self.output stream)))))
 
 (defstruct sys:awk-compile-time ()
-  inputs output name lets
+  inputs output name lets funs
   begin-file-actions end-file-actions
   begin-actions end-actions
   cond-actions
@@ -318,6 +318,7 @@
                                    (awk-error "bad :name syntax"))
                                  (set awc.name (car actions)))
                                (:let (push actions awc.lets))
+                               (:fun (push actions awc.funs))
                                (:begin (push actions awc.begin-actions))
                                (:set (push ^((set ,*actions)) awc.begin-actions))
                                (:end (push actions awc.end-actions))
@@ -349,6 +350,7 @@
                                         awc.cond-actions))))
         (junk (awk-error "bad clause syntax ~s" junk))))
     (set awc.lets [apply append (nreverse awc.lets)]
+         awc.funs [apply append (nreverse awc.funs)]
          awc.begin-actions [apply append (nreverse awc.begin-actions)]
          awc.end-actions [apply append (nreverse awc.end-actions)]
          awc.begin-file-actions [apply append (nreverse awc.begin-file-actions)]
@@ -552,27 +554,28 @@
                  (sys:awk-mac-let ,awc ,aws-sym
                    (sys:awk-fun-let ,aws-sym
                      (sys:awk-symac-let ,awc
-                       (let* (,*(if awc.output
-                                  ^((*stdout* (qref ,aws-sym output))))
-                               ,*(if (and awc.cond-actions awc.begin-file-actions)
-                                   ^((,awk-begf-fun (lambda (,aws-sym)
-                                                      ,*awc.begin-file-actions))))
-                               ,*(if (and awc.cond-actions awc.end-file-actions)
-                                   ^((,awk-endf-fun (lambda (,aws-sym)
-                                                      ,*awc.end-file-actions))))
-                               ,*(if (or awc.cond-actions awc.begin-file-actions
-                                         awc.end-file-actions awc.end-actions)
-                                   ^((,awk-fun (lambda (,aws-sym)
-                                                 ,p-actions-xform)))))
-                         ,*awc.begin-actions
-                         (unwind-protect
-                           ,(if (or awc.cond-actions awc.begin-file-actions
-                                    awc.end-file-actions awc.end-actions)
-                              ^(qref ,aws-sym (loop ,awk-fun
-                                                    ,(if awc.begin-file-actions
-                                                       awk-begf-fun)
-                                                    ,(if awc.end-file-actions
-                                                       awk-endf-fun))))
-                           (set ,awk-retval (progn ,*awc.end-actions))
-                           (call-finalizers ,aws-sym))
-                         ,awk-retval))))))))))))
+                       (labels ,awc.funs
+                         (let* (,*(if awc.output
+                                    ^((*stdout* (qref ,aws-sym output))))
+                                 ,*(if (and awc.cond-actions awc.begin-file-actions)
+                                     ^((,awk-begf-fun (lambda (,aws-sym)
+                                                        ,*awc.begin-file-actions))))
+                                 ,*(if (and awc.cond-actions awc.end-file-actions)
+                                     ^((,awk-endf-fun (lambda (,aws-sym)
+                                                        ,*awc.end-file-actions))))
+                                 ,*(if (or awc.cond-actions awc.begin-file-actions
+                                           awc.end-file-actions awc.end-actions)
+                                     ^((,awk-fun (lambda (,aws-sym)
+                                                   ,p-actions-xform)))))
+                           ,*awc.begin-actions
+                           (unwind-protect
+                             ,(if (or awc.cond-actions awc.begin-file-actions
+                                      awc.end-file-actions awc.end-actions)
+                                ^(qref ,aws-sym (loop ,awk-fun
+                                                      ,(if awc.begin-file-actions
+                                                         awk-begf-fun)
+                                                      ,(if awc.end-file-actions
+                                                         awk-endf-fun))))
+                             (set ,awk-retval (progn ,*awc.end-actions))
+                             (call-finalizers ,aws-sym))
+                           ,awk-retval)))))))))))))
