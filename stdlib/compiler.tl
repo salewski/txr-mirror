@@ -1111,15 +1111,21 @@
                           (set ffuns (uni ffuns ff.ffuns)
                                fvars (uni fvars ff.fvars))
                           (list ff)))))
-        (new (frag boreg
-                   (append ^((frame ,nenv.lev ,frsize))
-                           (mappend .code ffrags)
-                           bfrag.code
-                           (maybe-mov boreg bfrag.oreg)
-                           ^((end ,boreg)))
-                   (uni fvars bfrag.fvars)
-                   (uni (diff bfrag.ffuns lexfuns)
-                        (if rec (diff ffuns lexfuns) ffuns))))))))
+        (if ffrags
+          (new (frag boreg
+                     (append ^((frame ,nenv.lev ,frsize))
+                             (mappend .code ffrags)
+                             bfrag.code
+                             (maybe-mov boreg bfrag.oreg)
+                             ^((end ,boreg)))
+                     (uni fvars bfrag.fvars)
+                     (uni (diff bfrag.ffuns lexfuns)
+                          (if rec (diff ffuns lexfuns) ffuns))))
+          (new (frag boreg
+                     (append me.(eliminate-frame bfrag.code nenv)
+                             (maybe-mov boreg bfrag.oreg))
+                     bfrag.fvars
+                     bfrag.ffuns)))))))
 
 (defmeth compiler comp-lambda-impl (me oreg env form)
   (mac-param-bind form (t par-syntax . body) form
