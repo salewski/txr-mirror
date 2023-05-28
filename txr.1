@@ -41748,8 +41748,14 @@ have a binding in the parameter macro namespace: a global namespace
 which associates keyword symbols with parameter list expander
 functions.
 
+Parameter list macros are recognized in both function parameter
+lists and macro parameter lists. A macro parameter list can,
+via nesting, contain multiple nested parameter lists. Each
+such nested list may contain parameter macro invocations; those
+are all traversed and processed.
+
 Expansion of a parameter list macro occurs at macro-expansion
-time, when a function's parameter list is traversed by the
+time, when a function's or macro's parameter list is traversed by the
 macro expander. It takes place as follows.
 First, the keyword is removed from the parameter list.
 The keyword's binding in the parameter macro namespace is

@@ -2,6 +2,8 @@
 
 (defvarl v :v)
 (defsymacro u (identity :u))
+(defvarl x :x)
+(defvarl y :y)
 
 (mtest
   [(lambda (:key))] nil
@@ -36,3 +38,10 @@
 
 (test
   (set (key-place :x 3 :y 4) 42) (3 4 42 t))
+
+(defmacro kp (r (:key -- (a v a-p) (b u b-p)) : ((:key -- (c x c-p) (d y d-p))))
+  ^'(r ,a ,a-p ,b ,b-p ,c ,c-p ,d ,d-p))
+
+(mtest
+  (kp :r ()) (r :v nil :u nil :x nil :y nil)
+  (kp 0 (:a 1 :b 2) (:d 3)) (r 1 t 2 t :x nil 3 t))
