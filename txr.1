@@ -41290,6 +41290,60 @@ emanating from the
 .code delta
 form.
 
+.coNP Macro @ expander-let
+.synb
+.mets (expander-let >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The
+.code expander-let
+operator strongly resembles
+.code let*
+but has different semantics, relevant to expansion.
+It also has a stricter syntax in that variables may not
+be symbols without a
+.metn init-form :
+only variable binding specifications of the form
+.mono
+.meti >> (sym << init-form )
+.onom
+are allowed.
+
+Symbols bound using
+.code expander-let
+are expected to be special variables. For every
+.metn sym ,
+the expression
+.mono
+.meti (special-var-p << sym )
+.onom
+should be true. The behavior is unspecified for any
+.meta sym
+which doesn't name a special variable.
+
+The
+.code expander-let
+macro establishes a new dynamic environment which each given
+.meta sym
+has the value of the specified
+.meta init-form
+which is evaluated in the top-level environment.
+Then, the
+.metn body-form s
+are turned into the arguments of a
+.code progn
+form, and that form is then expanded in the new environment in which the
+dynamic bindings are visible.
+
+Thus
+.code expander-let
+may be used to bind special variables which are visible to expansion-time
+computations occurring within
+.metn body-form s.
+A macro may generate an
+.code expander-let
+form in order to communicate values to macros contained in that form.
+
 .coNP Macro @ macro-time
 .synb
 .mets (macro-time << form *)

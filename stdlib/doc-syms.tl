@@ -673,6 +673,7 @@
       ("expand-left" "N-00E168FE")
       ("expand-right" "N-023B6B64")
       ("expand-with-free-refs" "N-0334827B")
+      ("expander-let" "N-00DBD46D")
       ("expt" "D-0076")
       ("exptmod" "D-0036")
       ("extproc" "N-0072FF5E")

@@ -918,6 +918,22 @@ static val constfun_instantiate(void)
   return nil;
 }
 
+static val expander_let_set_entries(val fun)
+{
+  val sys_name[] = {
+    lit("expander-let"),
+    nil
+  };
+  autoload_set(al_fun, sys_name, fun);
+  return nil;
+}
+
+static val expander_let_instantiate(void)
+{
+  load(scat2(stdlib_path, lit("expander-let")));
+  return nil;
+}
+
 val autoload_reg(val (*instantiate)(void),
                  val (*set_entries)(val))
 {
@@ -985,6 +1001,7 @@ void autoload_init(void)
   autoload_reg(doc_instantiate, doc_set_entries);
   autoload_reg(pic_instantiate, pic_set_entries);
   autoload_reg(constfun_instantiate, constfun_set_entries);
+  autoload_reg(expander_let_instantiate, expander_let_set_entries);
 
   reg_fun(intern(lit("autoload-try-fun"), system_package), func_n1(autoload_try_fun));
 }
