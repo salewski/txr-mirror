@@ -88283,7 +88283,7 @@ with unused variable checking enabled.
 
 .coNP Operator @ compiler-let
 .synb
-.mets (compiler-let >> ({ sym | >> ( sym << init-form )}*) << body-form *)
+.mets (compiler-let >> ({( sym << init-form )}*) << body-form *)
 .syne
 .desc
 The
@@ -88291,6 +88291,14 @@ The
 operator strongly resembles
 .code let*
 but has different semantics, relevant to compilation.
+It also has a stricter syntax in that variables may not
+be symbols without a
+.metn init-form :
+only variable binding specifications of the form
+.mono
+.meti >> (sym << init-form )
+.onom
+are allowed.
 
 Symbols bound using
 .code compiler-let
