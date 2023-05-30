@@ -58,6 +58,8 @@
 #define YY_DECL \
   static int yylex_impl(YYSTYPE *yylval_param, yyscan_t yyscanner)
 
+#define YY_FATAL_ERROR(msg) lex_irrecoverable_error(msg)
+
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 
 val form_to_ln_hash;
@@ -129,6 +131,12 @@ static void yyerrprepf(scanner_t *scanner, val fmt, ...)
         vformat_to_string(fmt, vl));
     va_end (vl);
   }
+}
+
+static void lex_irrecoverable_error(const char *msg8)
+{
+  val msg = string_utf8(msg8);
+  uw_throwf(error_s, lit("error in parser: ~a"), msg, nao);
 }
 
 static void out_of_range_float(scanner_t *scanner, const char *tok)
@@ -1521,4 +1529,5 @@ void parser_l_init(void)
 {
   prot1(&form_to_ln_hash);
   form_to_ln_hash = make_eq_hash(hash_weak_keys);
+  (void) &yy_fatal_error; /* suppress unused function warning */
 }
