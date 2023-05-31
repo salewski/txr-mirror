@@ -891,6 +891,31 @@ val read_compiled_file(val self, val stream, val error_stream)
   return read_file_common(self, stream, error_stream, t);
 }
 
+val read_objects_from_string(val string, val error_stream,
+                             val error_return_val, val name_in)
+{
+  val self = lit("read-objects-from-string");
+  val stream = make_string_byte_input_stream(string);
+  val name = default_arg(name_in, lit("string"));
+  val parser = ensure_parser(stream, name);
+  list_collect_decl (out, ptail);
+
+  for (;;) {
+    val form = lisp_parse_impl(self, prime_lisp, t, stream,
+                               error_stream, unique_s, name, colon_k);
+
+    if (form == unique_s) {
+      if (parser_errors(parser) != zero)
+        return error_return_val;
+      break;
+    }
+
+    ptail = list_collect(ptail, form);
+  }
+
+  return out;
+}
+
 val txr_parse(val source_in, val error_stream,
               val error_return_val, val name_in)
 {

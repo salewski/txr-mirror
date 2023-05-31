@@ -815,9 +815,13 @@ no longer specifies the
 .metn script-file .
 It is an argument to the script, such as the name of an input source.
 
-.meIP -e < expression
-Evaluates a \*(TL expression for its side effects, without printing
-its value. Can be specified more than once. The
+.meIP -e < expressions
+Evaluates zero or more \*(TL expressions for their side effects, without
+implicitly printing their values. Can be specified more than once.
+The argument may be empty, in which case the argument has no effect,
+since it calls for an empty sequence of forms to be evaluated.
+
+The
 .meta script-file
 argument becomes optional if at least one
 .codn -e ,
@@ -825,7 +829,9 @@ argument becomes optional if at least one
 .code -P
 or
 .code -t
-option is processed. If the evaluation of every
+option is processed.
+
+If the evaluation of every
 .meta expression
 evaluated this way terminates normally, and there is no
 .meta script-file
@@ -835,11 +841,9 @@ instead of entering the interactive listener. The
 option can be used to request the listener.
 
 .meIP -p < expression
-Just like
-.code -e
-but prints the value of
-.meta expression
-using the
+The argument must specify exactly one valid \*(TL form.
+If this is successfully parsed and evaluated,
+the value of the expression is printed as if using the
 .code prinl
 function.
 

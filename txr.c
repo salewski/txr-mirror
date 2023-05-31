@@ -143,9 +143,10 @@ static void help(void)
 "                       instead of as the script-file argument.\n"
 "                       This allows #! scripts to pass options through\n"
 "                       to the txr utility.\n"
-"-e expression          Evaluate TXR Lisp expression. Can be specified\n"
-"                       multiple times. The script-file arg becomes optional.\n"
-"-p expression          Like -e, but prints the result of the expression\n"
+"-e expressions         Evaluate zero or more TXR Lisp expressions.\n"
+"                       Can be specified multiple times. The script-file\n"
+"                       arg becomes optional.\n"
+"-p expression          Evaluate a single expression, and print the value\n"
 "                       using the prinl function.\n"
 "-P expression          Like -p, but prints using pprinl.\n"
 "-t expression          Like -p, but prints using tprint.\n"
@@ -1054,10 +1055,17 @@ int txr_main(int argc, char **argv)
           reg_varl(self_path_s, lit("cmdline-expr"));
           reg_var(args_s, or2(orig_args, arg_list));
 
-          eval_intrinsic(lisp_parse(arg, std_error, colon_k,
-                                    lit("cmdline-expr"), colon_k),
-                         make_env(bindings, nil, nil));
+          {
+            val forms = read_objects_from_string(arg, std_error, colon_k,
+                                                 lit("cmdline-expr"));
+
+            if (forms != colon_k)
+              eval_intrinsic(cons(progn_s, forms),
+                             make_env(bindings, nil, nil));
+          }
+
           evaled = t;
+
           args_new = cdr(lookup_global_var(args_s));
 
           if (args_new != args_saved) {
