@@ -4628,10 +4628,11 @@ static val v_load(match_files_ctx *c)
                    path_cat(dir_name(parent), target));
     val stream, name = target;
     val txr_lisp_p = nil;
-    val ret = nil;
+    val ret = next_spec_k;
     val saved_dyn_env = dyn_env;
     val load_dyn_env = make_env(nil, nil, dyn_env);
     val rec = cdr(lookup_var(nil, load_recursive_s));
+    uw_block_begin (load_s, load_ret);
 
     open_txr_file(path, &txr_lisp_p, &name, &stream, t, self);
 
@@ -4680,8 +4681,6 @@ static val v_load(match_files_ctx *c)
                     nao);
             c->data = nil;
           }
-
-          ret = next_spec_k;
         }
       }
     } else {
@@ -4714,6 +4713,8 @@ static val v_load(match_files_ctx *c)
     }
 
     uw_catch_end;
+
+    uw_block_end;
 
     return ret;
   }

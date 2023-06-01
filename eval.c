@@ -4755,6 +4755,7 @@ val load(val target)
   val saved_dyn_env = dyn_env;
   val load_dyn_env = make_env(nil, nil, dyn_env);
   val rec = cdr(lookup_var(nil, load_recursive_s));
+  uw_block_begin (load_s, ret);
 
   open_txr_file(path, &txr_lisp_p, &name, &stream, t, self);
 
@@ -4822,8 +4823,9 @@ val load(val target)
   }
 
   uw_catch_end;
+  uw_block_end;
 
-  return nil;
+  return ret;
 }
 
 static val rt_load_for(struct args *args)

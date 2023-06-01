@@ -9357,7 +9357,18 @@ takes place prior to evaluation time, whereas
 .code load
 doesn't execute until evaluation time.
 
+Note:
+the
+.code load
+directive doesn't provide access to the value propagated by a
+.code return
+via the
+.code load
+block.
+
 See also: the
+.code load
+function, and the
 .codn self-path ,
 .code stdlib
 and
@@ -79884,6 +79895,33 @@ loaded file has the effect of altering the value of
 .codn *package* ,
 that effect will be undone when the binding is removed
 after the load completes.
+
+Over the evaluation of either a \*(TL, compiled file, or \*(TX file,
+.code load
+establishes a block named
+.codn load ,
+which makes it possible for the loaded module to abort the loading
+using the
+.mono
+.meti (return-from load << expr )
+.onom
+expression. In this situation, the value of
+.meta expr
+will appear as the return value of the
+.code load
+function. A block named
+.code load
+is also established by the
+.code @(load)
+directive in the pattern language, that that directive provides
+no access to the returned value. The block is also visible to the
+file processed from the command line. When a such a file aborts
+the load via
+.codn return ,
+the returned value is discarded. If the interactive option
+.code -i
+was specified, the interactive listener will be entered, otherwise
+the process will terminate successfully.
 
 When the
 .code load
