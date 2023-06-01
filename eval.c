@@ -103,7 +103,7 @@ val macro_time_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s, struct_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val load_path_s, load_hooks_s, load_recursive_s, load_search_dirs_s;
-val load_time_s, load_time_lit_s;
+val load_args_s, load_time_s, load_time_lit_s;
 val eval_only_s, compile_only_s, compiler_let_s;
 val const_foldable_s;
 val pct_fun_s;
@@ -4684,14 +4684,16 @@ static val me_load_for(val form, val menv)
       if (!bindable(cadr(arg)))
         expand_error(form, lit("~s: first argument in ~s must be bindable symbol"),
                      sym, arg, nao);
-      if (length(arg) != three)
-        expand_error(form, lit("~s: clause ~s expected to have two arguments"),
+      if (lt(length(arg), three))
+        expand_error(form, lit("~s: clause ~s needs at least two arguments"),
                      sym, arg, nao);
-      ptail = list_collect(ptail, list(list_s,
-                                       list(quote_s, car(arg), nao),
-                                       list(quote_s, cadr(arg), nao),
-                                       caddr(arg),
-                                       nao));
+      ptail = list_collect(ptail,
+                           apply_frob_args(list(list_s,
+                                                list(quote_s, car(arg), nao),
+                                                list(quote_s, cadr(arg), nao),
+                                                caddr(arg),
+                                                cdddr(arg),
+                                                nao)));
     } else {
       expand_error(form, lit("~s: invalid clause ~s"), sym, arg, nao);
     }
@@ -4742,7 +4744,7 @@ static void run_load_hooks_atexit(void)
   run_load_hooks(dyn_env);
 }
 
-val load(val target)
+val loadv(val target, struct args *load_args)
 {
   val self = lit("load");
   uses_or2;
@@ -4773,6 +4775,7 @@ val load(val target)
   env_vbind(dyn_env, load_recursive_s, t);
   env_vbind(dyn_env, load_hooks_s, nil);
   env_vbind(dyn_env, package_s, cur_package);
+  env_vbind(dyn_env, load_args_s, args_get_list(load_args));
 
   if (txr_lisp_p == t) {
     if (!read_eval_stream(self, stream, std_error)) {
@@ -4828,16 +4831,24 @@ val load(val target)
   return ret;
 }
 
+val load(val target)
+{
+  args_decl_list(load_args, ARGS_MIN, nil);
+  return loadv(target, load_args);
+}
+
 static val rt_load_for(struct args *args)
 {
   val self = lit("sys:rt-load-for");
   cnum index = 0;
+  val ret = nil;
 
   while (args_more(args, index)) {
     val clause = args_get(args, &index);
     val kind = pop(&clause);
     val sym = pop(&clause);
     val file = car(clause);
+    val load_args_list = cdr(clause);
     val (*testfun)(val);
 
     if (kind == usr_var_s)
@@ -4855,14 +4866,15 @@ static val rt_load_for(struct args *args)
                 self, kind, nao);
 
     if (!testfun(sym)) {
-      load(file);
+      args_decl_list(load_args, ARGS_MIN, load_args_list);
+      ret = loadv(file, load_args);
       if (!testfun(sym))
         uw_throwf(error_s, lit("~a: file ~s didn't define ~a ~s"),
                   self, file, kind, sym, nao);
     }
   }
 
-  return nil;
+  return ret;
 }
 
 static val fun_macro_env(val menv, val name)
@@ -7048,6 +7060,7 @@ void eval_init(void)
   load_hooks_s = intern(lit("*load-hooks*"), user_package);
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
   load_search_dirs_s = intern(lit("*load-search-dirs*"), user_package);
+  load_args_s  = intern(lit("*load-args*"), user_package);
   load_time_s = intern(lit("load-time"), user_package);
   load_time_lit_s  = intern(lit("load-time-lit"), system_package);
   eval_only_s  = intern(lit("eval-only"), user_package);
@@ -7379,11 +7392,12 @@ void eval_init(void)
   reg_fun(intern(lit("iread"), user_package), func_n5o(iread, 0));
   reg_fun(intern(lit("get-json"), user_package), func_n5o(get_json, 0));
   reg_fun(intern(lit("txr-parse"), user_package), func_n4o(txr_parse, 0));
-  reg_fun(intern(lit("load"), user_package), func_n1(load));
+  reg_fun(intern(lit("load"), user_package), func_n1v(loadv));
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
   reg_var(load_recursive_s, nil);
   reg_var(load_search_dirs_s, nil);
+  reg_var(load_args_s, nil);
   reg_var(load_hooks_s, nil);
   reg_fun(intern(lit("expand"), user_package), func_n2o(no_warn_expand, 1));
   reg_fun(intern(lit("expand*"), user_package), func_n2o(expand, 1));

@@ -79739,7 +79739,7 @@ can immediately use to expand the given form that is being traversed.
 
 .coNP Function @ load
 .synb
-.mets (load << target )
+.mets (load < target << load-arg *)
 .syne
 .desc
 The
@@ -79884,18 +79884,33 @@ stream.
 Over the evaluation of either a \*(TL, compiled file, or \*(TX file,
 .code load
 establishes a new dynamic binding for several special
-variables. The variable
-.code *load-path*
-is given a new binding containing the actual pathname.
-The
-.code *package*
-variable is also given a new dynamic binding, whose value is the
-same as the existing binding. Thus if the processing of the
+variables:
+
+.RS
+.coIP *load-path*
+This variable is bound to the actual pathname being loaded.
+
+.coIP *load-args*
+The values of the
+.meta load-arg
+arguments which follow
+.meta target
+are combined into a list which is bound to
+.codn *load-args* .
+By this mechanism,
+.code load
+can pass arguments to the loaded file.
+
+.coIP *package*
+is given a new dynamic binding, whose value is the same as its
+existing binding. Thus if the processing of the
 loaded file has the effect of altering the value of
 .codn *package* ,
 that effect will be undone when the binding is removed
 after the load completes.
+.RE
 
+.IP
 Over the evaluation of either a \*(TL, compiled file, or \*(TX file,
 .code load
 establishes a block named
@@ -80180,7 +80195,7 @@ The following equivalences hold:
 
 .coNP Macro @ load-for
 .synb
-.mets (load-for >> {( kind < sym << target )}*)
+.mets (load-for >> {( kind < sym < target << load-arg*)}*)
 .syne
 .desc
 The
@@ -80194,7 +80209,7 @@ has a certain kind of binding.
 
 Each argument clause has the syntax
 .mono
-.meti >> ( kind < sym << target )
+.meti >> ( kind < sym < target << load-arg *)
 .onom
 where
 .meta kind
@@ -80280,8 +80295,21 @@ of the right
 If this isn't the case, an error is thrown.
 
 The
+.code load
+function is invoked with any
+.meta load-arg
+arguments specified in the clause.
+The
+.meta load-arg
+expressions of all clauses are unconditionally evaluated in order before
+.code load-arg
+performs any other action.
+
+The
 .code load-for
-function returns
+function returns the value returned by the rightmost
+.code load
+that was actually performed. If no loads are performed, it returns
 .codn nil .
 
 .coNP Variable @ txr-exe-path

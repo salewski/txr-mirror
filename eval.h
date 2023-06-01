@@ -86,6 +86,7 @@ val format_field(val string_or_list, val modifier, val filter, val eval_fun);
 val subst_vars(val forms, val env, val filter);
 val expand_quasi(val quasi_forms, val menv);
 void run_load_hooks(val load_dyn_env);
+val loadv(val target, struct args *);
 val load(val target);
 val expand(val form, val menv);
 val expand_forms(val forms, val menv);
