@@ -1,3 +1,83 @@
+                                    TXR 287
+                                   2023-06-03
+
+
+  Features:
+
+  - Lisp:
+    - New: progv special operator, similar to Common Lisp's
+
+    - New: compiler-let: binds dynamic variables in the
+      compiler's context, allowing control over the compiler
+      at the expression level.
+      - with-compile-options now implemented using compiler-let.
+
+   - Awk macro:
+     - redirection operators visible in wider scope
+     - new :fun clause for binding functions local to macro.
+
+   - Compiler:
+     - small optimizations: when all local functions in
+       a labels/flet block are unused, the frame is not
+       generated for them.
+
+   - Expander:
+      - Parameter list macros now work in nested lambda lists.
+        (This is also listed below under Bugs.)
+      - New expander-let macro for binding special variables
+        at macro-expansion time.
+        - Allows customization of macros which occur inside,
+          by having them respond to the values of the specials.
+        - Used in TL-WHO port of CL-WHO to fix CL-WHO bugs.
+
+   - Command line:
+     - The -e option evaluates multiple expressions from
+       the same argument string.
+       - They are read together before evaluation, almost
+         as if they were in the same progn.
+
+   - Listener:
+     - Evaluates multiple expressions in command line,
+       instead of complaining about trailing material.
+
+   - Lib:
+     - load function has new features:
+       - extra arguments may be passed to load, which are
+         dynamically bound to a special var called *load-args*
+       - a loaded file can bail early using using
+         (return-from load) or (return-from load <value>)
+       - the interrupted load function will then return that
+         value to its caller.
+       - thus loaded files can behave like functions with
+         arguments and return values.
+
+  Bugs
+
+  - Android: fixes for running on Android 13 via Termux.
+
+  - Environments:
+    - Fixed crash when certain built in variables are removed
+      with makunbound.
+    - Fixed (symbol-value ...) wrongly storing a value to the
+      top-level binding rather than the current dynamic binding.
+    - Fixed bug in the VM: getlx and setlx instructions
+      using dynamic lookup rather than global.
+
+  - Expander:
+    - Fixed bug in empty case of flets/labels causing
+      unrelated symbol macros to be strangely affected.
+    - Parameter list macros now work in nested lambda lists.
+
+  - Awk macro: fixed completely broken redirection operators.
+
+  - Parser:
+    - There is now a proper handler for fatal Flex errors, like
+      when a token is ridiculously long.
+      - Flex-generated default handler prints something and exits.
+      - Our handler throws exception.
+
+
+
                                     TXR 286
                                    2023-05-07
 
