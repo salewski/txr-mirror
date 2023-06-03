@@ -626,7 +626,9 @@ If the
 .code -n
 option is effect and \*(TX enters into the interactive listener,
 the listener operates in
-.IR "plain mode" .
+.I "plain mode"
+instead of the
+.IR "visual mode" .
 The listener reads buffered lines
 from the operating system without any character-based editing features
 or history navigation. In plain mode, no prompts appear and no
@@ -89105,8 +89107,13 @@ multiline input. The carriage return characters which separate multiple lines
 count as one abstract character each, and are understood to occupy two display
 positions.
 
-The command line must contain exactly one complete \*(TL expression, or a
-comment. Multiple expressions will not be evaluated.
+Until \*(TX 286, the command line had to contain exactly one complete \*(TL
+expression, or a comment. Multiple expressions were not evaluated.
+This restriction has been lifted: multiple expressions in the command line
+are parsed as one unit, and evaluated as if they were placed into a
+.code progn
+form. If all the expressions evaluate and terminate normally, the value of the
+last expression is printed.
 
 In multiline mode, if the number of lines exceeds the number of lines
 of the terminal display, the editing experience is adversely affected
@@ -90213,7 +90220,7 @@ without incrementing the number.
 In plain mode, the
 .code :prompt-on
 command enables the printing of prompts. The full prompt is printed before
-reading each new expression. An abbreviated prompt is printed before reading
+reading each new command line. An abbreviated prompt is printed before reading
 the continuation lines of an incomplete expression. The printing of prompts
 is automatically enabled if the input device is an interactive terminal.
 
@@ -90228,12 +90235,11 @@ or
 command-line operations are used when invoking \*(TX,
 the listener operates in
 .IR "plain mode" .
-It reads input without providing any editing features: no completion,
-history recall, selection, or copy and paste.  Only the line editing
-features provided by the operating system are available.
-Prompts appear if standard input is an interactive terminal, or
-if explicitly enabled. There is still an incrementing counter,
-and the numbered variables
+It reads input without providing any of the editing features of visual mode: no
+completion, history recall, selection, or copy and paste.  Only the line
+editing features provided by the operating system are available.  Prompts
+appear if standard input is an interactive terminal, or if explicitly enabled.
+There is still an incrementing counter, and the numbered variables
 .codn *1 ,
 .codn *2 ,
 .code ...
@@ -90246,8 +90252,11 @@ Whenever a line of input is read which represents incomplete syntax, another
 line of input is read and appended to that line. This repeats until the
 accumulated input represents complete syntax, and is then processed as a unit.
 
-Each unit of input is expected to represent a single expression, otherwise
-an error is diagnosed.
+Like in visual mode, each unit of input may contain multiple expressions.
+These are parsed as a unit and evaluated as if they were the elements of a
+.code progn
+expression. The resulting value which is printed is that of the last
+expression.
 
 .SS* Interactive Profile File
 
@@ -90469,11 +90478,11 @@ in the listener. The default value is
 .codn nil ,
 disabling the feature.
 
-Greedy evaluation means that after the listener evaluates an expression
-successfully and prints its value, it then checks whether that value is
-an expression that may be further subject to nontrivial evaluation.
-If so, it evaluates that expression, and prints the resulting value.
-The process is then repeated with the resulting value. It keeps repeating until
+Greedy evaluation means that after the listener evaluates the input expressions
+successfully and prints the value of the last one, it then checks whether that
+value is an expression that may be further subject to nontrivial evaluation.
+If so, it evaluates that expression, and prints the resulting value.  The
+process is then repeated with the resulting value. It keeps repeating until
 evaluation throws an error, or produces a self-evaluating object.
 
 These additional evaluations are performed in such a way that all warnings are

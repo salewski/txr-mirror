@@ -1732,7 +1732,8 @@ val repl(val bindings, val in_stream, val out_stream, val env)
     {
       val name = format(nil, lit("expr-~d"), prev_counter, nao);
       val line = string(line_w);
-      val form = lisp_parse(line, out_stream, colon_k, name, colon_k);
+      val forms = read_objects_from_string(line, std_error, colon_k, name);
+      val form = if2(and2(consp(forms), null(cdr(forms))), car(forms));
       if (form == quit_k) {
         done = t;
       } else if (form == prompt_k) {
@@ -1749,7 +1750,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
         counter = prev_counter;
       } else {
         val value = if3(form != read_k,
-                        eval_intrinsic(form, env),
+                        eval_intrinsic(cons(progn_s, forms), env),
                         read_eval_ret_last(nil, prev_counter,
                                            in_stream, out_stream));
         val pprin = cdr(pprint_var);
