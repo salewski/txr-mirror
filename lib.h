@@ -47,8 +47,8 @@ typedef double_uintptr_t dbl_ucnum;
 #endif
 
 #define container(PTR, TYPE, MEMB)                          \
-  convert(TYPE *,                                           \
-          convert(mem_t *, (PTR)) - offsetof(TYPE, MEMB))
+  coerce(TYPE *,                                            \
+         coerce(mem_t *, (PTR)) - offsetof(TYPE, MEMB))
 
 #if __STDC_VERSION__ >= 199901L
 #define FLEX_ARRAY

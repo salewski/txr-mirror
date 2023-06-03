@@ -1323,11 +1323,11 @@ static struct cobj_ops prot_array_ops = cobj_ops_init(eq,
 
 val *gc_prot_array_alloc(cnum size)
 {
-  struct prot_array *pa = convert(struct prot_array *,
-                                  chk_calloc(offsetof(struct prot_array, arr) +
-                                             size * sizeof(val), 1));
+  struct prot_array *pa = coerce(struct prot_array *,
+                                 chk_calloc(offsetof(struct prot_array, arr) +
+                                            size * sizeof(val), 1));
   pa->size = size;
-  pa->self = cobj(convert(mem_t *, pa), prot_array_cls, &prot_array_ops);
+  pa->self = cobj(coerce(mem_t *, pa), prot_array_cls, &prot_array_ops);
 
   return pa->arr;
 }
