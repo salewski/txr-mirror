@@ -663,6 +663,10 @@ static val compiler_set_entries(val fun)
     lit("with-compile-opts"), lit("compiler-let"),
     nil
   };
+  val sys_vname[] = {
+    lit("*in-compilation-unit*"),
+    nil
+  };
   val vname[] = {
     lit("*opt-level*"), lit("*compile-opts*"),
     nil
@@ -674,6 +678,7 @@ static val compiler_set_entries(val fun)
   autoload_sys_set(al_struct, sys_name, fun);
   autoload_set(al_struct, sname, fun);
   autoload_set(al_fun, name, fun);
+  autoload_sys_set(al_var, sys_vname, fun);
   autoload_set(al_var, vname, fun);
   autoload_set(al_slot, slname, fun);
   return nil;
