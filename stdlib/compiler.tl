@@ -36,10 +36,11 @@
   usr:shadow-fun
   usr:shadow-var
   usr:shadow-cross
-  usr:unused)
+  usr:unused
+  usr:log-level)
 
 (defsymacro %warning-syms% '(usr:shadow-fun usr:shadow-var usr:shadow-cross
-                             usr:unused))
+                             usr:unused usr:log-level))
 
 (defvar usr:*compile-opts* (new compile-opts usr:unused t))
 
@@ -2509,7 +2510,10 @@
              (*eval* t)
              (*load-path* (stream-get-prop (car streams) :name))
              (*rec-source-loc* t)
+             (lev (or *compile-opts*.log-level 0))
              (out (new list-builder)))
+        (if (> lev 0)
+          (put-line `compiling @{*load-path*}`))
         (with-compilation-unit
           (iflet ((line (get-line in-stream))
                   ((starts-with "#!" line)))
@@ -2520,6 +2524,14 @@
           (labels ((compile-form (unex-form)
                      (let* ((form (macroexpand unex-form))
                             (sym (if (consp form) (car form))))
+                       (when (and sym (> lev 1))
+                         (let* ((loc (source-loc form))
+                                (line (or (car loc) "unknown")))
+                           (if-match @(or @(with (@(symbolp @a) @(symbolp @b) . @nil)
+                                                 print-form ^(,a ,b))
+                                          @(with (@(symbolp @a) . @nil)
+                                                 print-form a)) form
+                             (format t "~a: ~a\n" line print-form))))
                        (caseq sym
                          (progn [mapdo compile-form (cdr form)])
                          (compile-only (let ((*eval* nil))
@@ -2633,7 +2645,7 @@
 (defmacro usr:with-compile-opts (:form form . clauses)
   (match-case clauses
     (() ())
-    (((@(as op @(or nil t :warn :error)) . @syms) . @rest)
+    (((@(as op @(or nil t :warn :error @(integerp))) . @syms) . @rest)
      (each ((s syms))
        (unless (member s %warning-syms%)
          (compile-error form

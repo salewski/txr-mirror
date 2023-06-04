@@ -673,7 +673,7 @@ static val compiler_set_entries(val fun)
   };
   val slname[] = {
     lit("shadow-fun"), lit("shadow-var"), lit("shadow-cross"),
-    lit("unused"), nil
+    lit("unused"), lit("log-level"), nil
   };
   autoload_sys_set(al_struct, sys_name, fun);
   autoload_set(al_struct, sname, fun);

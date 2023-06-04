@@ -88297,7 +88297,7 @@ and not to propagate compiled versions of the macros which produced it.
 .coNP Structure @ compile-opts
 .synb
 .mets (defstruct compile-opts ()
-.mets \ \ shadow-fun shadow-var shadow-cross unused)
+.mets \ \ shadow-fun shadow-var shadow-cross unused log-level)
 .syne
 .desc
 The
@@ -88315,12 +88315,13 @@ macro.
 Currently, all of the options are diagnostic. In the future, there may be other
 kinds of options.
 
-Diagnostic options take on the values
+Diagnostic options which are Boolean take on the values
 .codn nil ,
 .codn t ,
 .code :warn
-and
+or
 .codn :error .
+Numeric options take integer values.
 The
 .code t
 and
@@ -88383,6 +88384,18 @@ expression is constantly false. The discarded expression is never
 traversed in a way that would cause it to be noted as accessing the
 .code a
 variable.
+.coIP log-level
+Diagnostic option,
+.code nil
+by default. When set to a positive integer value, it enables logging, with
+increasing values implying more detailed logging. The value 1 causes
+.code compile-file
+and
+.code compile-update-file
+to emit an informational message whenever a file is compiled.
+The value 2 causes informational messages emitted for each compound
+top-level that is compiled, if it is a compound form beginning with
+a symbol.
 .RE
 
 .coNP Special variable @ *compile-opts*
@@ -88479,6 +88492,12 @@ with unused variable checking enabled.
     (with-compile-opts (nil unused)
       (let (y) x)))
 
+  ;; Show detailed traces of what forms are
+  ;; compiled in these two files.
+  (with-compile-opts
+    (2 log-level)
+    (compile-file "foo.tl")
+    (compile-file "bar.tl"))
 .brev
 
 .coNP Operator @ compiler-let
