@@ -2425,6 +2425,22 @@
 
     (list in-stream out-stream out-path)))
 
+(defun clean-file (path)
+  (let* ((parent *load-path*)
+         (path (if (and parent (pure-rel-path-p path))
+                 (path-cat (dir-name parent) path)
+                 path)))
+    (match-case path
+      (@(or `@base.tlo`
+            `@base.tlo.gz`)
+        (ignore base)
+        (remove-path path))
+      (@(or `@base.txr`
+            `@base.tl`
+            `@base`)
+        (or (remove-path `@base.tlo` nil)
+            (remove-path `@base.tlo.gz` nil))))))
+
 (defun list-from-vm-desc (vd)
   (list (sys:vm-desc-nlevels vd)
         (sys:vm-desc-nregs vd)

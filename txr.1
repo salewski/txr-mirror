@@ -88069,6 +88069,80 @@ by merging some identical code blocks, or improving some more rarely
 occurring instruction patterns.
 .RE
 
+.coNP Function @ clean-file
+.synb
+.mets (compile-file << path )
+.syne
+.desc
+The
+.code clean-file
+function removes a previously compiled file associated with
+.metn path ,
+if such a file exists. In situations when it successfully removes
+a file, it returns
+.codn t ,
+otherwise
+.codn nil .
+The function may also throw an exception, in situations such as
+encountering a nonexistent directory component or permission problem.
+
+First, if
+.meta path
+specifies a pure relative pathname, as defined by the
+.code pure-rel-path-p
+function, and if the
+.code *load-path*
+variable contains a value other than
+.codn nil ,
+then
+.code clean-file
+calculates the directory name of
+.code *load-path*
+as if by using
+.code dir-name
+and catenates that directory name with
+.meta path
+to produce an intermediate path.
+Otherwise
+.meta path
+is considered to be the intermediate path.
+
+Next, the suffix of the intermediate path is examined.
+If it ends with
+.str .tlo
+or
+.strn .tlo.gz ,
+then an attempt is made to remove that path,
+and the function terminates.
+
+If the intermediate path ends with
+.str .tl
+or
+.strn .txr ,
+then two attempts are made to remove a file: first,
+the suffix is replaced with
+.str .tlo
+and that is attempted to be removed. If that fails
+due to non-existence, then the suffix
+.str .tlo.gz
+is tried.
+
+Otherwise, if the intermediate path doesn't have
+any of the above suffixes, then an attempt is made
+to remove the path with the
+.str .tlo
+suffix added, and then with the
+.str .tlo.gz
+suffix added.
+
+Note: no attempt is made to remove the unmodified
+intermediate path itself, except in the cases when it ends with
+.str .tlo
+or
+.strn .tlo.gz ,
+because that risks removing a source file rather than
+a compiled file.
+
 .coNP Macro @ with-compilation-unit
 .synb
 .mets (with-compilation-unit << form *)

@@ -329,6 +329,7 @@
       ("chr-xdigit" "N-021C89F4")
       ("chrp" "N-02C6CEED")
       ("clamp" "N-03B940D4")
+      ("clean-file" "N-001939D4")
       ("clear-cflags" "N-02061924")
       ("clear-dirty" "N-03AB857D")
       ("clear-error" "D-000C")
