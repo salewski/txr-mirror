@@ -2448,7 +2448,7 @@
 (defun dump-to-tlo (out-stream out)
   (let* ((*print-circle* t)
          (*package* (sys:make-anon-package))
-         (out-forms (split* out.(get) (op where (op eq :fence)))))
+         (out-forms (partition* out.(get) (op where (op eq :fence)))))
     (prinl %tlo-ver% out-stream)
     [mapdo (op prinl @1 out-stream) out-forms]
     (delete-package *package*)))
