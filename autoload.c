@@ -925,11 +925,11 @@ static val constfun_instantiate(void)
 
 static val expander_let_set_entries(val fun)
 {
-  val sys_name[] = {
+  val name[] = {
     lit("expander-let"),
     nil
   };
-  autoload_set(al_fun, sys_name, fun);
+  autoload_set(al_fun, name, fun);
   return nil;
 }
 
