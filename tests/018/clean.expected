@@ -1,0 +1,100 @@
+(let ((*load-path*
+       ()))
+  (clean-file "nabuchodonosor.tl"))
+-->
+(remove-path ("nabuchodonosor.tlo" nil)
+  nil)
+(remove-path ("nabuchodonosor.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       ()))
+  (clean-file "nabuchodonosor.txr"))
+-->
+(remove-path ("nabuchodonosor.tlo" nil)
+  nil)
+(remove-path ("nabuchodonosor.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       ()))
+  (clean-file "nabuchodonosor.tlo"))
+-->
+(remove-path ("nabuchodonosor.tlo" nil)
+  nil)
+
+(let ((*load-path*
+       ()))
+  (clean-file "nabuchodonosor.tlo.gz"))
+-->
+(remove-path ("nabuchodonosor.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       ()))
+  (clean-file "nabuchodonosor.abc"))
+-->
+(remove-path ("nabuchodonosor.abc.tlo" nil)
+  nil)
+(remove-path ("nabuchodonosor.abc.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       ()))
+  (clean-file "nabuchodonosor"))
+-->
+(remove-path ("nabuchodonosor.tlo" nil)
+  nil)
+(remove-path ("nabuchodonosor.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       "/tmp/foo.tlo"))
+  (clean-file "nabuchodonosor.tl"))
+-->
+(remove-path ("/tmp/nabuchodonosor.tlo" nil)
+  nil)
+(remove-path ("/tmp/nabuchodonosor.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       "/tmp/foo.tlo"))
+  (clean-file "nabuchodonosor.txr"))
+-->
+(remove-path ("/tmp/nabuchodonosor.tlo" nil)
+  nil)
+(remove-path ("/tmp/nabuchodonosor.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       "/tmp/foo.tlo"))
+  (clean-file "nabuchodonosor.tlo"))
+-->
+(remove-path ("/tmp/nabuchodonosor.tlo" nil)
+  nil)
+
+(let ((*load-path*
+       "/tmp/foo.tlo"))
+  (clean-file "nabuchodonosor.tlo.gz"))
+-->
+(remove-path ("/tmp/nabuchodonosor.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       "/tmp/foo.tlo"))
+  (clean-file "nabuchodonosor.abc"))
+-->
+(remove-path ("/tmp/nabuchodonosor.abc.tlo" nil)
+  nil)
+(remove-path ("/tmp/nabuchodonosor.abc.tlo.gz" nil)
+  nil)
+
+(let ((*load-path*
+       "/tmp/foo.tlo"))
+  (clean-file "nabuchodonosor"))
+-->
+(remove-path ("/tmp/nabuchodonosor.tlo" nil)
+  nil)
+(remove-path ("/tmp/nabuchodonosor.tlo.gz" nil)
+  nil)
+
