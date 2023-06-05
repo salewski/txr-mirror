@@ -2427,20 +2427,25 @@
     (list in-stream out-stream out-path)))
 
 (defun clean-file (path)
-  (let* ((parent *load-path*)
+  (let* ((lev (or *compile-opts*.log-level 0))
+         (parent *load-path*)
          (path (if (and parent (pure-rel-path-p path))
                  (path-cat (dir-name parent) path)
                  path)))
-    (match-case path
-      (@(or `@base.tlo`
-            `@base.tlo.gz`)
-        (ignore base)
-        (remove-path path))
-      (@(or `@base.txr`
-            `@base.tl`
-            `@base`)
-        (or (remove-path `@base.tlo` nil)
-            (remove-path `@base.tlo.gz` nil))))))
+    (flet ((try-clean (try-path)
+             (if (remove-path try-path nil)
+               (if (> lev 0)
+                 (put-line `cleaned @{try-path}`)))))
+      (match-case path
+        (@(or `@base.tlo`
+              `@base.tlo.gz`)
+          (ignore base)
+          (try-clean path))
+        (@(or `@base.txr`
+              `@base.tl`
+              `@base`)
+          (or (try-clean `@base.tlo`)
+              (try-clean `@base.tlo.gz`)))))))
 
 (defun list-from-vm-desc (vd)
   (list (sys:vm-desc-nlevels vd)
@@ -2573,7 +2578,13 @@
   [compile-file-conditionally in-path out-path tf])
 
 (defun usr:compile-update-file (in-path : out-path)
-  [compile-file-conditionally in-path out-path [mapf path-newer fstat identity]])
+  (let ((test-newer [mapf path-newer fstat identity]))
+    (if (> (or *compile-opts*.log-level 0) 0)
+      (set test-newer [orf test-newer
+                           (do progn
+                             (put-line `skipping up-to-date @2`)
+                             nil)]))
+    [compile-file-conditionally in-path out-path test-newer]))
 
 (defun usr:dump-compiled-objects (out-stream . compiled-objs)
   (symacrolet ((self 'dump-compiled-objects))
