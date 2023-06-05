@@ -80157,6 +80157,218 @@ is not processed after the listener reads the
 file. Hooks installed by the profile file will activate when the process
 exits.
 
+
+.coNP Function @ load-args-recurse
+.synb
+.mets (load-args-recurse << file-list )
+.mets (load-args-recurse << file *)
+.syne
+.desc
+The
+.code load-args-recurse
+function loads multiple files, passing down the current
+.code *load-args*
+to each one.
+
+It may be invoked with a single argument which is a list of files, or else it
+may be given multiple arguments which are files. 
+
+Each
+.meta file
+is passed to the
+.code load
+function, along with extra arguments coming from the current
+.code *load-args*
+value.
+
+Note: the purpose of
+.code load-args-recurse
+is to support a module organization of system whereby modules
+have local top-level files that respond to various actions specified via
+.codn *load-args* ,
+actions such as compiling, loading or cleaning.
+The
+.code load-args-recurse
+function allows such modules to not only perform the actions requested in
+.code *load-args*
+locally, but also pass it down to submodules which then do the same.
+
+.coNP Function @ load-args-process
+.synb
+.mets (load-args-process << file-list )
+.mets (load-args-process << file *)
+.syne
+.desc
+The
+.code load-args-process
+function performs one of several actions over the specified files,
+those actions being distinguished by the value in
+.codn *load-args* .
+
+In addition, some of the actions are also performed for the file
+indicated in the current value of
+.codn *load-path* .
+
+It may be invoked with a single argument which is a list of files, or else it
+may be given multiple arguments which are files. 
+
+If there is exactly one argument in
+.codn *load-args* ,
+the function responds to the following values of that argument:
+.RS
+.coIP :compile
+The current file in
+.code *load-path*
+as well as the files passed as arguments, are compiled with
+.codn compile-update-file .
+.coIP :clean
+The current file in
+.code *load-path*
+as well as the files passed as arguments, are processed with
+.codn clean-file .
+.RE
+.IP
+Any other value of
+.code *load-args*
+causes the function to
+.code load
+the files passed in the argument, as if by
+.codn load-args-recurse .
+
+Note:
+The
+.code load-args-process
+function supports a protocol for organizing a program into library modules.
+
+.TP* Example:
+
+Suppose a module located in the
+.str path/to/application
+path consists of the files
+.strn command
+.strn data
+.str reports
+and
+.str main .
+Further, suppose that there are two submodules in the
+.str utils
+directory relative to this directory:
+.str database
+and
+.strn date .
+
+Then the application might have a file called
+.str "path/to/application/app.tl"
+with this content:
+
+.verb
+  (compile-only
+    (load-args-recurse
+      "utils/database/db"
+      "utils/date/date")
+
+    (load-args-process
+      "command"
+      "data"
+      "reports"
+      "main"))
+.brev
+
+Furthermore, the
+.str database
+module similarly provides a
+.str "path/to/application/utils/database/db.tl"
+file with this content:
+
+.verb
+  (compile-only
+    (load-args-process
+      "postgres"
+      "mariadb"
+      "sqlite"))
+.brev
+
+Lastly, the
+.str date
+module provides a file
+.str "path/to/application/utils/date/date.tl"
+with this content:
+
+.verb
+  (compile-only
+    (load-args-process
+      "src/date.tl"))
+.brev
+
+Then, to load the application and the submodules, all that is needed is
+.codn "(load \(dqpath/to/application/app\(dq)" .
+
+Furthermore, the modules may be compiled using
+.codn "(load \(dqpath/to/application/app\(dq :compile)" .
+Now the
+.code *load-args*
+being passed is
+.code "(:compile)"
+which tells every
+.code load-args-process
+invocation to compile the file in which it occurs as well as its arguments.
+
+First, the 
+.code app
+module's
+.code load-args-recurse
+call is executed, causing the
+.str database
+and
+.str date
+modules to compile.
+
+First, the
+.str database
+module's
+.str db.tl
+top file is compiled, if necessary, and then likewise the
+.strn postgres.tl ,
+.str mariadb.tl
+and
+.str sqlite.tl
+files.
+
+Then the
+.str date
+module is similarly processed, due to its own invocation of
+.codn load-args-process .
+
+Finally the
+.code load-args-process
+call in the
+.str app
+module compiles
+.strn app.tl ,
+.strn command.tl ,
+.str data.tl
+.str reports.tl
+and
+.strn main.tl
+
+If the
+.code :clean
+keyword is passed via
+.code *load-args*
+instead of
+.codn :compile ,
+then compiled files are recursively removed. The next time the
+application is loaded, source files will be loaded rather
+than compiled files.
+
+Note that the
+.code load-args-recurse
+and
+.code load-args-process
+forms are placed into a
+.code compile-only
+form so that the file compiler refrains from executing them.
+
 .coNP Macros @ push-after-load and @ pop-after-load
 .synb
 .mets (push-after-load << form *)

@@ -939,6 +939,22 @@ static val expander_let_instantiate(void)
   return nil;
 }
 
+static val load_args_set_entries(val fun)
+{
+  val name[] = {
+    lit("load-args-recurse"), lit("load-args-process"),
+    nil
+  };
+  autoload_set(al_fun, name, fun);
+  return nil;
+}
+
+static val load_args_instantiate(void)
+{
+  load(scat2(stdlib_path, lit("load-args")));
+  return nil;
+}
+
 val autoload_reg(val (*instantiate)(void),
                  val (*set_entries)(val))
 {
@@ -1007,6 +1023,7 @@ void autoload_init(void)
   autoload_reg(pic_instantiate, pic_set_entries);
   autoload_reg(constfun_instantiate, constfun_set_entries);
   autoload_reg(expander_let_instantiate, expander_let_set_entries);
+  autoload_reg(load_args_instantiate, load_args_set_entries);
 
   reg_fun(intern(lit("autoload-try-fun"), system_package), func_n1(autoload_try_fun));
 }

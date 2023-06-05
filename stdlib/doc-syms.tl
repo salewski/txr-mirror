@@ -1144,6 +1144,8 @@
       ("lnew" "N-0230059D")
       ("lnew*" "N-021E6FDC")
       ("load" "D-0083")
+      ("load-args-process" "N-03D9382A")
+      ("load-args-recurse" "N-03067356")
       ("load-for" "N-0020A085")
       ("load-time" "D-0048")
       ("loff-t" "N-01153D9E")
