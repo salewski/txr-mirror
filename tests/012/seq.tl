@@ -550,3 +550,18 @@
   (search-all '#"x x x x x" '#"y") nil
   (search-all '#"x x x x x" '#"x") (0 1 2 3 4)
   (search-all '#"x x x" "") (0 1 2 3))
+
+(mtest
+  [keep-keys-if evenp (range 1 20) square] (4 16 36 64 100 144 196 256 324 400)
+  [keep-keys-if chr-isupper "foo bar" chr-toupper] "FOOBAR"
+  [keep-keys-if evenp (vec-list (range 1 20)) square] #(4 16 36 64 100 144 196 256 324 400))
+
+
+(mtest
+  [separate-keys evenp (range 1 20) square] ((4 16 36 64 100 144 196 256 324 400)
+                                             (1 9 25 49 81 121 169 225 289 361))
+  [separate-keys chr-isupper "foo bar" chr-toupper] ("FOOBAR" " ")
+  [separate-keys evenp (vec-list (range 1 20)) square] (#(4 16 36 64 100 144 196 256 324 400)
+                                                        #(1 9 25 49 81 121 169 225 289 361)))
+
+

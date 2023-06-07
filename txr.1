@@ -35285,6 +35285,58 @@ but produce lazy lists.
   -> (("defg" 5))
 .brev
 
+.coNP Functions @ keep-keys-if and @ separate-keys
+.synb
+.mets (keep-keys-if < predicate-fun < sequence <> [ key-fun ])
+.mets (separate-keys < predicate-fun < sequence <> [ key-fun ])
+.syne
+.desc
+The functions
+.code keep-keys-if
+and
+.code separate-keys
+are derived, respectively, from the functions
+.code keep-if
+and
+.codn separate ,
+and have the same syntax and argument semantics. They differ in that
+rather than accumulating the elements of the input
+.codn sequence ,
+they accumulate the transformed values of those elements, as projected
+through the
+.metn key-fun .
+
+Thus when
+.meta key-fun
+is omitted, thus defaulting to
+.codn identity ,
+or else explicitly specified as
+.code identity
+or equivalent function, the behavior of these functions is the
+almost the same as that of
+.code keep-if
+and
+.codn separate .
+However, there may be a difference in whether the output shares structure with
+.metn sequence .
+
+.TP* Example:
+
+.verb
+  ;; square the values 1 to 20, keeping the even squares
+  [keep-keys-if evenp (range 1 20) square]
+  -> (4 16 36 64 100 144 196 256 324 400)
+
+  ;; square the values 1 to 20 separating into even and odd:
+  [separate-keys evenp (range 1 20) square]
+  -> ((4 16 36 64 100 144 196 256 324 400)
+      (1 9 25 49 81 121 169 225 289 361))
+
+  ;; contrast with keep-if: values are of input sequence
+  [keep-if evenp (range 1 20) square]
+  -> (2 4 6 8 10 12 14 16 18 20)
+.brev
+
 .coNP Functions @, countqual @ countql and @ countq
 .synb
 .mets (countq < object << iterable )

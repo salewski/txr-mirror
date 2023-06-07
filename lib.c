@@ -3141,7 +3141,6 @@ val remove_if(val pred, val seq_in, val keyfun_in)
   }
 }
 
-
 val remq(val obj, val seq, val keyfun)
 {
   return rem_impl(eq, lit("remq"), obj, seq, keyfun);
@@ -3175,6 +3174,71 @@ val keepqual(val obj, val seq, val keyfun)
 val keep_if(val pred, val seq, val keyfun)
 {
   return remove_if(notf(pred), seq, keyfun);
+}
+
+val keep_keys_if(val pred, val seq_in, val keyfun_in)
+{
+  val self = lit("keep-keys-if");
+  val keyfun = default_null_arg(keyfun_in);
+
+  switch (type(seq_in)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+  case COBJ:
+    {
+      list_collect_decl (out, ptail);
+      val list = seq_in;
+
+      gc_hint(list);
+
+      for (; list; list = cdr(list)) {
+        val elem = car(list);
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        if (funcall1(pred, key))
+          ptail = list_collect(ptail, key);
+      }
+      return out;
+    }
+  case LIT:
+  case STR:
+  case LSTR:
+    {
+      val out = mkustring(zero);
+      val str = seq_in;
+      cnum len = c_fixnum(length_str(str), self), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = chr_str(str, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        if (funcall1(pred, key))
+          string_extend(out, key, tnil(i == len - 1));
+      }
+
+      return out;
+    }
+  case VEC:
+    {
+      val out = vector(zero, nil);
+      val vec = seq_in;
+      cnum len = c_fixnum(length_vec(vec), self), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = vecref(vec, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        if (funcall1(pred, key))
+          vec_push(out, key);
+      }
+
+      return out;
+    }
+  default:
+    uw_throwf(error_s, lit("~a: ~s isn't a sequence"), self, seq_in, nao);
+  }
 }
 
 val separate(val pred, val seq_in, val keyfun_in)
@@ -3251,6 +3315,76 @@ val separate(val pred, val seq_in, val keyfun_in)
         val key = keyfun ? funcall1(keyfun, elem) : elem;
 
         vec_push(funcall1(pred, key) ? yea : nay, elem);
+      }
+
+      return cons(yea, cons(nay, nil));
+    }
+  default:
+    uw_throwf(error_s, lit("~a: ~s isn't a sequence"), self, seq_in, nao);
+  }
+}
+
+val separate_keys(val pred, val seq_in, val keyfun_in)
+{
+  val self = lit("separate-keys");
+  val keyfun = default_null_arg(keyfun_in);
+
+  switch (type(seq_in)) {
+  case NIL:
+    return cons(nil, cons(nil, nil));
+  case CONS:
+  case LCONS:
+  case COBJ:
+    {
+      list_collect_decl (yea, yptail);
+      list_collect_decl (nay, nptail);
+      val list = seq_in;
+
+      gc_hint(list);
+
+      for (; list; list = cdr(list)) {
+        val elem = car(list);
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+        val is_yea = if3(funcall1(pred, key), t, nil);
+
+        if (is_yea)
+          yptail = list_collect(yptail, key);
+        else
+          nptail = list_collect(nptail, key);
+      }
+
+      return cons(yea, cons(nay, nil));
+    }
+  case LIT:
+  case STR:
+  case LSTR:
+    {
+      val yea = mkustring(zero);
+      val nay = mkustring(zero);
+      val str = seq_in;
+      cnum len = c_fixnum(length_str(str), self), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = chr_str(str, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        string_extend(funcall1(pred, key) ? yea : nay, key, tnil(i == len - 1));
+      }
+
+      return cons(yea, cons(nay, nil));
+    }
+  case VEC:
+    {
+      val yea = vector(zero, nil);
+      val nay = vector(zero, nil);
+      val vec = seq_in;
+      cnum len = c_fixnum(length_vec(vec), self), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = vecref(vec, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        vec_push(funcall1(pred, key) ? yea : nay, key);
       }
 
       return cons(yea, cons(nay, nil));

@@ -7319,7 +7319,9 @@ void eval_init(void)
   reg_fun(intern(lit("keepql"), user_package), func_n3o(keepql, 2));
   reg_fun(intern(lit("keepqual"), user_package), func_n3o(keepqual, 2));
   reg_fun(intern(lit("keep-if"), user_package), func_n3o(keep_if, 2));
+  reg_fun(intern(lit("keep-keys-if"), user_package), func_n3o(keep_keys_if, 2));
   reg_fun(intern(lit("separate"), user_package), func_n3o(separate, 2));
+  reg_fun(intern(lit("separate-keys"), user_package), func_n3o(separate_keys, 2));
   reg_fun(intern(lit("remq*"), user_package), func_n2(remq_lazy));
   reg_fun(intern(lit("remql*"), user_package), func_n2(remql_lazy));
   reg_fun(intern(lit("remqual*"), user_package), func_n2(remqual_lazy));
