@@ -5230,7 +5230,7 @@ val string_finish(val str)
       alloc = len + 1;
       str->st.str = chk_wrealloc(str->st.str, alloc);
 #if !HAVE_MALLOC_USABLE_SIZE
-      set(mkloc(str->st.alloc, str), num(alloc));
+      str->st.alloc = alloc;
 #endif
     }
   }
