@@ -1,3 +1,37 @@
+                                    TXR 288
+                                   2023-06-10
+
+
+  Features
+
+  - Lib:
+    - New keep-keys-if, separate-keys functions.
+
+  - Compiler:
+    - New clean-file function for removing compiled file
+      with name built-in path resolution strategy
+      harmonizing with compile-file.
+    - New compiler option log-level.
+      - level 1: info message when file is compiled.
+      - level 2: info message when top-level form is compiled.
+
+   - Modularization:
+     - New functions load-args-recurse and load-args-process
+       - Handle a build/load command passed in *load-args*.
+     - Provide a disciplined way to structure programs
+       into hierarchical library modules.
+
+  Bugs
+
+  - Obscure in bug in compile-file giving rise to a .tlo
+    that cannot be loaded, under certain conditions.
+
+  - Autoload issue affecting with-compilation-unit,
+    causing compiled files that use with-compilation-unit
+    not to load.
+
+
+
                                     TXR 287
                                    2023-06-03
 
