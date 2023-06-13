@@ -696,6 +696,26 @@
          (or ,*clause-code)
          ,result-temp))))
 
+(defmacro match-cond (:form *match-form* :env e . clauses)
+  (unless [all clauses [andf proper-listp [chain len (op < 1)]]]
+    (compile-error *match-form* "bad clause syntax"))
+  (let* ((result-temp (gensym "result-"))
+         (var-list (get-var-list e))
+         (clause-matches [mapcar (op compile-match (car @1)
+                                     : (copy var-list))
+                                 clauses])
+         (clause-code (collect-each ((cl clauses)
+                                     (cm clause-matches))
+                        (mac-param-bind *match-form* (t obj . forms) cl
+                          ^(let (,*cm.(get-vars)
+                                 (,cm.obj-var ,obj))
+                             ,cm.(wrap-guards ^(set ,result-temp
+                                                    (progn ,cm.obj-var ,*forms))
+                                              t))))))
+    ^(let (,result-temp)
+       (or ,*clause-code)
+       ,result-temp)))
+
 (defmacro match-ecase (obj . clauses)
   (with-gensyms (else)
     ^(match-case ,obj

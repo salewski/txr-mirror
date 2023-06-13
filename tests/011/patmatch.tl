@@ -574,3 +574,17 @@
   (match ^#H() #H(() (a b)) t) t
   (match ^#H(()) #H(() (a b)) t) t
   (match ^#S(time) #S(time year 2023) t) t)
+
+(mtest
+  (match-cond (t)) :error
+  (match-cond (t t)) t
+  (match-cond (t t nil)) nil
+  (match-cond (t t t)) t
+  (let ((x 42))
+    (match-cond
+      (`@x-73` "73-73" :a)
+      (`@x-@y` "42-24" y))) "24"
+  (let ((x 42)
+        (y 24))
+    (match-cond
+      (`@x-24` `42-@y`))) "42-24")

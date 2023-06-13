@@ -1257,6 +1257,7 @@
       ("mask" "N-0056CEF1")
       ("match" "N-01BE5C4A")
       ("match-case" "N-0282196B")
+      ("match-cond" "N-021DEB00")
       ("match-ecase" "N-0282196B")
       ("match-fboundp" "N-02AF4E8B")
       ("match-fun" "N-033F766A")

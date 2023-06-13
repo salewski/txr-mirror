@@ -45035,6 +45035,7 @@ operators, which are:
 .codn if-match ,
 .codn match ,
 .codn match-case ,
+.codn match-cond ,
 .codn match-ecase ,
 .code lambda-match
 and
@@ -45074,6 +45075,13 @@ The
 macro is similar to
 .code match-case
 except that if no matching case is identified, an exception is thrown.
+
+The
+.code match-cond
+macro evaluates multiple clauses, each of which specifies a pattern and an
+object expression. If the object produced by the expression matches the
+pattern, the forms in the clause are evaluated in scope of the variables
+bound by the clause's pattern.
 
 The
 .code lambda-match
@@ -47104,6 +47112,60 @@ form throws an exception of type
    (match-case 1
      (2 :two)
      (@x :default)) --> :default
+.brev
+
+.coNP Macro @ match-cond
+.synb
+.mets (match-cond >> {( pattern < expr << form *)}*)
+.syne
+.desc
+The
+.code match-cond
+macro's arguments are zero or more clauses, each of which
+specifies a
+.metn pattern ,
+an expression
+.metn expr ,
+and zero or more
+.metn form s.
+
+The clauses are processed in order. Successive
+.metn expr s
+are evaluated, and matched against their corresponding pattern.
+If there is no match, processing continues with the next
+clause. If no match is found in any clause, the
+.code match-cond
+form terminates, returning
+.codn nil .
+
+If an
+.metn expr 's
+value matches the corresponding
+.metn pattern ,
+then every
+.code form
+is evaluated in scope of the variables established by the pattern.
+The
+.code match-form
+then terminates, yielding the value of the last
+.codn form ,
+or else the value of
+.meta expr
+if there are no
+.codn form s.
+
+Note: the pattern
+.code "(t t ...)"
+is recommended for specifying an unconditionally matching clause.
+
+.TP* Example:
+
+.verb
+  (let ((x 42))
+    (match-cond
+       (`@x-73` "73-73" :a)
+       (`@x-@y` "42-24" y)))
+  --> "24"
 .brev
 
 .coNP Macro @ lambda-match
