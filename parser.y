@@ -42,6 +42,7 @@
 #include "unwind.h"
 #include "regex.h"
 #include "match.h"
+#include "filter.h"
 #include "hash.h"
 #include "struct.h"
 #include "eval.h"
@@ -68,6 +69,7 @@ static val uref_helper(parser_t *, val expr);
 static val uoref_helper(parser_t *, val expr);
 static val qref_helper(parser_t *, val lexpr, val rexpr);
 static val fname_helper(parser_t *, val name);
+static val output_helper(parser_t *, val sym, val exprs, val clauses);
 
 #if YYBISON
 union YYSTYPE;
@@ -114,7 +116,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <lexeme> SPACE TEXT SYMTOK
 %token <lineno> ALL SOME NONE MAYBE CASES BLOCK CHOOSE GATHER
 %token <lineno> AND OR END COLLECT
-%token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY
+%token <lineno> UNTIL COLL OUTPUT REPEAT PUSH REP SINGLE FIRST LAST EMPTY
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY IF
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_J
@@ -135,7 +137,7 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
 %type <val> collect_repeat
 %type <val> clause_parts additional_parts gather_parts additional_gather_parts
-%type <val> output_clause define_clause try_clause catch_clauses_opt
+%type <val> output_clause output_push define_clause try_clause catch_clauses_opt
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers
@@ -619,47 +621,44 @@ catch_clauses_opt : CATCH ')' newl
                   ;
 
 
-output_clause : OUTPUT ')' o_elems '\n'
+output_clause : output_push ')' o_elems '\n'
                 out_clauses
                 END newl        { $$ = nil;
-                                  yyerr("obsolete output syntax: trailing material"); }
-              | OUTPUT ')' newl
-                END newl        { $$ = rl(list(output_s, nao), num($1)); }
-              | OUTPUT ')' newl
+                                  yyerrorf(scnr, lit("~a: traling material"),
+                                           car($1), nao); }
+              | output_push ')' newl
+                END newl        { $$ = rl(list(car($1), nao), $1); }
+              | output_push ')' newl
                 out_clauses
-                END newl        { $$ = rl(list(output_s, $4, nao), num($1)); }
-              | OUTPUT exprs ')' newl
+                END newl        { $$ = rl(list(car($1), $4, nao), $1); }
+              | output_push exprs ')' newl
                 out_clauses
-                END newl        { cons_bind (dest, rest, $2);
-                                  val dest_ex = expand_form_ver(dest, 166);
-                                  val args = if3(dest_ex == dest,
-                                                 $2, cons(dest_ex, rest));
-                                  $$ = list(output_s, $5, args, nao);
-                                  rl($$, num($1));
-                                  { val into_var = second(memql(into_k, args));
-                                    val named_var = second(memql(named_k, args));
-                                    match_reg_var(into_var);
-                                    match_reg_var(named_var); } }
-              | OUTPUT exprs ')' o_elems '\n'
+                END newl        { $$ = output_helper(parser, car($1), $2, $5);
+                                  rl($$, $1); }
+              | output_push exprs ')' o_elems '\n'
                 out_clauses
                 END newl        { $$ = nil;
                                   yyerr("invalid combination of old and "
-                                               "new syntax in output directive"); }
-              | OUTPUT error    { $$ = nil;
+                                        "new syntax in output directive"); }
+              | output_push error    { $$ = nil;
                                   yybadtok(yychar, lit("output directive")); }
-              | OUTPUT ')' o_elems '\n'
+              | output_push ')' o_elems '\n'
                 error           { $$ = nil;
                                   yybadtok(yychar, lit("output clause")); }
-              | OUTPUT ')' newl
+              | output_push ')' newl
                 error           { $$ = nil;
                                   yybadtok(yychar, lit("output clause")); }
-              | OUTPUT exprs ')' o_elems '\n'
+              | output_push exprs ')' o_elems '\n'
                 error           { $$ = nil;
                                   yybadtok(yychar, lit("output clause")); }
-              | OUTPUT exprs ')' newl
+              | output_push exprs ')' newl
                 error           { $$ = nil;
                                   yybadtok(yychar, lit("output clause")); }
               ;
+
+output_push : OUTPUT { $$ = cons(output_s, num($1)); }
+            | PUSH { $$ = cons(push_s, num($1)); }
+            ;
 
 out_clauses : out_clause                { $$ = cons($1, nil); }
             | out_clause out_clauses    { $$ = cons($1, $2);  }
@@ -1511,7 +1510,8 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
                                                          nil); }
              | OUTPUT
                 exprs_opt ')'   { yyerr("@(output) doesn't nest"); }
-
+             | PUSH
+                exprs_opt ')'   { yyerr("@(push) doesn't nest"); }
              ;
 
 %%
@@ -2055,6 +2055,52 @@ static val fname_helper(parser_t *parser, val name)
   }
 
   return nil;
+}
+
+static val output_helper(parser_t *parser, val sym, val exprs, val clauses)
+{
+  cons_bind (dest, rest, exprs);
+
+  val dest_ex = expand_form_ver(dest, 166);
+  val args = if3(dest_ex == dest, exprs, cons(dest_ex, rest));
+  val args_kw = keywordp(car(args));
+  val alist = improper_plist_to_alist(if3(args_kw, args, cdr(args)),
+                                      v_output_keys);
+
+  if (!args_kw && sym == push_s)
+  {
+    yyerrorf(parser->scanner, lit("~s: doesn't support destination argument"),
+             sym, nao);
+  }
+
+
+  while (alist) {
+    val key = car(pop(&alist));
+
+    if (key == filter_k)
+      continue;
+
+    if (sym != push_s) {
+      if (key == nothrow_k || key == append_k ||
+          key == named_k || key == continue_k ||
+          key == finish_k || key == into_k)
+      {
+        continue;
+      }
+    }
+
+    yyerrorf(parser->scanner, lit("~s: unsupported keyword ~s"),
+             sym, key, nao);
+  }
+
+  if (sym != push_s) {
+    val into_var = second(memql(into_k, args));
+    val named_var = second(memql(named_k, args));
+    match_reg_var(into_var);
+    match_reg_var(named_var);
+  }
+
+  return list(sym, clauses, args, nao);
 }
 
 #ifndef YYEOF

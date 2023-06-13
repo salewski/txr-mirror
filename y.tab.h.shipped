@@ -27,58 +27,59 @@
      COLL = 274,
      OUTPUT = 275,
      REPEAT = 276,
-     REP = 277,
-     SINGLE = 278,
-     FIRST = 279,
-     LAST = 280,
-     EMPTY = 281,
-     MOD = 282,
-     MODLAST = 283,
-     DEFINE = 284,
-     TRY = 285,
-     CATCH = 286,
-     FINALLY = 287,
-     IF = 288,
-     ERRTOK = 289,
-     HASH_BACKSLASH = 290,
-     HASH_SLASH = 291,
-     DOTDOT = 292,
-     HASH_H = 293,
-     HASH_S = 294,
-     HASH_R = 295,
-     HASH_J = 296,
-     HASH_SEMI = 297,
-     HASH_B_QUOTE = 298,
-     HASH_N = 299,
-     HASH_T = 300,
-     WORDS = 301,
-     WSPLICE = 302,
-     QWORDS = 303,
-     QWSPLICE = 304,
-     SECRET_ESCAPE_R = 305,
-     SECRET_ESCAPE_E = 306,
-     SECRET_ESCAPE_I = 307,
-     SECRET_ESCAPE_J = 308,
-     OLD_DOTDOT = 309,
-     NUMBER = 310,
-     METANUM = 311,
-     JSKW = 312,
-     HASH_N_EQUALS = 313,
-     HASH_N_HASH = 314,
-     REGCHAR = 315,
-     REGTOKEN = 316,
-     LITCHAR = 317,
-     SPLICE = 318,
-     JSPLICE = 319,
-     OLD_AT = 320,
-     CONSDOT = 321,
-     LAMBDOT = 322,
-     UREFDOT = 323,
-     OREFDOT = 324,
-     UOREFDOT = 325,
-     LOW = 326,
-     ELSE = 327,
-     ELIF = 328
+     PUSH = 277,
+     REP = 278,
+     SINGLE = 279,
+     FIRST = 280,
+     LAST = 281,
+     EMPTY = 282,
+     MOD = 283,
+     MODLAST = 284,
+     DEFINE = 285,
+     TRY = 286,
+     CATCH = 287,
+     FINALLY = 288,
+     IF = 289,
+     ERRTOK = 290,
+     HASH_BACKSLASH = 291,
+     HASH_SLASH = 292,
+     DOTDOT = 293,
+     HASH_H = 294,
+     HASH_S = 295,
+     HASH_R = 296,
+     HASH_J = 297,
+     HASH_SEMI = 298,
+     HASH_B_QUOTE = 299,
+     HASH_N = 300,
+     HASH_T = 301,
+     WORDS = 302,
+     WSPLICE = 303,
+     QWORDS = 304,
+     QWSPLICE = 305,
+     SECRET_ESCAPE_R = 306,
+     SECRET_ESCAPE_E = 307,
+     SECRET_ESCAPE_I = 308,
+     SECRET_ESCAPE_J = 309,
+     OLD_DOTDOT = 310,
+     NUMBER = 311,
+     METANUM = 312,
+     JSKW = 313,
+     HASH_N_EQUALS = 314,
+     HASH_N_HASH = 315,
+     REGCHAR = 316,
+     REGTOKEN = 317,
+     LITCHAR = 318,
+     SPLICE = 319,
+     JSPLICE = 320,
+     OLD_AT = 321,
+     CONSDOT = 322,
+     LAMBDOT = 323,
+     UREFDOT = 324,
+     OREFDOT = 325,
+     UOREFDOT = 326,
+     LOW = 327,
+     ELSE = 328,
+     ELIF = 329
    };
 #endif
 /* Tokens.  */
@@ -101,58 +102,59 @@
 #define COLL 274
 #define OUTPUT 275
 #define REPEAT 276
-#define REP 277
-#define SINGLE 278
-#define FIRST 279
-#define LAST 280
-#define EMPTY 281
-#define MOD 282
-#define MODLAST 283
-#define DEFINE 284
-#define TRY 285
-#define CATCH 286
-#define FINALLY 287
-#define IF 288
-#define ERRTOK 289
-#define HASH_BACKSLASH 290
-#define HASH_SLASH 291
-#define DOTDOT 292
-#define HASH_H 293
-#define HASH_S 294
-#define HASH_R 295
-#define HASH_J 296
-#define HASH_SEMI 297
-#define HASH_B_QUOTE 298
-#define HASH_N 299
-#define HASH_T 300
-#define WORDS 301
-#define WSPLICE 302
-#define QWORDS 303
-#define QWSPLICE 304
-#define SECRET_ESCAPE_R 305
-#define SECRET_ESCAPE_E 306
-#define SECRET_ESCAPE_I 307
-#define SECRET_ESCAPE_J 308
-#define OLD_DOTDOT 309
-#define NUMBER 310
-#define METANUM 311
-#define JSKW 312
-#define HASH_N_EQUALS 313
-#define HASH_N_HASH 314
-#define REGCHAR 315
-#define REGTOKEN 316
-#define LITCHAR 317
-#define SPLICE 318
-#define JSPLICE 319
-#define OLD_AT 320
-#define CONSDOT 321
-#define LAMBDOT 322
-#define UREFDOT 323
-#define OREFDOT 324
-#define UOREFDOT 325
-#define LOW 326
-#define ELSE 327
-#define ELIF 328
+#define PUSH 277
+#define REP 278
+#define SINGLE 279
+#define FIRST 280
+#define LAST 281
+#define EMPTY 282
+#define MOD 283
+#define MODLAST 284
+#define DEFINE 285
+#define TRY 286
+#define CATCH 287
+#define FINALLY 288
+#define IF 289
+#define ERRTOK 290
+#define HASH_BACKSLASH 291
+#define HASH_SLASH 292
+#define DOTDOT 293
+#define HASH_H 294
+#define HASH_S 295
+#define HASH_R 296
+#define HASH_J 297
+#define HASH_SEMI 298
+#define HASH_B_QUOTE 299
+#define HASH_N 300
+#define HASH_T 301
+#define WORDS 302
+#define WSPLICE 303
+#define QWORDS 304
+#define QWSPLICE 305
+#define SECRET_ESCAPE_R 306
+#define SECRET_ESCAPE_E 307
+#define SECRET_ESCAPE_I 308
+#define SECRET_ESCAPE_J 309
+#define OLD_DOTDOT 310
+#define NUMBER 311
+#define METANUM 312
+#define JSKW 313
+#define HASH_N_EQUALS 314
+#define HASH_N_HASH 315
+#define REGCHAR 316
+#define REGTOKEN 317
+#define LITCHAR 318
+#define SPLICE 319
+#define JSPLICE 320
+#define OLD_AT 321
+#define CONSDOT 322
+#define LAMBDOT 323
+#define UREFDOT 324
+#define OREFDOT 325
+#define UOREFDOT 326
+#define LOW 327
+#define ELSE 328
+#define ELIF 329
 
 
 
@@ -162,7 +164,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 107 "parser.y"
+#line 109 "parser.y"
 
   wchar_t *lexeme;
   union obj *val;
@@ -172,7 +174,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 205 "y.tab.h"
+#line 207 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

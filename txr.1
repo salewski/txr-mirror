@@ -4039,10 +4039,16 @@ Removes variable bindings.
 Synonym of
 .codn @(forget) .
 
-.coIP @(output)
+.ccIP @ @(output) and @(push)
 A directive which encloses an output clause in the query. An output section
-does not match text, but produces text. The directives above are not
-understood in an output clause.
+does not match text, but produces text which can be directed to various
+destinations, the default being standard output.  Most directives cannot
+be used inside an output clause. The
+.code @(push)
+clause is a variant of
+.code @(output)
+which produces text that implicitly pushed back into the input stream to be
+matched.
 
 .coIP @(repeat)
 A directive understood within an
@@ -9519,6 +9525,97 @@ stream object. That stream object is used for the output block.
 At the end of the output block, the stream is closed.
 An example is given in the documentation for the Close Directive
 below.
+
+.dir push
+
+The
+.code @(push)
+directive is a variant of
+.code @(output)
+which produces lines of text that are pushed back into the input stream.
+
+This directive supports only the
+.code :filter
+keyword argument.
+
+This directive doesn't take any of the keyword arguments supported by
+.code @(output)
+except for the
+.code :filter
+keyword.
+
+After the execution of a
+.codn @(push) ,
+the next pattern matching syntax that is evaluated now faces the material
+produced by that
+.code @(push)
+followed by the original input. In order to preserve the line numbering of the
+original input,
+.code @(push)
+adjusts the line number for the synthetic input by subtracting the number of
+synthetic lines from the original input's line number. For instance if the
+original input is line 5, and 7 lines are prepended by
+.codn @(push) ,
+then those lines are numbered -2 to 4.
+
+The input-synthesizing effect of
+.code @(push)
+is visible to a subsequent form in exactly those situations in which
+an input-consuming effect of a pattern matching directive would also
+be visible. For instance, a
+.code @(push)
+occurring in the body of a
+.code @(collect)
+can produce input that is visible to the next iteration.
+
+The
+.code @(push)
+directive interacts with the parallel matching directives such as
+.codn @(some) .
+When multiple parallel clauses match, the input position is advanced
+by the longest match. Lines pushed into the input by
+.code @(push)
+look like negative advancement. If one clause advances in the input,
+while another one pushes into it, the push will lose to the
+advancement and its effect will disappear.  If two clauses push varying amounts
+of material, the shorter push will win.
+
+.TP* Example:
+
+Swap the first two lines if they start with a colon, changing
+the colon to a period:
+
+.IP Code:
+.verb
+  @(maybe)
+  :@a
+  :@b
+  @  (push)
+  .@b
+  .@a
+  @  (end)
+  @(end)
+  @(data capture)
+  @(do (tprint capture))
+.brev
+
+.IP Data:
+.verb
+  :hello
+  :there
+  rest
+  of
+  data
+.brev
+
+.IP Output:
+.verb
+  .there
+  .hello
+  rest
+  of
+  data
+.brev
 
 .NP* Output Text
 

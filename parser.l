@@ -601,6 +601,10 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
   return directive_tok(yyg, REPEAT, NESTED);
 }
 
+<SPECIAL>\({WS}({NT0}?:)?push/{ID_END}  {
+  return directive_tok(yyg, PUSH, NESTED);
+}
+
 <SPECIAL>\({WS}({NT0}?:)?rep/{ID_END} {
   return directive_tok(yyg, REP, NESTED);
 }

@@ -110,7 +110,7 @@ val zeroplus_s, optional_s, compl_s, compound_s;
 val or_s, and_s, quasi_s, quasilist_s;
 val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
-val define_s, output_s, single_s, first_s, last_s, empty_s;
+val define_s, output_s, push_s, single_s, first_s, last_s, empty_s;
 val repeat_s, rep_s, flatten_s, forget_s;
 val local_s, merge_s, bind_s, rebind_s, cat_s;
 val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
@@ -13835,6 +13835,7 @@ static void obj_init(void)
   coll_s = intern(lit("coll"), user_package);
   define_s = intern(lit("define"), user_package);
   output_s = intern(lit("output"), user_package);
+  push_s = intern(lit("push"), user_package);
   single_s = intern(lit("single"), user_package);
   first_s = intern(lit("first"), user_package);
   last_s = intern(lit("last"), user_package);

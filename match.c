@@ -74,7 +74,9 @@ val noval_s;
 static val h_directive_table, v_directive_table;
 static val non_matching_directive_table, binding_directive_table;
 
-static val v_next_keys, v_output_keys;
+static val v_next_keys;
+
+val v_output_keys;
 
 static void debuglf(val form, val fmt, ...)
 {
@@ -3172,7 +3174,7 @@ static val v_parallel(match_files_ctx *c)
     val sym = first(first_spec);
     val all_match = t;
     val some_match = nil;
-    val max_line = zero;
+    val max_line = nil;
     val max_data = nil;
     val specs = second(first_spec);
     val plist = third(first_spec);
@@ -3254,7 +3256,7 @@ static val v_parallel(match_files_ctx *c)
           max_data = t;
         } else if (consp(success) && max_data != t) {
           cons_bind (new_data, new_line, success);
-          if (gt(new_line, max_line)) {
+          if (max_line == nil || gt(new_line, max_line)) {
             max_line = new_line;
             max_data = new_data;
           }
@@ -3737,7 +3739,13 @@ static val v_collect(match_files_ctx *c)
         if (consp(success)) {
           cons_bind (new_data, new_line, success);
 
-          bug_unless (ge(new_line, c->data_lineno));
+          /* The following assertion was in the code for the longest time.
+           * It doesn't hold because of @(push).
+           * In h_collect, the corresponding assertion that the
+           * character position advances is still there.
+           *
+           * bug_unless (ge(new_line, c->data_lineno));
+           */
 
           if (new_line == c->data_lineno) {
             new_data = cdr(new_data);
@@ -4151,6 +4159,52 @@ out:
   return ret;
 }
 
+static val v_push(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val specs = second(first_spec);
+  val dest_spec = third(first_spec);
+  val filter = nil;
+  val alist;
+  val stream = make_strlist_output_stream();
+
+  uw_match_env_begin;
+
+  val saved_de = set_dyn_env(make_env(c->bindings, nil, nil));
+
+  uw_set_match_context(cons(c->spec, c->spec));
+
+  alist = improper_plist_to_alist(dest_spec, v_output_keys);
+
+  {
+    val filter_sym = cdr(assoc(filter_k, alist));
+
+    if (filter_sym) {
+      filter = get_filter(filter_sym);
+
+      if (!filter)
+        sem_error(specline, lit("~s specifies unknown filter"), filter_sym, nao);
+    }
+  }
+
+  do_output(c->bindings, specs, filter, stream);
+
+  {
+    val list_out = get_list_from_stream(stream);
+    val len = length(list_out);
+
+    if (c->data_lineno)
+      c->data_lineno = minus(c->data_lineno, len);
+    c->data = append2(list_out, c->data);
+
+    debuglf(specs, lit("prepended ~s lines of output: adjusted lineno is ~s"),
+            len, c->data_lineno, nao);
+  }
+
+  set_dyn_env(saved_de);
+  uw_match_env_end;
+  return next_spec_k;
+}
 static val v_try(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
@@ -5246,6 +5300,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, set_s, cptr(coerce(mem_t *, v_set)));
   sethash(v_directive_table, cat_s, cptr(coerce(mem_t *, v_cat)));
   sethash(v_directive_table, output_s, cptr(coerce(mem_t *, v_output)));
+  sethash(v_directive_table, push_s, cptr(coerce(mem_t *, v_push)));
   sethash(v_directive_table, define_s, cptr(coerce(mem_t *, v_define)));
   sethash(v_directive_table, try_s, cptr(coerce(mem_t *, v_try)));
   sethash(v_directive_table, defex_s, cptr(coerce(mem_t *, v_defex)));

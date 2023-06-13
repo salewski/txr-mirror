@@ -30,6 +30,10 @@ extern val text_s, choose_s, gather_s, do_s, mdo_s, require_s, in_package_s;
 extern val close_s, load_s, include_s, mod_s, modlast_s, line_s;
 extern val else_s, elif_s;
 extern val counter_k, vars_k, lists_k, env_k, var_k, into_k, named_k, noclose_k;
+extern val append_k, continue_k, finish_k;
+
+extern val v_output_keys;
+
 val match_expand_keyword_args(val elem);
 val match_expand_elem(val elem);
 val match_filter(val name, val arg, val other_args);

@@ -679,7 +679,7 @@ extern val zeroplus_s, optional_s, compl_s, compound_s;
 extern val or_s, and_s, quasi_s, quasilist_s;
 extern val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 extern val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
-extern val define_s, output_s, single_s, first_s, last_s, empty_s;
+extern val define_s, output_s, push_s, single_s, first_s, last_s, empty_s;
 extern val repeat_s, rep_s, flatten_s, forget_s;
 extern val local_s, merge_s, bind_s, rebind_s, cat_s;
 extern val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
