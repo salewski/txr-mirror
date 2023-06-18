@@ -110,6 +110,7 @@
     "I've almost decided to wipe my kitchen floor. I feel ever so closer to mop!"
     "I'm confused; is this piano recital Rimsky-Korsakov or Wernicke–Korsakoff?"
     "TXR Lisp environments use genuine Saskatchewan sealskin bindings."
+    "I'm not addicted to procrastination. I can start any time I want to!"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
