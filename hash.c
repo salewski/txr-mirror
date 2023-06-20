@@ -924,7 +924,7 @@ static val do_make_hash(hash_weak_opt_t wkopt, hash_type_t type, val seed)
     h->seed = c_unum(default_arg(seed, if3(hash_seed_s, hash_seed, zero)),
                      self);
     h->wkopt = wkopt;
-    h->mask = c_unum(mod - 1, self);
+    h->mask = c_unum(mod, self) - 1;
     h->count = 0;
     h->table = table;
     h->userdata = nil;
@@ -996,7 +996,7 @@ val make_similar_hash(val existing)
   val table = vector(mod, nil);
   val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
 
-  h->mask = c_unum(mod - 1, self);
+  h->mask = c_unum(mod, self) - 1;
   h->count = 0;
   h->table = table;
   h->userdata = ex->userdata;
@@ -1147,7 +1147,7 @@ val clearhash(val hash)
   val mod = num_fast(256);
   val table = vector(mod, nil);
   ucnum oldcount = h->count;
-  h->mask = c_unum(mod - 1, self);
+  h->mask = c_unum(mod, self) - 1;
   h->count = 0;
   h->table = table;
   setcheck(hash, table);
