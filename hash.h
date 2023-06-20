@@ -37,8 +37,7 @@ typedef enum hash_weak_opt {
 struct hash_iter {
   struct hash_iter *next;
   val hash;
-  ucnum chain;
-  val cons;
+  ucnum index;
 };
 
 extern val weak_keys_k, weak_vals_k, weak_and_k, weak_or_k, userdata_k;

@@ -61,11 +61,10 @@ struct hash_ops {
   ucnum (*hash_fun)(val, int *, ucnum);
   val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, ucnum hash, val list);
-  val (*acons_new_c_fun)(val key, ucnum hash, loc new_p, loc list);
 };
 
-#define hash_ops_init(hash, equal, assoc, acons) \
-  { hash, equal, assoc, acons }
+#define hash_ops_init(hash, equal, assoc) \
+  { hash, equal, assoc }
 
 struct hash {
   ucnum seed;
@@ -454,6 +453,160 @@ static ucnum eq_hash(val obj)
   abort();
 }
 
+static ucnum hash_find_slot(struct hash *h, val key, ucnum hcode)
+{
+  val table = h->table;
+  val *vec = table->v.vec;
+  val (*equal_fun)(val, val) = h->hops->equal_fun;
+  ucnum mask = h->mask, start = hcode & mask, i = start;
+
+  do {
+    val cell = vec[i];
+
+    if (cell == nil)
+      break;
+
+    if (cell->ch.hash == hcode && equal_fun(us_car(cell), key))
+      return i;
+
+    i = (i + 1) & h->mask;
+  } while (i != start);
+
+  return UINT_PTR_MAX;
+}
+
+static val hash_lookup(struct hash *h, val key, ucnum hcode)
+{
+  val table = h->table;
+  val *vec = table->v.vec;
+
+  val (*equal_fun)(val, val) = h->hops->equal_fun;
+  ucnum mask = h->mask, start = hcode & mask, i = start;
+
+  do {
+    val cell = vec[i];
+
+    if (cell == nil)
+      break;
+
+    if (cell->ch.hash == hcode && equal_fun(us_car(cell), key))
+      return cell;
+
+    i = (i + 1) & h->mask;
+  } while (i != start);
+
+  return nil;
+}
+
+static void hash_grow(val hash, struct hash *h, val *vec, ucnum mask)
+{
+  ucnum j, nmask = (mask << 1) | 1;
+  val ntable;
+  val *nvec;
+
+  if (nmask > NUM_MAX - 1)
+    uw_throwf(error_s, lit("hash table overflow"), nao);
+
+  ntable = vector(num_fast(nmask + 1), nil);
+  nvec = ntable->v.vec;
+
+  h->table = ntable;
+  h->mask = nmask;
+
+  setcheck(hash, ntable);
+
+  for (j = 0; j <= mask; j++) {
+    val cell = vec[j];
+
+    if (cell) {
+      ucnum hcode = cell->ch.hash;
+      ucnum start = hcode & nmask, i = start;
+
+      for (;; i = (i + 1) & nmask) {
+        if (nvec[i] == nil) {
+          nvec[i] = cell;
+          break;
+        }
+      }
+    }
+  }
+}
+
+static val hash_insert(val hash, struct hash *h, val key, ucnum hcode, loc new_p)
+{
+  val table = h->table;
+  val *vec = table->v.vec;
+  val (*equal_fun)(val, val) = h->hops->equal_fun;
+  ucnum mask = h->mask, start = hcode & mask, i = start;
+
+  do {
+    val cell = vec[i];
+
+    if (cell == nil) {
+      val ncell = cons(key, nil);
+      ncell->ch.hash = hcode;
+      vec[i] = ncell;
+      setcheck(table, ncell);
+      if (!nullocp(new_p))
+        deref(new_p) = t;
+      if (++h->count > h->mask >> 1 && h->usecount == 0)
+        hash_grow(hash, h, vec, mask);
+      return ncell;
+    }
+
+    if (cell->ch.hash == hcode && equal_fun(us_car(cell), key)) {
+      if (!nullocp(new_p))
+        deref(new_p) = nil;
+      return cell;
+    }
+
+    i = (i + 1) & h->mask;
+  } while (i != start);
+
+  hash_grow(hash, h, vec, mask);
+
+  return hash_insert(hash, h, key, hcode, new_p);
+}
+
+static val hash_remove(struct hash *h, ucnum victim)
+{
+  val table = h->table;
+  val *vec = table->v.vec;
+  ucnum start = victim, i = start, mask = h->mask;
+  val cell = vec[i];
+  val ret = nil;
+
+  if (cell == nil)
+    return ret;
+
+  ret = us_cdr(cell);
+
+  i = (i + 1) & mask;
+
+  while (i != start) {
+    cell = vec[i];
+
+    if (cell == nil) {
+      break;
+    } else {
+      ucnum hcode = cell->ch.hash;
+      ucnum k = hcode & mask;
+
+      if ((i < start) ^ (k <= start) ^ (k > i)) {
+        vec[start] = vec[i];
+        start = i;
+      }
+      i = (i + 1) & h->mask;
+    }
+  }
+
+  vec[start] = nil;
+  bug_unless (h->count > 0);
+  h->count--;
+
+  return ret;
+}
+
 static ucnum eql_hash_op(val obj, int *count, ucnum seed)
 {
   (void) seed;
@@ -723,26 +876,25 @@ static void hash_mark(val hash)
 
   switch (h->wkopt) {
     ucnum i;
-    val iter;
   case hash_weak_none:
     gc_mark(table);
     return;
   case hash_weak_keys:
     /* Mark values only. Don't mark the table. */
     for (i = 0; i <= mask; i++) {
-      for (iter = vec[i]; iter; iter = us_cdr(iter)) {
-        val entry = us_car(iter);
-        gc_mark(us_cdr(entry));
-      }
+      val entry = vec[i];
+      if (!entry)
+        continue;
+      gc_mark(us_cdr(entry));
     }
     break;
   case hash_weak_vals:
     /* Mark keys only. Don't mark the table. */
     for (i = 0; i <= mask; i++) {
-      for (iter = vec[i]; iter; iter = us_cdr(iter)) {
-        val entry = us_car(iter);
-        gc_mark(us_car(entry));
-      }
+      val entry = vec[i];
+      if (!entry)
+        continue;
+      gc_mark(us_car(entry));
     }
     break;
   case hash_weak_or:
@@ -751,13 +903,13 @@ static void hash_mark(val hash)
   case hash_weak_and:
     /* Mark key if value is reachable and vice versa. */
     for (i = 0; i <= mask; i++) {
-      for (iter = vec[i]; iter; iter = us_cdr(iter)) {
-        val entry = us_car(iter);
-        if (gc_is_reachable(us_car(entry)))
-          gc_mark(us_cdr(entry));
-        else if (gc_is_reachable(us_cdr(entry)))
-          gc_mark(us_car(entry));
-      }
+      val entry = vec[i];
+      if (!entry)
+        continue;
+      if (gc_is_reachable(us_car(entry)))
+        gc_mark(us_cdr(entry));
+      else if (gc_is_reachable(us_cdr(entry)))
+        gc_mark(us_car(entry));
     }
     break;
   }
@@ -771,36 +923,6 @@ static struct cobj_ops hash_ops = cobj_ops_init(hash_equal_op,
                                                 cobj_destroy_free_op,
                                                 hash_mark,
                                                 hash_hash_op);
-
-static void hash_grow(struct hash *h, val hash)
-{
-  ucnum i;
-  ucnum new_mask = (h->mask << 1) | 1;
-  val new_table;
-
-  if (new_mask > NUM_MAX - 1)
-    return;
-
-  new_table = vector(num_fast(new_mask + 1), nil);
-
-  for (i = 0; i <= h->mask; i++) {
-    val conses = h->table->v.vec[i];
-
-    while (conses) {
-      val entry = us_car(conses);
-      val next = us_cdr(conses);
-      loc pchain = mkloc(new_table->v.vec[entry->ch.hash & new_mask],
-                         new_table);
-      us_rplacd(conses, deref(pchain));
-      set(pchain, conses);
-      conses = next;
-    }
-  }
-
-  h->mask = new_mask;
-  h->table = new_table;
-  setcheck(hash, new_table);
-}
 
 static val hash_assoc(val key, ucnum hash, val list)
 {
@@ -839,71 +961,14 @@ static val hash_assq(val key, ucnum hash, val list)
 }
 
 
-static val hash_acons_new_c(val key, ucnum hash, loc new_p, loc list)
-{
-  val existing = hash_assoc(key, hash, deref(list));
-
-  if (existing) {
-    if (!nullocp(new_p))
-      deref(new_p) = nil;
-    return existing;
-  } else {
-    val nc = cons(key, nil);
-    nc->ch.hash = hash;
-    set(list, cons(nc, deref(list)));
-    if (!nullocp(new_p))
-      deref(new_p) = t;
-    return nc;
-  }
-}
-
-static val hash_aconsql_new_c(val key, ucnum hash, loc new_p, loc list)
-{
-  val existing = hash_assql(key, hash, deref(list));
-
-  if (existing) {
-    if (!nullocp(new_p))
-      deref(new_p) = nil;
-    return existing;
-  } else {
-    val nc = cons(key, nil);
-    nc->ch.hash = hash;
-    set(list, cons(nc, deref(list)));
-    if (!nullocp(new_p))
-      deref(new_p) = t;
-    return nc;
-  }
-}
-
-static val hash_aconsq_new_c(val key, ucnum hash, loc new_p, loc list)
-{
-  val existing = hash_assq(key, hash, deref(list));
-
-  if (existing) {
-    if (!nullocp(new_p))
-      deref(new_p) = nil;
-    return existing;
-  } else {
-    val nc = cons(key, nil);
-    nc->ch.hash = hash;
-    set(list, cons(nc, deref(list)));
-    if (!nullocp(new_p))
-      deref(new_p) = t;
-    return nc;
-  }
-}
-
 static_def(struct hash_ops hash_eq_ops = hash_ops_init(eq_hash_op, eql,
-                                                       hash_assq,
-                                                       hash_aconsq_new_c));
+                                                       hash_assq));
 
 static_def(struct hash_ops hash_eql_ops = hash_ops_init(eql_hash_op, eql,
-                                                        hash_assql,
-                                                        hash_aconsql_new_c));
+                                                        hash_assql));
 
 static_def(struct hash_ops hash_equal_ops = hash_ops_init(equal_hash, equal,
-                                                          hash_assoc,
-                                                          hash_acons_new_c));
+                                                          hash_assoc));
 
 static val do_make_hash(hash_weak_opt_t wkopt, hash_type_t type, val seed)
 {
@@ -1009,20 +1074,6 @@ val make_similar_hash(val existing)
   return hash;
 }
 
-static val copy_hash_chain(val chain)
-{
-  list_collect_decl(out, ptail);
-
-  for (; chain; chain = us_cdr(chain)) {
-    val entry = us_car(chain);
-    val nentry = cons(us_car(entry), us_cdr(entry));
-    nentry->ch.hash = entry->ch.hash;
-    ptail = list_collect(ptail, nentry);
-  }
-
-  return out;
-}
-
 val copy_hash(val existing)
 {
   val self = lit("copy-hash");
@@ -1031,6 +1082,8 @@ val copy_hash(val existing)
   val mod = num_fast(ex->mask + 1);
   val table = vector(mod, nil);
   val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
+  val *exvec = ex->table->v.vec;
+  val *vec = table->v.vec;
   ucnum i;
 
   h->mask = ex->mask;
@@ -1043,9 +1096,15 @@ val copy_hash(val existing)
   h->usecount = 0;
   h->hops = ex->hops;
 
-  for (i = 0; i <= h->mask; i++)
-    set(mkloc(h->table->v.vec[i], h->table),
-        copy_hash_chain(ex->table->v.vec[i]));
+  for (i = 0; i <= h->mask; i++) {
+    val cell = exvec[i];
+    if (cell) {
+      val ncell = cons(us_car(cell), us_cdr(cell));
+      ncell->ch.hash = cell->ch.hash;
+      vec[i] = ncell;
+      setcheck(table, ncell);
+    }
+  }
 
   return hash;
 }
@@ -1055,12 +1114,7 @@ val gethash_c(val self, val hash, val key, loc new_p)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  loc pchain = mkloc(h->table->v.vec[hv & h->mask], h->table);
-  val old = deref(pchain);
-  val cell = h->hops->acons_new_c_fun(key, hv, new_p, pchain);
-  if (old != deref(pchain) && ++h->count > 2 * h->mask + 2 && h->usecount == 0)
-    hash_grow(h, hash);
-  return cell;
+  return hash_insert(hash, h, key, hv, new_p);
 }
 
 val gethash_e(val self, val hash, val key)
@@ -1068,8 +1122,7 @@ val gethash_e(val self, val hash, val key)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  val chain = h->table->v.vec[hv & h->mask];
-  return h->hops->assoc_fun(key, hv, chain);
+  return hash_lookup(h, key, hv);
 }
 
 val gethash(val hash, val key)
@@ -1122,22 +1175,8 @@ val remhash(val hash, val key)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  val *pchain = &h->table->v.vec[hv & h->mask];
-  val existing = h->hops->assoc_fun(key, hv, *pchain);
-
-  if (existing) {
-    for (; *pchain; pchain = us_cdr_p(*pchain)) {
-      if (us_car(*pchain) == existing) {
-        *pchain = us_cdr(*pchain);
-        break;
-      }
-    }
-    bug_unless (h->count > 0);
-    h->count--;
-    return us_cdr(existing);
-  }
-
-  return nil;
+  ucnum victim = hash_find_slot(h, key, hv);
+  return (victim != UINT_PTR_MAX) ? hash_remove(h, victim) : nil;
 }
 
 val clearhash(val hash)
@@ -1193,7 +1232,6 @@ static void hash_iter_mark(val hash_iter)
   struct hash_iter *hi = coerce(struct hash_iter *, hash_iter->co.handle);
   if (hi->hash)
     gc_mark(hi->hash);
-  gc_mark(hi->cons);
   hi->next = reachable_iters;
   reachable_iters = hi;
 }
@@ -1208,9 +1246,8 @@ void hash_iter_init(struct hash_iter *hi, val hash, val self)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   hi->next = 0;
-  hi->chain = UINT_PTR_MAX;
-  hi->cons = nil;
   hi->hash = hash;
+  hi->index = 0;
   h->usecount++;
 }
 
@@ -1218,57 +1255,52 @@ void us_hash_iter_init(struct hash_iter *hi, val hash)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
   hi->next = 0;
-  hi->chain = UINT_PTR_MAX;
-  hi->cons = nil;
   hi->hash = hash;
+  hi->index = 0;
   h->usecount++;
 }
 
-static val hash_iter_next_impl(struct hash_iter *hi, val iter)
+static val hash_iter_next_impl(struct hash_iter *hi)
 {
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
+  ucnum mask = h->mask;
 
   if (!h)
     return nil;
-  if (hi->cons)
-    hi->cons = us_cdr(hi->cons);
-  while (nilp(hi->cons)) {
-    if (++hi->chain > h->mask) {
-      hi->hash = nil;
-      h->usecount--;
-      return nil;
-    }
-    set(mkloc(hi->cons, iter), h->table->v.vec[hi->chain]);
+
+  while (hi->index <= mask) {
+    val cell = h->table->v.vec[hi->index++];
+    if (cell)
+      return cell;
   }
-  return us_car(hi->cons);
+
+  hi->hash = nil;
+  h->usecount--;
+  return nil;
 }
 
 val hash_iter_next(struct hash_iter *hi)
 {
-  return hash_iter_next_impl(hi, 0);
+  return hash_iter_next_impl(hi);
 }
 
 val hash_iter_peek(struct hash_iter *hi)
 {
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
-  ucnum chain = hi->chain;
-  val cell = hi->cons;
+  ucnum mask = h->mask, index = hi->index;
 
   if (!h)
     return nil;
-  if (cell) {
-    val peek = us_cdr(cell);
-    if (peek)
-      return us_car(peek);
-  }
+
   do {
-    if (++chain > h->mask)
-      return nil;
-    cell = h->table->v.vec[chain];
-  } while (!cell);
-  return us_car(cell);
+    val cell = h->table->v.vec[index++];
+    if (cell)
+      return cell;
+  } while (index <= mask);
+
+  return nil;
 }
 
 val hash_begin(val hash)
@@ -1287,7 +1319,7 @@ val hash_next(val iter)
   val self = lit("hash-next");
   struct hash_iter *hi = coerce(struct hash_iter *,
                                 cobj_handle(self, iter, hash_iter_cls));
-  return hash_iter_next_impl(hi, iter);
+  return hash_iter_next_impl(hi);
 }
 
 
@@ -1371,6 +1403,8 @@ static void do_weak_tables(void)
     if (gc_is_reachable(table))
       continue;
 
+    h->count = UINT_PTR_MAX;
+
     switch (h->wkopt) {
     case hash_weak_none:
       /* what is this doing here */
@@ -1379,21 +1413,17 @@ static void do_weak_tables(void)
       /* Sweep through all entries. Delete any which have keys
          that are garbage. */
       for (i = 0; i <= mask; i++) {
-        val *pchain = &vec[i];
-        val *iter;
+        val entry = vec[i];
 
-        for (iter = pchain; *iter; ) {
-          val entry = us_car(*iter);
+        if (entry) {
           if (!gc_is_reachable(us_car(entry))) {
-            *iter = us_cdr(*iter);
+            hash_remove(h, i--);
 #if CONFIG_EXTRA_DEBUGGING
             if (us_car(entry) == break_obj)
               breakpt();
 #endif
           } else {
             gc_mark(entry);
-            gc_mark_norec(*iter);
-            iter = us_cdr_p(*iter);
             c++;
           }
         }
@@ -1403,21 +1433,17 @@ static void do_weak_tables(void)
       /* Sweep through all entries. Delete any which have values
          that are garbage. */
       for (i = 0; i <= mask; i++) {
-        val *pchain = &vec[i];
-        val *iter;
+        val entry = vec[i];
 
-        for (iter = pchain; *iter; ) {
-          val entry = us_car(*iter);
+        if (entry) {
           if (!gc_is_reachable(us_cdr(entry))) {
-            *iter = us_cdr(*iter);
+            hash_remove(h, i--);
 #if CONFIG_EXTRA_DEBUGGING
             if (us_cdr(entry) == break_obj)
               breakpt();
 #endif
           } else {
             gc_mark(entry);
-            gc_mark_norec(*iter);
-            iter = us_cdr_p(*iter);
             c++;
           }
         }
@@ -1427,13 +1453,11 @@ static void do_weak_tables(void)
       /* Sweep through all entries. Delete any which have keys
          and values that are garbage. */
       for (i = 0; i <= mask; i++) {
-        val *pchain = &vec[i];
-        val *iter;
+        val entry = vec[i];
 
-        for (iter = pchain; *iter; ) {
-          val entry = us_car(*iter);
+        if (entry) {
           if (!gc_is_reachable(us_car(entry)) && !gc_is_reachable(us_cdr(entry))) {
-            *iter = us_cdr(*iter);
+            hash_remove(h, i--);
 #if CONFIG_EXTRA_DEBUGGING
             if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
               breakpt();
@@ -1442,8 +1466,6 @@ static void do_weak_tables(void)
 #endif
           } else {
             gc_mark(entry);
-            gc_mark_norec(*iter);
-            iter = us_cdr_p(*iter);
             c++;
           }
         }
@@ -1453,13 +1475,11 @@ static void do_weak_tables(void)
       /* Sweep through all entries. Delete any which have keys
          or values that are garbage. */
       for (i = 0; i <= mask; i++) {
-        val *pchain = &vec[i];
-        val *iter;
+        val entry = vec[i];
 
-        for (iter = pchain; *iter; ) {
-          val entry = us_car(*iter);
+        if (entry) {
           if (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry))) {
-            *iter = us_cdr(*iter);
+            hash_remove(h, i--);
 #if CONFIG_EXTRA_DEBUGGING
             if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
               breakpt();
@@ -1468,8 +1488,6 @@ static void do_weak_tables(void)
 #endif
           } else {
             gc_mark(entry);
-            gc_mark_norec(*iter);
-            iter = us_cdr_p(*iter);
             c++;
           }
         }
