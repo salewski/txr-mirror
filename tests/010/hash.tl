@@ -27,3 +27,36 @@
   (hash-props 1 2 'a 'b) #H(() (1 2) (a b))
   (hash-props 1) :error
   (hash-props 1 2 'a) :error)
+
+;; Test that growing a hash table works while iterators
+;; are referencing it.
+(let ((h (hash-list (range 0 199))))
+  (let ((i (hash-begin h)))
+    (each ((x 200..1000))
+      (set [h x] x))
+    (each ((x 0..1000))
+      (vtest [h x] x))))
+
+;; Test that when an iterator is created which references
+;; a table which is then resized, and from which all
+;; entries are subsequently deleted, when the iterator
+;; then marches, it will not see the deleted entries.
+(let ((h (hash-list (range 0 199))))
+  (let ((i (hash-begin h)))
+    (each ((x 200..1000))
+      (set [h x] x))
+    (each ((x 0..1000))
+      (del [h x]))
+    (test (hash-next i) nil)))
+
+;; Test that when an iterator is created which references
+;; a table which is then resized, and from which values
+;; are never deleted, the iterator will visit all the
+;; original items that existed when it was created.
+(let ((h (hash-list (range 0 199))))
+  (let ((i (hash-begin h)))
+    (each ((x 200..1000))
+      (set [h x] x))
+    (let ((items (build (whilet ((cell (hash-next i)))
+                          (add (car cell))))))
+      (test (diff 0..200 items) nil))))

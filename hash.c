@@ -75,6 +75,7 @@ struct hash {
   ucnum count;
   val userdata;
   int usecount;
+  val tblstack;
   struct hash_ops *hops;
 };
 
@@ -498,14 +499,23 @@ static val hash_lookup(struct hash *h, val key, ucnum hcode)
   return nil;
 }
 
-static void hash_grow(val hash, struct hash *h, val *vec, ucnum mask)
+static void hash_grow(val hash, struct hash *h, ucnum mask)
 {
   ucnum j, nmask = (mask << 1) | 1;
   val ntable;
+  val table = h->table;
+  val *vec = h->table->v.vec;
   val *nvec;
 
   if (nmask > NUM_MAX - 1)
     uw_throwf(error_s, lit("hash table overflow"), nao);
+
+  if (h->usecount > 0) {
+    push(table, &h->tblstack);
+    setcheck(hash, h->tblstack);
+  } else {
+    h->tblstack = nil;
+  }
 
   ntable = vector(num_fast(nmask + 1), nil);
   nvec = ntable->v.vec;
@@ -549,8 +559,8 @@ static val hash_insert(val hash, struct hash *h, val key, ucnum hcode, loc new_p
       setcheck(table, ncell);
       if (!nullocp(new_p))
         deref(new_p) = t;
-      if (++h->count > h->mask >> 1 && h->usecount == 0)
-        hash_grow(hash, h, vec, mask);
+      if (++h->count > h->mask >> 1)
+        hash_grow(hash, h, mask);
       return ncell;
     }
 
@@ -563,7 +573,7 @@ static val hash_insert(val hash, struct hash *h, val key, ucnum hcode, loc new_p
     i = (i + 1) & h->mask;
   } while (i != start);
 
-  hash_grow(hash, h, vec, mask);
+  hash_grow(hash, h, mask);
 
   return hash_insert(hash, h, key, hcode, new_p);
 }
@@ -575,6 +585,7 @@ static val hash_remove(struct hash *h, ucnum victim)
   ucnum start = victim, i = start, mask = h->mask;
   val cell = vec[i];
   val ret = nil;
+  val vicentry = vec[victim];
 
   if (cell == nil)
     return ret;
@@ -603,6 +614,27 @@ static val hash_remove(struct hash *h, ucnum victim)
   vec[start] = nil;
   bug_unless (h->count > 0);
   h->count--;
+
+  if (h->usecount) {
+    val tblit;
+
+    for (tblit = h->tblstack; tblit; tblit = us_cdr(tblit)) {
+      val stbl = us_car(tblit);
+      val *svec = stbl->v.vec;
+      ucnum smask = c_unum(svec[vec_length], nil) - 1;
+      ucnum start = victim & smask;
+      ucnum end = (victim + smask) & smask;
+
+      for (i = start; i != end; i = (i + 1) & smask) {
+        if (svec[i] == vicentry) {
+          svec[i] = nil;
+          break;
+        }
+      }
+    }
+  } else if (h->tblstack) {
+    h->tblstack = nil;
+  }
 
   return ret;
 }
@@ -865,8 +897,9 @@ static void hash_mark(val hash)
 
   gc_mark(h->userdata);
 
-  if (h->count == 0) {
+  if (h->count == 0 || h->tblstack) {
     gc_mark(table);
+    gc_mark(h->tblstack);
     return;
   }
 
@@ -995,6 +1028,7 @@ static val do_make_hash(hash_weak_opt_t wkopt, hash_type_t type, val seed)
     h->userdata = nil;
 
     h->usecount = 0;
+    h->tblstack = nil;
 
     switch (type) {
     case hash_type_eq:
@@ -1069,6 +1103,7 @@ val make_similar_hash(val existing)
   h->seed = ex->seed;
   h->wkopt = ex->wkopt;
   h->usecount = 0;
+  h->tblstack = 0;
   h->hops = ex->hops;
 
   return hash;
@@ -1094,6 +1129,7 @@ val copy_hash(val existing)
   h->seed = ex->seed;
   h->wkopt = ex->wkopt;
   h->usecount = 0;
+  h->tblstack = 0;
   h->hops = ex->hops;
 
   for (i = 0; i <= h->mask; i++) {
@@ -1230,8 +1266,8 @@ val hashp(val obj)
 static void hash_iter_mark(val hash_iter)
 {
   struct hash_iter *hi = coerce(struct hash_iter *, hash_iter->co.handle);
-  if (hi->hash)
-    gc_mark(hi->hash);
+  gc_mark(hi->hash);
+  gc_mark(hi->table);
   hi->next = reachable_iters;
   reachable_iters = hi;
 }
@@ -1247,6 +1283,8 @@ void hash_iter_init(struct hash_iter *hi, val hash, val self)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   hi->next = 0;
   hi->hash = hash;
+  hi->table = h->table;
+  hi->mask = h->mask;
   hi->index = 0;
   h->usecount++;
 }
@@ -1256,6 +1294,8 @@ void us_hash_iter_init(struct hash_iter *hi, val hash)
   struct hash *h = coerce(struct hash *, hash->co.handle);
   hi->next = 0;
   hi->hash = hash;
+  hi->table = h->table;
+  hi->mask = h->mask;
   hi->index = 0;
   h->usecount++;
 }
@@ -1264,19 +1304,21 @@ static val hash_iter_next_impl(struct hash_iter *hi)
 {
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
-  ucnum mask = h->mask;
+  ucnum mask = hi->mask;
 
   if (!h)
     return nil;
 
   while (hi->index <= mask) {
-    val cell = h->table->v.vec[hi->index++];
+    val cell = hi->table->v.vec[hi->index++];
     if (cell)
       return cell;
   }
 
   hi->hash = nil;
-  h->usecount--;
+  if (--h->usecount <= 0)
+    h->tblstack = nil;
+
   return nil;
 }
 
@@ -1289,13 +1331,13 @@ val hash_iter_peek(struct hash_iter *hi)
 {
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
-  ucnum mask = h->mask, index = hi->index;
+  ucnum mask = hi->mask, index = hi->index;
 
   if (!h)
     return nil;
 
   do {
-    val cell = h->table->v.vec[index++];
+    val cell = hi->table->v.vec[index++];
     if (cell)
       return cell;
   } while (index <= mask);
@@ -1339,13 +1381,17 @@ val hash_reset(val iter, val hash)
 
   if (hi->hash) {
     struct hash *h = coerce(struct hash *, hash->co.handle);
-    h->usecount--;
+    if (--h->usecount <= 0)
+      h->tblstack = nil;
   }
 
-  if (hash)
+  if (hash) {
     hash_iter_init(hi, hash, self);
-  else
+    if (hi->table)
+      setcheck(iter, hash);
+  } else {
     memset(hi, 0, sizeof *hi);
+  }
   return iter;
 }
 
