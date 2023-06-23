@@ -582,7 +582,7 @@ static val hash_remove(struct hash *h, ucnum victim)
 {
   val table = h->table;
   val *vec = table->v.vec;
-  ucnum start = victim, i = start, mask = h->mask;
+  ucnum wipe = victim, i = wipe, mask = h->mask;
   val cell = vec[i];
   val ret = nil;
   val vicentry = vec[victim];
@@ -594,24 +594,24 @@ static val hash_remove(struct hash *h, ucnum victim)
 
   i = (i + 1) & mask;
 
-  while (i != start) {
+  while (i != wipe) {
     cell = vec[i];
 
     if (cell == nil) {
       break;
     } else {
       ucnum hcode = cell->ch.hash;
-      ucnum k = hcode & mask;
+      ucnum iprobe = hcode & mask;
 
-      if ((i < start) ^ (k <= start) ^ (k > i)) {
-        vec[start] = vec[i];
-        start = i;
+      if ((i < wipe) ^ (iprobe <= wipe) ^ (iprobe > i)) {
+        vec[wipe] = vec[i];
+        wipe = i;
       }
       i = (i + 1) & h->mask;
     }
   }
 
-  vec[start] = nil;
+  vec[wipe] = nil;
   bug_unless (h->count > 0);
   h->count--;
 
