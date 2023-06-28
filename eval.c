@@ -1599,9 +1599,9 @@ static val expand_eval(val form, val env, val menv)
 
 static val macroexpand(val form, val menv);
 
-val eval_intrinsic(val form, val env)
+val eval_intrinsic(val form, val env, val menv_in)
 {
-  val menv = env_to_menv(default_null_arg(env), lit("eval"), nil);
+  val menv = env_to_menv(default_null_arg(env), lit("eval"), menv_in);
   val form_ex = macroexpand(form, menv);
   val op;
 
@@ -1631,7 +1631,7 @@ val eval_intrinsic_noerr(val form, val env, val *error_p)
 
   uw_catch_begin (cons(t, nil), exsym, exvals);
 
-  result = eval_intrinsic(form, env);
+  result = eval_intrinsic(form, env, nil);
 
   uw_catch(exsym, exvals) {
     (void) exsym; (void) exvals;
@@ -7388,7 +7388,7 @@ void eval_init(void)
 
   reg_var(intern(lit("*param-macro*"), user_package), pm_table);
 
-  reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
+  reg_fun(intern(lit("eval"), user_package), func_n3o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(nread, 0));
   reg_fun(intern(lit("read"), user_package), func_n5o(nread, 0));
   reg_fun(intern(lit("iread"), user_package), func_n5o(iread, 0));

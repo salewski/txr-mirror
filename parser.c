@@ -874,7 +874,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
                   stream, form, nao);
       }
     } else {
-      (void) eval_intrinsic(form, nil);
+      (void) eval_intrinsic(form, nil, nil);
     }
   }
 
@@ -1298,7 +1298,7 @@ static val read_eval_ret_last(val env, val counter,
     if (form == error_val)
       break;
 
-    value = eval_intrinsic(form, nil);
+    value = eval_intrinsic(form, nil, nil);
   }
 
   dyn_env = saved_dyn_env;
@@ -1750,7 +1750,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
         counter = prev_counter;
       } else {
         val value = if3(form != read_k,
-                        eval_intrinsic(cons(progn_s, forms), env),
+                        eval_intrinsic(cons(progn_s, forms), nil, env),
                         read_eval_ret_last(nil, prev_counter,
                                            in_stream, out_stream));
         val pprin = cdr(pprint_var);

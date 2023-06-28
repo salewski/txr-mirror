@@ -501,7 +501,7 @@ elem : texts                    { $$ = rlc(cons(text_s, $1), $1);
                                                    expand_forms(rest($1), nil)),
                                               $1);
                                   else if (sym == mdo_s)
-                                  { eval_intrinsic(cons(progn_s, cdr($1)), nil);
+                                  { eval_intrinsic(cons(progn_s, cdr($1)), nil, nil);
                                     $$ = cons(do_s, nil); }
                                   else
                                   { $$ = match_expand_elem($1);
@@ -1998,7 +1998,7 @@ static val check_parse_time_action(val spec_rev)
         return nappend2(nreverse(include(line)), rest(spec_rev));
       }
       if (sym == in_package_s) {
-        eval_intrinsic(elem, nil);
+        eval_intrinsic(elem, nil, nil);
         return nil;
       }
     }

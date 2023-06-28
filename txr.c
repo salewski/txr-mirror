@@ -1061,7 +1061,7 @@ int txr_main(int argc, char **argv)
 
             if (forms != colon_k)
               eval_intrinsic(cons(progn_s, forms),
-                             make_env(bindings, nil, nil));
+                             make_env(bindings, nil, nil), nil);
           }
 
           evaled = t;
@@ -1093,7 +1093,7 @@ int txr_main(int argc, char **argv)
 
           obj = eval_intrinsic(lisp_parse(arg, std_error, colon_k,
                                           lit("cmdline-expr"), colon_k),
-                               make_env(bindings, nil, nil));
+                               make_env(bindings, nil, nil), nil);
           gc_hint(obj);
           pf(z(obj), std_output);
 

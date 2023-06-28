@@ -4062,7 +4062,7 @@ yyreduce:
                                                    expand_forms(rest((yyvsp[(1) - (1)].val)), nil)),
                                               (yyvsp[(1) - (1)].val));
                                   else if (sym == mdo_s)
-                                  { eval_intrinsic(cons(progn_s, cdr((yyvsp[(1) - (1)].val))), nil);
+                                  { eval_intrinsic(cons(progn_s, cdr((yyvsp[(1) - (1)].val))), nil, nil);
                                     (yyval.val) = cons(do_s, nil); }
                                   else
                                   { (yyval.val) = match_expand_elem((yyvsp[(1) - (1)].val));
@@ -7715,7 +7715,7 @@ static val check_parse_time_action(val spec_rev)
         return nappend2(nreverse(include(line)), rest(spec_rev));
       }
       if (sym == in_package_s) {
-        eval_intrinsic(elem, nil);
+        eval_intrinsic(elem, nil, nil);
         return nil;
       }
     }

@@ -19190,7 +19190,7 @@ replaced by
 
 .coNP Function @ eval
 .synb
-.mets (eval < form <> [ env ])
+.mets (eval < form >> [ env <> [ menv ]])
 .syne
 .desc
 The
@@ -19199,12 +19199,36 @@ function treats the
 .meta form
 object as a Lisp expression, which is expanded and
 evaluated. The side effects implied by the form are performed, and the value
-which it produces is returned. The optional
+which it produces is returned.
+
+The optional
 .meta env
-object specifies an environment for
-resolving the function and variable references encountered in the expression.
-If this argument is omitted,
-then evaluation takes place in the global environment.
+argument specifies an environment for
+resolving the function and variable references encountered in
+.metn form .
+If this argument is omitted, then evaluation takes place in the global
+environment.
+
+The optional
+.meta menv
+object specifies a macro environment for expanding macros encountered in
+.metn form .
+If this argument is omitted, then
+.meta form
+may refer to only global macros.
+
+If both
+.meta menv
+and
+.meta env
+are specified, then
+.meta env
+takes precedence over
+.metn menv ,
+behaving like a more nested scope. Definitions contained in
+.meta env
+shadow same-named definitions in
+.metn menv .
 
 The
 .meta form
@@ -19214,7 +19238,11 @@ is not expanded all at once. Rather, it is treated by the following algorithm:
 First, if
 .meta form
 is a macro, it is macro-expanded as if by an application of the function
-.codn macroexpand .
+.code macroexpand
+(with a suitable environment argument, calculated by a combination of
+.meta env
+and
+.metn menv ).
 .IP 2.
 If the resulting expanded form is a
 .codn progn ,
