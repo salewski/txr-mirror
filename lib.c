@@ -11094,9 +11094,11 @@ static void mergesort(val vec, val lessfun, val keyfun, cnum from, cnum to,
 static void ssort_vec(val vec, val lessfun, val keyfun, val self)
 {
   cnum len = c_fixnum(length(vec), self);
-  val *aux = gc_prot_array_alloc(len);
+  val auxobj;
+  val *aux = gc_prot_array_alloc(len, &auxobj);
   mergesort(vec, lessfun, keyfun, 0, len, aux);
   gc_prot_array_free(aux);
+  gc_hint(auxobj);
 }
 
 
