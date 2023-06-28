@@ -4231,7 +4231,7 @@ val equal(val left, val right)
     default:
       break;
     }
-    return nil;
+    break;
   case LCONS:
     switch (type(right)) {
     case CONS:
@@ -4331,7 +4331,7 @@ val equal(val left, val right)
     default:
       return nil;
     }
-    return nil;
+    break;
   case BGNUM:
     if (type(right) == BGNUM) {
       if (mp_cmp(mp(left), mp(right)) == MP_EQ)
@@ -4381,7 +4381,7 @@ val equal(val left, val right)
     if (type(right) == COBJ && left->co.ops == right->co.ops)
       return left->co.ops->equal(left, right);
 
-    return nil;
+    break;
   case CPTR:
     if (type(right) == CPTR && left->co.ops == right->co.ops)
       return left->co.ops->equal(left, right);

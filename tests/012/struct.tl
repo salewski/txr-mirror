@@ -137,3 +137,11 @@
 (test (equal #S(foo) #S(foo)) t)
 (test (equal #S(foo a 0) #S(foo a 1)) nil)
 (test (equal #S(bar a 3 b 3) #S(bar a 3 b 3)) t)
+
+(defstruct eqsub ()
+  key
+  (:method equal (me) me.key))
+
+(test (equal (new eqsub key '(1 2))
+             (new eqsub key '(1 2)))
+      t)
