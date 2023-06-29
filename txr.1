@@ -38068,6 +38068,35 @@ was introduced in \*(TX 238. Prior to that version,
 behaved like
 .codn nsort .
 
+.coNP Functions @, csort @, cnsort @ cssort and @ csnsort
+.synb
+.mets (csort < sequence >> [ lessfun <> [ keyfun ]])
+.mets (cnsort < sequence >> [ lessfun <> [ keyfun ]])
+.mets (cssort < sequence >> [ lessfun <> [ keyfun ]])
+.mets (csnsort < sequence >> [ lessfun <> [ keyfun ]])
+.syne
+.desc
+The functions
+.codn csort ,
+.codn cnsort ,
+.code cssort
+and
+.code csnsort
+are caching counterparts of, respectively,
+.codn sort ,
+.codn nsort ,
+.code ssort
+and
+.codn snsort .
+They have exactly the same argument syntax and semantics.
+
+Caching refers to eliminating repeated calls to
+.meta keyfun
+for the same element of
+.metn sequence ,
+in order to reduce the execution time, at the cost of
+using more storage.
+
 .coNP Function @ grade
 .synb
 .mets (grade < sequence >> [ lessfun <> [ keyfun ]])

@@ -27,7 +27,18 @@
     (sort vec) vec
     (sort svec) vec
     (sort vec (fun greater)) (reverse vec)
-    (sort svec (fun greater)) (reverse vec)))
+    (sort svec (fun greater)) (reverse vec))
+  (mvtest
+    (csort list) list
+    (csort slist) list
+    (csort list (fun greater)) (reverse list)
+    (csort slist (fun greater)) (reverse list))
+  (mvtest
+    (csort vec) vec
+    (csort svec) vec
+    (csort vec (fun greater)) (reverse vec)
+    (csort svec (fun greater)) (reverse vec)))
+
 
 (test (ssort ()) nil)
 
@@ -56,4 +67,14 @@
     (ssort vec) vec
     (ssort svec) vec
     (ssort vec (fun greater)) (reverse vec)
-    (ssort svec (fun greater)) (reverse vec)))
+    (ssort svec (fun greater)) (reverse vec))
+  (mvtest
+    (cssort list) list
+    (cssort slist) list
+    (cssort list (fun greater)) (reverse list)
+    (cssort slist (fun greater)) (reverse list))
+  (mvtest
+    (cssort vec) vec
+    (cssort svec) vec
+    (cssort vec (fun greater)) (reverse vec)
+    (cssort svec (fun greater)) (reverse vec)))
