@@ -49,7 +49,7 @@
    "D01" "D02" "D03" "D04" "D05" "D10" "D11" "D12" "D13" "D14" "D15"
    "E01" "E02" "E03" "E04" "E05" "E10" "E11" "E12" "E13" "E14" "E15"
    "F01" "F02" "F03" "F04" "F05" "F10" "F11" "F12" "F13" "F14" "F15")
-  [maprod append "A".."F" ["00".."99" 1..11]]
+  [maprod append "A".."F" [1..11 "00".."99"]]
   ("A01" "A02" "A03" "A04" "A05" "A06" "A07" "A08" "A09" "A10" "B01"
    "B02" "B03" "B04" "B05" "B06" "B07" "B08" "B09" "B10" "C01" "C02"
    "C03" "C04" "C05" "C06" "C07" "C08" "C09" "C10" "D01" "D02" "D03"
@@ -58,7 +58,7 @@
    "F06" "F07" "F08" "F09" "F10"))
 
 (test
-  [mapcar identity [0..10 3 6]] (3 4 5))
+  [mapcar identity [3..6 0..10]] (3 4 5))
 
 ;; iterating from fixnum to bignum was rejected in up to txr-269.
 (test (each ((x fixnum-max..(* 5 fixnum-max))) (return 42)) 42)

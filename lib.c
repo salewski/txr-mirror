@@ -8333,6 +8333,7 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
   case BUF:
   carray:
   default:
+  dfl:
     bug_unless (args->argc >= ARGS_MIN);
     args_normalize_least(args, 3);
 
@@ -8364,6 +8365,31 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
       fun = cdr(binding);
     }
     break;
+  case NUM:
+  case BGNUM:
+    args_normalize_least(args, 1);
+
+    switch (args->fill) {
+    case 0:
+      callerror(fun, lit("missing required arguments"));
+    case 1:
+      return ref(args->arg[0], fun);
+    default:
+      callerror(fun, lit("too many arguments"));
+    }
+  case RNG:
+    if (opt_compat && opt_compat <= 288)
+      goto dfl;
+    args_normalize_least(args, 1);
+
+    switch (args->fill) {
+    case 0:
+      callerror(fun, lit("missing required arguments"));
+    case 1:
+      return sub(args->arg[0], fun->rn.from, fun->rn.to);
+    default:
+      callerror(fun, lit("too many arguments"));
+    }
   case COBJ:
     if (fun->co.cls == hash_cls) {
       bug_unless (args->argc >= ARGS_MIN);

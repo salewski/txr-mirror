@@ -13816,6 +13816,15 @@ operates on a string argument.
 It returns the leftmost matching substring, or else
 .codn nil .
 
+Structure objects are callable if they implement the
+.code lambda
+method.
+
+Integers and ranges are callable like functions. They take one argument,
+which must be a sequence or hash. An integer selects the corresponding
+element position from the sequence, and a range extracts a slice of
+its argument.
+
 .B Example 1:
 
 .verb
@@ -13877,6 +13886,26 @@ substring
 .str bc
 within the argument
 .strn abcd .
+
+.B Example 5:
+
+.verb
+  [1 "abcd"] -> #\eb
+
+  ["abcd" 1] -> #\eb
+.brev
+An integer used as function indexes into sequence.
+This produces the same result as when the sequence is used
+as a function with an integer argument.
+
+.B Example 6:
+
+.verb
+  [1..3 '(a b c d)] -> (b c)
+  ['(a b c d) 1..3] -> (b c)
+.brev
+
+A range used as a function extracts a slice of its argument.
 
 .SS* Special Variables
 Similarly to Common Lisp, \*(TL is lexically scoped by default, but
@@ -91611,6 +91640,12 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 288
+Integers and ranges callable like functions are a new feature introduced
+after \*(TX 288. The latter, callable ranges, are a breaking change;
+certain expressions with a range in the function position interpreted
+the range as a sequence. Using this compatibility value disables ranges being
+callable, restoring the old behaviors.
 .IP 283
 In \*(TX 283 and older versions, the
 .meta flags
