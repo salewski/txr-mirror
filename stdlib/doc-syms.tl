@@ -952,6 +952,7 @@
       ("hash-keys" "N-00C9B125")
       ("hash-keys-of" "N-02FBE776")
       ("hash-list" "N-02EE9235")
+      ("hash-map" "N-027671E9")
       ("hash-next" "N-0225209D")
       ("hash-pairs" "N-00C9B125")
       ("hash-peek" "N-0225209D")

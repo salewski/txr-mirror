@@ -13,6 +13,7 @@
    (defvarl tagnum (hash :equal-based))
    (defvarl disamb (hash :equal-based))
    (defvarl dist-counter 0)
+   (defvarl colli (hash-props "Function <tt>hash-map</tt>" 1))
 
    (defun hash-str (str)
      (for ((lim (len str)) (i 0) (h 0) g) ((< i lim) h) ((inc i))
@@ -22,6 +23,7 @@
 
    (defun hash-title (title)
      (let* ((h (logtrunc (hash-str title) 32))
+            (h (+ h (or [colli title] 0)))
             (existing [dupes h]))
        (when existing
          (unless (equal title existing)

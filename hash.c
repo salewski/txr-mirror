@@ -1694,6 +1694,19 @@ val hash_from_alist_v(val alist, struct args *hashv_args)
   return hash;
 }
 
+val hash_map(val fun, val seq, struct args *hashv_args)
+{
+  val self = lit("hash-map");
+  seq_iter_t iter;
+  val hash = hashv(hashv_args), elem;
+  seq_iter_init(self, &iter, seq);
+
+  while (seq_get(&iter, &elem))
+    sethash(hash, elem, funcall1(fun, elem));
+
+  return hash;
+}
+
 val hash_props(struct args *plist)
 {
   val self = lit("hash-props");
@@ -2222,6 +2235,7 @@ void hash_init(void)
   reg_fun(hash_construct_s, func_n2(hash_construct));
   reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs_v));
   reg_fun(intern(lit("hash-from-alist"), user_package), func_n1v(hash_from_alist_v));
+  reg_fun(intern(lit("hash-map"), user_package), func_n2v(hash_map));
   reg_fun(intern(lit("hash-props"), user_package), func_n0v(hash_props));
   reg_fun(intern(lit("hash-list"), user_package), func_n1v(hash_list));
   reg_fun(intern(lit("hash-zip"), user_package), func_n2v(hash_zip));

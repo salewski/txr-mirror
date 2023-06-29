@@ -60,3 +60,6 @@
     (let ((items (build (whilet ((cell (hash-next i)))
                           (add (car cell))))))
       (test (diff 0..200 items) nil))))
+
+(test [hash-map square '(1 2 3)]
+      #H(() (1 1) (2 4) (3 9)))

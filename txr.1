@@ -55848,6 +55848,38 @@ The returned hash table is
 and no parameters are available for customizing any of
 its properties, such as weakness.
 
+.coNP Function @ hash-map
+.synb
+.mets (hash-map < fun < sequence << hash-arg *)
+.syne
+.desc
+The
+.code hash-map
+function constructs a function out of a
+.metn sequence .
+The
+.meta fun
+argument must be a function that can be called with one argument.
+
+The elements of
+.meta sequence
+become the hash keys. The value associated with each key
+is determined by passing that value to function
+.meta fun
+and taking the returned value.
+
+The remaining
+.meta hash-arg
+arguments determine what kind of hash table is created,
+as if they were applied to the
+.code hash
+function.
+
+If the sequence contains duplicate elements (according to the
+hash table equality in effect for the hash table being
+constructed), duplicate elements later in the sequence
+replace earlier elements.
+
 .coNP Function @ hash-update
 .synb
 .mets (hash-update < hash << function )
