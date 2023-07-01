@@ -21,3 +21,11 @@
 
 (test (mapcar [callf list* 2 0 1 3..:] '((A B C X) (D E F Y) (G H I Z)))
       ((C A B X) (F D E Y) (I G H Z)))
+
+(mtest
+  (set [1 1] 2) :error
+  (set [1 1..2] 2) :error
+  (set [1..2 1] 2) :error
+  (set [1..2 1..2] 2) :error
+  (let ((abc "abc")) (set [1..2 abc] "42") abc) "a42c"
+  (let ((abc "abc")) (set [1 abc] #\d) abc) "adc")

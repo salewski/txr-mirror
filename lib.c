@@ -13134,42 +13134,78 @@ val replace(val seq, val items, val from, val to)
 val dwim_set(val place_p, val seq, varg vargs)
 {
   val self = lit("index/range assignment");
+  type_t st = type(seq);
 
-  switch (type(seq)) {
-  case COBJ:
-    if (type(seq) == COBJ) {
-      if (seq->co.cls == hash_cls) {
-        args_normalize_least(vargs, 3);
-
-        switch (vargs->fill) {
-        case 2:
-          (void) sethash(seq, vargs->arg[0], vargs->arg[1]);
-          break;
-        case 3:
-          if (vargs->list)
-            goto excargs;
-          (void) sethash(seq, vargs->arg[0], vargs->arg[2]);
-          break;
-        default:
-          goto fewargs;
-        }
-
-        return seq;
-      }
-      if (obj_struct_p(seq)) {
+  switch (st) {
+  case NUM:
+  case BGNUM:
+  case RNG:
+    {
+      args_normalize_least(vargs, 3);
+      switch (vargs->fill) {
+      case 2:
         {
-          val lambda_set_meth = get_special_slot(seq, lambda_set_m);
-          if (lambda_set_meth) {
-            (void) funcall(method_args(seq, lambda_set_s, vargs));
-            return seq;
+          val arg = vargs->arg[0];
+          val newval = vargs->arg[1];
+          switch (type(arg)) {
+          case NUM:
+          case BGNUM:
+          case RNG:
+            goto notplace;
+          default:
+            if (st == RNG) {
+              range_bind (x, y, seq);
+              if (!place_p && listp(arg))
+                goto notplace;
+              return replace(arg, newval, x, y);
+            } else {
+              (void) refset(arg, seq, newval);
+              return seq;
+            }
           }
         }
-        if (get_special_slot(seq, car_m))
-          goto list;
-        type_mismatch(lit("~a: object ~s lacks "
-                          "~s or ~s method"),
-                      self, seq, lambda_set_s, car_s, nao);
+      case 1:
+      case 0:
+        goto fewargs;
+      default:
+        goto excargs;
       }
+    }
+  case COBJ:
+    if (seq->co.cls == hash_cls) {
+      args_normalize_least(vargs, 3);
+
+      switch (vargs->fill) {
+      case 2:
+        (void) sethash(seq, vargs->arg[0], vargs->arg[1]);
+        break;
+      case 3:
+        if (vargs->list)
+          goto excargs;
+        (void) sethash(seq, vargs->arg[0], vargs->arg[2]);
+        break;
+      case 1:
+      case 0:
+        goto fewargs;
+      default:
+        goto excargs;
+      }
+
+      return seq;
+    }
+    if (obj_struct_p(seq)) {
+      {
+        val lambda_set_meth = get_special_slot(seq, lambda_set_m);
+        if (lambda_set_meth) {
+          (void) funcall(method_args(seq, lambda_set_s, vargs));
+          return seq;
+        }
+      }
+      if (get_special_slot(seq, car_m))
+        goto list;
+      type_mismatch(lit("~a: object ~s lacks "
+                        "~s or ~s method"),
+                    self, seq, lambda_set_s, car_s, nao);
     }
     /* fallthrough */
   default:

@@ -14291,10 +14291,14 @@ defined by \*(TX programs.
 .mets (gethash < hash < key <> [ alt ])
 .mets (hash-userdata << hash )
 .mets (dwim < obj-place < index <> [ alt ])
+.mets (dwim < integer < obj-place ) ;; integers are callable
+.mets (dwim < range < obj-place ) ;; ranges are callable
 .mets (sub-list < obj >> [ from <> [ to ]])
 .mets (sub-vec < obj >> [ from <> [ to ]])
 .mets (sub-str < str >> [ from <> [ to ]])
 .mets >> [ obj-place < index <> [ alt ]] ;; equivalent to dwim
+.mets >> [ integer < obj-place ]
+.mets >> [ range < obj-place ]
 .mets (symbol-value << symbol-valued-form )
 .mets (symbol-function << function-name-valued-form )
 .mets (symbol-macro << symbol-valued-form )
@@ -15966,9 +15970,11 @@ retrieve a global macro expander using the function
 .coNP Operator @ dwim
 .synb
 .mets (dwim << argument *)
-.mets <> '[' argument *']'
 .mets (set (dwim < obj-place < index <> [ alt ]) << new-value )
+.mets (set (dwim >> { integer | << range } << obj-place ) << new-value )
+.mets <> '[' argument *']'
 .mets (set >> '[' obj-place < index <> [ alt ]']' << new-value )
+.mets (set >> '[{' integer | << range } << obj-place']' << new-value )
 .syne
 .desc
 The
@@ -16296,13 +16302,33 @@ These, in turn, rely on the specialized functions.
 .code carray-sub
 and
 .codn carray-replace .
+
 .meIP >> [ buf << index ]
 Indexing is supported for objects of type
 .codn buf .
 This provides a way to access and store the individual bytes
 of a buffer.
+
+.meIP >> [ integer << sequence ]
+If the left argument is an integer, it denotes selection of an
+element from
+.metn sequence .
+The
+.meta integer
+value acts as the index into a vector-like or list-like sequence,
+or a key into a hash table.
+
+.meIP >> [ range << sequence ]
+If the left argument is an range, it denotes selection of a
+subrange of
+.metn sequence .
 .RE
 .PP
+
+Note that the various above forms are not actually special cases of
+.code dwim
+but the consequence of the objects appearing as the first argument being
+callable as functions, and their respective semantics.
 
 .TP* "Range Indexing:"
 Vector and list range indexing is based from zero, meaning
