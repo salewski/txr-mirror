@@ -169,7 +169,7 @@ const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NOTSEQ,   /* CPTR */
   SEQ_NOTSEQ,   /* ENV */
   SEQ_NOTSEQ,   /* BGNUM */
-  SEQ_NOTSEQ,   /* RNG */
+  SEQ_VECLIKE,  /* RNG */
   SEQ_VECLIKE,  /* BUF */
   SEQ_NOTSEQ,   /* TNOD */
   SEQ_NOTSEQ,   /* DARG */
