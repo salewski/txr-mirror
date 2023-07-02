@@ -1,3 +1,46 @@
+                                    TXR 289
+                                   2023-07-02
+
+
+  Features
+
+  - TXR Pattern Language:
+    - New @(push) directive uses @(output) syntax to push lines
+      back into input.
+
+  - Pattern Matching:
+    - New match-cond macro.
+
+  - Lib:
+    - New cached sorting functions, for situations when a fairly expensive
+      keyfun is used for sorting.
+
+  - Lisp:
+    - eval takes macro environment.
+    - integers and ranges are function-callable objects
+      - provides succinct indexed access in functional expressions, using
+        integers and ranges as higher-order functions.
+
+  - Hash Tables:
+    - Switched from chained hashing to open-addressing with linear probing.
+    - New hash-map function: populate a hash with keys from a sequence, and
+      values from a function over those keys.
+
+  Bugs
+
+  - hash tables: bug in initial hash mask calculation, caused zero bits,
+    causing some chains not to be used, reducing efficiency.
+
+  - gc bug in vector case of ssort function, causing crash.
+
+  - equal: fix broken cases in equality substitution.
+
+  - range objects were not treated as iterable in some situations,
+    for no good reason: e.g. (take 13 "AA".."BB") didn't work,
+    requiring (take 13 (list-seq "AA".."BB")) as a workaround.
+
+
+
                                     TXR 288
                                    2023-06-10
 
