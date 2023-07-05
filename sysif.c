@@ -2081,7 +2081,9 @@ static val crypt_wrap(val wkey, val wsalt)
   free(key);
   free(salt);
 
-  if (hash != 0) {
+  /* libxcrypt puts out two possible failure tokens "*0" or "*1".
+   */
+  if (hash != 0 && strcmp(hash, "*0") != 0 && strcmp(hash, "*1") != 0) {
     val ret = string_utf8(hash);
 #if HAVE_CRYPT_R
     free(cd);
