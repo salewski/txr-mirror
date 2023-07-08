@@ -43,13 +43,14 @@
 #include "stream.h"
 #include "utf8.h"
 #include "buf.h"
+#include "chksums/sha1.h"
 #include "chksums/sha256.h"
 #include "chksums/crc32.h"
 #include "chksums/md5.h"
 #include "chksum.h"
 
-static val sha256_ctx_s, md5_ctx_s;
-static struct cobj_class *sha256_ctx_cls, *md5_ctx_cls;
+static val sha1_ctx_s, sha256_ctx_s, md5_ctx_s;
+static struct cobj_class *sha1_ctx_cls, *sha256_ctx_cls, *md5_ctx_cls;
 
 static val chksum_ensure_buf(val self, val buf_in,
                              val len, unsigned char **phash,
@@ -276,6 +277,9 @@ static val chksum_ensure_buf(val self, val buf_in,
     return buf;                                               \
   }
 
+chksum_impl(sha1, SHA1_t, "SHA-1", SHA1_DIGEST_LENGTH,
+            SHA1_init, SHA1_update, SHA1_final);
+
 chksum_impl(sha256, SHA256_t, "SHA-256", SHA256_DIGEST_LENGTH,
             SHA256_init, SHA256_update, SHA256_final);
 
@@ -370,10 +374,17 @@ static val crc32(val obj, val init)
 
 void chksum_init(void)
 {
+  sha1_ctx_s = intern(lit("sha1-ctx"), user_package);
   sha256_ctx_s = intern(lit("sha256-ctx"), user_package);
   md5_ctx_s = intern(lit("md5-ctx"), user_package);
+  sha1_ctx_cls = cobj_register(sha1_ctx_s);
   sha256_ctx_cls = cobj_register(sha256_ctx_s);
   md5_ctx_cls = cobj_register(md5_ctx_s);
+  reg_fun(intern(lit("sha1-stream"), user_package), func_n3o(sha1_stream, 1));
+  reg_fun(intern(lit("sha1"), user_package), func_n2o(sha1, 1));
+  reg_fun(intern(lit("sha1-begin"), user_package), func_n0(sha1_begin));
+  reg_fun(intern(lit("sha1-hash"), user_package), func_n2(sha1_hash));
+  reg_fun(intern(lit("sha1-end"), user_package), func_n2o(sha1_end, 1));
   reg_fun(intern(lit("sha256-stream"), user_package), func_n3o(sha256_stream, 1));
   reg_fun(intern(lit("sha256"), user_package), func_n2o(sha256, 1));
   reg_fun(intern(lit("sha256-begin"), user_package), func_n0(sha256_begin));

@@ -10,6 +10,11 @@ Linenoise:
    Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>
    All rights reserved.
 
+SHA-1:
+   Copyright 1995-1998 WIDE Project (implementor: Jun-ichiro Itoh)
+   All rights reserved.
+   NOTE: three-clause BSD license, not two.
+
 SHA-256:
    Copyright 2005 Colin Percival
    All rights reserved.

@@ -29,6 +29,10 @@ and md5.h files. The permission is compatible with the BSD license,
 as it allows unfettered redistribution and use, without any advertizing
 clauses.
 
+SHA-1 routines used in TXR are derived from code written by Jun-ichiro Itoh
+in the 1990s.  Their copyright notice attributes them to the WIDE project,
+and licenses them under a three-clause BSD license.
+
 SHA-256 routines used in TXR are derived from code which is
 Copyright 2005 Colin Percival, and available under the same two-clause
 BSD license as TXR.

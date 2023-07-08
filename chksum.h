@@ -26,6 +26,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+val sha1_stream(val stream, val nbytes, val buf);
+val sha1(val obj, val buf);
+val sha1_begin(void);
+val sha1_hash(val ctx, val obj);
+val sha1_end(val ctx, val buf);
 val sha256_stream(val stream, val nbytes, val buf);
 val sha256(val obj, val buf);
 val sha256_begin(void);
