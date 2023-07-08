@@ -51,50 +51,6 @@
 static val sha256_ctx_s, md5_ctx_s;
 static struct cobj_class *sha256_ctx_cls, *md5_ctx_cls;
 
-static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash,
-                               val self)
-{
-  SHA256_t s256;
-  val buf = iobuf_get();
-  val bfsz = length_buf(buf);
-  SHA256_init(&s256);
-
-  if (null_or_missing_p(nbytes)) {
-    for (;;) {
-      val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read, self);
-
-      if (!rd)
-        break;
-
-      SHA256_update(&s256, buf->b.data, rd);
-    }
-  } else {
-    while (ge(nbytes, bfsz)) {
-      val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read, self);
-
-      if (zerop(read))
-        break;
-
-      SHA256_update(&s256, buf->b.data, rd);
-      nbytes = minus(nbytes, read);
-    }
-
-    buf_set_length(buf, nbytes, nil);
-
-    {
-      val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read, self);
-      if (rd)
-        SHA256_update(&s256, buf->b.data, rd);
-    }
-  }
-
-  SHA256_final(&s256, hash);
-  iobuf_put(buf);
-}
-
 static val chksum_ensure_buf(val self, val buf_in,
                              val len, unsigned char **phash,
                              val hash_name)
@@ -111,139 +67,220 @@ static val chksum_ensure_buf(val self, val buf_in,
   }
 }
 
-val sha256_stream(val stream, val nbytes, val buf_in)
-{
-  val self = lit("sha256-stream");
-  unsigned char *hash;
-  val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
-                              &hash, lit("SHA-256"));
-  sha256_stream_impl(stream, nbytes, hash, self);
-  return buf;
-}
-
-static void sha256_szmax_upd(SHA256_t *ps256, mem_t *data, ucnum len)
-{
-  const size_t szmax = convert(size_t, -1) / 4 + 1;
-  while (len >= szmax) {
-    SHA256_update(ps256, data, szmax);
-    data += szmax;
-    len -= szmax;
+#define chksum_impl(nameroot, ctx_type,                       \
+                   hash_name, digest_len, chksum_init,        \
+                   chksum_update, chksum_final)               \
+                                                              \
+  static void nameroot ## _stream_impl(val stream,            \
+                                       val nbytes,            \
+                                       unsigned char *hash,   \
+                                       val self)              \
+  {                                                           \
+    ctx_type ctx;                                             \
+    val buf = iobuf_get();                                    \
+    val bfsz = length_buf(buf);                               \
+    chksum_init(&ctx);                                        \
+                                                              \
+    if (null_or_missing_p(nbytes)) {                          \
+      for (;;) {                                              \
+        val read = fill_buf(buf, zero, stream);               \
+        cnum rd = c_num(read, self);                          \
+                                                              \
+        if (!rd)                                              \
+          break;                                              \
+                                                              \
+        chksum_update(&ctx, buf->b.data, rd);                 \
+      }                                                       \
+    } else {                                                  \
+      while (ge(nbytes, bfsz)) {                              \
+        val read = fill_buf(buf, zero, stream);               \
+        cnum rd = c_num(read, self);                          \
+                                                              \
+        if (zerop(read))                                      \
+          break;                                              \
+                                                              \
+        chksum_update(&ctx, buf->b.data, rd);                 \
+        nbytes = minus(nbytes, read);                         \
+      }                                                       \
+                                                              \
+      buf_set_length(buf, nbytes, nil);                       \
+                                                              \
+      {                                                       \
+        val read = fill_buf(buf, zero, stream);               \
+        cnum rd = c_num(read, self);                          \
+        if (rd)                                               \
+          chksum_update(&ctx, buf->b.data, rd);               \
+      }                                                       \
+    }                                                         \
+                                                              \
+    chksum_final(&ctx, hash);                                 \
+    iobuf_put(buf);                                           \
+  }                                                           \
+                                                              \
+  val nameroot ## _stream(val stream, val nbytes, val buf_in) \
+  {                                                           \
+    val self = lit(#nameroot "-stream");                      \
+    unsigned char *hash;                                      \
+    val buf = chksum_ensure_buf(self, buf_in,                 \
+                                num_fast(digest_len),         \
+                                &hash, lit(hash_name));       \
+    nameroot ## _stream_impl(stream, nbytes, hash, self);     \
+    return buf;                                               \
+  }                                                           \
+                                                              \
+  static void nameroot ## _szmax_upd(ctx_type *pctx,          \
+                                      mem_t *data, ucnum len) \
+  {                                                           \
+    const size_t szmax = convert(size_t, -1) / 4 + 1;         \
+    while (len >= szmax) {                                    \
+      chksum_update(pctx, data, szmax);                       \
+      data += szmax;                                          \
+      len -= szmax;                                           \
+    }                                                         \
+    if (len > 0)                                              \
+      chksum_update(pctx, data, len);                         \
+  }                                                           \
+                                                              \
+  static void nameroot ## _buf(val buf, unsigned char *hash,  \
+                               val self)                      \
+  {                                                           \
+    ctx_type ctx;                                             \
+    chksum_init(&ctx);                                        \
+    nameroot ## _szmax_upd(&ctx, buf->b.data,                 \
+                           c_unum(buf->b.len, self));         \
+    chksum_final(&ctx, hash);                                 \
+  }                                                           \
+                                                              \
+  static void nameroot ## _str(val str, unsigned char *hash,  \
+                         val self)                            \
+  {                                                           \
+    char *s = utf8_dup_to(c_str(str, self));                  \
+    ctx_type ctx;                                             \
+    chksum_init(&ctx);                                        \
+    chksum_update(&ctx, coerce(const unsigned char *, s),     \
+                 strlen(s));                                  \
+    free(s);                                                  \
+    chksum_final(&ctx, hash);                                 \
+  }                                                           \
+                                                              \
+  val nameroot(val obj, val buf_in)                           \
+  {                                                           \
+    val self = lit(#nameroot);                                \
+    unsigned char *hash;                                      \
+    val buf = chksum_ensure_buf(self, buf_in,                 \
+                                num_fast(digest_len),         \
+                                &hash, lit(hash_name));       \
+    switch (type(obj)) {                                      \
+    case STR:                                                 \
+    case LSTR:                                                \
+    case LIT:                                                 \
+      nameroot ## _str(obj, hash, self);                      \
+      return buf;                                             \
+    case BUF:                                                 \
+      nameroot ## _buf(obj, hash, self);                      \
+      return buf;                                             \
+    default:                                                  \
+      uw_throwf(error_s,                                      \
+                lit("~a: cannot hash ~s, "                    \
+                    "only buffer and strings"),               \
+                self, obj, nao);                              \
+    }                                                         \
+  }                                                           \
+                                                              \
+  static struct cobj_ops nameroot ## _ops =                   \
+     cobj_ops_init(cobj_equal_handle_op,                      \
+                   cobj_print_op,                             \
+                   cobj_destroy_free_op,                      \
+                   cobj_mark_op,                              \
+                   cobj_handle_hash_op);                      \
+                                                              \
+  val nameroot ## _begin(void)                                \
+  {                                                           \
+    ctx_type *pctx = coerce(ctx_type *,                       \
+                            chk_malloc(sizeof *pctx));        \
+    chksum_init(pctx);                                        \
+    return cobj(coerce(mem_t *, pctx),                        \
+                nameroot ## _ctx_cls, &nameroot ## _ops);     \
+  }                                                           \
+                                                              \
+  static int nameroot ## _utf8_byte_callback(int b,           \
+                                             mem_t *ctx)      \
+  {                                                           \
+    ctx_type *pctx = coerce(ctx_type *, ctx);                 \
+    unsigned char uc = b;                                     \
+    chksum_update(pctx, &uc, 1);                              \
+    return 1;                                                 \
+  }                                                           \
+                                                              \
+  val nameroot ## _hash(val ctx, val obj)                     \
+  {                                                           \
+    val self = lit(#nameroot "-hash");                        \
+    ctx_type *pctx = coerce(ctx_type *,                       \
+                            cobj_handle(self, ctx,            \
+                                        nameroot ##           \
+                                        _ctx_cls));           \
+    switch (type(obj)) {                                      \
+    case STR:                                                 \
+    case LSTR:                                                \
+    case LIT:                                                 \
+      {                                                       \
+        char *str = utf8_dup_to(c_str(obj, self));            \
+        chksum_update(pctx,                                   \
+                      coerce(const unsigned char *, str),     \
+                      strlen(str));                           \
+        free(str);                                            \
+      }                                                       \
+      break;                                                  \
+    case BUF:                                                 \
+      nameroot ## _szmax_upd(pctx, obj->b.data,               \
+                            c_unum(obj->b.len, self));        \
+      break;                                                  \
+    case CHR:                                                 \
+      utf8_encode(c_ch(obj),                                  \
+                  nameroot ## _utf8_byte_callback,            \
+                  coerce(mem_t *, pctx));                     \
+      break;                                                  \
+    case NUM:                                                 \
+      {                                                       \
+        cnum n = c_num(obj, self);                            \
+        unsigned char uc = n;                                 \
+        if (n < 0 || n > 255)                                 \
+          uw_throwf(error_s,                                  \
+                    lit("~a: byte value ~s out of range"),    \
+                    self, obj, nao);                          \
+        chksum_update(pctx, &uc, 1);                          \
+      }                                                       \
+      break;                                                  \
+    default:                                                  \
+      uw_throwf(error_s, lit("~a: cannot hash ~s, "           \
+                             "only buffer and strings"),      \
+                self, obj, nao);                              \
+    }                                                         \
+                                                              \
+    return obj;                                               \
+  }                                                           \
+                                                              \
+  val nameroot ## _end(val ctx, val buf_in)                   \
+  {                                                           \
+    val self = lit(#nameroot "-end");                         \
+    unsigned char *hash;                                      \
+    ctx_type *pctx = coerce(ctx_type *,                       \
+                            cobj_handle(self, ctx,            \
+                                        nameroot ##           \
+                                        _ctx_cls));           \
+    val buf = chksum_ensure_buf(self, buf_in,                 \
+                                num_fast(digest_len),         \
+                                &hash, lit(hash_name));       \
+    chksum_final(pctx, hash);                                 \
+    chksum_init(pctx);                                        \
+    return buf;                                               \
   }
-  if (len > 0)
-    SHA256_update(ps256, data, len);
-}
 
-static void sha256_buf(val buf, unsigned char *hash, val self)
-{
-  SHA256_t s256;
-  SHA256_init(&s256);
-  sha256_szmax_upd(&s256, buf->b.data, c_unum(buf->b.len, self));
-  SHA256_final(&s256, hash);
-}
+chksum_impl(sha256, SHA256_t, "SHA-256", SHA256_DIGEST_LENGTH,
+            SHA256_init, SHA256_update, SHA256_final);
 
-static void sha256_str(val str, unsigned char *hash, val self)
-{
-  char *s = utf8_dup_to(c_str(str, self));
-  SHA256_t s256;
-  SHA256_init(&s256);
-  SHA256_update(&s256, coerce(const unsigned char *, s), strlen(s));
-  free(s);
-  SHA256_final(&s256, hash);
-}
-
-val sha256(val obj, val buf_in)
-{
-  val self = lit("sha256");
-  unsigned char *hash;
-  val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
-                              &hash, lit("SHA-256"));
-
-  switch (type(obj)) {
-  case STR:
-  case LSTR:
-  case LIT:
-    sha256_str(obj, hash, self);
-    return buf;
-  case BUF:
-    sha256_buf(obj, hash, self);
-    return buf;
-  default:
-    uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
-              self, obj, nao);
-  }
-}
-
-static struct cobj_ops sha256_ops = cobj_ops_init(cobj_equal_handle_op,
-                                                  cobj_print_op,
-                                                  cobj_destroy_free_op,
-                                                  cobj_mark_op,
-                                                  cobj_handle_hash_op);
-val sha256_begin(void)
-{
-  SHA256_t *ps256 = coerce(SHA256_t *, chk_malloc(sizeof *ps256));
-  SHA256_init(ps256);
-  return cobj(coerce(mem_t *, ps256), sha256_ctx_cls, &sha256_ops);
-}
-
-static int sha256_utf8_byte_callback(int b, mem_t *ctx)
-{
-  SHA256_t *ps256 = coerce(SHA256_t *, ctx);
-  unsigned char uc = b;
-  SHA256_update(ps256, &uc, 1);
-  return 1;
-}
-
-val sha256_hash(val ctx, val obj)
-{
-  val self = lit("sha256-hash");
-  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_cls));
-
-  switch (type(obj)) {
-  case STR:
-  case LSTR:
-  case LIT:
-    {
-      char *str = utf8_dup_to(c_str(obj, self));
-      SHA256_update(ps256, coerce(const unsigned char *, str), strlen(str));
-      free(str);
-    }
-    break;
-  case BUF:
-    sha256_szmax_upd(ps256, obj->b.data, c_unum(obj->b.len, self));
-    break;
-  case CHR:
-    utf8_encode(c_ch(obj), sha256_utf8_byte_callback, coerce(mem_t *, ps256));
-    break;
-  case NUM:
-    {
-      cnum n = c_num(obj, self);
-      unsigned char uc = n;
-      if (n < 0 || n > 255)
-        uw_throwf(error_s, lit("~a: byte value ~s out of range"),
-                  self, obj, nao);
-      SHA256_update(ps256, &uc, 1);
-    }
-    break;
-  default:
-    uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
-              self, obj, nao);
-  }
-
-  return obj;
-}
-
-val sha256_end(val ctx, val buf_in)
-{
-  val self = lit("sha256-end");
-  unsigned char *hash;
-  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_cls));
-  val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
-                              &hash, lit("SHA-256"));
-
-  SHA256_final(ps256, hash);
-  SHA256_init(ps256);
-  return buf;
-}
+chksum_impl(md5, MD5_t, "MD5", MD5_DIGEST_LENGTH,
+            MD5_init, MD5_update, MD5_final);
 
 val crc32_stream(val stream, val nbytes, val init)
 {
@@ -329,184 +366,6 @@ static val crc32(val obj, val init)
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
               self, obj, nao);
   }
-}
-
-static void md5_stream_impl(val stream, val nbytes, unsigned char *hash,
-                            val self)
-{
-  MD5_t md5;
-  val buf = iobuf_get();
-  val bfsz = length_buf(buf);
-  MD5_init(&md5);
-
-  if (null_or_missing_p(nbytes)) {
-    for (;;) {
-      val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read, self);
-
-      if (!rd)
-        break;
-
-      MD5_update(&md5, buf->b.data, rd);
-    }
-  } else {
-    while (ge(nbytes, bfsz)) {
-      val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read, self);
-
-      if (zerop(read))
-        break;
-
-      MD5_update(&md5, buf->b.data, rd);
-      nbytes = minus(nbytes, read);
-    }
-
-    buf_set_length(buf, nbytes, nil);
-
-    {
-      val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read, self);
-      if (rd)
-        MD5_update(&md5, buf->b.data, rd);
-    }
-  }
-
-  MD5_final(&md5, hash);
-  iobuf_put(buf);
-}
-
-val md5_stream(val stream, val nbytes, val buf_in)
-{
-  val self = lit("md5-stream");
-  unsigned char *hash;
-  val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
-                              &hash, lit("MD5"));
-  md5_stream_impl(stream, nbytes, hash, self);
-  return buf;
-}
-
-static void md5_szmax_upd(MD5_t *pmd5, mem_t *data, ucnum len)
-{
-  const size_t szmax = convert(size_t, -1) / 4 + 1;
-  while (len >= szmax) {
-    MD5_update(pmd5, data, szmax);
-    data += szmax;
-    len -= szmax;
-  }
-  if (len > 0)
-    MD5_update(pmd5, data, len);
-}
-
-static void md5_buf(val buf, unsigned char *hash, val self)
-{
-  MD5_t md5;
-  MD5_init(&md5);
-  md5_szmax_upd(&md5, buf->b.data, c_unum(buf->b.len, self));
-  MD5_final(&md5, hash);
-}
-
-static void md5_str(val str, unsigned char *hash, val self)
-{
-  char *s = utf8_dup_to(c_str(str, self));
-  MD5_t md5;
-  MD5_init(&md5);
-  MD5_update(&md5, coerce(const unsigned char *, s), strlen(s));
-  free(s);
-  MD5_final(&md5, hash);
-}
-
-val md5(val obj, val buf_in)
-{
-  val self = lit("md5");
-  unsigned char *hash;
-  val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
-                              &hash, lit("MD5"));
-
-  switch (type(obj)) {
-  case STR:
-  case LSTR:
-  case LIT:
-    md5_str(obj, hash, self);
-    return buf;
-  case BUF:
-    md5_buf(obj, hash, self);
-    return buf;
-  default:
-    uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
-              self, obj, nao);
-  }
-}
-
-static struct cobj_ops md5_ops = cobj_ops_init(cobj_equal_handle_op,
-                                                  cobj_print_op,
-                                                  cobj_destroy_free_op,
-                                                  cobj_mark_op,
-                                                  cobj_handle_hash_op);
-val md5_begin(void)
-{
-  MD5_t *pmd5 = coerce(MD5_t *, chk_malloc(sizeof *pmd5));
-  MD5_init(pmd5);
-  return cobj(coerce(mem_t *, pmd5), md5_ctx_cls, &md5_ops);
-}
-
-static int md5_utf8_byte_callback(int b, mem_t *ctx)
-{
-  MD5_t *ps256 = coerce(MD5_t *, ctx);
-  unsigned char uc = b;
-  MD5_update(ps256, &uc, 1);
-  return 1;
-}
-
-val md5_hash(val ctx, val obj)
-{
-  val self = lit("md5-hash");
-  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_cls));
-
-  switch (type(obj)) {
-  case STR:
-  case LSTR:
-  case LIT:
-    {
-      char *str = utf8_dup_to(c_str(obj, self));
-      MD5_update(pmd5, coerce(const unsigned char *, str), strlen(str));
-      free(str);
-    }
-    break;
-  case BUF:
-    md5_szmax_upd(pmd5, obj->b.data, c_unum(obj->b.len, self));
-    break;
-  case CHR:
-    utf8_encode(c_ch(obj), md5_utf8_byte_callback, coerce(mem_t *, pmd5));
-    break;
-  case NUM:
-    {
-      cnum n = c_num(obj, self);
-      unsigned char uc = n;
-      if (n < 0 || n > 255)
-        uw_throwf(error_s, lit("~a: byte value ~s out of range"),
-                  self, obj, nao);
-      MD5_update(pmd5, &uc, 1);
-    }
-    break;
-  default:
-    uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
-              self, obj, nao);
-  }
-
-  return obj;
-}
-
-val md5_end(val ctx, val buf_in)
-{
-  val self = lit("md5-end");
-  unsigned char *hash;
-  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_cls));
-  val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
-                              &hash, lit("SHA-256"));
-
-  MD5_final(pmd5, hash);
-  MD5_init(pmd5);
-  return buf;
 }
 
 void chksum_init(void)
