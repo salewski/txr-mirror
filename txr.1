@@ -67928,15 +67928,19 @@ with
   (crc32 "CD" (crc32 "AB")) -> 3675725989
 .onom
 
-.coNP Functions @ sha256-stream and @ md5-stream
+.coNP Functions @, sha1-stream @ sha256-stream and @ md5-stream
 .synb
+.mets (sha1-stream < stream >> [ nbytes <> [ buf ]])
 .mets (sha256-stream < stream >> [ nbytes <> [ buf ]])
 .mets (md5-stream < stream >> [ nbytes <> [ buf ]])
 .syne
 .desc
 The
+.code sha1-stream
+and
 .code sha256-stream
-calculates the NIST SHA-256 digest over the bytes read from
+functions calculate, respectively, the NIST SHA-1 and SHA-256 digests over the
+bytes read from
 .metn stream ,
 starting at the stream's current position.
 
@@ -67964,15 +67968,18 @@ argument is specified, it must be a buffer that is at least 16 bytes long
 in the case of MD5, and at least 32 bytes long in the case of SHA-256.
 The hash is placed into that buffer, which is then returned.
 
-.coNP Functions @ sha256 and @ md5
+.coNP Functions @, sha1 @ sha256 and @ md5
 .synb
+.mets (sha1 < obj <> [ buf ])
 .mets (sha256 < obj <> [ buf ])
 .mets (md5 < obj <> [ buf ])
 .syne
 .desc
 The
+.code sha1
+and
 .code sha256
-function calculates the NIST SHA-256 digest over
+function calculate, respectively, the NIST SHA-1 and SHA-256 digests over
 .metn obj ,
 which may be a character string or a buffer.
 
@@ -68003,6 +68010,63 @@ If the
 argument is specified, it must be a buffer that is at least 16 bytes long
 in the case of MD5, and at least 32 bytes long in the case of SHA-256.
 The hash is placed into that buffer, which is then returned.
+
+.coNP Functions @, sha1-begin @ sha1-hash and @ sha1-end
+.synb
+.mets (sha1-begin)
+.mets (sha1-hash < ctx << obj )
+.mets (sha1-end < ctx <> [ buf ])
+.syne
+.desc
+The three functions
+.codn sha1-begin ,
+.code sha1-hash
+and
+.code sha1-end
+implement a stateful computation of SHA-1 digest which allows multiple input
+sources to contribute to the result. Furthermore, the context object may be
+serially reused for calculating multiple digests.
+
+The
+.code sha1-begin
+function, which takes no arguments, returns a new SHA-1 digest-producing
+context object.
+
+The
+.code sha1-hash
+updates the state of the SHA-1 digest object
+.meta ctx
+by including
+.meta obj
+into the digest calculation. The
+.meta obj
+argument may be: a character or character string, whose UTF-8 representation is
+digested; a buffer object, whose contents are digested; or an integer,
+representing a byte value in the range 0 to 255 included in the digest.
+The
+.code sha1-hash
+function may be called multiple times to include any mixture of
+strings and buffers into the digest calculation.
+
+The
+.code sha1-end
+function finalizes the digest calculation and returns the digest in
+a buffer. If the
+.meta buf
+argument is omitted, then a new 20-byte buffer is created for this
+purpose. Otherwise,
+.meta buf
+must specify a
+.code buf
+object that is at least 20 bytes long. The digest is stored into this
+buffer and that the buffer is returned.
+
+The
+.code sha1-end
+function additionally resets the
+.meta ctx
+object into the initial state of a newly created context object, so
+that it may be used for another digest session.
 
 .coNP Functions @, sha256-begin @ sha256-hash and @ sha256-end
 .synb
