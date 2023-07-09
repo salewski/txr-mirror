@@ -68016,18 +68016,18 @@ The three functions
 .code sha256-hash
 and
 .code sha256-end
-implement a stateful computation of SHA256 digest which allows multiple input
+implement a stateful computation of SHA-256 digest which allows multiple input
 sources to contribute to the result. Furthermore, the context object may be
 serially reused for calculating multiple digests.
 
 The
 .code sha256-begin
-function, which takes no arguments, returns a new SHA256 digest-producing
+function, which takes no arguments, returns a new SHA-256 digest-producing
 context object.
 
 The
 .code sha256-hash
-updates the state of the SHA256 digest object
+updates the state of the SHA-256 digest object
 .meta ctx
 by including
 .meta obj
