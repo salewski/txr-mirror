@@ -67909,6 +67909,15 @@ The
 .code crc32
 function returns the calculated CRC-32 as a nonnegative integer.
 
+The parameters of the algorith are as follows. The polynomial is
+.codn #x04C11DB7 ;
+the input and result are reflected; the initial value is
+.codn #xFFFFFFFF ;
+and the final value is bitwise
+.IR xor -ed
+with
+.codn #xFFFFFFFF .
+
 .TP* Examples:
 
 .mono
