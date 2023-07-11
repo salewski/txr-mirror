@@ -1792,34 +1792,23 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
                  val initval, val filter_fun)
 {
   val self = lit("group-reduce");
+  seq_iter_t iter;
+  val elem;
+
   initval = default_null_arg(initval);
 
-  if (vectorp(seq)) {
-    cnum i, len;
+  seq_iter_init(self, &iter, seq);
 
-    for (i = 0, len = c_fixnum(length(seq), self); i < len; i++) {
-      val v = vecref(seq, num_fast(i));
-      val key = funcall1(by_fun, v);
-      val new_p;
-      loc pcdr = gethash_l(self, hash, key, mkcloc(new_p));
+  while (seq_get(&iter, &elem))
+  {
+    val key = funcall1(by_fun, elem);
+    val new_p;
+    loc pcdr = gethash_l(self, hash, key, mkcloc(new_p));
 
-      if (new_p)
-        set(pcdr, funcall2(reduce_fun, initval, v));
-      else
-        set(pcdr, funcall2(reduce_fun, deref(pcdr), v));
-    }
-  } else {
-    for (; seq; seq = cdr(seq)) {
-      val v = car(seq);
-      val key = funcall1(by_fun, v);
-      val new_p;
-      loc pcdr = gethash_l(self, hash, key, mkcloc(new_p));
-
-      if (new_p)
-        set(pcdr, funcall2(reduce_fun, initval, v));
-      else
-        set(pcdr, funcall2(reduce_fun, deref(pcdr), v));
-    }
+    if (new_p)
+      set(pcdr, funcall2(reduce_fun, initval, elem));
+    else
+      set(pcdr, funcall2(reduce_fun, deref(pcdr), elem));
   }
 
   if (!null_or_missing_p(filter_fun))

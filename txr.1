@@ -56180,7 +56180,7 @@ Frequency histogram:
 Separate the integers 1\(en10 into even and odd, and sum these groups:
 
 .verb
-  [group-reduce (hash) evenp + (range 1 10) 0]
+  [group-reduce (hash) evenp + 1..11 0]
   -> #H(() (t 30) (nil 25))
 .brev
 
