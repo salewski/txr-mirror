@@ -11339,31 +11339,19 @@ val unique(val seq, val keyfun, struct args *hashv_args)
   val self = lit("unique");
   val hash = hashv(hashv_args);
   val kf = default_arg(keyfun, identity_f);
-
+  seq_iter_t iter;
+  val elem;
   list_collect_decl (out, ptail);
 
-  if (vectorp(seq) || stringp(seq)) {
-    cnum i, len;
+  seq_iter_init(self, &iter, seq);
 
-    for (i = 0, len = c_fixnum(length(seq), self); i < len; i++) {
-      val new_p;
-      val v = ref(seq, num_fast(i));
+  while (seq_get(&iter, &elem)) {
+    val new_p;
 
-      (void) gethash_c(self, hash, funcall1(kf, v), mkcloc(new_p));
+    (void) gethash_c(self, hash, funcall1(kf, elem), mkcloc(new_p));
 
-      if (new_p)
-        ptail = list_collect(ptail, v);
-    }
-  } else {
-    for (; seq; seq = cdr(seq)) {
-      val new_p;
-      val v = car(seq);
-
-      (void) gethash_c(self, hash, funcall1(kf, v), mkcloc(new_p));
-
-      if (new_p)
-        ptail = list_collect(ptail, v);
-    }
+    if (new_p)
+      ptail = list_collect(ptail, elem);
   }
 
   return make_like(out, seq);
