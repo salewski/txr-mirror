@@ -56036,9 +56036,8 @@ is also returned.
 The
 .code group-by
 function produces a hash table from
-.metn sequence ,
-which is a
-list or vector. Entries of the hash table are not elements of
+.metn sequence .
+Entries of the hash table are not elements of
 .metn sequence ,
 but lists of elements of
 .metn sequence .
@@ -56088,7 +56087,7 @@ Group the integers from 0 to 10 into three buckets keyed on 0, 1 and 2
 according to the modulo 3 congruence:
 
 .verb
-  (group-by (op mod @1 3) (range 0 10))
+  (group-by (op mod @1 3) 0..11)
   -> #H(() (0 (0 3 6 9)) (1 (1 4 7 10)) (2 (2 5 8)))
 .brev
 
@@ -56096,7 +56095,7 @@ Same as above, but associate the keys with the sums of the
 buckets:
 
 .verb
-  [group-map (op mod @1 3) sum (range 0 10)]
+  [group-map (op mod @1 3) sum 0..11]
   -> #H(() (0 18) (1 22) (2 15))
 .brev
 

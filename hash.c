@@ -1761,20 +1761,13 @@ val group_by(val func, val seq, struct args *hashv_args)
 {
   val self = lit("group-by");
   val hash = hashv(hashv_args);
+  seq_iter_t iter;
+  val elem;
 
-  if (vectorp(seq)) {
-    cnum i, len;
+  seq_iter_init(self, &iter, seq);
 
-    for (i = 0, len = c_fixnum(length(seq), self); i < len; i++) {
-      val v = vecref(seq, num_fast(i));
-      pushhash(hash, funcall1(func, v), v);
-    }
-  } else {
-    for (; seq; seq = cdr(seq)) {
-      val v = car(seq);
-      pushhash(hash, funcall1(func, v), v);
-    }
-  }
+  while (seq_get(&iter, &elem))
+    pushhash(hash, funcall1(func, elem), elem);
 
   {
     struct hash_iter hi;
