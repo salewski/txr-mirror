@@ -4677,6 +4677,9 @@ static val me_load_for(val form, val menv)
 
     if (consp(arg)) {
       val kind = car(arg);
+      if (!symbolp(kind))
+        expand_error(form, lit("~s: clause symbol expected, not ~s"),
+                     sym, kind, nao);
       if (kind != usr_var_s && kind != fun_s && kind != macro_s
           && kind != struct_s && kind != pkg_s)
         expand_error(form, lit("~s: unrecognized clause symbol ~s"),

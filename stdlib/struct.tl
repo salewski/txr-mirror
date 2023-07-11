@@ -231,7 +231,7 @@
   (unless (or (sys:slot-types slot)
               (sys:static-slot-types slot))
     (compile-defr-warning form ^(slot . ,slot)
-                          "symbol ~s isn't the name of a struct slot"
+                          "~s isn't the name of a struct slot"
                           slot))
   slot)
 
