@@ -56,10 +56,10 @@ static void encode(unsigned char *output, u32_t *input, unsigned int len)
   for (i = 0; i < len; i += 4) {
     u32_t iw = input[i/4];
 
-    output[i]   = (iw >> 24) & 0xff;
-    output[i+1] = (iw >> 16) & 0xff;
-    output[i+2] = (iw >> 8)  & 0xff;
-    output[i+3] =  iw        & 0xff;
+    output[i]   =  iw        & 0xff;
+    output[i+1] = (iw >> 8)  & 0xff;
+    output[i+2] = (iw >> 16) & 0xff;
+    output[i+3] = (iw >> 24) & 0xff;
   }
 }
 
@@ -72,10 +72,10 @@ static void decode(u32_t *output, const unsigned char *input, unsigned int len)
   unsigned int i;
 
   for (i = 0; i < len; i += 4) {
-    u32_t ow = convert(u32_t, input[i]) << 24;
-    ow |= convert(u32_t, input[i+1]) << 16;
-    ow |= convert(u32_t, input[i+2]) << 8;
-    ow |= convert(u32_t, input[i+3]);
+    u32_t ow = convert(u32_t, input[i]);
+    ow |= convert(u32_t, input[i+1]) << 8;
+    ow |= convert(u32_t, input[i+2]) << 16;
+    ow |= convert(u32_t, input[i+3]) << 24;
     output[i/4] = ow;
   }
 }
