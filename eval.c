@@ -7769,7 +7769,7 @@ void eval_init(void)
   reg_fun(intern(lit("expand-right"), user_package), func_n2(expand_right));
   reg_fun(intern(lit("expand-left"), user_package), func_n2(expand_left));
   reg_fun(intern(lit("nexpand-left"), user_package), func_n2(nexpand_left));
-  reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 1));
+  reg_fun(repeat_s, func_n2o(repeat, 1));
   reg_fun(intern(lit("pad"), user_package), func_n3o(pad, 1));
   reg_fun(intern(lit("weave"), user_package), func_n0v(weavev));
   reg_fun(force_s, func_n1(force));
