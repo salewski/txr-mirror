@@ -50549,6 +50549,59 @@ four rounding mode variables, and the function succeeds anyway, then the
 rounding behavior of floating-point operations depends on the host
 environment's interpretation of that value.
 
+.SS* Supplementary Math Library
+
+The following functions are defined, if they are available from the host
+platform. They corresponds to same-named functions in the ISO C language
+standard, which appeared in the 1999 revision ("C99").
+
+Even if some of these functions happen not to be defined, it is nevertheless
+possible to define them as methods in a user-defined arithmetic structure.
+See the section User-Defined Arithemtic Types below
+
+.coNP Functions @, cbrt @, erf @, erfc @, exp10 @, exp2 @, expm1 @, gamma @, j0 @, j1 @, lgamma @, log1p @, logb @, nearbyint @, rint @, significand @, tgamma @ y0 and @ y1
+.synb
+.mets (cbrt << arg )
+.mets (erf << arg )
+.mets (erfc << arg )
+.mets (exp10 << arg )
+.mets (exp2 << arg )
+.mets (expm1 << arg )
+.mets (gamma << arg )
+.mets (j0 << arg )
+.mets (j1 << arg )
+.mets (lgamma << arg )
+.mets (log1p << arg )
+.mets (logb << arg )
+.mets (nearbyint << arg )
+.mets (rint << arg )
+.mets (significand << arg )
+.mets (tgamma << arg )
+.mets (y0 << arg )
+.mets (y1 << arg )
+.syne
+.desc
+These are one-argument functions, which take a numeric argument, and return a floating-point result.
+
+.coNP Functions @, copysign @, drem @, fdim @, fmax @, fmin @, hypot @, jn @, ldexp @, nextafter @, remainder @, scalb @ scalbln and @ yn
+.synb
+.mets (copysign < arg1 << arg2 )
+.mets (drem < arg1 << arg2 )
+.mets (fdim < arg1 << arg2 )
+.mets (fmax < arg1 << arg2 )
+.mets (fmin < arg1 << arg2 )
+.mets (hypot < arg1 << arg2 )
+.mets (jn < arg1 << arg2 )
+.mets (ldexp < arg1 << arg2 )
+.mets (nextafter < arg1 << arg2 )
+.mets (remainder < arg1 << arg2 )
+.mets (scalb < arg1 << arg2 )
+.mets (scalbln < arg1 << arg2 )
+.mets (yn < arg1 << arg2 )
+.syne
+.desc
+These are two-argument functions, which take numeric arguments, and return a floating-point result.
+
 .SS* Bit Operations
 In \*(TL, similarly to Common Lisp, bit operations on integers are based
 on a concept that might be called "infinite two's complement".
@@ -51485,6 +51538,37 @@ arguments must be integers.
 .bmnl logtrunc
 .bmnr r-logtrunc logtrunc
 .bmnl sign-extend
+.um cbrt
+.um erf
+.um erfc
+.um exp10
+.um exp2
+.um expm1
+.um gamma
+.um j0
+.um j1
+.um lgamma
+.um log1p
+.um logb
+.um nearbyint
+.um rint
+.um significand
+.um tgamma
+.um y0
+.um y1
+.bmnr r-copysign copysign
+.bmnr r-drem drem
+.bmnr r-fdim fdim
+.bmnr r-fmax fmax
+.bmnr r-fmin fmin
+.bmnr r-hypot hypot
+.bmnr r-jn jn
+.bmnr r-ldexp ldexp
+.bmnr r-nextafter nextafter
+.bmnr r-remainder remainder
+.bmnr r-scalb scalb
+.bmnr r-scalbln scalbln
+.bmnr r-yn yn
 
 Note: the
 .code sign-extend

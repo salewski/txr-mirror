@@ -95,9 +95,11 @@ typedef double_uintptr_t dbl_ucnum;
 #ifdef __GNUC__
 #define NORETURN __attribute__((noreturn))
 #define NOINLINE __attribute__((noinline))
+#define UNUSED __attribute__((unused))
 #else
 #define NORETURN
 #define NOINLINE
+#define UNUSED
 #endif
 
 typedef enum type {

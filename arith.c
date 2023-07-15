@@ -51,6 +51,7 @@
 #include "struct.h"
 #include "txr.h"
 #include "psquare.h"
+#include "autoload.h"
 #include "arith.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -72,6 +73,16 @@ val log_s, log2_s, log10_s, exp_s, sqrt_s;
 val logand_s, logior_s, logxor_s;
 val lognot1_s, lognot_s, r_lognot_s, logtrunc_s, r_logtrunc_s;
 val sign_extend_s, ash_s, bit_s, width_s, bitset_s, logcount_s;
+
+val cbrt_s, erf_s, erfc_s, exp10_s, exp2_s, expm1_s;
+val gamma_s, j0_s, j1_s, lgamma_s, log1p_s, logb_s;
+val nearbyint_s, rint_s, significand_s, tgamma_s, y0_s, y1_s;
+val copysign_s, drem_s, fdim_s, fmax_s, fmin_s, hypot_s;
+val jn_s, ldexp_s, nextafter_s, remainder_s, scalb_s;
+val scalbln_s, yn_s;
+val r_copysign_s, r_drem_s, r_fdim_s, r_fmax_s, r_fmin_s, r_hypot_s;
+val r_jn_s, r_ldexp_s, r_nextafter_s, r_remainder_s, r_scalb_s;
+val r_scalbln_s, r_yn_s;
 
 val make_bignum(void)
 {
@@ -480,6 +491,12 @@ static int highest_significant_bit(int_ptr_t n)
   if (n >= 0)
     return highest_bit(n);
   return highest_bit(-n - 1);
+}
+
+static UNUSED NORETURN void not_available(val name)
+{
+  uw_throwf(file_error_s, lit("~a is not available on this platform"),
+            name, nao);
 }
 
 void do_mp_error(val self, mp_err code)
@@ -3021,6 +3038,418 @@ val sqroot(val num)
   return flo(sqrt(c_flo(to_float(self, num), self)));
 }
 
+static val cbrt_wrap(val num)
+{
+  val self = cbrt_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_CBRT
+  return flo(cbrt(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val erf_wrap(val num)
+{
+  val self = erf_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_ERF
+  return flo(erf(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val erfc_wrap(val num)
+{
+  val self = erfc_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_ERFC
+  return flo(erfc(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val exp10_wrap(val num)
+{
+  val self = exp10_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_EXP10
+  return flo(exp10(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val exp2_wrap(val num)
+{
+  val self = exp2_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_EXP2
+  return flo(exp2(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val expm1_wrap(val num)
+{
+  val self = expm1_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_EXPM1
+  return flo(expm1(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val gamma_wrap(val num)
+{
+  val self = gamma_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_GAMMA
+  return flo(gamma(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val j0_wrap(val num)
+{
+  val self = j0_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_J0
+  return flo(j0(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val j1_wrap(val num)
+{
+  val self = j1_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_J1
+  return flo(j1(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val lgamma_wrap(val num)
+{
+  val self = lgamma_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_LGAMMA
+  return flo(lgamma(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val log1p_wrap(val num)
+{
+  val self = log1p_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_LOG1P
+  return flo(log1p(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val logb_wrap(val num)
+{
+  val self = logb_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_LOGB
+  return flo(logb(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val nearbyint_wrap(val num)
+{
+  val self = nearbyint_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_NEARBYINT
+  return flo(nearbyint(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val rint_wrap(val num)
+{
+  val self = rint_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_RINT
+  return flo(rint(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val significand_wrap(val num)
+{
+  val self = significand_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_SIGNIFICAND
+  return flo(significand(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val tgamma_wrap(val num)
+{
+  val self = tgamma_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_TGAMMA
+  return flo(tgamma(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val y0_wrap(val num)
+{
+  val self = y0_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_Y0
+  return flo(y0(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val y1_wrap(val num)
+{
+  val self = y1_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+#if HAVE_Y1
+  return flo(y1(c_flo(to_float(self, num), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val copysign_wrap(val anum, val bnum)
+{
+  val self = copysign_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_copysign_s, bnum, anum);
+#if HAVE_COPYSIGN
+  return flo(copysign(c_flo(to_float(self, anum), self),
+                      c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val drem_wrap(val anum, val bnum)
+{
+  val self = drem_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_drem_s, bnum, anum);
+#if HAVE_DREM
+  return flo(drem(c_flo(to_float(self, anum), self),
+                  c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val fdim_wrap(val anum, val bnum)
+{
+  val self = fdim_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_fdim_s, bnum, anum);
+#if HAVE_FDIM
+  return flo(fdim(c_flo(to_float(self, anum), self),
+                  c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val fmax_wrap(val anum, val bnum)
+{
+  val self = fmax_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_fmax_s, bnum, anum);
+#if HAVE_FMAX
+  return flo(fmax(c_flo(to_float(self, anum), self),
+                  c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val fmin_wrap(val anum, val bnum)
+{
+  val self = fmin_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_fmin_s, bnum, anum);
+#if HAVE_FMIN
+  return flo(fmin(c_flo(to_float(self, anum), self),
+                  c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val hypot_wrap(val anum, val bnum)
+{
+  val self = hypot_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_hypot_s, bnum, anum);
+#if HAVE_HYPOT
+  return flo(hypot(c_flo(to_float(self, anum), self),
+                   c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val jn_wrap(val anum, val bnum)
+{
+  val self = jn_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_jn_s, bnum, anum);
+#if HAVE_JN
+  return flo(jn(c_flo(to_float(self, anum), self),
+                c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val ldexp_wrap(val anum, val bnum)
+{
+  val self = ldexp_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_ldexp_s, bnum, anum);
+#if HAVE_LDEXP
+  return flo(ldexp(c_flo(to_float(self, anum), self),
+                   c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val nextafter_wrap(val anum, val bnum)
+{
+  val self = nextafter_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_nextafter_s, bnum, anum);
+#if HAVE_NEXTAFTER
+  return flo(nextafter(c_flo(to_float(self, anum), self),
+                       c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val remainder_wrap(val anum, val bnum)
+{
+  val self = remainder_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_remainder_s, bnum, anum);
+#if HAVE_REMAINDER
+  return flo(remainder(c_flo(to_float(self, anum), self),
+                       c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val scalb_wrap(val anum, val bnum)
+{
+  val self = scalb_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_scalb_s, bnum, anum);
+#if HAVE_SCALB
+  return flo(scalb(c_flo(to_float(self, anum), self),
+                   c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val scalbln_wrap(val anum, val bnum)
+{
+  val self = scalbln_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_scalbln_s, bnum, anum);
+#if HAVE_SCALBLN
+  return flo(scalbln(c_flo(to_float(self, anum), self),
+                     c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+static val yn_wrap(val anum, val bnum)
+{
+  val self = yn_s;
+  if (cobjp(anum))
+    return do_binary_method(self, self, anum, bnum);
+  if (cobjp(bnum))
+    return do_binary_method(self, r_yn_s, bnum, anum);
+#if HAVE_YN
+  return flo(yn(c_flo(to_float(self, anum), self),
+                c_flo(to_float(self, bnum), self)));
+#else
+  not_available(self);
+#endif
+}
+
+
 /*
  * TODO: replace this text-based hack!
  */
@@ -4759,6 +5188,108 @@ val quantile(val pv, val grsize_in, val rate_in)
   return func_f0v(psqo, quant_fun);
 }
 
+static val arith_set_entries(val fun)
+{
+  val name[] = {
+    lit("cbrt"),lit("erf"), lit("erfc"), lit("exp10"),
+    lit("exp2"),lit("expm1"), lit("gamma"), lit("j0"),
+    lit("j1"),lit("lgamma"), lit("log1p"), lit("logb"),
+    lit("nearbyint"),lit("rint"), lit("significand"), lit("tgamma"),
+    lit("y0"),lit("y1"), lit("copysign"), lit("drem"),
+    lit("fdim"),lit("fmax"), lit("fmin"), lit("hypot"),
+    lit("jn"),lit("ldexp"), lit("nextafter"),
+    lit("remainder"),lit("scalb"), lit("scalbln"), lit("yn"),
+    lit("r-copysign"), lit("r-drem"),
+    lit("r-fdim"),lit("r-fmax"), lit("r-fmin"), lit("r-hypot"),
+    lit("r-jn"),lit("r-ldexp"), lit("r-nextafter"),
+    lit("r-remainder"),lit("r-scalb"), lit("r-scalbln"), lit("r-yn"),
+    nil
+  };
+  autoload_set(al_fun, name, fun);
+  return nil;
+}
+
+static val arith_instantiate(void)
+{
+  cbrt_s = intern(lit("cbrt"), user_package);
+  erf_s = intern(lit("erf"), user_package);
+  erfc_s = intern(lit("erfc"), user_package);
+  exp10_s = intern(lit("exp10"), user_package);
+  exp2_s = intern(lit("exp2"), user_package);
+  expm1_s = intern(lit("expm1"), user_package);
+  gamma_s = intern(lit("gamma"), user_package);
+  j0_s = intern(lit("j0"), user_package);
+  j1_s = intern(lit("j1"), user_package);
+  lgamma_s = intern(lit("lgamma"), user_package);
+  log1p_s = intern(lit("log1p"), user_package);
+  logb_s = intern(lit("logb"), user_package);
+  nearbyint_s = intern(lit("nearbyint"), user_package);
+  rint_s = intern(lit("rint"), user_package);
+  significand_s = intern(lit("significand"), user_package);
+  tgamma_s = intern(lit("tgamma"), user_package);
+  y0_s = intern(lit("y0"), user_package);
+  y1_s = intern(lit("y1"), user_package);
+  copysign_s = intern(lit("copysign"), user_package);
+  drem_s = intern(lit("drem"), user_package);
+  fdim_s = intern(lit("fdim"), user_package);
+  fmax_s = intern(lit("fmax"), user_package);
+  fmin_s = intern(lit("fmin"), user_package);
+  hypot_s = intern(lit("hypot"), user_package);
+  jn_s = intern(lit("jn"), user_package);
+  ldexp_s = intern(lit("ldexp"), user_package);
+  nextafter_s = intern(lit("nextafter"), user_package);
+  remainder_s = intern(lit("remainder"), user_package);
+  scalb_s = intern(lit("scalb"), user_package);
+  scalbln_s = intern(lit("scalbln"), user_package);
+  yn_s = intern(lit("yn"), user_package);
+  r_copysign_s = intern(lit("r-copysign"), user_package);
+  r_drem_s = intern(lit("r-drem"), user_package);
+  r_fdim_s = intern(lit("r-fdim"), user_package);
+  r_fmax_s = intern(lit("r-fmax"), user_package);
+  r_fmin_s = intern(lit("r-fmin"), user_package);
+  r_hypot_s = intern(lit("r-hypot"), user_package);
+  r_jn_s = intern(lit("r-jn"), user_package);
+  r_ldexp_s = intern(lit("r-ldexp"), user_package);
+  r_nextafter_s = intern(lit("r-nextafter"), user_package);
+  r_remainder_s = intern(lit("r-remainder"), user_package);
+  r_scalb_s = intern(lit("r-scalb"), user_package);
+  r_scalbln_s = intern(lit("r-scalbln"), user_package);
+  r_yn_s = intern(lit("r-yn"), user_package);
+
+  reg_fun(cbrt_s, func_n1(cbrt_wrap));
+  reg_fun(erf_s, func_n1(erf_wrap));
+  reg_fun(erfc_s, func_n1(erfc_wrap));
+  reg_fun(exp10_s, func_n1(exp10_wrap));
+  reg_fun(exp2_s, func_n1(exp2_wrap));
+  reg_fun(expm1_s, func_n1(expm1_wrap));
+  reg_fun(gamma_s, func_n1(gamma_wrap));
+  reg_fun(j0_s, func_n1(j0_wrap));
+  reg_fun(j1_s, func_n1(j1_wrap));
+  reg_fun(lgamma_s, func_n1(lgamma_wrap));
+  reg_fun(log1p_s, func_n1(log1p_wrap));
+  reg_fun(logb_s, func_n1(logb_wrap));
+  reg_fun(nearbyint_s, func_n1(nearbyint_wrap));
+  reg_fun(rint_s, func_n1(rint_wrap));
+  reg_fun(significand_s, func_n1(significand_wrap));
+  reg_fun(tgamma_s, func_n1(tgamma_wrap));
+  reg_fun(y0_s, func_n1(y0_wrap));
+  reg_fun(y1_s, func_n1(y1_wrap));
+  reg_fun(copysign_s, func_n2(copysign_wrap));
+  reg_fun(drem_s, func_n2(drem_wrap));
+  reg_fun(fdim_s, func_n2(fdim_wrap));
+  reg_fun(fmax_s, func_n2(fmax_wrap));
+  reg_fun(fmin_s, func_n2(fmin_wrap));
+  reg_fun(hypot_s, func_n2(hypot_wrap));
+  reg_fun(jn_s, func_n2(jn_wrap));
+  reg_fun(ldexp_s, func_n2(ldexp_wrap));
+  reg_fun(nextafter_s, func_n2(nextafter_wrap));
+  reg_fun(remainder_s, func_n2(remainder_wrap));
+  reg_fun(scalb_s, func_n2(scalb_wrap));
+  reg_fun(scalbln_s, func_n2(scalbln_wrap));
+  reg_fun(yn_s, func_n2(yn_wrap));
+  return nil;
+}
+
 void arith_init(void)
 {
   log2_init();
@@ -4969,6 +5500,8 @@ void arith_init(void)
   reg_fun(intern(lit("flo-set-round-mode"), user_package),
           func_n1(flo_set_round_mode));
 #endif
+
+  autoload_reg(arith_instantiate, arith_set_entries);
 }
 
 void arith_compat_fixup(int compat_ver)
