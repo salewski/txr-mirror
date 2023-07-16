@@ -409,8 +409,9 @@
       (((dreg [me.dreg dobj])) dreg)
       ((((< me.dreg-cntr %lev-size%)))
        (let ((dreg ^(d ,(pinc me.dreg-cntr))))
-        (set [me.data (cadr dreg)] dobj)
-        (set [me.dreg dobj] dreg)))
+        (set me.datavec nil
+             [me.data (cadr dreg)] dobj
+             [me.dreg dobj] dreg)))
       (t (compile-error me.last-form "code too complex: too many literals")))))
 
 (defmeth compiler alloc-dreg (me)
@@ -420,12 +421,24 @@
       dreg)
     (compile-error me.last-form "code too complex: too many literals")))
 
+(defmeth compiler null-dregs (me used-dreg)
+  (each ((n 0..me.dreg-cntr))
+    (unless (bit used-dreg n)
+      (set [me.data n] nil
+           me.datavec nil))))
+
 (defmeth compiler get-sidx (me atom)
   (iflet ((sidx [me.sidx atom]))
     sidx
     (let* ((sidx (pinc me.sidx-cntr)))
       (set [me.stab sidx] atom)
       (set [me.sidx atom] sidx))))
+
+(defmeth compiler null-stab (me used-sidx)
+  (each ((n 0..me.sidx-cntr))
+    (unless (bit used-sidx n)
+      (set [me.stab n] nil
+           me.symvec nil))))
 
 (defmeth compiler get-datavec (me)
   (or me.datavec
@@ -1766,7 +1779,7 @@
   (let ((olev *opt-level*))
     (if (>= olev 4)
       (let* ((lt-dregs (mapcar .oreg me.lt-frags))
-             (bb (new (basic-blocks insns lt-dregs me.(get-symvec)))))
+             (bb (new (basic-blocks me insns lt-dregs me.(get-symvec)))))
         (when (>= olev 4)
           bb.(thread-jumps)
           bb.(elim-dead-code))
@@ -1778,7 +1791,8 @@
               bb.(peephole)
               bb.(link-graph)
               bb.(thread-jumps)
-              bb.(elim-dead-code))))
+              bb.(elim-dead-code))
+            bb.(null-unused-data)))
         (cond
           ((>= olev 7)
            bb.(merge-jump-thunks)

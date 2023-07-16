@@ -317,42 +317,42 @@
 
 (mtest
   (nrot nil) nil
-  (nrot #()) #()
+  (nrot (vec)) #()
   (nrot "") ""
   (nrot nil 2) nil
-  (nrot #() 2) #()
+  (nrot (vec) 2) #()
   (nrot "" 2) ""
   (nrot nil -1) nil
-  (nrot #() -1) #()
+  (nrot (vec) -1) #()
   (nrot "" -1) "")
 
 (mtest
   (let ((s '(a))) (nrot s)) (a)
-  (let ((s #(1))) (nrot s) s) #(1)
+  (let ((s (vec 1))) (nrot s) s) #(1)
   (let ((s "x")) (nrot s) s) "x"
   (let ((s '(a))) (nrot s -1)) (a)
-  (let ((s #(1))) (nrot s -1) s) #(1)
+  (let ((s (vec 1))) (nrot s -1) s) #(1)
   (let ((s "x")) (nrot s -1) s) "x")
 
 (mtest
   (let ((s '(a b))) (nrot s)) (b a)
-  (let ((s #(1 2))) (nrot s) s) #(2 1)
-  (let ((s "xy")) (nrot s) s) "yx"
+  (let ((s (vec 1 2))) (nrot s) s) #(2 1)
+  (let ((s (copy "xy"))) (nrot s) s) "yx"
   (let ((s '(a b))) (nrot s -1)) (b a)
-  (let ((s #(1 2))) (nrot s -1) s) #(2 1)
-  (let ((s "xy")) (nrot s -1) s) "yx")
+  (let ((s (vec 1 2))) (nrot s -1) s) #(2 1)
+  (let ((s (copy "xy"))) (nrot s -1) s) "yx")
 
 (mtest
   (let ((s '(a b c))) (nrot s)) (b c a)
-  (let ((s #(1 2 3))) (nrot s) s) #(2 3 1)
-  (let ((s "xyz")) (nrot s) s) "yzx"
+  (let ((s (vec 1 2 3))) (nrot s) s) #(2 3 1)
+  (let ((s (copy "xyz"))) (nrot s) s) "yzx"
   (let ((s '(a b c))) (nrot s -1)) (c a b)
-  (let ((s #(1 2 3))) (nrot s -1) s) #(3 1 2)
-  (let ((s "xyz")) (nrot s -1) s) "zxy")
+  (let ((s (vec 1 2 3))) (nrot s -1) s) #(3 1 2)
+  (let ((s (copy "xyz"))) (nrot s -1) s) "zxy")
 
 (mtest
-  (let ((s '(a b c))) (nrot s 33)) (a b c)
-  (let ((s '(a b c))) (nrot s 34)) (b c a))
+  (let ((s (list 'a 'b 'c))) (nrot s 33)) (a b c)
+  (let ((s (list 'a 'b 'c))) (nrot s 34)) (b c a))
 
 (mtest
   (rot nil) nil

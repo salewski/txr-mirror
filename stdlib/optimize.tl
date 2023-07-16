@@ -52,7 +52,8 @@
                            rlinks ,(mapcar .label bl.rlinks)
                            next ,bl.next.?label) stream)))
 
-  (defstruct (basic-blocks insns lt-dregs symvec) nil
+  (defstruct (basic-blocks compiler insns lt-dregs symvec) nil
+    compiler
     insns
     lt-dregs
     symvec
@@ -524,6 +525,16 @@
              (set bb.recalc t)
              (cons (car insns) ren))
             (t insns))))
+      ;; constant folding
+      (@(require ((gcall @tgt @idx . @(all (d @dn))) . @rest)
+                 [%const-foldable% [bb.symvec idx]])
+        (let* ((co bb.compiler)
+               (dvec co.(get-datavec))
+               (fun [bb.symvec idx])
+               (args [mapcar dvec dn])
+               (val (apply fun args))
+               (dreg co.(get-dreg val)))
+          ^((mov ,tgt ,dreg) ,*rest)))
       (@nil insns))))
 
 (defmeth basic-blocks peephole (bb)
@@ -763,6 +774,19 @@
           cl.(fill-treg-compacting-map map))
         (each ((cl clist))
           cl.(apply-treg-compacting-map map))))))
+
+(defmeth basic-blocks null-unused-data (bb)
+  (let ((used-dregs 0)
+        (used-funs 0)
+        (co bb.compiler))
+    (each ((bl bb.list))
+      (each ((insn bl.insns))
+        (if-match @(coll (d @dn)) insn
+          (set-mask used-dregs (mask . dn)))
+        (if-match (@(or gcall gapply getf getlx setlx) @nil @fn . @nil) insn
+          (set-mask used-funs (mask fn)))))
+    co.(null-dregs used-dregs)
+    co.(null-stab used-funs)))
 
 (defun rewrite (fun list)
   (build
