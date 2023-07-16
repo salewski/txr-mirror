@@ -61,3 +61,33 @@
     rangep from to in-range in-range* nullify))
 
 (defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
+
+(defvarl %effect-free-funs%
+  '(append append* revappend list list* zip interpose copy-list reverse
+   flatten flatten* flatcar flatcar* tuples remq remql remqual
+   keepq keepq keepqual remq* remql* remq* make-sym gensym
+   mkstring copy-str upcase-str downcase-str cat-str split-str spl
+   split-str-set sspl tok-str tok tok-where list-str trim-str
+   get-lines lazy-str length-str-> length-str->= length-str-<
+   length-str-<= vector vec vector-list list-vector list-vec
+   copy-vec sub-vec cat-vec acons acons-new aconsql-new alist-remove
+   copy-cons copy-tree copy-alist plist-to-alist improper-plist-to-alist
+   merge sort shuffle list-seq vec-seq str-seq copy sub seq-begin
+   iter-begin rcons make-like nullify symbol-value symbol-function
+   symbol-macro boundp fboundp mboundp special-operator-p special-var-p
+   copy-fun func-get-form func-get-name func-get-env functionp
+   interp-fun-p vm-fun-p fun-fixparam-count fun-optparam-count
+   fun-variadic sys:ctx-form sys:ctx-name range range* rlist rlist*
+   repeat pad weave promisep rperm perm comb rcomb source-loc
+   source-loc-str macro-ancestor cptr-int cptr-obj cptr-buf
+   int-cptr cptrp cptr-type cptr-size-hint))
+
+(defvarl %effect-free% (hash-uni %const-foldable%
+                                 (hash-list %effect-free-funs% :eq-based)))
+
+(defvarl %functional-funs%
+  '(chain chand juxt andf orf notf iff iffi dup flipargs if or and
+    progn prog1 prog2 retf apf ipf callf mapf tf umethod uslot))
+
+(defvarl %functional% (hash-list %functional-funs% :eq-based))
+

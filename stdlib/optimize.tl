@@ -25,6 +25,8 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 
+(load-for (usr:var %const-foldable% "constfun"))
+
 (compile-only
   (defstruct live-info nil
     (defined 0)
