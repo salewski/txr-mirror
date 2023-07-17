@@ -2129,7 +2129,7 @@ static val rt_defvarl(val sym)
 
 static val rt_defv(val sym)
 {
-  val self = lit("sys:defv");
+  val self = lit("sys:rt-defv");
   val new_p;
   val cell = (autoload_try_var(sym),
               gethash_c(self, top_vb, sym, mkcloc(new_p)));
