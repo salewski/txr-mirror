@@ -672,7 +672,7 @@ val func_get_name(val fun, val env)
     if ((name = hash_revget(top_fb, fun, eq_f, nil)))
       return name;
 
-    if ((name = hash_revget(top_mb, fun, eq_f, cdr_f)))
+    if ((name = hash_revget(top_mb, fun, eq_f, nil)))
       return list(macro_s, name, nao);
 
     if ((name = method_name(fun)))
@@ -690,8 +690,8 @@ static val lookup_mac(val menv, val sym)
   uses_or2;
 
   if (nilp(menv)) {
-    return or2(gethash(top_mb, sym),
-               if2(autoload_try_fun(sym), gethash(top_mb, sym)));
+    return or2(gethash_d(top_mb, sym),
+               if2(autoload_try_fun(sym), gethash_d(top_mb, sym)));
   } else  {
     type_check(lit("macro lookup"), menv, ENV);
 
@@ -709,8 +709,8 @@ static val lookup_symac(val menv, val sym)
   uses_or2;
 
   if (nilp(menv)) {
-    return or2(gethash(top_smb, sym),
-               if2(autoload_try_var(sym), gethash(top_smb, sym)));
+    return or2(gethash_d(top_smb, sym),
+               if2(autoload_try_var(sym), gethash_d(top_smb, sym)));
   } else  {
     type_check(lit("symacro lookup"), menv, ENV);
 
@@ -728,8 +728,8 @@ static val lookup_symac_lisp1(val menv, val sym)
   uses_or2;
 
   if (nilp(menv)) {
-    return or2(gethash(top_smb, sym),
-               if2(autoload_try_var(sym), gethash(top_smb, sym)));
+    return or2(gethash_d(top_smb, sym),
+               if2(autoload_try_var(sym), gethash_d(top_smb, sym)));
   } else  {
     type_check(lit("symacro lookup"), menv, ENV);
 
@@ -2161,7 +2161,7 @@ static val op_defsymacro(val form, val env)
   remhash(top_vb, sym);
   if (!opt_compat || opt_compat > 143)
     remhash(special, sym);
-  sethash(top_smb, sym, cons(sym, second(args)));
+  sethash(top_smb, sym, second(args));
   return sym;
 }
 
@@ -2170,7 +2170,7 @@ static val rt_defsymacro(val sym, val def)
   autoload_try_var(sym);
   remhash(top_vb, sym);
   remhash(special, sym);
-  sethash(top_smb, sym, cons(sym, def));
+  sethash(top_smb, sym, def);
   return sym;
 }
 
@@ -2199,7 +2199,7 @@ static val rt_defun(val name, val function)
 static val rt_defmacro(val sym, val name, val function)
 {
   autoload_try_fun(sym);
-  sethash(top_mb, sym, cons(name, function));
+  sethash(top_mb, sym, function);
   return name;
 }
 
@@ -2276,8 +2276,8 @@ static val op_defmacro(val form, val env)
 
   /* defmacro captures lexical environment, so env is passed */
   sethash(top_mb, name,
-          rlcp_tree(cons(name, func_f2(cons(env, cons(params, cons(block, nil))),
-                                       me_interp_macro)),
+          rlcp_tree(func_f2(cons(env, cons(params, cons(block, nil))),
+                            me_interp_macro),
                     block));
   return name;
 }
@@ -6624,7 +6624,7 @@ void reg_fun(val sym, val fun)
 void reg_mac(val sym, val fun)
 {
   assert (sym != 0);
-  sethash(top_mb, sym, cons(sym, fun));
+  sethash(top_mb, sym, fun);
   sethash(builtin, sym, defmacro_s);
 }
 
@@ -6642,13 +6642,7 @@ void reg_var(val sym, val val)
 
 void reg_symacro(val sym, val form)
 {
-  loc pcdr = gethash_l(lit("internal initialization"), top_smb, sym, nulloc);
-  val binding = deref(pcdr);
-
-  if (binding)
-    rplacd(binding, form);
-  else
-    set(pcdr, cons(sym, form));
+  sethash(top_smb, sym, form);
 }
 
 static val if_fun(val cond, val then, val alt)

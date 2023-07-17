@@ -813,8 +813,7 @@
         :))
     ((type sym)
       (if (eq type 'macro)
-        (let ((cell (or (gethash sys:top-mb sym)
-                        (sethash sys:top-mb sym (cons sym nil)))))
+        (let ((cell (or (inhash sys:top-mb sym nil))))
           (cons (op cdr)
                 (op sys:rplacd cell)))
         :))
@@ -840,7 +839,7 @@
        ,body)))
 
 (defun sys:get-mb (f sym)
-  (or (gethash sys:top-mb sym)
+  (or (inhash sys:top-mb sym)
       (compile-error f "unbound macro ~s" sym)))
 
 (defplace (symbol-macro sym-expr) body
