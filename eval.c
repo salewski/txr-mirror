@@ -189,11 +189,7 @@ val env_fbind(val env, val sym, val fun)
     cell = acons_new_c(sym, nulloc, mkloc(env->e.fbindings, env));
     return rplacd(cell, fun);
   } else {
-    loc pcdr = gethash_l(self, top_fb, sym, nulloc);
-    val cell = deref(pcdr);
-    if (cell)
-      return rplacd(cell, fun);
-    return set(pcdr, cons(sym, fun));
+    return sethash(top_fb, sym, fun);
   }
 }
 
@@ -207,11 +203,7 @@ val env_vbind(val env, val sym, val obj)
     cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
     return rplacd(cell, obj);
   } else {
-    loc pcdr = gethash_l(self, top_vb, sym, nulloc);
-    val cell = deref(pcdr);
-    if (cell)
-      return rplacd(cell, obj);
-    return set(pcdr, cons(sym, obj));
+    return sethash(top_vb, sym, obj);
   }
 }
 
@@ -526,8 +518,8 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
 val lookup_global_var(val sym)
 {
   uses_or2;
-  return or2(gethash(top_vb, sym),
-             if2(autoload_try_var(sym), gethash(top_vb, sym)));
+  return or2(gethash_d(top_vb, sym),
+             if2(autoload_try_var(sym), gethash_d(top_vb, sym)));
 }
 
 val lookup_global_fun(val sym)
@@ -584,10 +576,10 @@ val lookup_sym_lisp1(val env, val sym)
       return binding;
   }
 
-  return or3(gethash(top_vb, sym),
+  return or3(gethash_d(top_vb, sym),
              if2(autoload_try_fun_var(sym),
-                 gethash(top_vb, sym)),
-             gethash(top_fb, sym));
+                 gethash_d(top_vb, sym)),
+             gethash_d(top_fb, sym));
 }
 
 loc lookup_var_l(val env, val sym)
@@ -648,8 +640,8 @@ val lookup_fun(val env, val sym)
     }
   }
 
-  return or2(gethash(top_fb, sym),
-             if2(autoload_try_fun(sym), gethash(top_fb, sym)));
+  return or2(gethash_d(top_fb, sym),
+             if2(autoload_try_fun(sym), gethash_d(top_fb, sym)));
 }
 
 val func_get_name(val fun, val env)
@@ -677,7 +669,7 @@ val func_get_name(val fun, val env)
   {
     val name;
 
-    if ((name = hash_revget(top_fb, fun, eq_f, cdr_f)))
+    if ((name = hash_revget(top_fb, fun, eq_f, nil)))
       return name;
 
     if ((name = hash_revget(top_mb, fun, eq_f, cdr_f)))
@@ -2138,7 +2130,7 @@ static val rt_defv(val sym)
     uw_purge_deferred_warning(cons(var_s, sym));
     uw_purge_deferred_warning(cons(sym_s, sym));
     remhash(top_smb, sym);
-    return sys_rplacd(cell, cons(sym, nil));
+    return cell;
   }
 
   return nil;
@@ -2198,7 +2190,7 @@ void trace_check(val name)
 static val rt_defun(val name, val function)
 {
   autoload_try_fun(name);
-  sethash(top_fb, name, cons(name, function));
+  sethash(top_fb, name, function);
   uw_purge_deferred_warning(cons(fun_s, name));
   uw_purge_deferred_warning(cons(sym_s, name));
   return name;
@@ -5957,7 +5949,7 @@ static val set_symbol_value(val sym, val value)
   if (vbind)
     rplacd(vbind, value);
   else
-    sethash(top_vb, sym, cons(sym, value));
+    sethash(top_vb, sym, value);
 
   return value;
 }
@@ -6625,7 +6617,7 @@ static void reg_op(val sym, opfun_t fun)
 void reg_fun(val sym, val fun)
 {
   assert (sym != 0);
-  sethash(top_fb, sym, cons(sym, fun));
+  sethash(top_fb, sym, fun);
   sethash(builtin, sym, defun_s);
 }
 
@@ -6639,7 +6631,7 @@ void reg_mac(val sym, val fun)
 void reg_varl(val sym, val val)
 {
   assert (sym != nil);
-  sethash(top_vb, sym, cons(sym, val));
+  sethash(top_vb, sym, val);
 }
 
 void reg_var(val sym, val val)

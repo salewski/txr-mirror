@@ -1161,6 +1161,11 @@ val gethash_e(val self, val hash, val key)
   return hash_lookup(h, key, hv);
 }
 
+val gethash_d(val hash, val key)
+{
+  return gethash_e(lit("gethash_d"), hash, key);
+}
+
 val gethash(val hash, val key)
 {
   val self = lit("gethash");

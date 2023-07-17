@@ -55,6 +55,7 @@ val make_similar_hash(val existing);
 val copy_hash(val existing);
 val gethash_c(val self, val hash, val key, loc new_p);
 val gethash_e(val self, val hash, val key);
+val gethash_d(val hash, val key);
 val gethash(val hash, val key);
 val inhash(val hash, val key, val init);
 val gethash_n(val hash, val key, val notfound_val);

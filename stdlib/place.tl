@@ -823,8 +823,7 @@
        (compile-error f "cannot assign to lambda")
        (compile-error f "invalid function syntax ~s" sym)))
     (else
-      (let ((cell (or (gethash sys:top-fb sym)
-                      (sethash sys:top-fb sym (cons else nil)))))
+      (let ((cell (inhash sys:top-fb else nil)))
         (cons (op cdr)
               (op sys:rplacd cell))))))
 
@@ -857,8 +856,7 @@
        ,body)))
 
 (defun sys:get-vb (sym)
-  (or (gethash sys:top-vb sym)
-      (sethash sys:top-vb sym (cons sym nil))))
+  (inhash sys:top-vb sym nil))
 
 (defplace (symbol-value sym-expr) body
   (getter setter
