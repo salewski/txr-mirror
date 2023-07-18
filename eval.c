@@ -2154,6 +2154,7 @@ static val op_defsymacro(val form, val env)
 {
   val args = rest(form);
   val sym = first(args);
+  val varexisted = gethash_d(top_vb, sym);
 
   (void) env;
 
@@ -2162,17 +2163,20 @@ static val op_defsymacro(val form, val env)
   if (!opt_compat || opt_compat > 143)
     remhash(special, sym);
   sethash(top_smb, sym, second(args));
-  vm_invalidate_binding(sym);
+  if (varexisted)
+    vm_invalidate_binding(sym);
   return sym;
 }
 
 static val rt_defsymacro(val sym, val def)
 {
+  val varexisted = gethash_d(top_vb, sym);
   autoload_try_var(sym);
   remhash(top_vb, sym);
   remhash(special, sym);
   sethash(top_smb, sym, def);
-  vm_invalidate_binding(sym);
+  if (varexisted)
+    vm_invalidate_binding(sym);
   return sym;
 }
 
@@ -6027,11 +6031,13 @@ static val makunbound(val sym)
     }
   }
 
-  remhash(top_vb, sym);
+  if (gethash_d(top_vb, sym)) {
+    remhash(top_vb, sym);
+    vm_invalidate_binding(sym);
+  }
+
   remhash(top_smb, sym);
   remhash(special, sym);
-
-  vm_invalidate_binding(sym);
 
   return sym;
 }
@@ -6039,10 +6045,15 @@ static val makunbound(val sym)
 static val fmakunbound(val sym)
 {
   autoload_try_var(sym);
-  remhash(top_fb, sym);
+
+  if (gethash_d(top_fb, sym)) {
+    remhash(top_fb, sym);
+    vm_invalidate_binding(sym);
+  }
+
   if (opt_compat && opt_compat <= 127)
     remhash(top_mb, sym);
-  vm_invalidate_binding(sym);
+
   return sym;
 }
 
