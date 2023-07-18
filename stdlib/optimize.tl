@@ -539,6 +539,21 @@
                (val (apply fun args))
                (dreg co.(get-dreg val)))
           ^((mov ,tgt ,dreg) ,*rest)))
+      ;; apply to gapply
+      (@(require @(with ((getf @(as treg (t @tn)) @idx) . @rest)
+                        @(scan @(or @(with @(as apl ((apply @dest @treg . @args)
+                                              . @arest))
+                                           li [bb.li-hash (car apl)])
+                                    @(require (@insn . @nil)
+                                              (find treg insn))))
+                        rest)
+                 apl
+                 (or (equal dest treg)
+                     (not (bit li.used tn))))
+        (set bb.recalc t)
+        (let* ((gapl ^(gapply ,dest ,idx ,*args)))
+          (set [bb.li-hash gapl] li)
+          ^(,*(ldiff rest apl) ,gapl ,*arest)))
       (@nil insns))))
 
 (defmeth basic-blocks peephole (bb)
