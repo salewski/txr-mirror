@@ -14591,7 +14591,10 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == vector_lit_s && two_elem) {
         put_char(chr('#'), out);
-        obj_print_impl(arg, out, pretty, ctx);
+        if (!arg)
+          put_string(lit("()"), out);
+        else
+          obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
         if (!args)
