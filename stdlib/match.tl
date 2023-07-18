@@ -1088,7 +1088,7 @@
     ((sys:hash-lit nil . @(all (@key @val)))
      ^@(hash ,*(zip [mapcar transform-qquote key]
                     [mapcar transform-qquote val])))
-    ((sys:hash-lit)
+    ((sys:hash-lit . @(eq nil))
      '@(hash))
     ((sys:struct-lit @type . @args)
      ^@(struct ,(transform-qquote type)
