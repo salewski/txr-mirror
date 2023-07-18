@@ -528,15 +528,18 @@
              (cons (car insns) ren))
             (t insns))))
       ;; constant folding
-      (@(require ((gcall @tgt @idx . @(all @(or (d @dn)
-                                                @(with (t 0) dn nil))))
+      (@(require ((@(as op @(or gapply gcall)) @tgt @idx
+                                               . @(all @(or (d @dn)
+                                                            @(with (t 0) dn nil))))
                   . @rest)
                  [%const-foldable% [bb.symvec idx]])
         (let* ((co bb.compiler)
                (dvec co.(get-datavec))
                (fun [bb.symvec idx])
                (args (mapcar [iffi true dvec] dn))
-               (val (apply fun args))
+               (val (if (eq op 'gcall)
+                      (apply fun args)
+                      (apply fun (append [args 0..-1] [args -1]))))
                (dreg co.(get-dreg val)))
           ^((mov ,tgt ,dreg) ,*rest)))
       ;; apply to gapply
