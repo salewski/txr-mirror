@@ -17,3 +17,7 @@
 (defparml foov :barv)
 
 (test (bar) (:bar :barv))
+
+(defsymacro foov 42)
+
+(test (bar) :error)

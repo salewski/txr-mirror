@@ -2162,6 +2162,7 @@ static val op_defsymacro(val form, val env)
   if (!opt_compat || opt_compat > 143)
     remhash(special, sym);
   sethash(top_smb, sym, second(args));
+  vm_invalidate_binding(sym);
   return sym;
 }
 
@@ -2171,6 +2172,7 @@ static val rt_defsymacro(val sym, val def)
   remhash(top_vb, sym);
   remhash(special, sym);
   sethash(top_smb, sym, def);
+  vm_invalidate_binding(sym);
   return sym;
 }
 
