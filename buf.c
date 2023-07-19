@@ -47,6 +47,7 @@
 #include "stream.h"
 #include "arith.h"
 #include "utf8.h"
+#include "txr.h"
 #include "buf.h"
 
 static cnum buf_check_len(val len, val self)
@@ -290,6 +291,8 @@ val replace_buf(val buf, val items, val from, val to)
     from = len;
   } else if (!integerp(from)) {
     seq_iter_t wh_iter, item_iter;
+    cnum offs = 0;
+    cnum l = c_num(len, self), ol = l;
     val wh, item;
     seq_iter_init(self, &wh_iter, from);
     seq_iter_init(self, &item_iter, items);
@@ -299,10 +302,37 @@ val replace_buf(val buf, val items, val from, val to)
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
-    while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+    while (seq_get(&item_iter, &item) && seq_get(&wh_iter, &wh)) {
       if (ge(wh, len))
         break;
       buf_put_uchar(buf, wh, item);
+    }
+
+    if (!opt_compat || opt_compat > 289) {
+      while (seq_get(&wh_iter, &wh)) {
+        cnum w = c_num(wh, self);
+
+        if (w < 0)
+          w += ol;
+
+        if (w < 0)
+          break;
+
+        w -= offs;
+
+        if (w >= l)
+          break;
+
+        memmove(buf->b.data + w,
+                buf->b.data + w + 1,
+                l - w - 1);
+        l--;
+        offs++;
+
+      }
+
+      if (offs > 0)
+        buf_set_length(buf, num_fast(l), zero);
     }
 
     return buf;

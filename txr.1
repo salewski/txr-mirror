@@ -34283,18 +34283,28 @@ given by
 with their counterparts
 from
 .metn replacement-sequence .
-This form of the replace function does not insert
-or delete; it simply overwrites elements. If
+If
 .meta replacement-sequence
-and
+has at least as many elements as are indicated in
+.metn index-list ,
+then the indicated elements of
+.meta sequence
+are overwritten with successive elements from
+.metn replacement-sequence .
+If
+.meta replacement-sequence
+contains fewer elements than
+.metn index-list ,
+then the excess elements indicated in
 .meta index-list
-are of different lengths, then the shorter of the two determines
-the maximum number of elements which are overwritten.
+which have no counterparts in the
+.meta replacement-sequence
+are deleted.
 Whenever a negative value occurs in
 .meta index-list
-the length of
+the original length of
 .meta sequence
-is added to that value.
+(before any deletions) is added to that value.
 Furthermore, similar restrictions apply on
 .meta index-list
 as under the
@@ -34305,11 +34315,12 @@ is encountered which is out of range for
 .metn sequence .
 furthermore, if
 .meta sequence
-is a list, then
+is a list, or if any deletions take place, then
 .meta index-list
 must
 be monotonically increasing, after consideration of the
-displacement of negative values.
+displacement of negative values, or else the behavior
+is unspecified.
 
 If
 .meta replacement-sequence
@@ -91822,6 +91833,32 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 289
+Until \*(TX 289, the
+.code replace
+function had different semantics in the handling of the
+.meta index-list
+and
+.metn replacement-sequence .
+When the
+.meta index-list
+contained more indices than elements of
+.meta replacement-sequence
+then the replacement of elemenets in the main sequence would stop.
+No deletion of elements was performed. This behavior is restored by
+selecting 289 or lower compatibility. Note, however, that this breaks
+the ability of the
+.code del
+macro to delete items from a sequence by
+.metn index-list .
+The
+.code del
+macro could do that in version 289 or older, and the behavior
+That behavior didn't work in version 289 or older, and is supported
+by the new semantics of
+.metn replace ,
+which is capable of deleting items specified by
+.metn index-list .
 .IP 288
 Integers and ranges callable like functions are a new feature introduced
 after \*(TX 288. The latter, callable ranges, are a breaking change;

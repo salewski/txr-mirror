@@ -2603,8 +2603,11 @@ val replace_list(val list, val items, val from, val to)
     from = nil;
   } else if (!integerp(from)) {
     seq_iter_t wh_iter;
-    val iter = list, idx = zero, item, wh;
+    cnum ndel = 0;
+    loc iter = mkcloc(list);
+    val cons, idx = zero, item, wh;
     seq_iter_t item_iter;
+    int compat = opt_compat && opt_compat <= 289;
     seq_iter_init(self, &item_iter, items);
     seq_iter_init(self, &wh_iter, from);
 
@@ -2613,20 +2616,30 @@ val replace_list(val list, val items, val from, val to)
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
-    while (iter && seq_peek(&item_iter, &item) && seq_peek(&wh_iter, &wh)) {
+    while ((cons = deref(iter)) && seq_peek(&wh_iter, &wh)) {
+      int have_item = seq_peek(&item_iter, &item);
+      if (!have_item && compat)
+        break;
       if (minusp(wh))
-        wh = plus(wh, len ? len : (len = length(list)));
+        wh = plus(wh, len ? len : (len = plus(length(list), num_fast(ndel))));
       if (lt(wh, idx)) {
         seq_geti(&wh_iter);
         seq_geti(&item_iter);
         continue;
       } else if (eql(wh, idx)) {
-        rplaca(iter, item);
         seq_geti(&wh_iter);
-        seq_geti(&item_iter);
+        if (have_item) {
+          rplaca(cons, item);
+          seq_geti(&item_iter);
+        } else {
+          deref(iter) = cdr(cons);
+          idx = plus(idx, one);
+          ndel++;
+          continue;
+        }
       }
 
-      iter = cdr(iter);
+      iter = cdr_l(cons);
       idx = plus(idx, one);
     }
 
@@ -5688,6 +5701,8 @@ val replace_str(val str_in, val items, val from, val to)
     from = len;
   } else if (!integerp(from)) {
     val wh, item;
+    cnum offs = 0;
+    cnum l = c_num(len, self), ol = l;
     seq_iter_t wh_iter, item_iter;
     seq_iter_init(self, &item_iter, items);
     seq_iter_init(self, &wh_iter, from);
@@ -5697,12 +5712,37 @@ val replace_str(val str_in, val items, val from, val to)
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
-    while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+    while (seq_get(&item_iter, &item) && seq_get(&wh_iter, &wh)) {
       if (ge(wh, len))
         break;
       chr_str_set(str_in, wh, item);
     }
 
+    if (!opt_compat || opt_compat > 289) {
+      while (seq_get(&wh_iter, &wh)) {
+        cnum w = c_num(wh, self);
+
+        if (w < 0)
+          w += ol;
+
+        if (w < 0)
+          break;
+
+        w -= offs;
+
+        if (w >= l)
+          break;
+
+        wmemmove(str_in->st.str + w,
+                 str_in->st.str + w + 1,
+                 l - w);
+        l--;
+        offs++;
+
+      }
+      if (offs > 0)
+        set(mkloc(str_in->st.len, str_in), num_fast(l));
+    }
     return str_in;
   } else if (minusp(from)) {
     from = plus(from, len);
@@ -9636,6 +9676,8 @@ val replace_vec(val vec_in, val items, val from, val to)
     from = len;
   } else if (!integerp(from)) {
     seq_iter_t wh_iter, item_iter;
+    cnum offs = 0;
+    cnum l = c_num(len, self), ol = l;
     val wh, item;
     seq_iter_init(self, &wh_iter, from);
     seq_iter_init(self, &item_iter, items);
@@ -9645,10 +9687,36 @@ val replace_vec(val vec_in, val items, val from, val to)
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
-    while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+    while (seq_get(&item_iter, &item) && seq_get(&wh_iter, &wh)) {
       if (ge(wh, len))
         break;
       set(vecref_l(vec_in, wh), item);
+    }
+
+    if (!opt_compat || opt_compat > 289) {
+      while (seq_get(&wh_iter, &wh)) {
+        cnum w = c_num(wh, self);
+
+        if (w < 0)
+          w += ol;
+
+        if (w < 0)
+          break;
+
+        w -= offs;
+
+        if (w >= l)
+          break;
+
+        memmove(vec_in->v.vec + w,
+                vec_in->v.vec + w + 1,
+                (l - w - 1) * sizeof vec_in->v.vec);
+        l--;
+        offs++;
+      }
+
+    if (offs > 0)
+      vec_set_length(vec_in, num_fast(l));
     }
 
     return vec_in;
@@ -13257,9 +13325,18 @@ val dwim_del(val place_p, val seq, val ind_range)
     break;
   }
 
-  if (rangep(ind_range)) {
-    return replace(seq, nil, from(ind_range), to(ind_range));
-  } else {
+  switch (type(ind_range)) {
+  case NIL:
+  case CONS:
+  case LCONS:
+  case VEC:
+    return replace(seq, nil, ind_range, colon_k);
+  case RNG:
+    {
+      range_bind (x, y, ind_range);
+      return replace(seq, nil, x, y);
+    }
+  default:
     return replace(seq, nil, ind_range, succ(ind_range));
   }
 }
