@@ -797,15 +797,6 @@
         (each ((cl clist))
           cl.(apply-treg-compacting-map map))))))
 
-(defmeth basic-blocks null-unused-data (bb)
-  (let ((used-funs 0)
-        (co bb.compiler))
-    (each ((bl bb.list))
-      (each ((insn bl.insns))
-        (if-match (@(or gcall gapply getf getlx setlx) @nil @fn . @nil) insn
-          (set-mask used-funs (mask fn)))))
-    co.(null-stab used-funs)))
-
 (defun rewrite (fun list)
   (build
     (while* list

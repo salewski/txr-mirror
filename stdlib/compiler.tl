@@ -403,12 +403,6 @@
       (set [me.stab sidx] atom)
       (set [me.sidx atom] sidx))))
 
-(defmeth compiler null-stab (me used-sidx)
-  (each ((n 0..me.sidx-cntr))
-    (unless (bit used-sidx n)
-      (set [me.stab n] nil
-           me.symvec nil))))
-
 (defmeth compiler get-datavec (me)
   (or me.datavec
       (set me.datavec (vec-list [mapcar me.data (range* 0 me.dreg-cntr)]))))
@@ -1744,23 +1738,54 @@
              (push lt-frag me.lt-frags)
              (new (frag dreg nil nil nil exp.pars))))))))
 
-(defmeth compiler compact-dregs (me insns)
-  (let ((map (hash))
-        (i 0))
+(defmeth compiler compact-dregs-and-syms (me insns)
+  (let ((dmap (hash))
+        (smap (vector (len me.sidx)))
+        (used-syms 0)
+        (dc 0)
+        (sc 0))
+
     (each ((insn insns))
       (if-match @(coll @(as dr (d @nil))) insn
         (each ((d dr))
-          (unless (inhash map d)
-            (set [map d] ^(d ,(pinc i)))))))
+          (unless (inhash dmap d)
+            (set [dmap d] ^(d ,(pinc dc))))))
+      (if-match (@(or gcall gapply getf getlx setlx) @nil @fn . @nil) insn
+        (set-mask used-syms (mask fn))))
+
     (let ((data (hash :eql-based)))
-      (dohash (from-dreg to-dreg map)
+      (dohash (from-dreg to-dreg dmap)
         (set [data (cadr to-dreg)] [me.data (cadr from-dreg)]))
-      (set me.data data))
-    (each ((cell me.dreg))
-      (upd (cdr cell) map))
-    (set me.datavec nil
-         me.dreg-cntr i)
-    (mapcar [iffi consp (op mapcar [orf map use])] insns)))
+      (set me.data data
+         me.datavec nil
+         me.dreg-cntr dc)
+      (each ((cell me.dreg))
+        (upd (cdr cell) dmap)))
+
+    (let ((stab (hash :eql-based))
+          (sidx (hash :eql-based))
+          (nsym (width used-syms)))
+      (each ((from 0..nsym))
+        (when (bit used-syms from)
+          (let ((to (pinc sc))
+                (atom [me.stab from]))
+            (set [stab to] atom
+                 [sidx atom] to
+                 [smap from] to))))
+      (set me.stab stab
+           me.sidx sidx
+           me.sidx-cntr sc
+           me.symvec nil))
+
+    (mapcar [iffi consp (opip
+                          (mapcar [orf dmap use])
+                          (do if-match (@(as op @(or gcall gapply
+                                                     getf getlx setlx))
+                                         @dest @fn . @args)
+                                       @1
+                            ^(,op ,dest ,[smap fn] ,*args)
+                            @1))]
+            insns)))
 
 (defmeth compiler optimize (me insns)
   (let ((olev *opt-level*))
@@ -1778,15 +1803,14 @@
               bb.(peephole)
               bb.(link-graph)
               bb.(thread-jumps)
-              bb.(elim-dead-code))
-            bb.(null-unused-data)))
+              bb.(elim-dead-code))))
         (cond
           ((>= olev 7)
            bb.(merge-jump-thunks)
            bb.(compact-tregs)
-           bb.(late-peephole me.(compact-dregs bb.(get-insns))))
+           bb.(late-peephole me.(compact-dregs-and-syms bb.(get-insns))))
           ((>= olev 5)
-           me.(compact-dregs bb.(get-insns)))
+           me.(compact-dregs-and-syms bb.(get-insns)))
           (t  bb.(get-insns))))
       insns)))
 
