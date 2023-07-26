@@ -798,16 +798,12 @@
           cl.(apply-treg-compacting-map map))))))
 
 (defmeth basic-blocks null-unused-data (bb)
-  (let ((used-dregs 0)
-        (used-funs 0)
+  (let ((used-funs 0)
         (co bb.compiler))
     (each ((bl bb.list))
       (each ((insn bl.insns))
-        (if-match @(coll (d @dn)) insn
-          (set-mask used-dregs (mask . dn)))
         (if-match (@(or gcall gapply getf getlx setlx) @nil @fn . @nil) insn
           (set-mask used-funs (mask fn)))))
-    co.(null-dregs used-dregs)
     co.(null-stab used-funs)))
 
 (defun rewrite (fun list)

@@ -377,12 +377,11 @@
     (condlet
       ((((null dobj))) '(t 0))
       (((dreg [me.dreg dobj])) dreg)
-      ((((< me.dreg-cntr %lev-size%)))
-       (let ((dreg ^(d ,(pinc me.dreg-cntr))))
-         (set me.datavec nil
-              [me.data (cadr dreg)] dobj
-              [me.dreg dobj] dreg)))
-      (t (compile-error me.last-form "code too complex: too many literals")))))
+      (t
+        (let ((dreg ^(d ,(pinc me.dreg-cntr))))
+          (set me.datavec nil
+               [me.data (cadr dreg)] dobj
+               [me.dreg dobj] dreg))))))
 
 (defmeth compiler alloc-dreg (me)
   (if (< me.dreg-cntr %lev-size%)
@@ -1745,6 +1744,24 @@
              (push lt-frag me.lt-frags)
              (new (frag dreg nil nil nil exp.pars))))))))
 
+(defmeth compiler compact-dregs (me insns)
+  (let ((map (hash))
+        (i 0))
+    (each ((insn insns))
+      (if-match @(coll @(as dr (d @nil))) insn
+        (each ((d dr))
+          (unless (inhash map d)
+            (set [map d] ^(d ,(pinc i)))))))
+    (let ((data (hash :eql-based)))
+      (dohash (from-dreg to-dreg map)
+        (set [data (cadr to-dreg)] [me.data (cadr from-dreg)]))
+      (set me.data data))
+    (each ((cell me.dreg))
+      (upd (cdr cell) map))
+    (set me.datavec nil
+         me.dreg-cntr i)
+    (mapcar [iffi consp (op mapcar [orf map use])] insns)))
+
 (defmeth compiler optimize (me insns)
   (let ((olev *opt-level*))
     (if (>= olev 4)
@@ -1767,8 +1784,10 @@
           ((>= olev 7)
            bb.(merge-jump-thunks)
            bb.(compact-tregs)
-           bb.(late-peephole bb.(get-insns)))
-          (t bb.(get-insns))))
+           bb.(late-peephole me.(compact-dregs bb.(get-insns))))
+          ((>= olev 5)
+           me.(compact-dregs bb.(get-insns)))
+          (t  bb.(get-insns))))
       insns)))
 
 (defun true-const-p (arg)
@@ -2326,9 +2345,12 @@
         (eval-cache-emit-warnings))
       co.(free-treg oreg)
       co.(check-treg-leak)
-      as.(asm co.(optimize ^(,*(mappend .code (nreverse co.lt-frags))
-                             ,*frag.code
-                             (jend ,frag.oreg))))
+      (let ((insns co.(optimize ^(,*(mappend .code (nreverse co.lt-frags))
+                                   ,*frag.code
+                                   (jend ,frag.oreg)))))
+        (unless (< co.dreg-cntr %lev-size%)
+          (compile-error co.last-form "code too complex: too many literals"))
+        as.(asm insns))
       (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-symvec)))))
 
 (defun get-param-info (sym)
