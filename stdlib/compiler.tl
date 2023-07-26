@@ -379,9 +379,9 @@
       (((dreg [me.dreg dobj])) dreg)
       ((((< me.dreg-cntr %lev-size%)))
        (let ((dreg ^(d ,(pinc me.dreg-cntr))))
-        (set me.datavec nil
-             [me.data (cadr dreg)] dobj
-             [me.dreg dobj] dreg)))
+         (set me.datavec nil
+              [me.data (cadr dreg)] dobj
+              [me.dreg dobj] dreg)))
       (t (compile-error me.last-form "code too complex: too many literals")))))
 
 (defmeth compiler alloc-dreg (me)

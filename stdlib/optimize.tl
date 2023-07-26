@@ -739,7 +739,7 @@
               (if-match (t @nil) reg
                 (set [map reg] ^(t ,(len map))))))
            (add-tregs (args)
-              [mapcar add-treg args]))
+             [mapcar add-treg args]))
     (iflet ((cl bl.closer))
       (let ((cloinsn (car (last cl.insns))))
         (add-tregs (cddr cloinsn))))
