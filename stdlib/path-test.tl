@@ -301,9 +301,9 @@
            (let ((vol (car more)))
 	     (cond
 	       ((nequal "" vol)
-		(set (car comp) "")
-		(set (cdr comp) (cdr more))
-		vol)
+               (set (car comp) "")
+               (set (cdr comp) (cdr more))
+               vol)
 	       (t :abs))))
           ((and (m^ #/[A-Za-z0-9]+:/ head) head)
            (set (car comp) next)
@@ -311,7 +311,7 @@
            (if (and (equal "" next) more)
              ^(:abs . ,head)
              ^(:rel . ,head)))))
-      (if (equal head "") :abs))))
+      (if (and (equal head "") (cdr comp)) :abs))))
 
 (defun rel-path (from to)
   (let* ((fspl (path-split from))

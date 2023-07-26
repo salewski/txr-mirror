@@ -19,4 +19,7 @@
   (rel-path "x///" "x") "."
   (rel-path "x" "x///") "."
   (rel-path "///x" "/x") "."
-  (rel-path "../../x" "y") :error)
+  (rel-path "../../x" "y") :error
+  (rel-path "" "") "."
+  (rel-path "a" "") ".."
+  (rel-path "" "a") "a")
