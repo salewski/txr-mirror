@@ -1341,11 +1341,11 @@ val hash_iter_peek(struct hash_iter *hi)
   if (!h)
     return nil;
 
-  do {
+  while (index <= mask) {
     val cell = hi->table->v.vec[index++];
     if (cell)
       return cell;
-  } while (index <= mask);
+  }
 
   return nil;
 }
