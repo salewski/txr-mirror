@@ -550,12 +550,6 @@
   (match-ecase 42 (@a a)) 42
   (match-ecase '(1 2) ((@a) a)) :error)
 
-(compile-only
-  (eval-only
-    (with-compile-opts (nil unused)
-      (compile-file (base-name *load-path*) "temp.tlo"))
-    (remove-path "temp.tlo")))
-
 (mtest
   (match @`foo-@a` "foo-abc" a) "abc"
   (match ^(,`foo-@a`) '("foo-abc") a) "abc"
@@ -588,3 +582,9 @@
         (y 24))
     (match-cond
       (`@x-24` `42-@y`))) "42-24")
+
+(compile-only
+  (eval-only
+    (with-compile-opts (nil unused)
+      (compile-file (base-name *load-path*) "temp.tlo"))
+    (remove-path "temp.tlo")))
