@@ -800,6 +800,8 @@
        ,body)))
 
 (defun sys:get-fun-getter-setter (sym : f)
+  (unless (bindable sym)
+    (compile-error f "~s isn't a bindable symbol" sym))
   (tree-case sym
     ((type struct slot)
       (if (eq type 'meth)
