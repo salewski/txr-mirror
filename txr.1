@@ -45388,12 +45388,15 @@ occurring in a pattern may be a fresh variable, or a reference to an existing
 one. The difference between these situations is not apparent from the syntax
 of the pattern; it depends on the context established by the scope.
 
-With one exception, if a pattern contains a variable which is already in
-the surrounding scope, including a global variable, then it refers to that
-variable. Otherwise, it freshly binds the variable.
-The exception is that pattern operator
+With one exception, if a pattern contains a variable which is already bound in
+the surrounding scope, then it refers to that binding.  Otherwise, it freshly
+binds the variable.  The exception is that pattern operator
 .code @(as)
-always binds a fresh variable.
+always binds a fresh variable. A variable being already bound includes
+as a lexical or global symbol macro
+.cod2 ( symacrolet
+or
+.codn defsymacro ).
 
 When a pattern variable refers to an existing variable, then each occurrence
 of that variable must match an object which is

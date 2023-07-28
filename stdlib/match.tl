@@ -121,7 +121,7 @@
   menv
 
   (:method exists (me sym) (or (member sym me.vars)
-                               (lexical-var-p me.menv sym)
+                               (lexical-binding-kind me.menv sym)
                                (boundp sym)))
   (:method record (me sym) (push sym me.vars))
   (:method merge (me copy) (each ((v copy.vars)) (pushnew v me.vars))))

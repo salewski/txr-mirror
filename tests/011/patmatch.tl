@@ -583,6 +583,25 @@
     (match-cond
       (`@x-24` `42-@y`))) "42-24")
 
+(mtest
+  (symacrolet ((x 3))
+    (match @x 4 x)) :error
+  (symacrolet ((x 3))
+    (match @x 3 x)) 3
+  (let ((x 3))
+    (match @x 4 x)) :error
+  (let ((x 3))
+    (match @x 3 x)) 3)
+
+(defvar dv :dv)
+(defsymacro gs :gs)
+
+(mtest
+  (match @dv 0 dv) :error
+  (match @dv :dv dv) :dv
+  (match @gs 0 gs) :error
+  (match @gs :gs gs) :gs)
+
 (compile-only
   (eval-only
     (with-compile-opts (nil unused)
