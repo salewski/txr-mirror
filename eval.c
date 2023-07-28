@@ -109,7 +109,7 @@ val const_foldable_s;
 val pct_fun_s;
 
 val special_s, unbound_s;
-val whole_k, form_k, symacro_k;
+val whole_k, form_k, symacro_k, macro_k;
 
 val last_form_evaled;
 
@@ -765,23 +765,58 @@ static val special_var_p(val sym)
              if2(autoload_try_var(sym), gethash(special, sym)));
 }
 
-static val lexical_var_p(val menv, val sym)
+static val lexical_binding_kind(val menv, val sym)
 {
   if (nilp(menv)) {
     return nil;
-  } else if (special_var_p(sym)) {
-    return nil;
   } else {
-    type_check(lit("lexical-var-p"), menv, ENV);
+    type_check(lit("lexical-binding-kind"), menv, ENV);
 
     {
       val binding = assoc(sym, menv->e.vbindings);
 
-      if (binding) /* special_s: see make_var_shadowing_env */
-        return tnil(cdr(binding) == special_s);
-      return lexical_var_p(menv->e.up_env, sym);
+      if (binding) {
+        /* special_s: see make_var_shadowing_env */
+        if (cdr(binding) != special_s)
+          return symacro_k;
+        else if (special_var_p(sym))
+          return nil;
+        return var_k;
+      }
     }
+
+    return lexical_binding_kind(menv->e.up_env, sym);
   }
+}
+
+static val lexical_fun_binding_kind(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return nil;
+  } else {
+    type_check(lit("lexical-fun-binding-kind"), menv, ENV);
+
+    {
+      val binding = assoc(sym, menv->e.fbindings);
+
+      /* special_s: see make_var_shadowing_env */
+      if (binding)
+        return if3(cdr(binding) == special_s,
+                   fun_k, macro_k);
+    }
+
+    return lexical_fun_binding_kind(menv->e.up_env, sym);
+  }
+}
+
+static val lexical_var_p(val menv, val sym)
+{
+  return eq(lexical_binding_kind(menv, sym), var_k);
+}
+
+static val lexical_symacro_p(val menv, val sym)
+{
+  return eq(lexical_binding_kind(menv, sym), symacro_k);
 }
 
 static val old_lexical_var_p(val menv, val sym)
@@ -803,19 +838,12 @@ static val old_lexical_var_p(val menv, val sym)
 
 static val lexical_fun_p(val menv, val sym)
 {
-  if (nilp(menv)) {
-    return nil;
-  } else {
-    type_check(lit("lexical-fun-p"), menv, ENV);
+  return eq(lexical_fun_binding_kind(menv, sym), fun_k);
+}
 
-    {
-      val binding = assoc(sym, menv->e.fbindings);
-
-      if (binding) /* special_s: see make_var_shadowing_env */
-        return tnil(cdr(binding) == special_s);
-      return lexical_fun_p(menv->e.up_env, sym);
-    }
-  }
+static val lexical_macro_p(val menv, val sym)
+{
+  return eq(lexical_fun_binding_kind(menv, sym), macro_k);
 }
 
 static val lexical_lisp1_binding(val menv, val sym)
@@ -828,9 +856,14 @@ static val lexical_lisp1_binding(val menv, val sym)
     {
       val binding = assoc(sym, menv->e.vbindings);
 
-      if (binding) /* special_s: see make_var_shadowing_env */
-        return if3(cdr(binding) == special_s,
-                   var_k, symacro_k);
+      if (binding) {
+        /* special_s: see make_var_shadowing_env */
+        if (cdr(binding) != special_s)
+          return symacro_k;
+        else if (special_var_p(sym))
+          return nil;
+        return var_k;
+      }
     }
 
     {
@@ -7055,6 +7088,7 @@ void eval_init(void)
   special_s = intern(lit("special"), system_package);
   unbound_s = make_sym(lit("unbound"));
   symacro_k = intern(lit("symacro"), keyword_package);
+  macro_k = intern(lit("macro"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
   switch_s = intern(lit("switch"), system_package);
   struct_s = intern(lit("struct"), user_package);
@@ -7426,7 +7460,13 @@ void eval_init(void)
   reg_fun(intern(lit("env-fbindings"), user_package), func_n1(env_fbindings));
   reg_fun(intern(lit("env-next"), user_package), func_n1(env_next));
   reg_fun(intern(lit("lexical-var-p"), user_package), func_n2(lexical_var_p));
+  reg_fun(intern(lit("lexical-symacro-p"), user_package), func_n2(lexical_symacro_p));
   reg_fun(intern(lit("lexical-fun-p"), user_package), func_n2(lexical_fun_p));
+  reg_fun(intern(lit("lexical-macro-p"), user_package), func_n2(lexical_macro_p));
+  reg_fun(intern(lit("lexical-binding-kind"), user_package),
+          func_n2(lexical_binding_kind));
+  reg_fun(intern(lit("lexical-fun-binding-kind"), user_package),
+          func_n2(lexical_fun_binding_kind));
   reg_fun(intern(lit("lexical-lisp1-binding"), user_package),
           func_n2(lexical_lisp1_binding));
   reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));

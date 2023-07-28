@@ -41187,13 +41187,15 @@ to discover the identities of the variables and functions which are used inside
 that form, whose definitions come from a specific, bounded scope surrounding
 that form.
 
-.coNP Functions @ lexical-var-p and @ lexical-fun-p
+.coNP Functions @, lexical-var-p @, lexical-fun-p @ lexical-symacro-p and @ lexical-macro-p
 .synb
 .mets (lexical-var-p < env << form )
 .mets (lexical-fun-p < env << form )
+.mets (lexical-symacro-p < env << form )
+.mets (lexical-macro-p < env << form )
 .syne
 .desc
-These two functions are useful to macro writers. They are intended
+These four functions are useful to macro writers. They are intended
 to be called from the bodies of macro expanders, such as the bodies of
 .code defmacro
 or
@@ -41206,8 +41208,12 @@ via the special
 parameter. Using these functions, a macro can enquire whether
 a given
 .meta form
-is a symbol which has a variable binding or a function binding
-in the local lexical environment.
+is, respectively, a symbol which has a variable binding, a function binding,
+a symbol macro (defined by
+.codn symacrolet )
+or a macro (defined by
+.codn macrolet )
+in the environment of the macro's invocation.
 This information is known during macro expansion. The macro expander
 recognizes lexical function and variable bindings, because these
 bindings can shadow macros.
@@ -41244,7 +41250,15 @@ Similarly,
 .code lexical-fun-p
 returns
 .code nil
-for global functions.
+for global functions,
+.code lexical-symacro-p
+returns
+.code nil
+for global symbol macros and
+.code lexical-macro-p
+returns
+.code nil
+for global macros.
 
 .TP* Example:
 
@@ -41280,15 +41294,66 @@ for global functions.
 
 .TP* Note:
 
-These functions do not call
-.code macroexpand
-on the form. In most cases, it is necessary for the macro writers
-to do so. Not that in the above example,  symbol
-.code y
-is classified as neither a lexical function nor variable.
-However, it can be macro-expanded to
-.code x
-which is a lexical variable.
+.coNP Function @ lexical-binding-kind
+.synb
+.mets (lexical-binding-kind < env << symbol )
+.syne
+.desc
+The
+.code lexical-binding-kind
+function inspects the macro-time environment
+.meta env
+to determine what kind of binding, if any, does
+.meta symbol
+have in the the variable namespace of that environment.
+
+If the innermost binding for
+.meta symbol
+is a variable binding, then either
+.code :var
+is returned if the variable is lexical, otherwise
+.code nil
+is returned if the variable is special.
+
+If the innermost binding for
+.meta symbol
+is a symbol macro, then
+.code :symacro
+is returned.
+
+In all other cases,
+.code nil
+is returned. The function does not consider global symbol macros
+or global lexical variables.
+
+.coNP Function @ lexical-fun-binding-kind
+.synb
+.mets (lexical-fun-binding-kind < env << symbol )
+.syne
+.desc
+The
+.code lexical-fun-binding-kind
+function inspects the macro-time environment
+.meta env
+to determine what kind of binding, if any, does
+.meta symbol
+have in the the function namespace of that environment.
+
+If the innermost binding for
+.meta symbol
+is a function binding, then
+.code :fun
+is returned.
+
+If the innermost binding for
+.meta symbol
+is a macro, then
+.code :macro
+is returned.
+
+In all other cases,
+.code nil
+is returned. The function does not consider global macros or functions.
 
 .coNP Function @ lexical-lisp1-binding
 .synb
@@ -41319,12 +41384,27 @@ If no such lexical binding is found, then the function
 returns
 .codn nil .
 
+Note that
+.code :var
+is never returned for a special variable, but such a variable
+can be shadowed by a symbol macro, in which case
+.code :symacro
+is returned.
+
 Note that a
 .code nil
 return doesn't mean that the symbol doesn't have a lexical binding.  It could
 have an operator macro lexical binding (a macro binding in the function
 namespace established by
 .codn macrolet ).
+Unlike the
+.code lexical-binding-kind
+function, the
+.code lexical-lisp1-binding
+function never returns
+.code :macro
+because Lisp-1-style evaluation of symbols is blind to the existence of macros,
+other than symbol macros.
 
 .coNP Operator @ defsymacro
 .synb
