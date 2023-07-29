@@ -74,11 +74,11 @@
 
     (:postinit (bb)
       (let* ((insns (early-peephole (dedup-labels (cons bb.start bb.insns))))
-             (cuts (merge [where symbolp insns]
-                          [where [andf consp
-                                       (op memq (car @1) bb.jump-ops)]
-                                 (cons nil insns)]))
-             (parts (partition insns cuts))
+             (parts (partition-if (lambda (prev next)
+                                    (or (symbolp next)
+                                        (and (consp prev)
+                                             (memq (car prev) bb.jump-ops))))
+                                  insns))
              (lparts (mapcar [iff [chain car symbolp]
                                   use
                                   (op cons (gensym))]
