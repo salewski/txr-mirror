@@ -416,6 +416,9 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
   val xlast = uw_last_form_expanded();
   val info = source_loc_str(last, nil);
   val max_length = nil, max_depth = nil;
+  val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
+
+  env_vbind(dyn_env, print_circle_s, t);
 
   uw_dump_deferred_warnings(out_stream);
 
@@ -513,6 +516,8 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
     set_max_length(out_stream, max_length);
     set_max_depth(out_stream, max_depth);
   }
+
+  dyn_env = saved_de;
 }
 
 val lookup_global_var(val sym)
