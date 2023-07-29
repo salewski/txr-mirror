@@ -1,3 +1,72 @@
+                                    TXR 290
+                                   2023-07-29
+
+
+  Features
+
+  - Compiler:
+    - Deeper constant-folding optimizations, assisted
+      by data flow information.
+
+  - Data Integrity:
+    - SHA-1 digest now provided; it is in wide use.
+
+  - Lib:
+    - group-by, group-reduce and unique functions refactored to use sequence
+      iteration.
+
+  - Math:
+    - Numerous C99 math functions now exposed:
+      - cbrt, erf, erfc, exp10, exp2, expm1, gamma, j0, j1, lgamma,
+        log1p, logb, nearbyint, rint, significand, tgamma, y0, y1,
+        copysign, drem, fdim, fmax, fmin, hypot, jn, ldexp, nextafter,
+        remainder, scalb, scalbln, and yn
+    - All of these can be user-defined in a custom arithmetic struct.
+
+  - Environments
+    - Internal representation of top-level environments is simplified,
+      eliminating a level of indirection.
+    - New functions for lexical introspection:
+      - lexical-binding-kind, lexical-fun-binding-kind,
+        lexical-symacro-p and lexical-macro-p.
+
+  Bugs
+
+  - hash: out-of-bounds access in hash-iter-peek function causing instability
+    in hash iteration that depend on this function.
+  - crypt function:
+    - handle libxcrypt failure tokens properly, so that we treat them as an
+      error instead of returnig them to the application.
+  - md5: was totally broken on big endian.
+  - VM: compiled functions were not picking up redefinitions of functions that
+    they call, sticking with the old functions. This issue was uncovered during
+    work on the new representation of top-level environments, which also
+    happens to fix the problem.
+  - pattern matching:
+    - the above VM bug fix means that the double definition of
+      sys:non-triv-pat-p in the pattern matching module is handled right;
+      causing sys:transform-qquote to be expanded using the correct definition
+      of the function, exposing an obscure issue with quasiquoted hash
+      literals.
+    - another bug: variable patterns like @var were not seeing lexical
+      symbol macros, only global symbol macros, global variables and
+      lexical variables.
+  - environments: redefinition of symbol macros was found not to trigger cache
+    invalidation in VM descriptors, causing compiled code to keep seeing
+    the old definitions of the symbol.
+  - lib: the del operator now works with index lists, which is the access
+    notation like [obj '(1 2 4)] for picking out indices.
+    As a result of this, there is a change in semantics in how the
+    replace function handles index lists. If there are fewer replacement
+    items than indices, then instead of stopping, the replace function
+    deletes the specified indices. (Subject to -C option.)
+  - paths: rel-path function was considering empty strings to be
+    absolute paths, causing (rel-path "" "a") to be diagnosed as an
+    invalid mixture of absolute and relative paths.
+  - environments: bugfix in lexical-var-p and lexical-lisp1-binding.
+
+
+
                                     TXR 289
                                    2023-07-02
 
