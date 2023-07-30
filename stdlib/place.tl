@@ -800,8 +800,6 @@
        ,body)))
 
 (defun sys:get-fun-getter-setter (sym : f)
-  (unless (bindable sym)
-    (compile-error f "~s isn't a bindable symbol" sym))
   (tree-case sym
     ((type struct slot)
       (if (eq type 'meth)
@@ -824,9 +822,11 @@
        (compile-error f "cannot assign to lambda")
        (compile-error f "invalid function syntax ~s" sym)))
     (else
-      (let ((cell (inhash sys:top-fb else nil)))
-        (cons (op cdr)
-              (op sys:rplacd cell))))))
+      (if (bindable else)
+        (let ((cell (inhash sys:top-fb sym nil)))
+          (cons (op cdr)
+                (op sys:rplacd cell)))
+        (compile-error f "~s isn't a bindable symbol" else)))))
 
 (defplace (symbol-function sym-expr) body
   (getter setter
