@@ -87,7 +87,7 @@
                                insns @1 label (car @1))
                              lparts))
         (mapdo (do set [bb.hash @1.label] @1) bb.list))
-      bb.(link-graph))
+      bb.(link-graph t))
 
     (:method num-blocks (bb)
       (len bb.list))
@@ -129,7 +129,13 @@
                 ,*cases))
             ,list))
 
-(defmeth basic-blocks link-graph (bb)
+(defmeth basic-blocks link-graph (bb : first-time)
+  (unless first-time
+    (each ((bl bb.list))
+      (set bl.links nil
+           bl.next nil
+           bl.prev nil
+           bl.rlinks nil)))
   (each* ((bl bb.list)
           (nxbl (append (cdr bl) '(nil))))
     (let* ((code bl.insns)
@@ -600,11 +606,6 @@
     (set bb.list (joinbl bb.list))))
 
 (defmeth basic-blocks elim-dead-code (bb)
-  (each ((bl bb.list))
-    (set bl.links nil
-         bl.next nil
-         bl.prev nil
-         bl.rlinks nil))
   bb.(link-graph)
   (let* ((visited (hash :eq-based)))
     (labels ((visit (bl)
@@ -633,7 +634,8 @@
             (del [visited bl])))
         (if rep
           (upd bb.list (keep-if visited))))))
-  bb.(join-blocks))
+  bb.(join-blocks)
+  bb.(link-graph))
 
 (defmeth basic-blocks merge-jump-thunks (bb)
   (let* ((candidates (mappend [andf [chain .links len (op eql 1)]
