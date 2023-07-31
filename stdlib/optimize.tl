@@ -115,6 +115,7 @@
            nxbl.insns nil
            bl.next nxbl.next
            bl.links nxbl.links
+           bl.nojoin nxbl.nojoin
            bb.list (remq nxbl bb.list))
       (if nxbl.next
         (set nxbl.next.prev bl.prev))
