@@ -1,0 +1,6 @@
+@(bind a ("a" "b" "c"))
+@(output)
+@(repeat :counter (i 1) :vars ((x (len a))))
+@i @x @a
+@(end)
+@(end)

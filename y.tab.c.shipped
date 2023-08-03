@@ -7351,10 +7351,10 @@ static val expand_repeat_rep_args(val args)
       }
     } else if (exp_pair) {
       match_reg_var(arg);
+      ptail = list_collect(ptail, arg);
     }
 
     exp_pair = exp_pairs = nil;
-    ptail = list_collect(ptail, arg);
   }
 
   return out;
