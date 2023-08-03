@@ -59065,6 +59065,19 @@ notation denotes the following transformation applied to each argument:
   .(method ...)  -> .(method ...)
   atom           -> atom
 
+  ;; forms headed by let are treated specially
+
+  (let sym)      -> ;; described below
+
+  (let (s0 i0)
+       (s1 i1)
+       ....)     -> ;; described below
+
+  (let ((s0 i0)
+        (s1 i1)) -> ;; described below
+    body)
+
+
   ;; other compound forms are transformed like this:
 
   (function ...) -> (op function ...)
@@ -59089,6 +59102,78 @@ or the respective dot notations, forms which invoke any of the
 .code do
 family of operators, as well as any atom forms.
 
+When a
+.code let
+or
+.code let*
+expression occurs in
+.code opip
+syntax, it denotes a special syntax which is treated as follows.
+.RS
+.IP 1.
+The simple form
+.mono
+.meti (let << sym )
+.onom
+where
+.meta sym
+is a symbol is transformed into the
+.mono
+.meti (let >> ( sym @1))
+.onom
+syntax, which is then handled via the following case (2).
+.IP 2.
+The form
+.mono
+.meti (let >> {( sym << init )}+)
+.onom
+specifies an implicit function which binds the specified variables.
+The variables are bound sequentially as if by
+.codn let* ,
+even though the operator is
+.codn let .
+Note also that the bindings are not enclosed in a list. An example
+of the syntax is
+.code "(let (x @1) (y (+ x @2)))"
+which specifies a function of two arguments, inside of which
+.code x
+will be bound to the first argument, and
+.code y
+will be bound to the value of
+.code x
+plus the second argument.
+The remaining elements of the
+.code opip
+are incorporated into the body of this function. The value of
+the first argument,
+.codn @1 ,
+is injected into the
+.code opip
+remaining opip chain, and that chain is processed in a scope
+in which the variables bound by
+.code let
+are visible.
+.IP 3.
+All other
+.code let
+forms not matching the above syntax are treated like all special
+operators. They become a
+.code do
+element of the
+.code opip
+pipeline. For instance
+.code "(let ((x @1)) (+ x 1))"
+denotes a one-argument function which binds
+.code x
+to its first argument, then produces the value
+.code "(+ x 1)"
+which is passed to the next stage of the
+.code opip
+chain. The remaining chain is not evaluated in the scope of the
+.code x
+variable.
+.RE
+.IP
 Note: the
 .code opip
 and
@@ -59104,7 +59189,7 @@ which follows from a documented property of the
 .code chain
 function.
 
-.TP* Example:
+.TP* Examples:
 Take each element from the list
 .code "(1 2 3 4)"
 and multiply it by three, then add 1.
@@ -59137,6 +59222,46 @@ and
 respectively, whereas
 .code "[iff oddp list]"
 is passed through untransformed.
+
+The following demonstrates the single variable
+.codn let :
+
+.mono
+  (let ((pipe (opip (+ 1) (let x)
+                    (+ 2) (let y)
+                    (+ 3)
+                    (list x y))))
+    [pipe 1])
+  -> (2 4 7)
+.onom
+
+The
+.code x
+variable intercepts the value coming from
+.code "(+ 1)"
+and binds
+.code x
+to that value. When the
+.code opip
+function is invoked with the argument
+.codn 1 ,
+that value is
+.codn 2 .
+That value also continues to the
+.code "(+ 2)"
+element which yields
+.codn 4 ,
+which is similarly captured by variable
+.codn y .
+The final
+.code list
+expression lists the values of
+.code x
+and
+.codn y ,
+as well as, implicitly, the value
+.code @1
+coming from the previous element,
 
 .coNP Macro @ flow
 .synb

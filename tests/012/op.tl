@@ -99,3 +99,9 @@
         (partition-if (op neq 1 (- @2 @1)))
         (find-max-key @1 : len))
       80)
+
+(mtest
+  (flow 1 (+ 1) (let x) (+ 2) (let y) (+ 3) (list x y @1)) (2 4 7)
+  (flow 10 (+ 1) (let (x @1) (y (* x 2))) (+ x y)) 44
+  (flow 10 (+ 1) (let ((x @1) (y (* @1 2))) (+ x y))) 33
+  (flow 10 (+ 1) (let ((x @1) (y (* @1 2))))) nil)

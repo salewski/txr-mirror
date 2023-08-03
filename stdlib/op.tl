@@ -216,16 +216,41 @@
 (defmacro aret (arg)
   ^(ap identity* ,arg))
 
+(defun sys:opip-single-let-p (c)
+  (tree-case c
+    ((op sym)
+     (and (eq op 'let)
+          (atom sym)))
+    (t nil)))
+
+(defun sys:opip-let-p (c)
+  (tree-case c
+    ((op (sym t) . rest)
+     (and (eq op 'let)
+          (atom sym)
+          (listp rest)))
+    (t nil)))
+
 (defun sys:opip-expand (e clauses)
-  (collect-each ((c clauses))
-    (if (atom c)
-      c
-      (let ((sym (car c)))
-        (if (member sym '(dwim uref qref op do lop ldo ap ip ado ido ret aret))
-          c
-          (let ((opdo (if (or (special-operator-p (car c))
-                              (macro-form-p c e)) 'do 'op)))
-            ^(,opdo ,*c)))))))
+  (tree-case clauses
+    (nil nil)
+    ((c . rest)
+     (if (atom c)
+       (cons c (sys:opip-expand e rest))
+       (let ((sym (car c)))
+         (cond
+           ((memq sym '(dwim uref qref op do lop ldo ap ip ado ido ret aret))
+            (cons c (sys:opip-expand e rest)))
+           ((sys:opip-single-let-p c)
+            (tree-bind (t sym) c
+              (sys:opip-expand e ^((let (,sym @1)) ,*rest))))
+           ((sys:opip-let-p c)
+            (tree-bind (t . vars) c
+              ^((do let* ,vars
+                  [(opip ,*(sys:opip-expand e rest)) @1]))))
+           (t (let ((opdo (if (or (special-operator-p (car c))
+                                  (macro-form-p c e)) 'do 'op)))
+                (cons ^(,opdo ,*c) (sys:opip-expand e rest))))))))))
 
 (defmacro opip (:env e . clauses)
   ^[chain ,*(sys:opip-expand e clauses)])
