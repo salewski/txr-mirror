@@ -539,7 +539,8 @@
                                                . @(all @(or (d @dn)
                                                             @(with (t 0) dn nil))))
                   . @rest)
-                 [%const-foldable% [bb.symvec idx]])
+                 [%const-foldable% [bb.symvec idx]]
+                 [none dn (lop member bb.lt-dregs : cadr)])
         (let* ((co bb.compiler)
                (dvec co.(get-datavec))
                (fun [bb.symvec idx])
