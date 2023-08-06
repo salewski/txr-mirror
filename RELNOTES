@@ -1,3 +1,27 @@
+                                    TXR 291
+                                   2023-08-06
+
+
+  Features
+
+  - opip macro:
+    - now supports binding variables which are visible
+      to the rest of the chain.
+
+
+  Bugs
+
+  - symbol-function accessor: not supporting functions whose names are not
+    symbols, like (meth ...)
+    - Regression introduced in TXR 290.
+  - compiler: invalid constant folding of load-time values.
+    - Recent regression.
+  - Pattern Language: in output-side @(repeat), inability to specify :vars
+    together with :counter.
+    - Regression dating back to March 2016.
+
+
+
                                     TXR 290
                                    2023-07-29
 
