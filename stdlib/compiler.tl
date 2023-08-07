@@ -2499,6 +2499,9 @@
 
 (defun dump-to-tlo (out-stream out)
   (let* ((*print-circle* t)
+         (*print-base* 10)
+         (*print-flo-format* "~s")
+         (*print-flo-precision* flo-max-dig)
          (*package* (sys:make-anon-package))
          (out-forms (partition* out.(get) (op where (op eq :fence)))))
     (prinl %tlo-ver% out-stream)
