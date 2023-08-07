@@ -62097,6 +62097,8 @@ instead of returning
 If
 .code close-stream
 is called in such a way that it returns a value, without throwing an exception,
+and that value isn't
+.codn nil ,
 that value is retained. Additional calls to the function with the same
 .meta stream
 object return that same value without having any effect on the stream.
