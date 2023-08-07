@@ -70,7 +70,7 @@ EXTRA_OBJS-$(add_win_res) += win/txr.res
 STDLIB_SRCS := $(wildcard stdlib/*.tl)
 STDLIB_TLOS := $(patsubst %.tl,%.tlo,$(STDLIB_SRCS))
 
-STDLIB_EARLY_PATS := %/error.tlo # these must be compiled first
+STDLIB_EARLY_PATS := %/optimize.tlo %/param.tlo %/compiler.tlo %/asm.tlo
 STDLIB_EARLY_TLOS := $(filter $(STDLIB_EARLY_PATS),$(STDLIB_TLOS))
 STDLIB_LATE_TLOS := $(filter-out $(STDLIB_EARLY_TLOS),$(STDLIB_TLOS))
 
