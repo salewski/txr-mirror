@@ -231,32 +231,42 @@
           (listp rest)))
     (t nil)))
 
-(defun sys:opip-expand (e clauses)
+(defun sys:opip-expand (e opsym dosym clauses)
   (tree-case clauses
     (nil nil)
     ((c . rest)
      (if (atom c)
-       (cons c (sys:opip-expand e rest))
+       (cons c (sys:opip-expand e opsym dosym rest))
        (let ((sym (car c)))
          (cond
            ((memq sym '(dwim uref qref op do lop ldo ap ip ado ido ret aret))
-            (cons c (sys:opip-expand e rest)))
+            (cons c (sys:opip-expand e opsym dosym rest)))
            ((sys:opip-single-let-p c)
             (tree-bind (t sym) c
-              (sys:opip-expand e ^((let (,sym @1)) ,*rest))))
+              (sys:opip-expand e opsym dosym ^((let (,sym @1)) ,*rest))))
            ((sys:opip-let-p c)
             (tree-bind (t . vars) c
               ^((do let* ,vars
-                  [(opip ,*(sys:opip-expand e rest)) @1]))))
+                  [(opip ,*(sys:opip-expand e opsym dosym rest)) @1]))))
            (t (let ((opdo (if (or (special-operator-p (car c))
-                                  (macro-form-p c e)) 'do 'op)))
-                (cons ^(,opdo ,*c) (sys:opip-expand e rest))))))))))
+                                  (macro-form-p c e)) dosym opsym)))
+                (cons ^(,opdo ,*c) (sys:opip-expand e opsym dosym
+                                                    rest))))))))))
 
 (defmacro opip (:env e . clauses)
-  ^[chain ,*(sys:opip-expand e clauses)])
+  ^[chain ,*(sys:opip-expand e 'op 'do clauses)])
 
 (defmacro oand (:env e . clauses)
-  ^[chand ,*(sys:opip-expand e clauses)])
+  ^[chand ,*(sys:opip-expand e 'op 'do clauses)])
+
+(defmacro lopip (:env e . clauses)
+  ^[chain ,*(sys:opip-expand e 'lop 'ldo clauses)])
+
+(defmacro loand (:env e . clauses)
+  ^[chand ,*(sys:opip-expand e 'lop 'ldo clauses)])
 
 (defmacro flow (val . opip-args)
   ^(call (opip ,*opip-args) ,val))
+
+(defmacro lflow (val . opip-args)
+  ^(call (lopip ,*opip-args) ,val))

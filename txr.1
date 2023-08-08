@@ -59006,10 +59006,12 @@ functions.
   (mapcar (ap list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
 .brev
 
-.coNP Macros @ opip and @ oand
+.coNP Macros @, opip @, oand @ lopip and @ loand
 .synb
 .mets (opip << clause *)
 .mets (oand << clause *)
+.mets (lopip << clause *)
+.mets (loand << clause *)
 .syne
 .desc
 The
@@ -59101,6 +59103,26 @@ or
 or the respective dot notations, forms which invoke any of the
 .code do
 family of operators, as well as any atom forms.
+
+The
+.code lopip
+and
+.code loand
+operators are similar to, respectively,
+.code opip
+and
+.codn oand ,
+except that they insert the implicit argument as the leftmost
+argument.  For these macros, the above specification of what transformations
+are applied to the arguments is modified as follows:
+
+.verb
+  ;; other compound forms are transformed like this:
+
+  (function ...) -> (lop function ...)
+  (operator ...) -> (ldo operator ...)
+  (macro ...)    -> (ldo macro ...)
+.brev
 
 When a
 .code let
@@ -59263,9 +59285,10 @@ as well as, implicitly, the value
 .code @1
 coming from the previous element,
 
-.coNP Macro @ flow
+.coNP Macros @ flow and @ lflow
 .synb
 .mets (flow < form << opip-arg *)
+.mets (lflow < form << lopip-arg *)
 .syne
 .desc
 The
@@ -59282,10 +59305,19 @@ arguments follow the semantics of the
 .code opip
 macro.
 
-The following equivalence holds:
+The same requirements apply to
+.codn lflow ,
+except that it is related to the
+.code lopip
+macro which inserts the implicit argument into the
+leftmost position.
+
+
+The following equivalences hold:
 
 .verb
-  (flow x ...)  <-->  [(opip ...) x]
+  (flow x ...)   <-->  [(opip ...) x]
+  (lflow x ...)  <-->  [(lopip ...) x]
 .brev
 
 That is to say,
@@ -59293,19 +59325,28 @@ That is to say,
 is equivalent to the application of an
 .codn opip -generated
 function to the value of
-.metn form .
+.metn form ,
+and likewise
+.code lflow
+is equivalent to the application of a
+.codn lopip -generated
+function.
 
 Note: if there are no
 .meta opip-arg
+or
+.meta lopip-arg
 arguments, then
 .code flow
 evaluates the
 .code x
 argument and returns
 .codn nil ;
-which follows from the behavior of
+which follows from the behavior of the
 .code opip
-when that operator is invoked with no arguments.
+and
+.code lopip
+macros, when those are invoked with no arguments.
 
 .TP* Examples:
 
@@ -59313,6 +59354,10 @@ when that operator is invoked with no arguments.
   (flow 1 (+ 2) (* 3) (cons 0)) -> (0 . 9)
 
   (flow "abc" (upcase-str) (regsub #/B/ "ZTE")) -> "AZTEC"
+
+  (flow 1 (- 10)) -> 9
+
+  (lflow 10 (- 1)) -> 9
 .brev
 
 .coNP Macro @ ret
