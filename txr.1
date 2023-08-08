@@ -88413,7 +88413,7 @@ named by uninterned symbols.
 .brev
 
 .IP 5.
-.BR "In pattern matching, put catch-all variable to use" :
+.BR "In destructuring and pattern matching, put catch-all variable to use" :
 
 Examples:
 
@@ -88436,6 +88436,17 @@ Examples:
 .brev
 
 .IP 6.
+In pattern matching, use the
+.code @nil
+pattern:
+
+.verb
+   (match-case obj
+      ((@a @nil) (calculate-something a))
+      (@nil (transform obj)))
+.brev
+
+.IP 7.
 .B "In macro parameter lists use t symbol" :
 in macro-style parameter lists, any variable may be replaced by the
 .code t
