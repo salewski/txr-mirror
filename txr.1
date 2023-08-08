@@ -65783,6 +65783,42 @@ description of the
 .code close-stream
 stream I/O function.
 
+With two exceptions, the value returned from
+.code close
+is retained by close-stream, such that repeated calls to
+.code close-stream
+then return that value without calling the
+.code close
+method.
+The exceptions are the values
+.code nil
+and
+.code :
+(the colon symbol).
+If either of these values is returned, and
+.code close-stream
+is invoked again on the same stream object, the
+.code close
+method will be called again.
+
+Furthermore, if the
+.code :
+symbol is returned by the
+.code close
+method, this indicates a successful close, and the
+.code close-stream
+function returns the
+.code t
+symbol rather than the
+.code :
+symbol.
+
+The rationale for this mechanism is that it supports reference-counted
+closing. A struct delegate stream may be written which is shared by
+several owners, which must each call
+.code close-stream
+before the underlying real stream is closed.
+
 .coNP Method @ flush
 .synb
 .mets << stream .(flush < offs << whence )

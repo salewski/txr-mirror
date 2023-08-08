@@ -2990,11 +2990,18 @@ val close_stream(val stream, val throw_on_error)
   struct strm_base *s = coerce(struct strm_base *,
                                cobj_handle(self, stream, stream_cls));
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  val res = s->close_result;
 
-  if (!s->close_result)
-    s->close_result = ops->close(stream, throw_on_error);
+  if (!res) {
+    res = ops->close(stream, throw_on_error);
 
-  return s->close_result;
+    if (res == colon_k)
+      res = t;
+    else if (res)
+      s->close_result = res;
+  }
+
+  return res;
 }
 
 val get_error(val stream)
