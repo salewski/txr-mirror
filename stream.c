@@ -459,6 +459,7 @@ static val dev_null_close(val stream, val throw_on_error)
   if (n->fd != -1) {
     close(n->fd);
     n->fd = -1;
+    return t;
   }
   return nil;
 }
@@ -1847,6 +1848,7 @@ static val dir_close(val stream, val throw_on_error)
   if (h->d != 0) {
     closedir(coerce(DIR *, h->d));
     h->d = 0;
+    return t;
   }
 
   return nil;

@@ -567,9 +567,10 @@ static val dgram_close(val stream, val throw_on_error)
     close(d->fd);
     d->fd = -1;
     d->err = 0;
+    return t;
   }
 
-  return t;
+  return nil;
 }
 
 static val dgram_get_prop(val stream, val ind)
