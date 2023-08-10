@@ -1411,6 +1411,8 @@
            (set form (rlcp ^(,bin ,a ,b) form)))
           ((- @a)
            (set form (rlcp ^(neg ,a) form)))
+          ((subtypep (typeof @a) @b)
+           (set form (rlcp ^(typep ,a ,b) form)))
           ((@(or ignore nilf) . @args)
            (if (eql sym 'ignore)
              (each ((a args))

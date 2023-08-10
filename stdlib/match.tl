@@ -163,8 +163,7 @@
                                                      (ret ^(slotp ,type-gensym
                                                                   ',@1))
                                                required-slots))
-                                     ^(subtypep (typeof ,obj-var)
-                                                ',required-type))))))
+                                     ^(typep ,obj-var ',required-type))))))
       (unless loose-p
         (let ((type (find-struct-type required-type)))
           (if type
