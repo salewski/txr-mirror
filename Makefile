@@ -131,7 +131,6 @@ endef
 
 define COMPILE_C_WITH_DEPS
 $(call ABBREV,CC)
-$(call SH,mkdir -p $(dir $@))
 $(call SH,$(TXR_CC) -MMD -MT $@ $(1) $(TXR_CFLAGS) -c -o $@ $<)
 endef
 
@@ -142,7 +141,6 @@ endef
 
 define WINDRES
 $(call ABBREV,RES)
-$(call SH,mkdir -p $(dir $@))
 $(call SH,windres -O coff -DTXR_VER=$(txr_ver) $< $@)
 endef
 
@@ -187,7 +185,7 @@ dbg/%-win.o: $(top_srcdir)%.c
 opt/%-win.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS, $(OPT_FLAGS))
 
-win/%.res: $(top_srcdir)win/%.rc $(top_srcdir)win/%.ico
+win/%.res: $(top_srcdir)win/%.rc $(top_srcdir)win/%.ico | win
 	$(call WINDRES)
 
 %.tlo: %.tl | $(PROG)
@@ -248,6 +246,13 @@ dbg/lex.yy.o: lex.yy.c
 
 opt/y.tab.o: y.tab.c
 dbg/y.tab.o: y.tab.c
+
+# Turn each directory in the object file tree into target built by mkdir -p
+$(sort $(foreach name,$(OBJS),$(dir $(name)))) win:
+	$(call SH,mkdir -p $@)
+
+# Make each object file depend on its own directory, so that it's created.
+$(foreach obj,$(OBJS),$(eval $(obj): | $(dir $(obj))))
 
 ifeq ($(maintainer),y)
 
