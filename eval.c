@@ -7548,6 +7548,7 @@ void eval_init(void)
   reg_fun(intern(lit("package-local-symbols"), user_package), func_n1o(package_local_symbols, 0));
   reg_fun(intern(lit("package-foreign-symbols"), user_package), func_n1o(package_foreign_symbols, 0));
   reg_fun(intern(lit("use-sym"), user_package), func_n2o(use_sym, 1));
+  reg_fun(intern(lit("use-sym-as"), user_package), func_n3o(use_sym_as, 2));
   reg_fun(intern(lit("unuse-sym"), user_package), func_n2o(unuse_sym, 1));
   reg_fun(intern(lit("use-package"), user_package), func_n2o(use_package, 1));
   reg_fun(intern(lit("unuse-package"), user_package), func_n2o(unuse_package, 1));

@@ -7314,13 +7314,19 @@ static void prot_sym_check(val func, val symname, val package)
   }
 }
 
-val use_sym(val symbol, val package_in)
+val use_sym_as(val symbol, val name, val package_in)
 {
-  val self = lit("use-sym");
+  val self = lit("use-sym-as");
   val package = get_package(self, package_in, t);
 
+  if (symbolp(name))
+    name = symbol_name(name);
+  else if (!stringp(name))
+    uw_throwf(error_s,
+              lit("~a: ~s: name must be specified as string or symbol"),
+              self, name, nao);
+
   if (symbol_package(symbol) != package) {
-    val name = symbol_name(symbol);
     val found = gethash_e(self, package->pk.symhash, name);
     val existing = cdr(found);
 
@@ -7336,6 +7342,11 @@ val use_sym(val symbol, val package_in)
   }
 
   return symbol;
+}
+
+val use_sym(val sym, val package_in)
+{
+  return use_sym_as(sym, symbol_name(sym), package_in);
 }
 
 val unuse_sym(val symbol, val package_in)

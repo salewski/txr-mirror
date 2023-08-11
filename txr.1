@@ -66129,9 +66129,9 @@ When a package is deleted with
 .codn delete-package ,
 its symbols are uninterned from all other packages.
 
-An existing symbol can be brought into a package via the
+An symbol existing in one package can be brought into another package via the
 .code use-sym
-function, causing it to be interned in that package. A symbol which thus exists
+function, causing it to be interned in the target package. A symbol which thus exists
 inside a package which is not its home package is called a
 .IR "foreign symbol" ,
 relative to that package.
@@ -66142,6 +66142,13 @@ is
 which refers to a symbol, relative to a package, which is interned in that
 package and that package is also its home. Every symbol interned in
 a package is either foreign or local.
+
+An existing symbol can also be brought into a package under a different
+name using the
+.code use-sym-as
+function, causing it to be interned under an alternative name.
+This has the effect of creating a local alias for a foreign symbol,
+and is intended as a renaming mechanism for resolving name clashes.
 
 If a foreign symbol is introduced into a package, and has the same name
 as an existing local symbol, the local symbol continues to exist, but
@@ -66251,6 +66258,73 @@ as the current package in the
 .code *package*
 variable. It then allows unqualified symbol references to refer across
 the fallback list.
+
+The \*(TL package system does not feature package nicknames,
+which have been found to be a source of clashes in large Common Lisp
+software collections, leading to the development of a feature
+called package local nicknames that is not part of ANSI CL, but
+supported by a number of implementations. In \*(TL,
+packages have only one name, accessible via
+.codn package-name .
+\*(TL packages are held in an association list called
+.codn *package-alist* ,
+which is public, which associates string names with packages.
+The function
+.code find-package
+which is used by the parser when looking up the package prefix
+of a qualified symbol, only uses the names which appears as keys
+in this association list. Usually those names are the same as
+the names of the package objects.  However, it's possible to manipulate
+this association list to create alias names for packages.
+Thus, it is possible for
+.code "(find-package \(dqfoo\(dq)"
+to return
+.code "#<package: bar>"
+if the name
+.str foo
+is associated, in
+.code *package-alist*
+with a package object named
+.strn bar .
+
+The \*(TL package system doesn't feature package local nicknames.
+There are three reasons for this.  One is that it doesn't have global package
+nicknames. The second is that the mechanism would be cumbersome,
+and add delay to the resolution of qualified symbols, requiring
+nicknames in the
+.code *package*
+to be searched for a package name, in addition to the dynamic
+.codn *package-alist* .
+The third reason is that package local nicknames do not actually solve the
+problem of clashing symbols, when an application uses multiple packages
+that each define a symbol by the same name. Package nicknames only
+shorten the qualified names required to refer to the symbols,
+Instead, \*(TL allows a foreign symbol to be interned in a
+package under a name which is different from its
+.codn symbol-name .
+Thus, rather than creating aliases for package names,
+\*(TL packages can locally rename the actual clashing symbols,
+which can then be referenced by unqualified names.
+
+By manipulating
+.codn *package-alist* ,
+a \*(TL source file can nevertheless achieve the creation of a
+de facto package nickname, which is local to a loaded file,
+by following the following example:
+
+.verb
+  ;; make sure that when this file finishes loading,
+  ;; or the loading is interrupted by an exception,
+  ;; the "u" package alias is deleted from *package-alist*
+  (push-after-load
+    (set *package-alist* [remqual "u" *package-alist* car]))
+
+  ;; push an alias named u for the usr package.
+  (push (cons "u" (find-package "usr")) *package-alist*)
+
+  ;; u: can now be used, until the end of this file
+  (u:prinl (u:list 1 2 3))
+.brev
 
 .NP* Package Examples
 The following example illustrates a simple scenario of a module
@@ -67153,55 +67227,86 @@ special symbols
 and
 .codn nil .
 
-.coNP Function @ use-sym
+.coNP Functions @ use-sym and @ use-sym-as
 .synb
 .mets (use-sym < symbol <> [ package ])
+.mets (use-sym-as < symbol < name <> [ package ])
 .syne
 .desc
 The
 .code use-sym
 function brings an existing
-.code symbol
+.meta symbol
 into
 .metn package .
 
-In all cases, the function returns
+The
+.code use-sym-as
+is similar, but allows an alternative
+.meta name
+to be specified. The
+.meta symbol
+will be interned under that name, rather than under its symbol name.
+
+In all cases, both function return
 .codn symbol .
 
-If
+The following equivalence holds:
+
+.verb
+  (use-sym s p)  <-->  (use-sym-as s (symbol-name s) p)
+.brev
+
+Thus, in the following descriptions, when the remarks are interpreted
+as applying to
+.codn use-sym ,
+the
+.meta name
+argument is understood as referring to the
+.code symbol-name
+of the
 .meta symbol
-is already interned in
-.metn package ,
+argument.
+
+If
+.meta package
+is the home package of
+.metn symbol ,
 then the function has no effect.
 
 Otherwise
 .meta symbol
 is interned in
-.metn package .
+.meta package
+under
+.metn name .
 
-If a symbol having the same name as
-.meta symbol
-already exists in
-.metn package ,
-then it is replaced.
+If a symbol is already interned in
+.meta package
+under
+.metn name ,
+then that symbol is is replaced.
 If that replaced symbol is a local symbol of
 .metn package ,
-then the replaced symbol turns into a hidden symbol associated
+meaning that
+.meta package
+is its home package,
+then that replaced symbol turns into a hidden symbol associated
 with the package. It is placed into a special hidden symbol store
 associated with
 .meta package
 and is stripped of its home package, becoming quasi-interned or uninterned.
 
-An odd case is possible whereby
-.meta symbol
-is already a hidden symbol of
-.metn package .
-In this case, the hidden symbol replaces some foreign symbol and
-is interned in
-.metn package .
-Thus it simultaneously exists as both an interned
-foreign symbol and as a hidden symbol of
-.metn package .
+Note:
+.code use-sym
+and
+.code use-sym-as
+are the basis for the
+.code defpackage
+clauses
+.code :use-syms
+and
+.codn :use-syms-as .
 
 .coNP Function @ unuse-sym
 .synb
@@ -67353,8 +67458,25 @@ The list of package names is processed as if by a call to
 .meIP (:use-syms << symbol *)
 The
 .code :use-syms
-clause specifies individual symbols to be interned in the present package.
-The arguments are symbols.
+clause specifies individual symbols to be brought into the present
+package, as if by the
+.code use-sym
+function. The arguments are symbols.
+.meIP (:use-syms-as >> { symbol << name }*)
+The
+.code :use-syms-as
+clause specifies individual symbols to be brought into the present
+package, as if by the
+.code use-sym-as
+function. The arguments constitute a property list consisting of interleaved
+symbols and names. Each
+.meta symbol
+argument is a symbol, and each
+.meta name
+is either a symbol or a string. If it is a symbol, then its name
+is retrieved via
+.code symbol-name
+and used in its place.
 .meIP (:use-from < package-name << symbol-name *)
 The
 .code :use-from

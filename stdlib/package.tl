@@ -61,6 +61,10 @@
                               (:use-syms
                                 ^((each ((s ',rest))
                                     (use-sym s ,pkg))))
+                              (:use-syms-as
+                                ^((doloop ((r ',rest (cddr r)))
+                                          (r)
+                                    (use-sym-as (car r) (cadr r) ,pkg))))
                               (:local
                                 ^((each ((n ',(mapcar (op sys:name-str 'symbol)
                                                       rest)))
