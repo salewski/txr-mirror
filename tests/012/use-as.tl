@@ -29,3 +29,11 @@
   (use-sym-as 3 '#:foo) :error
   (use-sym-as 'ldraw 3) :error
   (use-sym-as 'x 'x) x)
+
+(mtest
+  (find-symbol "ldraw") lottery:draw
+  (find-symbol "gdraw") graphics:draw
+  (unuse-sym 'ldraw) lottery:draw
+  (unuse-sym 'gdraw) graphics:draw
+  (find-symbol "ldraw") nil
+  (find-symbol "gdraw") nil)

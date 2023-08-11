@@ -67308,6 +67308,15 @@ clauses
 and
 .codn :use-syms-as .
 
+Note:
+if
+.code use-sym-as
+is used to introduce a foreign symbol into a package under a different
+name, that symbol cannot be removed with
+.codn unintern .
+It can only be removed using
+.codn unuse-sym .
+
 .coNP Function @ unuse-sym
 .synb
 .mets (unuse-sym < symbol <> [ package ])
@@ -67354,6 +67363,39 @@ If the package has no hidden symbol matching the removed
 then
 .meta symbol
 itself is returned.
+
+There are close similarities between the function
+.code unintern
+and
+.codn unuse-sym ,
+but the two are significantly different.
+
+Firstly,
+.code unuse-sym
+cannot be used to remove a symbol from its home package. As noted
+above, this requires
+.codn unintern .
+
+Secondly,
+.code unuse-sym
+can be used to undo the effect of
+.code use-sym-as
+whereby a foreign symbol is introduced into a package under a
+different name. If
+.meta symbol
+is not found under its name,
+.code unuse-sym
+will search the package for that symbol to discover whether it is
+present under a different name, and proceed with the removal
+using that name. The
+.code unintern
+function performs no such secondary check; if
+.meta symbol
+is not found in the package under its own name, the operation fails,
+and so
+.code unintern
+cannot be used for undoing the effect of
+.codn use-sym-as .
 
 .coNP Functions @ use-package and @ unuse-package
 .synb

@@ -7359,6 +7359,16 @@ val unuse_sym(val symbol, val package_in)
   val visible = cdr(found_visible);
   val hidden = cdr(found_hidden);
 
+  if (!found_visible || visible != symbol) {
+    name = hash_revget(package->pk.symhash, symbol, eq_f, identity_f);
+    if (name) {
+      found_visible = gethash_e(self, package->pk.symhash, name);
+      found_hidden = gethash_e(self, package->pk.hidhash, name);
+      visible = cdr(found_visible);
+      hidden = cdr(found_hidden);
+    }
+  }
+
   if (!found_visible || visible != symbol)
     return nil;
 
