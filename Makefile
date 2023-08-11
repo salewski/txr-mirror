@@ -107,23 +107,12 @@ ABBREV = $(if $(VERBOSE),\
            @:,\
            @printf "%s %s -> %s\n" $(1) \
            "$(patsubst $(top_srcdir)%,%,$<)" $@)
-# Filtering out $(DEP_$@) allows the abbreviated output to show just the direct
-# prerequisites without the long laundry list of additional dependencies.
 ABBREVN = $(if $(VERBOSE),\
             @:,\
             @printf "%s %s -> %s\n" $(1) \
-            "$(patsubst $(top_srcdir)%,%,$(filter-out $(DEP_$@),$^))" $@)
+            "$(patsubst $(top_srcdir)%,%,$^)" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 ABBREV3SH = $(if $(VERBOSE),:,printf "%s %s -> %s\n" $(1) "$(3)" $(2))
-
-define DEPGEN
-$(V)sed -e ':x'                                         \
-        -e '/\\$$/ {'                                   \
-        -e   'N; s/\\\n//'                              \
-        -e   'tx'                                       \
-        -e '}' < $(1) |                                 \
-  sed -e '1s/^/DEP_/' -e '1s/: [^ ]\+/ :=/' > $(1:.d=.v)
-endef
 
 define SH
 $(if $(VERBOSE),                                        \
@@ -144,7 +133,6 @@ define COMPILE_C_WITH_DEPS
 $(call ABBREV,CC)
 $(call SH,mkdir -p $(dir $@))
 $(call SH,$(TXR_CC) -MMD -MT $@ $(1) $(TXR_CFLAGS) -c -o $@ $<)
-$(call DEPGEN,${@:.o=.d})
 endef
 
 define LINK_PROG
@@ -245,31 +233,21 @@ $(PROG)-win: $(patsubst %/txr.o,%/txr-win.o,$(OPT_OBJS)) $(EXTRA_OBJS-y)
 $(PROG)-win-dbg: $(patsubst %/txr.o,%/txr-win.o,$(DBG_OBJS)) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,-mwindows)
 
-# Newline constant
-define NL
-
-
-endef
-
-CM := ,
-
-define DEP
-$(1): $(2)
-
-$(eval $(foreach item,$(1),DEP_$(item) += $(2)$(NL)))
-endef
-
 # Pull in dependencies
--include $(OBJS:.o=.d) $(OBJS:.o=.v)
+-include $(OBJS:.o=.d)
 
-# Add dependencies
-$(call DEP,$(OBJS) $(EXTRA_OBJS-y),config.make config.h)
+# Rebuild if config.make changes.
+$(OBJS) $(EXTRA_OBJS-y): config.make
 
-$(eval $(foreach item,lex.yy.o txr.o match.o parser.o,\
-          $(call DEP,opt/$(item) dbg/$(item),y.tab.h)))
+# Parser dependencies
+opt/lex.yy.o opt/txr.o opt/match.o opt/parser.o: y.tab.h
+dbg/lex.yy.o dbg/txr.o dbg/match.o dbg/parser.o: y.tab.h
 
-$(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
-          $(call DEP,$(item),config.make config.h)))
+opt/lex.yy.o: lex.yy.c
+dbg/lex.yy.o: lex.yy.c
+
+opt/y.tab.o: y.tab.c
+dbg/y.tab.o: y.tab.c
 
 ifeq ($(maintainer),y)
 
