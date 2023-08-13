@@ -2041,7 +2041,7 @@ void parse_init(void)
 
   reg_var(listener_hist_len_s, num_fast(500));
   reg_var(listener_multi_line_p_s, t);
-  reg_var(listener_sel_inclusive_p_s, nil);
+  reg_var(listener_sel_inclusive_p_s, t);
   reg_var(listener_pprint_s, nil);
   reg_var(listener_greedy_eval_s, nil);
   reg_var(rec_source_loc_s, nil);
