@@ -3566,10 +3566,16 @@ fi
 
 printf "Checking how to enable 64 bit off_t and time_t ..."
 
+file_offset_only_define=none
+time_bits_only_define=none
 file_offset_define=none
 time_bits_define=none
 
-for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 _TIME_BITS=64; do
+# We have a nested loop over pairs of options for off_t and time_t
+# because in Glibc, they are not independent. _TIME_BITS=64 cannot
+# be enabled if _FILE_OFFSET_BITS=64 isn't.
+for try_f in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64; do
+  for try_t in NOTHING _TIME_BITS=64; do
   cat > conftest.c <<!
 #include <limits.h>
 #include <time.h>
@@ -3591,47 +3597,79 @@ struct sizes {
   "\nSIZEOF_TIME_T=", DEC(sizeof (time_t)),
   "\n"
 };
-
 !
-  if ! conftest_o EXTRA_FLAGS=-D$try ; then
-    printf "failed\n\n"
+    if ! conftest_o EXTRA_FLAGS="-D$try_f -D$try_t" ; then
+      continue
+    fi
 
-    printf "Errors from compilation: \n\n"
-    cat conftest.err
-    exit 1
-  fi
+    eval $(tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/  *//')
 
-  eval $(tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/  *//')
+    if [ $SIZEOF_OFF_T -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
+      printf "failed\n"
+      exit 1
+    fi
 
-  if [ $SIZEOF_OFF_T -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
-    printf "failed\n"
-    exit 1
-  fi
+    # Regardless of what happens with time_t, if we detect the
+    # enabling of 64 bit off_t, we record then in the
+    # file_offset_only_define variable, and keep going.
 
-  if [ "$file_offset_define" = none ] ; then
-    if [ $(( SIZEOF_BYTE * SIZEOF_OFF_T )) -eq 64 ] ; then
-      if [ $try = NOTHING ] ; then
+    if [ "$file_offset_only_define" = none ] ; then
+      if [ $(( SIZEOF_BYTE * SIZEOF_OFF_T )) -eq 64 ] ; then
+        if [ $try_f = NOTHING ] ; then
+          file_offset_only_define=
+        else
+          file_offset_only_define=$try_f
+        fi
+      fi
+    fi
+
+    # Regardless of what happens with off_t, if we detect the
+    # enabling of 64 bit time_t, we record then in the
+    # time_bits_only_define variable, and keep going.
+
+    if [ "$time_bits_only_define" = none ] ; then
+      if [ $(( SIZEOF_BYTE * SIZEOF_TIME_T )) -eq 64 ] ; then
+        if [ $try_t = NOTHING ] ; then
+          time_bits_only_define=
+        else
+          time_bits_only_define=$try_t
+        fi
+      fi
+    fi
+
+    # If we get a combination of options (or lack thereof) that results in
+    # both 64 bit off_t and time_t, then we record those and are done.
+
+    if [ $(( SIZEOF_BYTE * SIZEOF_OFF_T )) -eq 64 ] && \
+       [ $(( SIZEOF_BYTE * SIZEOF_TIME_T )) -eq 64 ]
+    then
+      if [ $try_f = NOTHING ] ; then
         file_offset_define=
       else
-        printf -- " -D%s" $try
-        file_offset_define=$try
+        file_offset_define=$try_f
       fi
-    fi
-  fi
-
-  if [ "$time_bits_define" = none ] ; then
-    if [ $(( SIZEOF_BYTE * SIZEOF_TIME_T )) -eq 64 ] ; then
-      if [ $try = NOTHING ] ; then
+      if [ $try_t = NOTHING ] ; then
         time_bits_define=
       else
-        printf -- " -D%s" $try
-        time_bits_define=$try
+        time_bits_define=$try_t
       fi
-    fi
-  fi
 
-  [ "$file_offset_define" = none -o "$time_bits_define" = none ] || break
+      break
+    fi
+  done
 done
+
+# If 64 bit time_t was not detected, here we check whether we did
+# detect 64 bit off_t in above loop; and copy that auxiliary variable.
+if [ "$time_bits_define" = none -a -n "$file_offset_only_define" ] ; then
+  file_offset_define=$file_offset_only_define
+fi
+
+# Vice versa, if 64 bit off_t was not detected, here we check whether we did
+# detect 64 bit time_t in above loop; and copy that auxiliary variable.
+if [ "$file_offset_define" = none -a -n "$time_bits_only_define" ] ; then
+  time_bits_define=$time_bits_only_define
+fi
 
 case "$time_bits_define" in
 none )
@@ -3663,6 +3701,7 @@ esac
 if [ "$file_offset_define" = none ] ; then
   printf " (no 64 bit off_t)"
 elif [ -n "$file_offset_define" ] ; then
+  printf -- " -D%s" "$file_offset_define"
   printf "#define CONFIG_LARGE_FILE_OFFSET 1\n" >> config.h
   lang_flags="$lang_flags -D$file_offset_define"
 fi
@@ -3670,6 +3709,7 @@ fi
 if [ "$time_bits_define" = none ] ; then
   printf " (no 64 bit time_t)"
 elif [ -n "$time_bits_define" ] ; then
+  printf -- " -D%s" "$time_bits_define"
   lang_flags="$lang_flags -D$time_bits_define"
 fi
 
