@@ -76,7 +76,7 @@
 
 val parser_s, unique_s, circref_s;
 val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
-val listener_pprint_s, listener_greedy_eval_s;
+val listener_pprint_s, listener_greedy_eval_s, listener_auto_compound_s;
 val rec_source_loc_s, read_unknown_structs_s, read_bad_json_s;
 val json_s;
 val intr_s;
@@ -1618,6 +1618,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 #endif
   val pprint_var = lookup_global_var(listener_pprint_s);
   val greedy_eval = lookup_global_var(listener_greedy_eval_s);
+  val auto_parens = lookup_global_var(listener_auto_compound_s);
   val rw_f = func_f1v(out_stream, repl_warning);
   val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
   val brackets = mkstring(num_fast(repl_level), chr('>'));
@@ -1749,8 +1750,12 @@ val repl(val bindings, val in_stream, val out_stream, val env)
         hist_save(ls, in_stream, out_stream, histfile, histfile_w, hist_len_var);
         counter = prev_counter;
       } else {
+        val expr = if2(form != read_k,
+                       if3(auto_parens && cdr(forms),
+                           forms,
+                           cons(progn_s, forms)));
         val value = if3(form != read_k,
-                        eval_intrinsic(cons(progn_s, forms), nil, env),
+                        eval_intrinsic(expr, nil, env),
                         read_eval_ret_last(nil, prev_counter,
                                            in_stream, out_stream));
         val pprin = cdr(pprint_var);
@@ -2021,6 +2026,7 @@ void parse_init(void)
   listener_sel_inclusive_p_s = intern(lit("*listener-sel-inclusive-p*"), user_package);
   listener_pprint_s = intern(lit("*listener-pprint-p*"), user_package);
   listener_greedy_eval_s = intern(lit("*listener-greedy-eval-p*"), user_package);
+  listener_auto_compound_s = intern(lit("*listener-auto-compound-p*"), user_package);
   rec_source_loc_s = intern(lit("*rec-source-loc*"), user_package);
   read_unknown_structs_s = intern(lit("*read-unknown-structs*"), user_package);
   read_bad_json_s = intern(lit("*read-bad-json*"), user_package);
@@ -2044,6 +2050,7 @@ void parse_init(void)
   reg_var(listener_sel_inclusive_p_s, t);
   reg_var(listener_pprint_s, nil);
   reg_var(listener_greedy_eval_s, nil);
+  reg_var(listener_auto_compound_s, nil);
   reg_var(rec_source_loc_s, nil);
   reg_var(read_unknown_structs_s, nil);
   reg_var(read_bad_json_s, nil);

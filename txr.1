@@ -91830,6 +91830,35 @@ The object
 .code 4
 is self-evaluating, and so the greedy evaluation process stops.
 
+.coNP Special variable @ *listener-auto-compound-p*
+.desc
+The special variable
+.code *listener-auto-compound-p*
+controls whether or the listener is operating in "auto compound
+expression" mode. The default value is
+.codn nil ,
+disabling the feature.
+
+Normally, an input line can contain multiple expressions, which
+are treated as if they were combined into a single expression by
+.codn progn .
+Thus all the expressions are evaluated, and the value from
+the last one is printed.
+
+In auto compound mode, the behavior changes. An input line
+which consists of multiple expressions is turned into a compound
+form whose constituents are those items. Thus, for instance,
+the input
+.code "+ 2 2"
+is treated as the compound expression
+.code "(+ 2 2)"
+resulting in
+.code 4
+being calculated.
+
+When a single expression is input, it is evaluated as-is, and thus
+in that case auto compound expression mode makes no difference.
+
 .coNP Special variable @ *doc-url*
 .desc
 The special variable

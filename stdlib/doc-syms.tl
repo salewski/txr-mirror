@@ -14,6 +14,7 @@
       ("*filters*" "N-00E6A902")
       ("*gensym-counter*" "N-0387B1B1")
       ("*hash-seed*" "N-0041D85A")
+      ("*listener-auto-compound-p*" "N-03717672")
       ("*listener-greedy-eval-p*" "N-002B819C")
       ("*listener-hist-len*" "N-007B676F")
       ("*listener-multi-line-p*" "N-02C5CACF")
