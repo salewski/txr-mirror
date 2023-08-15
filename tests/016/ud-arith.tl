@@ -109,7 +109,9 @@
   (:method r-remainder (me arg) ^(remainder ,arg ,me.v))
   (:method r-scalb (me arg) ^(scalb ,arg ,me.v))
   (:method r-scalbln (me arg) ^(scalbln ,arg ,me.v))
-  (:method r-yn (me arg) ^(yn ,arg ,me.v)))
+  (:method r-yn (me arg) ^(yn ,arg ,me.v))
+  (:method tofloat (me) ^(tofloat ,me.v))
+  (:method toint (me) ^(toint ,me.v)))
 
 (defvarl n (new numbase v 1))
 
@@ -226,5 +228,7 @@
 (test (scalb 0 n) (scalb 0 1))
 (test (scalbln 0 n) (scalbln 0 1))
 (test (yn 0 n) (yn 0 1))
+(test (tofloat n) (tofloat 1))
+(test (toint n) (toint 1))
 
 (test (arithp n) t)

@@ -50128,6 +50128,15 @@ is a floating-point number, then it is converted by
 as if by the function
 .codn int-flo .
 
+If
+.meta value
+is a structure, then it is expected to implement the
+.code tofloat
+or
+.code toint
+method. This method is invoked by the same-named function, and the value is
+returned.
+
 .coNP Variables @ fixnum-min and @ fixnum-max
 .desc
 These variables hold, respectively, the most negative value of the
@@ -51555,6 +51564,28 @@ then, effectively, the method call
 takes place, and its return value is taken as the result
 of the operation.
 ..
+
+.um tofloat
+
+The method should return a floating-point value.
+It is also permissible for the method to return
+.codn nil ,
+in which case if it is invoked via
+.codn tofloatz ,
+that function will replace the
+.code nil
+return with value of 0.0.
+
+.um toint
+
+The method should return an integer value.
+It is permissible for the method to return
+.codn nil ,
+in which case if it is invoked via
+.codn tointz ,
+that function will replace the
+.code nil
+return with value of 0.
 
 .bmcv +
 .bmnl -

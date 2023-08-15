@@ -84,6 +84,8 @@ val r_copysign_s, r_drem_s, r_fdim_s, r_fmax_s, r_fmin_s, r_hypot_s;
 val r_jn_s, r_ldexp_s, r_nextafter_s, r_remainder_s, r_scalb_s;
 val r_scalbln_s, r_yn_s;
 
+val tofloat_s, toint_s;
+
 val make_bignum(void)
 {
   val n = make_obj();
@@ -4358,6 +4360,8 @@ val n_perm_k(val n, val k)
 
 val tofloat(val obj)
 {
+  val self = tofloat_s;
+
   switch (tag(obj)) {
   case TAG_NUM:
     return flo_int(obj);
@@ -4385,13 +4389,16 @@ val tofloat(val obj)
     }
     /* fallthrough */
   default:
-    uw_throwf(error_s, lit("tofloat: ~s is not convertible to float"), obj, nao);
+    if (type(obj) == COBJ)
+      return do_unary_method(self, self, obj);
+    uw_throwf(error_s, lit("~s: ~s is not convertible to float"),
+              self, obj, nao);
   }
 }
 
 val toint(val obj, val base)
 {
-  val self = lit("toint");
+  val self = toint_s;
 
   switch (tag(obj)) {
   case TAG_NUM:
@@ -4429,6 +4436,8 @@ val toint(val obj, val base)
     }
     /* fallthrough */
   default:
+    if (type(obj) == COBJ)
+      return do_unary_method(self, self, obj);
     uw_throwf(error_s, lit("~a: ~s is not convertible to integer"),
               self, obj, nao);
   }
@@ -5366,6 +5375,8 @@ void arith_init(void)
   width_s = intern(lit("width"), user_package);
   bitset_s = intern(lit("bitset"), user_package);
   logcount_s = intern(lit("logcount"), user_package);
+  tofloat_s = intern(lit("tofloat"), user_package);
+  toint_s = intern(lit("toint"), user_package);
 
   reg_varl(intern(lit("flo-dig"), user_package), num_fast(DBL_DIG));
   reg_varl(intern(lit("flo-max-dig"), user_package), num_fast(FLO_MAX_DIG));
@@ -5384,6 +5395,10 @@ void arith_init(void)
 #endif
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
 
+  reg_fun(tofloat_s, func_n1(tofloat));
+  reg_fun(toint_s, func_n2o(toint, 1));
+  reg_fun(intern(lit("tofloatz"), user_package), func_n1(tofloatz));
+  reg_fun(intern(lit("tointz"), user_package), func_n2o(tointz, 1));
   reg_fun(plus_s, func_n0v(plusv));
   reg_fun(minus_s, func_n1v(minusv));
   reg_fun(mul_s, func_n0v(mulv));
