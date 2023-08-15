@@ -589,8 +589,10 @@ static val tr_delete(val tree, struct tree *tr, val key)
 static val tr_delete_specific(val tree, struct tree *tr, val thisnode)
 {
   if (tr->root) {
+    val nkey = key(thisnode);
+    val key = if3(tr->key_fn, funcall1(tr->key_fn, nkey), nkey);
     val node = tr_do_delete_specific(tree, tr, tr->root,
-                                     nil, key(thisnode), thisnode);
+                                     nil, key, thisnode);
     if (node) {
       if (2 * --tr->size < tr->max_size) {
         tr_rebuild(tree, tr, tr->root, nil, tr->size);

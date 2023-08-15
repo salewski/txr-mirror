@@ -166,7 +166,7 @@
   (tree-delete tr 18) 18
   (tree-delete tr 19) 19)
 
-(set *tree-fun-whitelist* [list* '= '< *tree-fun-whitelist*])
+(set *tree-fun-whitelist* [list* '= '< 'to *tree-fun-whitelist*])
 
 (let ((tr [tree '(1 2 3) identity < =]))
   (mtest
@@ -256,3 +256,9 @@
     (tree-del-min tr) 10
     (tree-count tr) 0
     (tree-del-min tr) nil))
+
+(let* ((tr [tree '(#R(1 10) #R(11 20) #R(21 30)) to])
+       (node (tree-lookup-node tr 10)))
+  (test node #N(#R(1 10) nil nil))
+  (tree-delete-specific-node tr node)
+  (test tr #T((to) #R(11 20) #R(21 30))))
