@@ -60161,7 +60161,7 @@ execution of external utilities.
 
 .verb
   ;; redirect output of ls *.txt command to /dev/null
-  (let ((*stderr *stdnull*))
+  (let ((*stderr* *stdnull*))
     (sh "ls *.txt"))
 .brev
 
