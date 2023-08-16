@@ -98,7 +98,7 @@
 ..
 .\" Directive heading
 .de dir
-.  NP* The \f[4]\\$1\f[] directive
+.  NP* The \f[4]\\$1\f[] Directive
 ..
 .\" Multiple directive heading
 .de dirs
@@ -114,7 +114,7 @@
 .  if (\\n[.$]>0) \{\
 .    as s and \f[4]\\$1\f[]
 .  \}
-.  NP* The \\*s directives
+.  NP* The \\*s Directives
 ..
 .\" heading with code in position 1
 .de c1NP
@@ -5848,7 +5848,7 @@ clause before all
 .code gather
 clauses are satisfied.
 
-.coNP Keyword parameters in @ gather
+.coNP Keyword Parameters in @ gather
 The
 .code gather
 directive accepts the keyword parameter
@@ -6177,7 +6177,7 @@ case when the
 .code until
 clause matches, and the bindings of the main clause are discarded.
 
-.coNP Keyword parameters in @ collect
+.coNP Keyword Parameters in @ collect
 By default,
 .code collect
 searches the rest of the input indefinitely,
@@ -6414,7 +6414,7 @@ with a value of
 .codn nil .
 .PP
 
-.coNP Specifying variables in @ collect
+.coNP Specifying Variables in @ collect
 Normally, any variable for which a new binding occurs in a
 .code collect
 block is collected. A
@@ -6858,7 +6858,7 @@ can also be solved with
 .onom
 .PP
 
-.coNP Keyword parameters in @ coll
+.coNP Keyword Parameters in @ coll
 The
 .code @(coll)
 directive takes most of the same parameters as
@@ -7360,7 +7360,7 @@ which is then structurally matched against the pattern
 .codn "(X (Y Z))" ,
 and the variables receive the corresponding pieces.
 
-.coNP Keywords in the @ bind directive
+.coNP Keywords in The @ bind Directive
 The
 .code bind
 directive accepts these keywords:
@@ -7438,7 +7438,7 @@ matches
 .str c
 if these are upcased.
 
-.coNP Lisp forms in the @ bind directive
+.coNP Lisp Forms in The @ bind Directive
 
 \*(TL forms, introduced by
 .code @
@@ -8246,7 +8246,7 @@ to the
 .code @second
 variable.
 
-.coNP Interaction Between the @ trailer and @ accept Directives
+.coNP Interaction Between The @ trailer and @ accept Directives
 
 If one of the clauses which follow a
 .code @(trailer)
@@ -8296,7 +8296,7 @@ and adjusted back to the first line. Neglecting to do this adjustment
 would violate the semantics of
 .codn trailer .
 
-.coNP Interaction Between the @ next and @ accept Directives
+.coNP Interaction Between The @ next and @ accept Directives
 
 When the clauses under a
 .code next
@@ -8372,7 +8372,7 @@ is nested within that block, \*(TX would backtrack to the
 previous input position within
 .strn file-x .
 
-.coNP Interaction Between Functions and the @ accept directive
+.coNP Interaction Between Functions and the @ accept Directive
 If a pattern function is terminated due to
 .codn accept ,
 the function return mechanism intercepts the
@@ -14907,7 +14907,7 @@ a form are fully expanded prior to the evaluation of a form, therefore
 evaluation does not consider the possibility of a symbol being
 a symbol macro.
 
-.coNP Operator @ defvar and macro @ defparm
+.coNP Operator @ defvar and Macro @ defparm
 .synb
 .mets (defvar < sym <> [ value ])
 .mets (defparm < sym << value )
@@ -16526,7 +16526,7 @@ The entire lexical environment is copied; the copy and original function do not
 share any portion of the environment at any level of nesting.
 
 .SS* Sequencing, Selection and Iteration
-.coNP Operators/functions @ progn and @ prog1
+.coNP Operators/Functions @ progn and @ prog1
 .synb
 .mets (progn << form *)
 .mets (prog1 << form *)
@@ -16578,7 +16578,7 @@ nor
 .code prog1
 exist as functions.
 
-.coNP Macro/function @ prog2
+.coNP Macro/Function @ prog2
 .synb
 .mets (prog2 << form *)
 .syne
@@ -16889,7 +16889,7 @@ Without this clause, the case macro terminates with a value of
 .codn nil ,
 which may conceal the defect and delay its identification.
 
-.coNP Operator/function @ if
+.coNP Operator/Function @ if
 .synb
 .mets (if < cond < t-form <> [ e-form ])
 .mets '['if < cond < then <> [ else ]']'
@@ -16942,7 +16942,7 @@ argument, otherwise it returns the value of the
 argument if present, otherwise it returns
 .codn nil .
 
-.coNP Operator/function @ and
+.coNP Operator/Function @ and
 .synb
 .mets (and << form *)
 .mets '['and << arg *']'
@@ -17004,7 +17004,7 @@ Otherwise, it returns the value of the last argument.
   (and 1 2 3) -> 3  ;; shorthand for (if (and 1 2) 3).
 .brev
 
-.coNP Macro/function @ nand
+.coNP Macro/Function @ nand
 .synb
 .mets (nand << form *)
 .mets '['nand << arg *']'
@@ -17033,7 +17033,7 @@ They are related according to the following equivalences:
   [nand f0 f1 f2 ...] <--> (not [and f0 f1 f2 ...])
 .brev
 
-.coNP Operator/function @ or
+.coNP Operator/Function @ or
 .synb
 .mets (or << form *)
 .mets '['or << arg *']'
@@ -17097,7 +17097,7 @@ returns the value of the first argument which isn't
   (or (> 10 20) (stringp "foo")) -> t
 .brev
 
-.coNP Macro/function @ nor
+.coNP Macro/Function @ nor
 .synb
 .mets (nor << form *)
 .mets '['nor << arg *']'
@@ -20149,7 +20149,7 @@ if
 is a symbol which names a special operator, otherwise it returns
 .codn nil .
 
-.coNP Symbol macro @ %fun%
+.coNP Symbol Macro @ %fun%
 .desc
 The symbol macro
 .code %fun%
@@ -32503,7 +32503,7 @@ argument.
     (:method set-y (ob new) (set obj.y new)))
 .brev
 
-.coNP Struct clause macro @ :delegate
+.coNP Struct Clause Macro @ :delegate
 .synb
 .mets (:delegate < name <> ( param +) < delegate-expr <> [ target-name ])
 .syne
@@ -32626,7 +32626,7 @@ method delegates to a differently named method
   co.(break 5) -> "worker foo relaxes for 5 min"
 .brev
 
-.coNP Struct clause macro @ :mass-delegate
+.coNP Struct Clause Macro @ :mass-delegate
 .synb
 .mets (:mass-delegate < self-var < delegate-expr
 .mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  < from-type <> [ * ] <> [ method ]*)
@@ -32830,7 +32830,7 @@ form serves the role,
   -> ((1 2 3))
 .brev
 
-.coNP Special variable @ *struct-clause-expander*
+.coNP Special Variable @ *struct-clause-expander*
 .desc
 The
 .code *struct-clause-expander*
@@ -42211,7 +42211,7 @@ parameter list macro mechanism, by means of the public
 .code define-param-expander
 macro.
 
-.coNP Special variable @ *param-macro*
+.coNP Special Variable @ *param-macro*
 .desc
 The variable
 .code *param-macro*
@@ -42374,7 +42374,7 @@ All that is required is the insertion of the
 .code :memo
 keyword.
 
-.coNP Parameter list macro @ :key
+.coNP Parameter List Macro @ :key
 .synb
 .mets (:key << non-key-param *
 .mets \ \  [ -- >> { sym | >> ( sym >> [ init-form <> [ p-sym ]])}* ]
@@ -45177,7 +45177,7 @@ to simply make multiple references to
 which will cache the value; the macro doesn't have to introduce its own
 hidden caching variable.
 
-.coNP Special variables @, *place-update-expander* @ *place-clobber-expander* and @ *place-delete-expander*
+.coNP Special Variables @, *place-update-expander* @ *place-clobber-expander* and @ *place-delete-expander*
 .desc
 These variables hold hash tables, by means of which update expanders,
 clobber expanders and delete expanders are registered, as associations
@@ -45194,7 +45194,7 @@ then forms beginning with
 are not syntactic places. (The situation of a clobber accessor or delete
 accessor being defined without an update expander is improper).
 
-.coNP Special variable @ *place-macro*
+.coNP Special Variable @ *place-macro*
 .desc
 The
 .code *place-macro*
@@ -46066,7 +46066,7 @@ Any other quasiquoted object is left untranslated.
   --> "y"
 .brev
 
-.coNP Pattern operator @ struct
+.coNP Pattern Operator @ struct
 .synb
 .mets @(struct < name >> { slot-name << pattern }*)
 .mets @(struct < pattern >> { slot-name << pattern }*)
@@ -46165,7 +46165,7 @@ object's structure type: the type itself, rather than its symbolic name.
        (#<struct-type widget> :widg))
 .brev
 
-.coNP Pattern operator @ hash
+.coNP Pattern Operator @ hash
 .synb
 .mets @(hash >> {( key-pattern <> [ value-pattern ])}*)
 .syne
@@ -46326,7 +46326,7 @@ key in the hash table.
   --> (42)
 .brev
 
-.coNP Pattern operator @ as
+.coNP Pattern Operator @ as
 .synb
 .mets @(as < name << pattern )
 .syne
@@ -46386,7 +46386,7 @@ pattern operator can be used.
   --> :yes
 .brev
 
-.coNP Pattern operator @ with
+.coNP Pattern Operator @ with
 .synb
 .mets @(with <> [ main-pattern ] >> { side-pattern | << name } << expr )
 .syne
@@ -46448,7 +46448,7 @@ it must be a bindable symbol or else
   --> (4 3 6)
 .brev
 
-.coNP Pattern operator @ require
+.coNP Pattern Operator @ require
 .synb
 .mets @(require < pattern << condition *)
 .syne
@@ -46506,7 +46506,7 @@ forms are specified.
   --> :no-match
 .brev
 
-.coNP Pattern operators @ all and @ all*
+.coNP Pattern Operators @ all and @ all*
 .synb
 .mets @(all << pattern )
 .mets @(all* << pattern )
@@ -46569,7 +46569,7 @@ operator behaves like a failed match when the sequence is empty.
   (when-match @(@x @(all x)) '(1 (1 1 1 2)) x) -> nil
 .brev
 
-.coNP Pattern operator @ some
+.coNP Pattern Operator @ some
 .synb
 .mets @(some << pattern )
 .syne
@@ -46597,7 +46597,7 @@ Variables are extracted from the first matching which is found.
   -> (2 b)
 .brev
 
-.coNP Pattern operator @ coll
+.coNP Pattern Operator @ coll
 .synb
 .mets @(coll << pattern )
 .syne
@@ -46634,7 +46634,7 @@ operator.
   -> ((2 4) (b d))
 .brev
 
-.coNP Pattern operator @ scan
+.coNP Pattern Operator @ scan
 .synb
 .mets @(scan << pattern )
 .syne
@@ -46698,7 +46698,7 @@ if any suffix of that object matches.
   -> (4 5)
 .brev
 
-.coNP Pattern operators @ and and @ or
+.coNP Pattern Operators @ and and @ or
 .synb
 .mets @(and << pattern *)
 .mets @(or << pattern *)
@@ -46768,7 +46768,7 @@ values.
     x) -> 2
 .brev
 
-.coNP Pattern operator @ not
+.coNP Pattern Operator @ not
 .synb
 .mets @(not << pattern )
 .syne
@@ -46965,7 +46965,7 @@ into the predicate expression at the position indicated by
     (prinl "obj matches"))
 .brev
 
-.coNP Pattern macro @ sme
+.coNP Pattern Macro @ sme
 .synb
 .mets @(sme < spat < mpat < epat >> [ mvar <> [ evar ]])
 .syne
@@ -47117,7 +47117,7 @@ was matched by
   (when-match @(sme () () 5) 5 t) -> t
 .brev
 
-.coNP Pattern macro @ end
+.coNP Pattern Macro @ end
 .synb
 .mets @(end < pattern <> [ var ])
 .syne
@@ -47601,7 +47601,7 @@ macros.
   (ack 2 2) -> 7
 .brev
 
-.coNP Parameter list macro @ :match
+.coNP Parameter List Macro @ :match
 .synb
 .mets (:match << left-param * [-- << extra-param *]) << clause *
 .syne
@@ -47951,7 +47951,7 @@ rather than
 yet the expansion is
 .codn "@(struct ...)" .
 
-.coNP Special variable @ *match-macro*
+.coNP Special Variable @ *match-macro*
 .desc
 The
 .code *match-macro*
@@ -52678,7 +52678,8 @@ is with the
 .code with-stream
 macro, which implicitly closes the stream when it terminates.
 
-.coNP Special variable @ *unhandled-hook*
+.coNP Special Variable @ *unhandled-hook*
+.desc
 The
 .code *unhandled-hook*
 variable is initialized with
@@ -57339,7 +57340,7 @@ to
 .code nil
 if there is no next value.
 
-.coNP Special variable @ *hash-seed*
+.coNP Special Variable @ *hash-seed*
 .desc
 The
 .code *hash-seed*
@@ -58343,7 +58344,7 @@ The
 .meta dest-iter
 argument is returned.
 
-.coNP Special variable @ *tree-fun-whitelist*
+.coNP Special Variable @ *tree-fun-whitelist*
 .desc
 The
 .code *tree-fun-whitelist*
@@ -60113,7 +60114,7 @@ In general, I/O errors are usually turned into exceptions. When the description
 of error reporting is omitted from the description of a function, it can be
 assumed that it throws an error.
 
-.coNP Special variables @, *stdout* @, *stddebug* @, *stdin* @ *stderr* and @ *stdnull*
+.coNP Special Variables @, *stdout* @, *stddebug* @, *stdin* @ *stderr* and @ *stdnull*
 .desc
 These variables hold predefined stream objects. The
 .codn *stdin* ,
@@ -60165,7 +60166,7 @@ execution of external utilities.
     (sh "ls *.txt"))
 .brev
 
-.coNP Special variables @ *print-flo-format* and @ *pprint-flo-format*
+.coNP Special Variables @ *print-flo-format* and @ *pprint-flo-format*
 .desc
 The
 .code *print-flo-format*
@@ -60205,7 +60206,7 @@ is a valid value for
 or
 .codn *pprint-flo-format* .
 
-.coNP Special variable @ *print-flo-precision*
+.coNP Special Variable @ *print-flo-precision*
 .desc
 The
 .code *print-flo-precision*
@@ -60249,7 +60250,7 @@ to the value of the
 .code flo-max-dig
 variable.
 
-.coNP Special variable @ *print-flo-digits*
+.coNP Special Variable @ *print-flo-digits*
 .desc
 The
 .code *print-flo-precision*
@@ -60266,7 +60267,7 @@ is specified.
 Its default value is
 .codn 3 .
 
-.coNP Special variable @ *print-base*
+.coNP Special Variable @ *print-base*
 .desc
 The
 .code *print-base*
@@ -60301,7 +60302,7 @@ and
 When base 16 is selected, hexadecimal digits are printed as uppercase
 characters.
 
-.coNP Special variable @ *print-circle*
+.coNP Special Variable @ *print-circle*
 .desc
 The
 .code *print-circle*
@@ -60342,7 +60343,7 @@ circle notation label.  The "ordinary structure that is reachable from the
 slots" denotes structure that is directly reachable by traversing conses,
 ranges, vectors, hashes and struct slots: all printable aggregate objects.
 
-.coNP Special variable @ *read-unknown-structs*
+.coNP Special Variable @ *read-unknown-structs*
 .desc
 The
 .code *read-unknown-structs*
@@ -66597,7 +66598,7 @@ The names of these packages, respectively, are
 and
 .strn keyword .
 
-.coNP Special variable @ *package*
+.coNP Special Variable @ *package*
 .desc
 This variable holds the current package. The global value of this variable
 is initialized to a package called
@@ -66688,7 +66689,7 @@ object. The related function
 still returns unique symbols even if repeatedly called with the same
 string argument.
 
-.coNP Special variable @ *gensym-counter*
+.coNP Special Variable @ *gensym-counter*
 .desc
 This variable is initialized to 0. Each time the
 .code gensym
@@ -66813,7 +66814,7 @@ then it is returned. Otherwise
 .code nil
 is returned.
 
-.coNP Special variable @ *package-alist*
+.coNP Special Variable @ *package-alist*
 .desc
 The
 .code *package-alist*
@@ -67611,7 +67612,7 @@ package. If the package is not found at the time when
 the macro's expansion is evaluated, an error is thrown.
 
 .SS* Pseudorandom Numbers
-.coNP Special variable @ *random-state*
+.coNP Special Variable @ *random-state*
 .desc
 The
 .code *random-state*
@@ -67637,7 +67638,7 @@ a newly created random state object, which is produced as if by
 the call
 .codn "(make-random-state 42)" .
 
-.coNP Special variable @ *random-warmup*
+.coNP Special Variable @ *random-warmup*
 .desc
 The
 .code *random-warmup*
@@ -69995,6 +69996,7 @@ and so the
 function prints lines.
 
 .coNP Variable @ res
+.desc
 The
 .code awk
 variable
@@ -71152,7 +71154,7 @@ Note that environment variable names, their values, and command-line
 arguments are all regarded as being externally encoded in UTF-8. \*(TX performs
 the encoding and decoding automatically.
 
-.coNP Special variables @, *args-full* @ *args-eff* and @ *args*
+.coNP Special Variables @, *args-full* @ *args-eff* and @ *args*
 .desc
 The
 .code *args-full*
@@ -71451,7 +71453,7 @@ the original environment can be restored by passing that retained
 list to
 .codn replace-env .
 
-.coNP Special variable @ *child-env*
+.coNP Special Variable @ *child-env*
 .desc
 The
 .code *child-env*
@@ -75418,7 +75420,7 @@ See notes about
 in the documentation for
 .codn log-authpriv .
 
-.coNP Special variables @, log-user @, log-daemon @ log-auth and @ log-authpriv
+.coNP Special Variables @, log-user @, log-daemon @ log-auth and @ log-authpriv
 .desc
 These variables take on the values of the corresponding C preprocessor
 constants from the
@@ -75459,7 +75461,7 @@ These are the integer priority codes specified in the
 .code syslog
 function.
 
-.coNP Special variable @ *stdlog*
+.coNP Special Variable @ *stdlog*
 .desc
 The
 .code *stdlog*
@@ -79702,7 +79704,7 @@ results in more compact syntax.
 Note: this function is useful for creating a compact, prefix-compressed
 regular expression which matches a list of strings.
 
-.coNP Special variable @ *filters*
+.coNP Special Variable @ *filters*
 .desc
 The
 .code *filters*
@@ -80252,7 +80254,7 @@ has location info, the expander propagates that info to that form's
 expansion. In some situations, it is useful for a macro or other code
 transformer to perform this action explicitly.
 
-.coNP Special variable @ *rec-source-loc*
+.coNP Special Variable @ *rec-source-loc*
 .desc
 The Boolean special variable
 .code *rec-source-loc*
@@ -81015,7 +81017,7 @@ individually. The
 .code *load-path*
 is bound to the name of the combined file.
 
-.coNP Special variable @ *load-path*
+.coNP Special Variable @ *load-path*
 .desc
 The
 .code *load-path*
@@ -81062,7 +81064,7 @@ parsing and processing of a loaded \*(TX source file.
 Also, during the processing of the profile file (see Interactive Profile File),
 the variable is bound to the name of that file.
 
-.coNP Special variable @ *load-search-dirs*
+.coNP Special Variable @ *load-search-dirs*
 .desc
 The
 .code *load-search-dirs*
@@ -81096,7 +81098,7 @@ If a system has multiple installations of different versions of \*(TX
 in different locations, an environment variable intended for one installation
 could be mistakenly used by the others, resulting in chaos.
 
-.coNP Special variable @ *load-hooks*
+.coNP Special Variable @ *load-hooks*
 .desc
 The
 .code *load-hooks*
@@ -81541,7 +81543,7 @@ of the running \*(TX instance.
 
 .SS* Function Tracing
 
-.coNP Special variable @ *trace-output*
+.coNP Special Variable @ *trace-output*
 .desc
 The
 .code *trace-output*
@@ -88717,7 +88719,7 @@ operators can be used to deliberately produce code which behaves differently
 when compiled and interpreted. In addition, unwanted differences in behavior
 can also occur. The situations are summarized below.
 
-.coNP Differences due to @ load-time
+.coNP Differences Due to @ load-time
 
 Forms evaluated by
 .code load-time
@@ -88843,7 +88845,7 @@ The compiler treats a variable as dynamic if a
 .code defvar
 has been processed which marked that variable as special.
 
-.coNP Unbound symbols in @ dwim
+.coNP Unbound Symbols in @ dwim
 
 Arguments of a
 .code dwim
@@ -88884,7 +88886,7 @@ treated as a function. If it has both bindings, it is treated as a variable.
 The difference is that this is resolved at compile time for compiled code,
 and at evaluation time for interpreted code.
 
-.coNP File-wide insertion of gensyms
+.coNP File-Wide Insertion of Gensyms
 
 The following degenerate situation occurs, illustrated by example. Suppose the
 following definitions are given:
@@ -89247,8 +89249,7 @@ files, because such a
 .code load
 is treated as a single operation.
 
-.coNP Special variable @ *opt-level*
-
+.coNP Special Variable @ *opt-level*
 .desc
 The special variable
 .code *opt-level*
@@ -89629,7 +89630,7 @@ top-level that is compiled, if it is a compound form beginning with
 a symbol.
 .RE
 
-.coNP Special variable @ *compile-opts*
+.coNP Special Variable @ *compile-opts*
 .desc
 The special variable
 .code *compile-opts*
@@ -90540,7 +90541,7 @@ Thus, up to the previous hundred results can be referenced:
   10
 .brev
 
-.coNP Symbol macros @, *-1 @, *-2 ..., @ *-20
+.coNP Symbol Macros @, *-1 @, *-2 ..., @ *-20
 The listener provides small number of symbol macros for referencing the 
 results of previous commands in a relative. The macro
 .code *-1
@@ -91727,14 +91728,14 @@ The listener's behavior can be influenced through values of certain
 global variables. The settings can be made persistent by means
 of setting these variables in the interactive profile file.
 
-.coNP Special variable @ *listener-hist-len*
+.coNP Special Variable @ *listener-hist-len*
 .desc
 This special variable determines how many lines of history are
 retained by the listener. Changing this variable from within the listener
 has an instant effect. If the number is reduced from its current value,
 history lines are immediately discarded. The default value is 500.
 
-.coNP Special variable @ *listener-multi-line-p*
+.coNP Special Variable @ *listener-multi-line-p*
 .desc
 This is a Boolean variable which indicates whether the listener is
 in multiline mode. The default value is
@@ -91747,7 +91748,7 @@ If multiline mode is toggled interactively from within the listener,
 the variable is updated to reflect the latest state. This happens
 when the command is submitted for evaluation.
 
-.coNP Special variable @ *listener-sel-inclusive-p*
+.coNP Special Variable @ *listener-sel-inclusive-p*
 .desc
 This Boolean variable controls the behavior of visual selection.
 It is
@@ -91772,7 +91773,7 @@ that the selection is determined by the starting and ending character,
 and includes them. This type of selection pairs well with a block-shaped
 cursor.
 
-.coNP Special variable @ *listener-pprint-p*
+.coNP Special Variable @ *listener-pprint-p*
 .desc
 This Boolean variable controls how the listener prints the results
 of evaluations.
@@ -91793,7 +91794,7 @@ using the
 .code pprinl
 function.
 
-.coNP Special variable @ *listener-greedy-eval-p*
+.coNP Special Variable @ *listener-greedy-eval-p*
 .desc
 The special variable
 .code *listener-greedy-eval-p*
@@ -91861,7 +91862,7 @@ The object
 .code 4
 is self-evaluating, and so the greedy evaluation process stops.
 
-.coNP Special variable @ *listener-auto-compound-p*
+.coNP Special Variable @ *listener-auto-compound-p*
 .desc
 The special variable
 .code *listener-auto-compound-p*
@@ -91890,7 +91891,7 @@ being calculated.
 When a single expression is input, it is evaluated as-is, and thus
 in that case auto compound expression mode makes no difference.
 
-.coNP Special variable @ *doc-url*
+.coNP Special Variable @ *doc-url*
 .desc
 The special variable
 .code *doc-url*

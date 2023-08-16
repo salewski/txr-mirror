@@ -25,30 +25,25 @@
 @/..*/
 @(end)
 @;;
-@;; Check variable description headings
+@;; Check variable/operator/function/... description headings
+@;; introduced by .coNP
 @;;
-@(define check-var ())
+@(define check-coNP ())
 @  (cases)
 @;   exception
-.coNP @/Variables|Special variables/ @@, s-ifmt @(skip)
+.coNP @/Variables|Special Variables/ @@, s-ifmt @(skip)
 @    (or)
 @;   exception
-.coNP @/Variables|Special variables/ @@, *0 @(skip)
+.coNP @/Variables|Special Variables/ @@, *0 @(skip)
 @    (or)
-.coNP @/Variables|Special variables/@(assert bad ln `bad Variables heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
+.coNP @/Variables|Special Variables/@(assert bad ln `bad Variables heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
 @      (assert bad ln `no .desc after variables heading`)
 .desc
 @    (or)
-.coNP @/Variable|Special variable/@(assert bad ln `bad Variable heading`) @{x /\S+/}
+.coNP @/Variable|Special Variable/@(assert bad ln `bad Variable heading`) @@ @{x /\S+/}
 @      (assert bad ln `no .desc after variable heading`)
 .desc
-@  (end)
-@(end)
-@;;
-@;; Check function/macro/operator headings
-@;;
-@(define check-func ())
-@  (cases)
+@    (or)
 @;   exception
 .coNP @/Accessors/ @@, caar @(skip)
 @    (or)
@@ -56,19 +51,31 @@
 @      (assert bad ln `no .synb after @type/function heading`)
 @      (check-synb)
 @    (or)
-.coNP Operator @@ @op and macro @@ @mac
+.coNP Operator @@ @op and Macro @@ @mac
 @      (assert bad ln `no .synb after Operator and macro heading`)
 @      (check-synb)
 @    (or)
-.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure|Pattern operator|(Operators|Macros)\/function/}s@(assert bad ln `bad @{type}s heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
+.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure|Pattern Operator|(Operators|Macros)\/Function/}s@(assert bad ln `bad @{type}s heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
 @      (assert bad ln `no .synb after @{type}s heading`)
 @      (check-synb)
 @    (or)
-.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure|Pattern (operator|macro)|Parameter list macro|(Operator|Macro)\/function/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}@junk
+.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure|Pattern (Operator|Macro)|Parameter List Macro|(Operator|Macro)\/Function/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}@junk
 @      (assert bad ln `extra elements in singular @type heading`)
 @      (bind junk "")
 @      (assert bad ln `no .synb after @type heading`)
 @      (check-synb)
+@    (or)
+.coNP @/Argument Generation|Passing Options|The Lisp @|Keyword Param|\
+        The @ |Keyword Para|Keywords in|Lisp Forms in|Mandatory @|\
+        Specifying Variables in|@ catch Clauses|\
+        Interaction Between|Vertical-Horizontal|Horizontal-Horizontal|\
+        Nested @|@ repeat an|Conventions Used|Struct Clause Macro|\
+        Treatment of|Examples of|FFI type|Differences Due to|\
+        Unbound Symbols in|Bound symbols in|File-Wide|\
+        Delimited Continuations|Symbol Macro/@nil
+@    (or)
+.coNP @junk
+@      (throw bad ln `unrecognized .coNP arguments: @junk`)
 @  (end)
 @(end)
 @;;
@@ -157,9 +164,7 @@
 @  (line ln)
 @  (try)
 @    (cases)
-@      (check-var)
-@    (or)
-@      (check-func)
+@      (check-coNP)
 @    (or)
 @      (check-code)
 @    (or)
