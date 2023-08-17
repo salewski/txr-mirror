@@ -38372,7 +38372,7 @@ has the same effect as:
   -> "uryyb, jbeyq!"
 .brev
 
-.coNP Function @ sort-group
+.coNP Functions @ sort-group and @ csort-group
 .synb
 .mets (sort-group < sequence >> [ keyfun <> [ lessfun ]])
 .syne
@@ -38388,6 +38388,15 @@ and
 arguments, and then breaks the resulting sequence into groups,
 based on the equivalence of the elements under
 .metn keyfun .
+
+The
+.code csort-group
+differs from
+.code sort-group
+in that it is based on the caching
+.code csort
+rather than
+.codn sort .
 
 The following equivalence holds:
 

@@ -960,6 +960,7 @@ static val csort_set_entries(val fun)
 {
   val name[] = {
     lit("csort"), lit("cnsort"), lit("cssort"), lit("csnsort"),
+    lit("csort-group"),
     nil
   };
   autoload_set(al_fun, name, fun);

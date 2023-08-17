@@ -41,3 +41,6 @@
 
 (defun csnsort (seq : (less-fun :) (key-fun :))
   (cached-sort-body snsort))
+
+(defun csort-group (seq : (key-fun :) (less-fun :))
+  (partition-by key-fun (csort seq less-fun key-fun)))

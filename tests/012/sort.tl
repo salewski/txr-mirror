@@ -78,3 +78,13 @@
     (cssort svec) vec
     (cssort vec (fun greater)) (reverse vec)
     (cssort svec (fun greater)) (reverse vec)))
+
+(mtest
+  [sort-group '((a 1) (b 1) (a 2) (b 2) (a 3) (c 2) (c 1) (a 4)) car]
+  (((a 1) (a 2) (a 3) (a 4))
+   ((b 1) (b 2))
+   ((c 2) (c 1)))
+  [csort-group '((a 1) (b 1) (a 2) (b 2) (a 3) (c 2) (c 1) (a 4)) car]
+  (((a 1) (a 2) (a 3) (a 4))
+   ((b 1) (b 2))
+   ((c 2) (c 1))))
