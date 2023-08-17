@@ -10,11 +10,18 @@ UninstallIcon "win\txr.ico"
 
 SetCompressor lzma
 CRCCheck on
-RequestExecutionLevel admin
+
+RequestExecutionLevel highest
+
+var AccountType
 
 Function .onInit
-  # default installation dir
-  StrCpy $INSTDIR "C:\Program Files"
+  StrCpy $INSTDIR "$LOCALAPPDATA"
+  UserInfo::GetAccountType
+  Pop $AccountType
+  ${If} $AccountType == "Admin"
+    StrCpy $INSTDIR "$PROGRAMFILES32"
+  ${EndIf}
 FunctionEnd
 
 Function .onInstSuccess
@@ -71,7 +78,11 @@ section "TXR"
   CreateShortCut "$SMPROGRAMS\txr\uninstall.lnk" "$INSTDIR\txr\uninstall.exe"
   CreateShortCut "$SMPROGRAMS\txr\install-root.lnk" "$INSTDIR\txr"
   CreateShortCut "$STARTMENU\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
-  ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\txr\bin"
+  ${If} $AccountType == "Admin"
+    ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\txr\bin"
+  ${Else}
+    ${EnvVarUpdate} $0 "PATH" "A" "HKCU" "$INSTDIR\txr\bin"
+  ${Endif}
   ${RegisterExtension} "$INSTDIR\txr\bin\txr-win.exe" ".txr" "TXR Pattern Language"
   ${RegisterExtension} "$INSTDIR\txr\bin\txr-win.exe" ".tl" "TXR Lisp"
   ${RegisterExtension} "$INSTDIR\txr\bin\txr-win.exe" ".tlo" "Compiled TXR Lisp"
@@ -82,7 +93,11 @@ section "Uninstall"
   # $INSTDIR is now where the uninstaller is installed,
   # not the $INSTDIR that was used during installation!
 
-  ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\bin"
+  ${If} $AccountType == "Admin"
+    ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\bin"
+  ${Else}
+    ${un.EnvVarUpdate} $0 "PATH" "R" "HKCU" "$INSTDIR\bin"
+  ${Endif}
   ${UnregisterExtension} ".txr" "TXR Pattern Language"
   ${UnregisterExtension} ".tl" "TXR Lisp"
   ${UnregisterExtension} ".tlo" "Compiled TXR Lisp"
