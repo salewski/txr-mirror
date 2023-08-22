@@ -9,44 +9,47 @@
 @(bind clpsall "[collapse all]")
 @(bind closed t)
 @(do
-   (defvarl dupes (hash))
-   (defvarl tagnum (hash :equal-based))
-   (defvarl disamb (hash :equal-based))
+   (defvarl dupe-hashes (hash))
+   (defvarl dupe-titles (hash))
+   (defvarl direct (hash))
+   (defvarl disamb (hash))
    (defvarl dist-counter 0)
-   (defvarl colli (hash-props "Function <tt>hash-map</tt>" 1))
-
-   (defun hash-str (str)
-     (for ((lim (len str)) (i 0) (h 0) g) ((< i lim) h) ((inc i))
-       (set h (+ (ash h 4) (int-chr [str i])))
-       (set g (logand h #x7c000000))
-       (set h (logtrunc (logxor h (logxor (ash g -26) g)) 32))))
+   (defvarl colli (hash-props))
 
    (defun hash-title (title)
-     (let* ((h (logtrunc (hash-str title) 32))
-            (h (+ h (or [colli title] 0)))
-            (existing [dupes h]))
-       (when existing
-         (unless (equal title existing)
-           (error "~a ~a hash collision!" existing title)))
-       (set [dupes h] title)
-       (format nil "N-~,08X" h)))
+     (let* ((ti title)
+            (cntr 0)
+            (defs (build (while-match `@nil<tt>@ttitem</tt>@rest` ti
+                           (add ttitem)
+                           (set ti rest)))))
+       (set title (if defs
+                    (car defs)
+                    (downcase-str title))
+            ti title)
+       (while* [dupe-titles title]
+         (set title `T-@(inc cntr)-@ti`))
+       (set [dupe-titles title] t)
+       (let* ((h (crc32 title))
+              (h (+ h (or [colli title] 0)))
+              (existing [dupe-hashes h]))
+         (when existing
+           (unless (equal title existing)
+             (error "~a ~a hash collision!" existing title)))
+         (set [dupe-hashes h] title)
+         (format nil "N-~,08X" h))))
 
    (defun toc-tag (sec)
      `TOC-@sec`)
 
    (set [tagmap "lbAB"] (hash-title "NAME"))
 
-   (defun enumerate (title)
-     (let ((num (inc [tagnum title 0])))
-       `@title@(if (> num 1) `-@num` "")`))
-
    (defun process-ambiguities (hash)
-     (hash-update hash (do if (eql (length @1) 1)
-                         (first @1)
-                         (let ((new-tag (format nil "D-~,04X"
-                                                (inc dist-counter))))
-                           (set [disamb new-tag] (reverse @1))
-                           new-tag)))))
+     (dohash (sym tags hash)
+       (let ((shash (fmt "S-~,08X" (crc32 sym))))
+         (set [hash sym] shash)
+         (if (null (cdr tags))
+           (push shash [direct (car tags)])
+           (set [disamb shash] (reverse tags)))))))
 Content-type: text/html
 @(skip 15)
 <h1>TXR</h1>
@@ -64,7 +67,7 @@ Content-type: text/html
 <h@level>@sec @title
 </h@level>
 @      (end)
-@      (bind newtag @(hash-title (enumerate title)))
+@      (bind newtag @(hash-title title))
 @      (do (set [tagmap tag] newtag))
 @      (output :into BODY)
 <a name="@newtag">&nbsp;</a>
@@ -110,7 +113,7 @@ Content-type: text/html
 @  (and)
 <dt><a href="#@tag">@(coll :vars (sym))<tt>@sym</tt>@(end)
 @    (do (let ((n-tag [tagmap tag]))
-           (mapdo (do pushnew n-tag [symhash @1]) sym)
+           (mapdo (do pushnew n-tag [symhash (html-decode @1)]) sym)
            (set [tochash n-tag] rest)))
 @  (and)
 <dt><a href="#@tag">@num @nil
@@ -148,10 +151,17 @@ This document was created by
                                                  (pop @1)))
                                             (tok [@1 1..:])
                                             (bkt [@1 0])
-                                            (tag [symhash tok]))
+                                            (tag [symhash (html-decode tok)]))
                                     (if tag
                                       `@at@bkt<a href="#@tag">@tok</a>`
                                       `@at@1`)) @1))
+                        ((starts-with "<a name=" @1)
+                         (match @(with `<a name="@tag">@rest`
+                                       shash [direct tag])
+                           @1
+                           (join (collect-each ((sh shash))
+                                   `<a name="@sh">&nbsp;</a>\n`)
+                                 @1)))
                         ((search-regex @1 #/<h[1-9]>/) @1)
                         (t (regsub #/<tt>.%<\/tt>/
                              (do let* ((tok [@1 4 -5])
@@ -162,8 +172,8 @@ This document was created by
                                   (set pfx "@("
                                        sym [tok 2 tend]
                                        sfx [tok tend .. :]
-                                       tag [symhash sym]))
-                                 (t (set tag [symhash tok]
+                                       tag [symhash (html-decode sym)]))
+                                 (t (set tag [symhash (html-decode tok)]
                                          sym tok)))
                                (if tag
                                  `<tt>@pfx<a href="#@tag">@sym</a>@sfx</tt>`
@@ -297,39 +307,26 @@ function tocjump(hash) {
 </body>
 </html>
 @(end)
-@(bind (name code) @(let ((ignames '("*-1" "*-2" "*-20"
-                                     "*0" "*1" "*2" "*99"
-                                     "*n" "*r" "*v"
-                                     "--args" "--eargs" "-C"
-                                     ".."
-                                     "TXR_COMPAT"
-                                     "buf-get-" "buf-put-")))
-                      (flow (hash-pairs symhash)
-                        (remove-if (op in ignames) @1 car)
-                        (mapcar (tb ((sym code))
-                                  (list (html-decode sym) code)))
-                        (nsort @1 : car)
-                        transpose)))
-@(do (let ((syms (append-each* ((entry [remove-if (op equal "pub")
-                                                  (package-alist)
-                                                  car])
-                                (pkg-name [mapcar car entry])
-                                (pkg [mapcar cdr entry]))
-                   (let ((fn (casequal pkg-name
-                               (("usr" "keyword") (fun tostringp))
-                               (t (opip tostringp (join-with ":" pkg-name))))))
-                     (mapcar fn (package-symbols pkg))))))
-       (mapdo (do unless (in syms @1)
-                (format *stderr* "~a: missing from image\n" @1))
-              name)))
-@(output "stdlib/doc-syms.tl")
-(defparml doc-syms
-  (hash-from-pairs
-@  (repeat)
-      (@(tostring name) @(tostring code))
-@  (first)
-    '((@(tostring name) @(tostring code))
-@  (last)
-      (@(tostring name) @(tostring code)))))
-@  (end)
-@(end)
+@(do (let ((ignames '("*-1" "*-2" "*-20"
+                      "*0" "*1" "*2" "*99"
+                      "*n" "*r" "*v"
+                      "--args" "--eargs" "-C"
+                      ".."
+                      "TXR_COMPAT"
+                      "buf-get-" "buf-put-"))
+           (imgsyms (hash-list (append-each* ((entry [remove-if (op equal "pub")
+                                                                (package-alist)
+                                                                car])
+                                              (pkg-name [mapcar car entry])
+                                              (pkg [mapcar cdr entry]))
+                                 (let ((fn (casequal pkg-name
+                                             (("usr" "keyword")
+                                              (fun tostringp))
+                                             (t (opip tostringp
+                                                      (join-with ":" pkg-name))))))
+                                   (mapcar fn (package-symbols pkg)))))))
+       (each ((sym ignames))
+         (del [symhash sym]))
+       (let ((missing (hash-diff symhash imgsyms)))
+         (dohash (sym val missing)
+           (format *stderr* "~a: missing from image\n" sym)))))

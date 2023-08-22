@@ -1,5 +1,3 @@
-(load "doc-syms")
-
 (defvar usr:*doc-url* "https://www.nongnu.org/txr/txr-manpage.html")
 
 (defvarl os-symbol
@@ -63,6 +61,6 @@
                  (sym (let ((*package* (find-package "pub")))
                         (tostring sym)))
                  (t (tostringp sym))))
-          (tag (if str [doc-syms str] "")))
+          (tag (if str (fmt "S-~,08X" (crc32 str)) "")))
     (open-url `@{*doc-url*}#@tag`)
     (error "~s: ~s not found in symbol index" 'doc sym)))
