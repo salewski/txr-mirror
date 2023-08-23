@@ -1,14 +1,14 @@
 @# This requires a hacked version of man2html
 @# See here: http://www.kylheku.com/cgit/man
-@(bind symhash @(hash :equal-based))
-@(bind tagmap @(hash :equal-based))
-@(bind tochash @(hash :equal-based))
 @(bind closedtxt " <TT>[+]</TT>")
 @(bind opentxt " <TT>[-]</TT>")
 @(bind xpnall "[expand all]")
 @(bind clpsall "[collapse all]")
 @(bind closed t)
 @(do
+   (defvarl symhash (hash))
+   (defvarl tagmap (hash))
+   (defvarl tochash (hash))
    (defvarl dupe-hashes (hash))
    (defvarl dupe-titles (hash))
    (defvarl direct (hash))
