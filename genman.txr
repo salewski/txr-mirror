@@ -41,8 +41,6 @@
    (defun toc-tag (sec)
      `TOC-@sec`)
 
-   (set [tagmap "lbAB"] (hash-title "NAME"))
-
    (defun process-ambiguities (hash)
      (dohash (sym tags hash)
        (let ((shash (fmt "S-~,08X" (crc32 sym))))
