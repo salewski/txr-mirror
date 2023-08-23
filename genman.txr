@@ -42,12 +42,16 @@
      `TOC-@sec`)
 
    (defun process-ambiguities (hash)
-     (dohash (sym tags hash)
-       (let ((shash (fmt "S-~,08X" (crc32 sym))))
-         (set [hash sym] shash)
-         (if (null (cdr tags))
-           (push shash [direct (car tags)])
-           (set [disamb shash] (reverse tags)))))))
+     (let ((rhash (hash)))
+       (dohash (sym tags hash)
+         (let ((shash (fmt "S-~,08X" (crc32 sym))))
+           (if [rhash shash]
+             (error "~a ~a hash collision" sym [rhash shash])
+             (set [rhash shash] sym))
+           (set [hash sym] shash)
+           (if (null (cdr tags))
+             (push shash [direct (car tags)])
+             (set [disamb shash] (reverse tags))))))))
 Content-type: text/html
 @(skip 15)
 <h1>TXR</h1>
