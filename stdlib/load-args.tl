@@ -41,7 +41,7 @@
                                  `@name.tlo.gz`) lp
                     name lp)))
        (compile-update-file self))
-     [mapdo compile-update-file files])
+     (mapdo [orf compile-update-file load] files))
     ((:clean)
      (clean-file (base-name *load-path*))
      [mapdo clean-file files])

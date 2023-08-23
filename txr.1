@@ -81236,10 +81236,19 @@ If there is exactly one argument in
 the function responds to the following values of that argument:
 .RS
 .coIP :compile
-The current file in
+First, the current file in
 .code *load-path*
-as well as the files passed as arguments, are compiled with
+is processed with
 .codn compile-update-file .
+Then each file in the argument list is also processed with
+.codn compile-update-file .
+Whenever that function returns
+.code nil
+for any file, that file is loaded with
+.codn load .
+No additional arguments are passed to this
+.code load
+invocation.
 .coIP :clean
 The current file in
 .code *load-path*
