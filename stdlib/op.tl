@@ -265,6 +265,12 @@
 (defmacro loand (:env e . clauses)
   ^[chand ,*(sys:opip-expand e 'lop 'ldo clauses)])
 
+(defmacro opf (:env e fun . clauses)
+  ^[,fun ,*(sys:opip-expand e 'op 'do clauses)])
+
+(defmacro lopf (:env e fun . clauses)
+  ^[,fun ,*(sys:opip-expand e 'lop 'ldo clauses)])
+
 (defmacro flow (val . opip-args)
   ^(call (opip ,*opip-args) ,val))
 

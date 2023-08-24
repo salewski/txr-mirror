@@ -109,3 +109,7 @@
 (mtest
   (lflow 10 (- 1) (- 1)) 8
   (lflow 10 (op - 100) (+ 1)) 91)
+
+(mtest
+  (remove-if (opf orf (< 10) (> 5)) (range 0 20)) (5 6 7 8 9 10)
+  (remove-if (lopf orf (> 10) (< 5)) (range 0 20)) (5 6 7 8 9 10))

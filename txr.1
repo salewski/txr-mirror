@@ -59326,6 +59326,84 @@ as well as, implicitly, the value
 .code @1
 coming from the previous element,
 
+.coNP Macros @ opf and @ lopf
+.synb
+.mets (opf < function << clause *)
+.mets (lopf < function << clause *)
+.syne
+.desc
+The
+.code opf
+and
+.code lopf
+function make available the
+.codn opip -style
+functional arguments in conjunction with an arbitrary
+.metn function .
+
+The
+.meta clause
+arguments of
+.code opf
+and
+.code lopf
+are processed exactly like those of
+.code opip
+and
+.codn lopip .
+
+The syntax
+.verb
+  (opf f c1 c2 c3 ...)
+.brev
+is converted into a function call of the form:
+.verb
+  [f {c1} {c2} {c3} ...]
+.brev
+where every argument
+.code {cN}
+is converted to a form denoting a function, in exactly the same manner
+as the arguments of
+.codn opip .
+The same remarks apply to code
+.code lopf
+in relation to
+.codn lopip .
+
+Thus, it is possible to express
+.code opip
+using
+.code opf
+by choosing
+.code chain
+as the
+.meta function
+argument, according to this equivalence:
+
+.verb
+  (opip c1 c2 c3 ...)  <-->  (opf chain c1 c2 c3 ...)
+.brev
+
+.TP* Example:
+
+.verb
+  ;; Remove values greater than 10 or less than five from list
+  (remove-if (lopf orf (> 10) (< 5)) (range 0 20)) -> (5 6 7 8 9 10))
+
+  ;; Note: could be expressed as
+  (remove-if (orf (lop > 10) (lop < 5)) (range 0 20))
+.brev
+
+As the example shows, the
+.code opf
+and
+.code lopf
+macros provide a way to avoid repeating the
+.code op
+and
+.code lop
+syntax in every argument of a functional combinator of a function.
+
 .coNP Macros @ flow and @ lflow
 .synb
 .mets (flow < form << opip-arg *)
