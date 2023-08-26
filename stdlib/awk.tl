@@ -188,7 +188,8 @@
             (put-string `@(car a)`)
             (put-string (if (set next (cdr a)) self.ofs self.ors))))
     (t (put-string self.rec)
-       (put-string self.ors))))
+       (put-string self.ors)
+       nil)))
 
 (defmeth sys:awk-state ensure-stream (self kind path mode)
   (hash-update-1 self.streams
