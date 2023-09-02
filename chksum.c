@@ -64,10 +64,7 @@
  * - everything starting with the declaration "static val sha1_ctx_s ..."
  *   up to just before the crc32 section: the crc32_stream function.
  *
- * - the crc32 function section starting with the crc32_stream function,
- *   to just before the checksum_
- *
- * - a portion fo the chksum_init(void) function, up to the line
+ * - a portion of the chksum_init function, up to the line
  *   which registers the crc32-stream function.
  *
  * Thus, material outside of these sections is editable; but edits
