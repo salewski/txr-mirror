@@ -1077,6 +1077,7 @@ val tokn(val count, val tok_regex, val arg1, val arg2);
 val tok_where(val str, val tok_regex);
 val list_str(val str);
 val trim_str(val str);
+val str_esc(val escset, val escchr, val str);
 val cmp_str(val astr, val bstr);
 val str_eq(val astr, val bstr);
 val str_lt(val astr, val bstr);

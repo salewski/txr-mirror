@@ -7597,6 +7597,7 @@ void eval_init(void)
   reg_fun(intern(lit("tok-where"), user_package), func_n2(tok_where));
   reg_fun(intern(lit("list-str"), user_package), func_n1(list_str));
   reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
+  reg_fun(intern(lit("str-esc"), user_package), func_n3(str_esc));
   reg_fun(intern(lit("cmp-str"), user_package), func_n2(cmp_str));
   reg_fun(intern(lit("string-lt"), user_package), func_n2(str_lt));
   reg_fun(intern(lit("str="), user_package), func_n2(str_eq));

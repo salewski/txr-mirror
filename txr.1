@@ -26480,6 +26480,43 @@ function produces a copy of
 from which leading and
 trailing tabs, spaces and newlines are removed.
 
+.coNP Function @ str-esc
+.synb
+.mets (str-esc < esc-set < esc-tok << str )
+.syne
+.desc
+The
+.code str-esc
+function performs a
+.I "character escaping"
+transformation on the input string
+.metn str .
+
+The argument
+.meta esc-set
+is a string containing zero or more characters.
+
+The
+.meta esc-tok
+argument is a character or string.
+
+The function returns a transformed version of
+.meta str
+in which every character of
+.meta str
+which occurs in
+.meta esc-set
+is preceded by
+.metn esc-tok .
+
+.TP* Examples;
+
+.verb
+  (str-esc "$@#" "$" "$foo @abc #1") -> "$$foo $@abc $#1"
+
+  (str-esc "'" "'\e\e'" "foo 'bar' baz") -> "foo '\e\e''bar'\e\e'' baz"
+.brev
+
 .coNP Functions @ string-set-code and @ string-get-code
 .synb
 .mets (string-set-code < string << value )

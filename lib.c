@@ -6400,6 +6400,26 @@ val trim_str(val str)
   }
 }
 
+val str_esc(val escset, val escchr, val str)
+{
+  val self = lit("shell-escape");
+  val out = mkstring(zero, chr(' '));
+  const wchar_t *s = c_str(str, self);
+  const wchar_t *es = c_str(escset, self);
+  wchar_t ch;
+
+  while ((ch = *s++)) {
+    if (wcschr(es, ch)) {
+      string_extend(out, escchr, nil);
+      string_extend(out, chr(ch), nil);
+    } else {
+      string_extend(out, chr(ch), nil);
+    }
+  }
+
+  return string_finish(out);
+}
+
 val cmp_str(val astr, val bstr)
 {
   val self = lit("cmp-str");
