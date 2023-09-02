@@ -72684,6 +72684,96 @@ and expected to support
 .onom
 as a way of specifying a command to execute.
 
+.coNP Functions @, sh-esc @, sh-esc-all @ sh-esc-dq and @ sh-esc-sq
+.synb
+.mets (sh-esc << str )
+.mets (sh-esc-all << str )
+.mets (sh-esc-dq << str )
+.mets (sh-esc-sq << str )
+.syne
+.desc
+The functions
+.codn sh-esc ,
+.codn sh-esc-all ,
+.code sh-esc-dq
+and
+.code sh-esc-sq
+transform the argument string
+.code str
+for safe insertion into commands. These functions are intended
+for use on POSIX systems, where the
+command interpreter used by the functions
+.code sh
+and
+.code open-command
+and related functions is the POSIX Shell Command Language.
+
+The
+.code sh-esc
+function escapes its argument in such a way that the resulting
+string may be inserted as an argument into a command.
+
+The
+.code sh-esc-all
+function performs a stricter escaping, such that the transformed
+string may be inserted into any syntactic context where a
+textual operand is required for any reason, such as the
+.meta pattern
+in the
+.mono
+.meti <2> ${ var % pattern }
+.onom
+construct, or 
+
+The
+.code sh-esc-dq
+function escapes its argument for insertion into a double-quoted field in a
+shell command line. It does not add the double quotes themselves.
+
+The
+.code sh-esc-dq
+function escapes its argument for insertion into a single-quoted field in a
+shell command line. It does not add the single quotes themselves.
+
+The precise set of characters which are escaped by a backslash by the
+.code sh-esc
+function is the following:
+
+.verb
+  | & ; < > ( ) $ ` \e " ' tab newline space * ? [ # ~
+.brev
+
+The
+.code sh-esc-all
+function escapes all the above characters, and also these:
+
+.verb
+  = %
+.brev
+
+The
+.code sh-esc-dq
+function escapes the following characters:
+
+.verb
+ $ ` \e " newline
+.brev
+
+To escape with a backslash means to precede every occurrence of the
+specified characters with the character
+.codn \e .
+
+The
+.code sh-esc-sq
+function replaces every occurrence of the
+.code '
+character (single quote, apostrophe) with the sequence
+.code '\e''
+(single quote, backslash, single quotes, single quote).
+This sequence has the effect of terminating the enclosing single-quoted
+field, then producing a single quote via a backslash escape,
+and then opening a single-quoted field.
+
 .SS* Unix Filesystem Manipulation
 
 .coNP Structure @ stat

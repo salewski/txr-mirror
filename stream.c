@@ -4838,6 +4838,26 @@ static val sh(val command)
 
 #endif
 
+static val sh_esc(val string)
+{
+  return str_esc(lit("|&;<>()$`\\\"' \t\n*?[#~"), chr('\\'), string);
+}
+
+static val sh_esc_all(val string)
+{
+  return str_esc(lit("|&;<>()$`\\\"' \t\n*?[#~=%"), chr('\\'), string);
+}
+
+static val sh_esc_dq(val string)
+{
+  return str_esc(lit("$`\\\"\n"), chr('\\'), string);
+}
+
+static val sh_esc_sq(val string)
+{
+  return str_esc(lit("'"), lit("'\\'"), string);
+}
+
 val remove_path(val path, val throw_on_error)
 {
   val self = lit("remove-path");
@@ -5556,6 +5576,10 @@ void stream_init(void)
   reg_fun(intern(lit("sh"), user_package), func_n1(sh));
   reg_fun(intern(lit("run"), user_package), func_n2o(run, 1));
 #endif
+  reg_fun(intern(lit("sh-esc"), user_package), func_n1(sh_esc));
+  reg_fun(intern(lit("sh-esc-all"), user_package), func_n1(sh_esc_all));
+  reg_fun(intern(lit("sh-esc-dq"), user_package), func_n1(sh_esc_dq));
+  reg_fun(intern(lit("sh-esc-sq"), user_package), func_n1(sh_esc_sq));
   reg_fun(intern(lit("remove-path"), user_package), func_n2o(remove_path, 1));
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
   reg_fun(intern(lit("open-files"), user_package), func_n3o(open_files, 1));
