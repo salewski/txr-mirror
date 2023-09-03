@@ -74768,6 +74768,18 @@ that buffer. Where available, the
 .code crypt_r
 function is used which avoids static storage.
 
+Implementations of the C function vary in their error reporting.
+Some implementations return a null pointer for invalid salts,
+whereas others return valid "error token" strings which vary
+between implementations. To work consistently across numerous
+implementations, the \*(TL
+.code crypt
+function throws an
+.code error
+exception if the C library function returns either a null pointer,
+or a valid pointer to a string that is less than 13 characters long,
+regardless of its content.
+
 .SS* Unix Signal Handling
 
 On platforms where certain advanced features of POSIX signal handling are

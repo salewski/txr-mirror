@@ -2081,9 +2081,18 @@ static val crypt_wrap(val wkey, val wsalt)
   free(key);
   free(salt);
 
-  /* libxcrypt puts out two possible failure tokens "*0" or "*1".
+  /* libraries cannot agree on how to report unrecognized or bad hashes:
+   *
+   * - older glibc versions, other libraries return null
+   * - libxcrypt, integrated into newer glibc puts out two
+   *   possible failure tokens "*0" or "*1", documenting
+   *   that an error token starts with "*" and is less than 13
+   *   characters long.
+   * - musl uses "*" and "x", the latter being in the valid hash charset!
+   *
+   * let's go with: null or less than 13 chars means error.
    */
-  if (hash != 0 && strcmp(hash, "*0") != 0 && strcmp(hash, "*1") != 0) {
+  if (hash != 0 && memchr(hash, 0, 13) == 0) {
     val ret = string_utf8(hash);
 #if HAVE_CRYPT_R
     free(cd);
