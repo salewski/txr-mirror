@@ -11,7 +11,7 @@
 (if (eq :linux (os-symbol))
   (mtest
     (crypt "a" "b") :error
-    (crypt "a" "*$") :error
+    (crypt "a" "::") :error
     (crypt "a" "$1$") "$1$$Ij31LCAysPM23KuPlm1wA/"
     (crypt "a" "$1$bcd$") "$1$bcd$cgz778Ks3pkbWfyW.CWae/"
     (crypt "a" "$5$") "$5$$QG6CCM7eJAxpUPcBpn0Z2K29NHtaI6Mk1fCpPrpjdj3"
