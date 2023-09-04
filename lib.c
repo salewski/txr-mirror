@@ -14412,6 +14412,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
       return;
     }
     break;
+  case LCONS:
   case CONS:
     if (ctx != 0) {
       val sym = car(obj);
@@ -14504,13 +14505,14 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
         return;
       }
     }
-    break;
+    /* fallthrough */
   case VEC:
     {
       val save_indent;
       int force_br = 0;
-      cnum len = c_num(length(obj), self);
-      cnum i;
+      seq_iter_t si;
+      val elem;
+      seq_iter_init(self, &si, obj);
 
       if (jf == json_fmt_standard) {
         put_string(lit("[\n"), out);
@@ -14520,19 +14522,23 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
         save_indent = inc_indent(out, zero);
       }
 
-      for (i = 0; i < len; i++) {
-        val elem = obj->v.vec[i];
+      if (seq_get(&si, &elem)) for (;;) {
+        val nxelem;
+        int more = seq_get(&si, &nxelem);
         out_json_rec(elem, out, jf, ctx);
         if (jf == json_fmt_standard) {
-          if (i < len - 1)
+          if (more)
             put_string(lit(",\n"), out);
           else
             put_char(chr('\n'), out);
-        } else if (i < len - 1) {
+        } else if (more) {
           put_char(chr(','), out);
           if (width_check(out, nil))
             force_br = 1;
         }
+        if (!more)
+          break;
+        elem = nxelem;
       }
       set_indent(out, save_indent);
       put_char(chr(']'), out);
@@ -14592,6 +14598,8 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
     }
     break;
   case FLNUM:
+  case NUM:
+  case BGNUM:
     format(out, lit("~a"), obj, nao);
     return;
   case LIT:

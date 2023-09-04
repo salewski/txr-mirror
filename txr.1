@@ -82127,17 +82127,25 @@ and
 .codn null ,
 respectively.
 .IP 2.
-a floating-point number.
+a floating-point number or integer.
 .IP 3.
 a character string.
 .IP 4.
-a vector of JSON-conforming objects.
+a vector or list of JSON-conforming objects.
 .IP 5.
 a hash table whose keys and values are JSON-conforming objects.
 .RE
 .IP
 Note that unless the keys in a hash table are all strings, nonstandard JSON
 is produced, since RFC 8259 requires JSON object keys to be strings.
+
+A list of object is rendered in the same way as vector, in the JSON
+.code []
+notation. When such JSON notation is parsed, a vector is produced.
+
+When integer objects are output, they may not constitute valid JSON, since the
+JSON specification supports only IEEE 64 bit floating-point numbers. JSON
+numbers are read as floating-point.
 
 If the
 .code flat-p

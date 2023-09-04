@@ -184,3 +184,8 @@
       (command-put-jsons `cat > @name` '(#() 1.0 nil)) t
       (file-get-string name) "[]\n1\nfalse\n"
       (command-get-jsons `cat @name`) (#() 1.0 nil))))
+
+(mtest
+  (tojson 1) "1"
+  (tojson 123123123123123123123123123123) "123123123123123123123123123123"
+  (tojson '(1 2 3 4 5)) "[1,2,3,4,5]")
