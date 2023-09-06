@@ -1147,7 +1147,7 @@ val vm_execute_toplevel(val desc)
   return vm_execute(&vm);
 }
 
-val vm_execute_closure(val fun, struct args *args)
+val vm_execute_closure(val fun, varg args)
 {
   val self = lit("vm-execute-closure");
   val closure = fun->f.env;

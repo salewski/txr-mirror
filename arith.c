@@ -4108,7 +4108,7 @@ bad4:
   do_mp_error(self, mpe);
 }
 
-val maskv(struct args *bits)
+val maskv(varg bits)
 {
   cnum index = 0;
   val accum = zero;
@@ -4819,7 +4819,7 @@ val arithp(val obj)
 
 val nary_op(val self, val (*bfun)(val, val),
             val (*ufun)(val self, val),
-            struct args *args, val emptyval)
+            varg args, val emptyval)
 {
   val acc, next;
   cnum index = 0;
@@ -4841,7 +4841,7 @@ val nary_op(val self, val (*bfun)(val, val),
 }
 
 val nary_simple_op(val (*bfun)(val, val),
-                   struct args *args, val firstval)
+                   varg args, val firstval)
 {
   val acc = firstval, next;
   cnum index = 0;
@@ -4933,12 +4933,12 @@ static val unary_int(val self, val arg)
   return arg;
 }
 
-val plusv(struct args *nlist)
+val plusv(varg nlist)
 {
   return nary_op(plus_s, plus, unary_arith, nlist, zero);
 }
 
-val minusv(val minuend, struct args *nlist)
+val minusv(val minuend, varg nlist)
 {
   val acc = minuend, next;
   cnum index = 0;
@@ -4954,12 +4954,12 @@ val minusv(val minuend, struct args *nlist)
   return acc;
 }
 
-val mulv(struct args *nlist)
+val mulv(varg nlist)
 {
   return nary_op(mul_s, mul, unary_num, nlist, one);
 }
 
-val divv(val dividend, struct args *nlist)
+val divv(val dividend, varg nlist)
 {
   val acc = dividend, next;
   cnum index = 0;
@@ -4975,17 +4975,17 @@ val divv(val dividend, struct args *nlist)
   return acc;
 }
 
-val logandv(struct args *nlist)
+val logandv(varg nlist)
 {
   return nary_op(logand_s, logand, unary_int, nlist, negone);
 }
 
-val logiorv(struct args *nlist)
+val logiorv(varg nlist)
 {
   return nary_op(logior_s, logior, unary_int, nlist, zero);
 }
 
-val gtv(val first, struct args *rest)
+val gtv(val first, varg rest)
 {
   cnum index = 0;
 
@@ -5002,7 +5002,7 @@ val gtv(val first, struct args *rest)
   return t;
 }
 
-val ltv(val first, struct args *rest)
+val ltv(val first, varg rest)
 {
   cnum index = 0;
 
@@ -5019,7 +5019,7 @@ val ltv(val first, struct args *rest)
   return t;
 }
 
-val gev(val first, struct args *rest)
+val gev(val first, varg rest)
 {
   cnum index = 0;
 
@@ -5036,7 +5036,7 @@ val gev(val first, struct args *rest)
   return t;
 }
 
-val lev(val first, struct args *rest)
+val lev(val first, varg rest)
 {
   cnum index = 0;
 
@@ -5053,7 +5053,7 @@ val lev(val first, struct args *rest)
   return t;
 }
 
-val numeqv(val first, struct args *rest)
+val numeqv(val first, varg rest)
 {
   cnum index = 0;
 
@@ -5070,7 +5070,7 @@ val numeqv(val first, struct args *rest)
   return t;
 }
 
-val numneqv(struct args *args)
+val numneqv(varg args)
 {
   if (!args->list) {
     cnum i, j, n = args->fill;
@@ -5122,7 +5122,7 @@ static val rexpt(val right, val left)
   return expt(left, right);
 }
 
-val exptv(struct args *nlist)
+val exptv(varg nlist)
 {
   val self = lit("exptv");
   cnum nargs = args_count(nlist, self);
@@ -5137,12 +5137,12 @@ static val abso_self(val self, val arg)
   return abso(arg);
 }
 
-val gcdv(struct args *nlist)
+val gcdv(varg nlist)
 {
   return nary_op(lit("gcd"), gcd, abso_self, nlist, zero);
 }
 
-val lcmv(struct args *nlist)
+val lcmv(varg nlist)
 {
   return nary_op(lit("lcm"), lcm, abso_self, nlist, zero);
 }
@@ -5153,7 +5153,7 @@ static struct cobj_ops psq_ops = cobj_ops_init(cobj_equal_handle_op,
                                                cobj_mark_op,
                                                cobj_handle_hash_op);
 
-static val quant_fun(val psqo, struct args *args)
+static val quant_fun(val psqo, varg args)
 {
   val self = lit("quantile");
   cnum idx = 0;

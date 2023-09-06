@@ -972,7 +972,7 @@ INLINE void lex_or_dyn_bind(val *dyn_made, val lex_env, val sym, val obj)
   }
 }
 
-static val bind_args(val env, val params, struct args *args, val ctx)
+static val bind_args(val env, val params, varg args, val ctx)
 {
   val new_env = make_env(nil, nil, env);
   val dyn_env_made = nil;
@@ -1384,7 +1384,7 @@ static val apply_intrinsic_frob_args(val args)
   }
 }
 
-val applyv(val fun, struct args *args)
+val applyv(val fun, varg args)
 {
   args_normalize_least(args, 1);
 
@@ -1406,7 +1406,7 @@ static loc term(loc head)
   return head;
 }
 
-static val iapply(val fun, struct args *args)
+static val iapply(val fun, varg args)
 {
   cnum index = 0;
   list_collect_decl (mod_args, ptail);
@@ -1437,7 +1437,7 @@ static val iapply(val fun, struct args *args)
   return apply(fun, z(mod_args));
 }
 
-static val list_star_intrinsic(struct args *args)
+static val list_star_intrinsic(varg args)
 {
   return apply_frob_args(args_get_list(args));
 }
@@ -1588,7 +1588,7 @@ static val do_eval(val form, val env,
 
 static void do_eval_args(val form, val env, val ctx,
                          val (*lookup)(val env, val sym),
-                         struct args *args)
+                         varg args)
 {
   for (; form; form = cdr(form))
     args_add(args, do_eval(car(form), env, ctx, lookup));
@@ -1601,7 +1601,7 @@ val set_dyn_env(val de)
   return old;
 }
 
-val funcall_interp(val interp_fun, struct args *args)
+val funcall_interp(val interp_fun, varg args)
 {
   val env = interp_fun->f.env;
   val fun = interp_fun->f.f.interp_fun;
@@ -1759,7 +1759,7 @@ val eval(val form, val env, val ctx)
   return do_eval(form, env, ctx, &lookup_var);
 }
 
-static void eval_args_lisp1(val form, val env, val ctx, struct args *args)
+static void eval_args_lisp1(val form, val env, val ctx, varg args)
 {
   do_eval_args(form, env, ctx, &lookup_sym_lisp1, args);
 }
@@ -3090,7 +3090,7 @@ static val fmt_simple(val obj, val n, val sep,
                          nil);
 }
 
-static val fmt_flex(val obj, val plist, struct args *args)
+static val fmt_flex(val obj, val plist, varg args)
 {
   cnum ix = 0;
   val n = zero, sep = lit(" ");
@@ -4783,7 +4783,7 @@ static void run_load_hooks_atexit(void)
   run_load_hooks(dyn_env);
 }
 
-val loadv(val target, struct args *load_args)
+val loadv(val target, varg load_args)
 {
   val self = lit("load");
   uses_or2;
@@ -4876,7 +4876,7 @@ val load(val target)
   return loadv(target, load_args);
 }
 
-static val rt_load_for(struct args *args)
+static val rt_load_for(varg args)
 {
   val self = lit("sys:rt-load-for");
   cnum index = 0;
@@ -5464,7 +5464,7 @@ val expand(val form, val menv)
   return ret;
 }
 
-static val muffle_unbound_warning(val exc, struct args *args)
+static val muffle_unbound_warning(val exc, varg args)
 {
   (void) exc;
 
@@ -5494,7 +5494,7 @@ static val no_warn_expand(val form, val menv)
   return ret;
 }
 
-static val gather_free_refs(val info_cons, val exc, struct args *args)
+static val gather_free_refs(val info_cons, val exc, varg args)
 {
   val self = lit("expand-with-free-refs");
   (void) exc;
@@ -5521,7 +5521,7 @@ static val gather_free_refs(val info_cons, val exc, struct args *args)
 }
 
 static val gather_free_refs_nw(val info_cons, val exc,
-                               struct args *args)
+                               varg args)
 {
   gather_free_refs(info_cons, exc, args);
   return uw_rthrow(continue_s, nil);
@@ -5721,7 +5721,7 @@ static val me_l1_setq(val form, val menv)
 }
 
 static val rt_assert_fail(val file, val line, val expr,
-                          val fmt, struct args *args)
+                          val fmt, varg args)
 {
   val str_stream = make_string_output_stream();
 
@@ -5777,7 +5777,7 @@ static val abscond_star(val name, val retval)
   abort();
 }
 
-static val map_common(val self, val fun, struct args *lists,
+static val map_common(val self, val fun, varg lists,
                       loc (*collect_fn)(loc ptail, val obj),
                       val (*map_fn)(val fun, val seq))
 {
@@ -5823,7 +5823,7 @@ static val map_common(val self, val fun, struct args *lists,
   }
 }
 
-val mapcarv(val fun, struct args *lists)
+val mapcarv(val fun, varg lists)
 {
   return map_common(lit("mapcar"), fun, lists, list_collect, mapcar);
 }
@@ -5834,12 +5834,12 @@ val mapcarl(val fun, val list_of_lists)
   return mapcarv(fun, args);
 }
 
-static val mappendv(val fun, struct args *lists)
+static val mappendv(val fun, varg lists)
 {
   return map_common(lit("mappend"), fun, lists, list_collect_append, mappend);
 }
 
-static val mapdov(val fun, struct args *lists)
+static val mapdov(val fun, varg lists)
 {
   return map_common(lit("mapdo"), fun, lists, 0, mapdo);
 }
@@ -5882,7 +5882,7 @@ static val lazy_mapcarv_func(val env, val lcons)
   return nil;
 }
 
-static val lazy_mapcarv(val fun, struct args *lists)
+static val lazy_mapcarv(val fun, varg lists)
 {
   if (!args_more(lists, 0)) {
     return nil;
@@ -5906,14 +5906,14 @@ static val lazy_mapcarl(val fun, val list_of_lists)
   return lazy_mapcarv(fun, args);
 }
 
-static val lazy_mappendv(val fun, struct args *lists)
+static val lazy_mappendv(val fun, varg lists)
 {
   return lazy_appendl(lazy_mapcarv(fun, lists));
 }
 
-static val prod_common(val self, val fun, struct args *lists,
+static val prod_common(val self, val fun, varg lists,
                        loc (*collect_fn)(loc ptail, val obj),
-                       val (*mapv_fn)(val fun, struct args *lists))
+                       val (*mapv_fn)(val fun, varg lists))
 {
   if (!args_more(lists, 0)) {
     return nil;
@@ -5963,17 +5963,17 @@ static val prod_common(val self, val fun, struct args *lists,
   }
 }
 
-val maprodv(val fun, struct args *lists)
+val maprodv(val fun, varg lists)
 {
   return prod_common(lit("maprod"), fun, lists, list_collect, mapcarv);
 }
 
-val maprendv(val fun, struct args *lists)
+val maprendv(val fun, varg lists)
 {
   return prod_common(lit("maprend"), fun, lists, list_collect_append, mappendv);
 }
 
-static val maprodo(val fun, struct args *lists)
+static val maprodo(val fun, varg lists)
 {
   return prod_common(lit("maprodo"), fun, lists, 0, mapdov);
 }
@@ -6339,14 +6339,14 @@ static val rlist_star_fun(val item)
   return cons(item, nil);
 }
 
-static val rlist(struct args *items)
+static val rlist(varg items)
 {
   args_decl_list(lists, ARGS_MIN,
                  lazy_mapcar(func_n1(rlist_fun), args_get_list(items)));
   return lazy_appendv(lists);
 }
 
-static val rlist_star(struct args *items)
+static val rlist_star(varg items)
 {
   args_decl_list(lists, ARGS_MIN,
                  lazy_mapcar(func_n1(rlist_star_fun), args_get_list(items)));
@@ -6610,7 +6610,7 @@ static val weave_gen(val env)
   return ret;
 }
 
-static val weavev(struct args *args)
+static val weavev(varg args)
 {
   val lists = args_get_list(args);
   val uniq = cons(nil, nil);
@@ -6701,7 +6701,7 @@ static val if_fun(val cond, val then, val alt)
   return if3(cond, then, default_null_arg(alt));
 }
 
-static val or_fun(struct args *vals)
+static val or_fun(varg vals)
 {
   cnum index = 0;
 
@@ -6713,12 +6713,12 @@ static val or_fun(struct args *vals)
   return nil;
 }
 
-static val nor_fun(struct args *vals)
+static val nor_fun(varg vals)
 {
   return tnil(!or_fun(vals));
 }
 
-static val and_fun(struct args *vals)
+static val and_fun(varg vals)
 {
   val item = t;
   cnum index = 0;
@@ -6732,22 +6732,22 @@ static val and_fun(struct args *vals)
   return item;
 }
 
-static val nand_fun(struct args *vals)
+static val nand_fun(varg vals)
 {
   return tnil(!and_fun(vals));
 }
 
-static val progn_fun(struct args *vals)
+static val progn_fun(varg vals)
 {
   return if3(vals->list, car(lastcons(vals->list)), vals->arg[vals->fill - 1]);
 }
 
-static val prog1_fun(struct args *vals)
+static val prog1_fun(varg vals)
 {
   return if2(args_more(vals, 0), args_at(vals, 0));
 }
 
-static val prog2_fun(struct args *vals)
+static val prog2_fun(varg vals)
 {
   args_normalize_least(vals, 2);
   return if2(vals->fill >= 2, vals->arg[1]);
@@ -6758,19 +6758,19 @@ static val not_null(val obj)
   return if3(nilp(obj), nil, t);
 }
 
-static val tf(struct args *args)
+static val tf(varg args)
 {
   (void) args;
   return t;
 }
 
-static val nilf(struct args *args)
+static val nilf(varg args)
 {
   (void) args;
   return nil;
 }
 
-static val do_retf(val ret, struct args *args)
+static val do_retf(val ret, varg args)
 {
   (void) args;
   return ret;
@@ -6781,16 +6781,16 @@ val retf(val ret)
   return func_f0v(ret, do_retf);
 }
 
-static val do_apf(val fun, struct args *args)
+static val do_apf(val fun, varg args)
 {
   return applyv(fun, args);
 }
 
-static val do_args_apf(val dargs, struct args *args)
+static val do_args_apf(val dargs, varg args)
 {
   val self = lit("apf");
   val fun = dargs->a.car;
-  struct args *da = dargs->a.args;
+  varg da = dargs->a.args;
   cnum da_nargs = da->fill + c_num(length(da->list), self);
   args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
   args_copy(args_call, da);
@@ -6800,7 +6800,7 @@ static val do_args_apf(val dargs, struct args *args)
   return applyv(fun, args_call);
 }
 
-static val apf(val fun, struct args *args)
+static val apf(val fun, varg args)
 {
   if (!args || !args_more(args, 0))
     return func_f0v(fun, do_apf);
@@ -6808,16 +6808,16 @@ static val apf(val fun, struct args *args)
     return func_f0v(dyn_args(args, fun, nil), do_args_apf);
 }
 
-static val do_ipf(val fun, struct args *args)
+static val do_ipf(val fun, varg args)
 {
   return iapply(fun, args);
 }
 
-static val do_args_ipf(val dargs, struct args *args)
+static val do_args_ipf(val dargs, varg args)
 {
   val self = lit("ipf");
   val fun = dargs->a.car;
-  struct args *da = dargs->a.args;
+  varg da = dargs->a.args;
   cnum da_nargs = da->fill + c_num(length(da->list), self);
   args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
   args_copy(args_call, da);
@@ -6828,7 +6828,7 @@ static val do_args_ipf(val dargs, struct args *args)
 }
 
 
-static val ipf(val fun, struct args *args)
+static val ipf(val fun, varg args)
 {
   if (!args || !args_more(args, 0))
     return func_f0v(fun, do_ipf);
@@ -6836,21 +6836,21 @@ static val ipf(val fun, struct args *args)
     return func_f0v(dyn_args(args, fun, nil), do_args_ipf);
 }
 
-static val callf(val func, struct args *funlist)
+static val callf(val func, varg funlist)
 {
   val juxt_fun = juxtv(funlist);
   val apf_fun = apf(func, 0);
   return chain(juxt_fun, apf_fun, nao);
 }
 
-static val do_mapf(val env, struct args *args)
+static val do_mapf(val env, varg args)
 {
   cons_bind (fun, funlist, env);
   val mapped_args = mapcarl(call_f, cons(funlist, cons(args_get_list(args), nil)));
   return apply(fun, z(mapped_args));
 }
 
-static val mapf(val fun, struct args *funlist)
+static val mapf(val fun, varg funlist)
 {
   return func_f0v(cons(fun, args_get_list(funlist)), do_mapf);
 }

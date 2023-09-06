@@ -2692,7 +2692,7 @@ val make_catenated_stream(val stream_list)
   return catstrm;
 }
 
-val make_catenated_stream_v(struct args *streams)
+val make_catenated_stream_v(varg streams)
 {
   return make_catenated_stream(args_get_list(streams));
 }
@@ -3342,7 +3342,7 @@ static void vformat_str(val stream, val str, int width, enum align align,
   gc_hint(str);
 }
 
-val formatv(val stream_in, val fmtstr, struct args *al)
+val formatv(val stream_in, val fmtstr, varg al)
 {
   uses_or2;
   val stream = if3(stream_in == t,
@@ -3865,7 +3865,7 @@ val format(val stream, val str, ...)
   }
 }
 
-val fmt(val string, struct args *args)
+val fmt(val string, varg args)
 {
   return formatv(nil, string, args);
 }
@@ -5303,7 +5303,7 @@ val path_cat(val dir_name, val base_name)
   return scat(lit("/"), dir_name, base_name, nao);
 }
 
-static val path_vcat(struct args *args)
+static val path_vcat(varg args)
 {
   cnum ix = 0;
 

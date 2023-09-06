@@ -5472,7 +5472,7 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes,
   return obj;
 }
 
-val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
+val ffi_call_wrap(val fptr, val ffi_call_desc, varg args)
 {
   val real_self = lit("ffi-call");
   struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(real_self, ffi_call_desc);
@@ -7187,7 +7187,7 @@ val union_out(val uni, val memb, val memb_obj)
   return memb_obj;
 }
 
-val make_zstruct(val type, struct args *args)
+val make_zstruct(val type, varg args)
 {
   val self = lit("make-zstruct");
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);

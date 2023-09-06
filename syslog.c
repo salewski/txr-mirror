@@ -111,7 +111,7 @@ val setlogmask_wrap(val mask)
   return num(setlogmask(c_num(mask, self)));
 }
 
-val syslog_wrapv(val prio, val fmt, struct args *args)
+val syslog_wrapv(val prio, val fmt, varg args)
 {
   val self = lit("syslog");
   val text = formatv(nil, fmt, args);

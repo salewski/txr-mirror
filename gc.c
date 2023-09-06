@@ -480,7 +480,7 @@ tail_call:
     mark_obj_tail(obj->tn.key);
   case DARG:
     {
-      struct args *args = obj->a.args;
+      varg args = obj->a.args;
       cnum i, n = args->fill;
       val *arg = args->arg;
 

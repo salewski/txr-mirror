@@ -46,7 +46,7 @@ struct args_bool_key {
   val *store;
 };
 
-INLINE struct args *args_init_list(struct args *args, cnum argc, val list)
+INLINE varg args_init_list(varg args, cnum argc, val list)
 {
   args->argc = argc;
   args->fill = 0;
@@ -54,14 +54,14 @@ INLINE struct args *args_init_list(struct args *args, cnum argc, val list)
   return args;
 }
 
-INLINE void args_set_fill(struct args *args, cnum fill)
+INLINE void args_set_fill(varg args, cnum fill)
 {
   args->fill = fill;
 }
 
 #define args_decl_list(NAME, N, L)                                      \
   struct { struct args args; val arg[(N) - 1]; } _ac;                   \
-  struct args *NAME = args_init_list(&_ac.args, N, L)
+  varg NAME = args_init_list(&_ac.args, N, L)
 
 #define args_decl_constsize(NAME, N) args_decl_list(NAME, N, nil)
 
@@ -69,17 +69,17 @@ INLINE void args_set_fill(struct args *args, cnum fill)
   mem_t *NAME ## _mem =                                                 \
     coerce(mem_t *,                                                     \
            alloca(offsetof(struct args, arg) + (N)*sizeof (val)));      \
-  struct args *NAME = args_init_list(coerce(struct args *,              \
+  varg NAME = args_init_list(coerce(varg ,              \
                                             NAME ## _mem), N, L)
 
 #define args_decl(NAME, N) args_decl_list_dyn(NAME, N, nil)
 
-INLINE val args_add(struct args *args, val arg)
+INLINE val args_add(varg args, val arg)
 {
   return args->arg[args->fill++] = arg;
 }
 
-INLINE void args_add2(struct args *args, val arg1, val arg2)
+INLINE void args_add2(varg args, val arg1, val arg2)
 {
   val *arg = args->arg + args->fill;
   args->fill += 2;
@@ -87,7 +87,7 @@ INLINE void args_add2(struct args *args, val arg1, val arg2)
   *arg++ = arg2;
 }
 
-INLINE void args_add3(struct args *args, val arg1, val arg2, val arg3)
+INLINE void args_add3(varg args, val arg1, val arg2, val arg3)
 {
   val *arg = args->arg + args->fill;
   args->fill += 3;
@@ -96,7 +96,7 @@ INLINE void args_add3(struct args *args, val arg1, val arg2, val arg3)
   *arg++ = arg3;
 }
 
-INLINE void args_add4(struct args *args, val arg1, val arg2, val arg3, val arg4)
+INLINE void args_add4(varg args, val arg1, val arg2, val arg3, val arg4)
 {
   val *arg = args->arg + args->fill;
   args->fill += 4;
@@ -106,7 +106,7 @@ INLINE void args_add4(struct args *args, val arg1, val arg2, val arg3, val arg4)
   *arg++ = arg4;
 }
 
-INLINE void args_add5(struct args *args, val arg1, val arg2, val arg3,
+INLINE void args_add5(varg args, val arg1, val arg2, val arg3,
                       val arg4, val arg5)
 {
   val *arg = args->arg + args->fill;
@@ -118,19 +118,19 @@ INLINE void args_add5(struct args *args, val arg1, val arg2, val arg3,
   *arg++ = arg5;
 }
 
-val args_add_checked(val name, struct args *args, val arg);
+val args_add_checked(val name, varg args, val arg);
 
-INLINE void args_add_list(struct args *args, val list)
+INLINE void args_add_list(varg args, val list)
 {
   args->list = list;
 }
 
-INLINE int args_more(struct args *args, cnum index)
+INLINE int args_more(varg args, cnum index)
 {
   return index < args->fill || args->list;
 }
 
-INLINE int args_two_more(struct args *args, cnum index)
+INLINE int args_two_more(varg args, cnum index)
 {
   return
     index + 1 < args->fill ||
@@ -138,16 +138,16 @@ INLINE int args_two_more(struct args *args, cnum index)
     cdr(args->list);
 }
 
-INLINE int args_more_nozap(struct args *args, cnum index, val list)
+INLINE int args_more_nozap(varg args, cnum index, val list)
 {
   return list || index < args->fill;
 }
 
-void args_normalize_exact(struct args *args, cnum fill);
-void args_normalize_least(struct args *args, cnum fill);
-void args_normalize_fill(struct args *args, cnum minfill, cnum maxfill);
+void args_normalize_exact(varg args, cnum fill);
+void args_normalize_least(varg args, cnum fill);
+void args_normalize_fill(varg args, cnum minfill, cnum maxfill);
 
-INLINE val args_get_list(struct args *args)
+INLINE val args_get_list(varg args)
 {
   if (args->fill == 0)
     return z(args->list);
@@ -155,7 +155,7 @@ INLINE val args_get_list(struct args *args)
   return z(args->list);
 }
 
-INLINE val args_get_rest(struct args *args, cnum index)
+INLINE val args_get_rest(varg args, cnum index)
 {
   if (args->fill == index)
     return z(args->list);
@@ -163,14 +163,14 @@ INLINE val args_get_rest(struct args *args, cnum index)
   return z(args->list);
 }
 
-INLINE val args_at(struct args *args, cnum arg_index)
+INLINE val args_at(varg args, cnum arg_index)
 {
   if (arg_index < args->fill)
     return args->arg[arg_index];
   return car(args->list);
 }
 
-INLINE val args_atz(struct args *args, cnum arg_index)
+INLINE val args_atz(varg args, cnum arg_index)
 {
   if (arg_index < args->fill) {
     return z(args->arg[arg_index]);
@@ -179,35 +179,35 @@ INLINE val args_atz(struct args *args, cnum arg_index)
   }
 }
 
-INLINE val args_get(struct args *args, cnum *arg_index)
+INLINE val args_get(varg args, cnum *arg_index)
 {
   if (*arg_index < args->fill)
     return z(args->arg[(*arg_index)++]);
   return pop(&args->list);
 }
 
-INLINE val args_get_nozap(struct args *args, cnum *arg_index, val *list)
+INLINE val args_get_nozap(varg args, cnum *arg_index, val *list)
 {
   if (*arg_index < args->fill)
     return args->arg[(*arg_index)++];
   return pop(list);
 }
 
-INLINE cnum args_count(struct args *args, val self)
+INLINE cnum args_count(varg args, val self)
 {
   return args->fill + c_num(length_list(args->list), self);
 }
 
-val args_get_checked(val name, struct args *args, cnum *arg_index);
-struct args *args_copy(struct args *to, struct args *from);
-struct args *args_copy_zap(struct args *to, struct args *from);
-struct args *args_cat(struct args *to, struct args *from);
-struct args *args_cat_zap(struct args *to, struct args *from);
-struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index);
-struct args *args_copy_reverse(struct args *to, struct args *from, cnum nargs);
-val args_copy_to_list(struct args *args);
-void args_for_each(struct args *args,
+val args_get_checked(val name, varg args, cnum *arg_index);
+varg args_copy(varg to, varg from);
+varg args_copy_zap(varg to, varg from);
+varg args_cat(varg to, varg from);
+varg args_cat_zap(varg to, varg from);
+varg args_cat_zap_from(varg to, varg from, cnum index);
+varg args_copy_reverse(varg to, varg from, cnum nargs);
+val args_copy_to_list(varg args);
+void args_for_each(varg args,
                    int (*fn)(val arg, int ix, mem_t *ctx),
                    mem_t *ctx);
-void args_keys_extract(struct args *args, struct args_bool_key *, int n);
-val dyn_args(struct args *args, val car, val cdr);
+void args_keys_extract(varg args, struct args_bool_key *, int n);
+val dyn_args(varg args, val car, val cdr);

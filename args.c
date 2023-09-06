@@ -37,16 +37,16 @@
 #include "gc.h"
 #include "args.h"
 
-val args_cons_list(struct args *args);
+val args_cons_list(varg args);
 
-val args_add_checked(val name, struct args *args, val arg)
+val args_add_checked(val name, varg args, val arg)
 {
   if (args->fill >= args->argc)
     uw_throwf(assert_s, lit("~a: argument list size exceeded"), name, nao);
   return args_add(args, arg);
 }
 
-void args_normalize_exact(struct args *args, cnum fill)
+void args_normalize_exact(varg args, cnum fill)
 {
   bug_unless (fill <= args->argc);
 
@@ -58,7 +58,7 @@ void args_normalize_exact(struct args *args, cnum fill)
 
 }
 
-void args_normalize_least(struct args *args, cnum minfill)
+void args_normalize_least(varg args, cnum minfill)
 {
   bug_unless (minfill <= args->argc);
 
@@ -66,7 +66,7 @@ void args_normalize_least(struct args *args, cnum minfill)
     args_add(args, pop(&args->list));
 }
 
-void args_normalize_fill(struct args *args, cnum minfill, cnum maxfill)
+void args_normalize_fill(varg args, cnum minfill, cnum maxfill)
 {
   args_normalize_least(args, maxfill);
 
@@ -75,14 +75,14 @@ void args_normalize_fill(struct args *args, cnum minfill, cnum maxfill)
       args_add(args, colon_k);
 }
 
-val args_get_checked(val name, struct args *args, cnum *arg_index)
+val args_get_checked(val name, varg args, cnum *arg_index)
 {
   if (*arg_index >= args->fill && !args->list)
     uw_throwf(assert_s, lit("~a: insufficient arguments"), name, nao);
   return args_get(args, arg_index);
 }
 
-struct args *args_copy(struct args *to, struct args *from)
+varg args_copy(varg to, varg from)
 {
   to->fill = from->fill;
   to->list = from->list;
@@ -90,14 +90,14 @@ struct args *args_copy(struct args *to, struct args *from)
   return to;
 }
 
-struct args *args_copy_zap(struct args *to, struct args *from)
+varg args_copy_zap(varg to, varg from)
 {
   args_copy(to, from);
   memset(from->arg, 0, sizeof *from->arg * from->fill);
   return to;
 }
 
-struct args *args_cat(struct args *to, struct args *from)
+varg args_cat(varg to, varg from)
 {
   size_t size = sizeof *from->arg * from->fill;
   to->list = from->list;
@@ -106,7 +106,7 @@ struct args *args_cat(struct args *to, struct args *from)
   return to;
 }
 
-struct args *args_cat_zap(struct args *to, struct args *from)
+varg args_cat_zap(varg to, varg from)
 {
   size_t size = sizeof *from->arg * from->fill;
   to->list = from->list;
@@ -116,7 +116,7 @@ struct args *args_cat_zap(struct args *to, struct args *from)
   return to;
 }
 
-struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index)
+varg args_cat_zap_from(varg to, varg from, cnum index)
 {
   size_t size = sizeof *from->arg * (from->fill - index);
   to->list = from->list;
@@ -126,7 +126,7 @@ struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index)
   return to;
 }
 
-struct args *args_copy_reverse(struct args *to, struct args *from, cnum nargs)
+varg args_copy_reverse(varg to, varg from, cnum nargs)
 {
   cnum i, index = 0;
 
@@ -137,7 +137,7 @@ struct args *args_copy_reverse(struct args *to, struct args *from, cnum nargs)
   return to;
 }
 
-val args_copy_to_list(struct args *args)
+val args_copy_to_list(varg args)
 {
   list_collect_decl (out, ptail);
   cnum i;
@@ -150,7 +150,7 @@ val args_copy_to_list(struct args *args)
   return out;
 }
 
-void args_for_each(struct args *args,
+void args_for_each(varg args,
                    int (*fn)(val arg, int ix, mem_t *ctx),
                    mem_t *ctx)
 {
@@ -199,7 +199,7 @@ static int args_key_check_store(val arg, int ix, mem_t *ctx)
   return 0;
 }
 
-void args_keys_extract(struct args *args, struct args_bool_key *akv, int n)
+void args_keys_extract(varg args, struct args_bool_key *akv, int n)
 {
   if (n > 0) {
     struct args_bool_ctx acx;
@@ -210,11 +210,10 @@ void args_keys_extract(struct args *args, struct args_bool_key *akv, int n)
   }
 }
 
-val dyn_args(struct args *args, val car, val cdr)
+val dyn_args(varg args, val car, val cdr)
 {
   size_t size = offsetof(struct args, arg) + sizeof (val) * args->argc;
-  struct args *copy = coerce(struct args *, chk_copy_obj(coerce(mem_t *, args),
-                                                         size));
+  varg copy = coerce(varg , chk_copy_obj(coerce(mem_t *, args), size));
   val obj = make_obj();
 
   obj->a.type = DARG;

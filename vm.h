@@ -34,7 +34,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
                  val datavec, val funvec);
 val vm_execute_toplevel(val desc);
 val vm_copy_closure(val closure);
-val vm_execute_closure(val fun, struct args *);
+val vm_execute_closure(val fun, varg);
 val vm_funcall(val fun);
 val vm_funcall1(val fun, val arg);
 val vm_funcall2(val fun, val arg1, val arg2);

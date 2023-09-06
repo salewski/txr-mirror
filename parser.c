@@ -1323,7 +1323,7 @@ static val get_home_path(void)
   return getenv_wrap(lit("HOME"));
 }
 
-static val repl_warning(val out_stream, val exc, struct args *rest)
+static val repl_warning(val out_stream, val exc, varg rest)
 {
   val args = args_get_list(rest);
 

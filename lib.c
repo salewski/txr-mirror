@@ -2440,7 +2440,7 @@ val append2(val list1, val list2)
   return out;
 }
 
-val appendv(struct args *lists)
+val appendv(varg lists)
 {
   cnum index = 0;
   list_collect_decl (out, ptail);
@@ -2489,7 +2489,7 @@ val nreconc(val list1, val list2)
   return out;
 }
 
-val nconcv(struct args *lists)
+val nconcv(varg lists)
 {
   cnum index = 0;
   list_collect_decl (out, ptail);
@@ -2726,7 +2726,7 @@ static val lazy_appendv_func(val rl, val lcons)
   return nil;
 }
 
-val lazy_appendv(struct args *args)
+val lazy_appendv(varg args)
 {
   val nonempty = nil;
   cnum index = 0;
@@ -3631,7 +3631,7 @@ val none_satisfy(val seq, val pred_in, val key_in)
   return t;
 }
 
-val multi(val func, struct args *lists)
+val multi(val func, varg lists)
 {
   val transposed = mapcarv(list_f, lists);
   val processed = funcall1(func, transposed);
@@ -3898,7 +3898,7 @@ val partition_by(val func, val seq)
                                 funcall1(func, car(seq)), seq);
 }
 
-static val partition_if_countdown_funv(val envcons, struct args *args)
+static val partition_if_countdown_funv(val envcons, varg args)
 {
   cons_bind(count, targetfun, envcons);
   val ret;
@@ -4784,7 +4784,7 @@ val list(val first, ...)
   return list;
 }
 
-val listv(struct args *args)
+val listv(varg args)
 {
   return args_get_list(args);
 }
@@ -4960,12 +4960,12 @@ val min2(val a, val b)
   return if3(less(a, b), a, b);
 }
 
-val maxv(val first, struct args *rest)
+val maxv(val first, varg rest)
 {
   return nary_simple_op(max2, rest, first);
 }
 
-val minv(val first, struct args *rest)
+val minv(val first, varg rest)
 {
   return nary_simple_op(min2, rest, first);
 }
@@ -4987,7 +4987,7 @@ val clamp(val low, val high, val num)
   return max2(low, min2(high, num));
 }
 
-val bracket(val larg, struct args *args)
+val bracket(val larg, varg args)
 {
   cnum index = 0, i = 0;
 
@@ -6009,7 +6009,7 @@ val scat3(val s1, val sep, val s2)
   return cat_str_get(&cs);
 }
 
-val join_with(val sep, struct args *args)
+val join_with(val sep, varg args)
 {
   val self = lit("join-with");
   cnum index;
@@ -6036,7 +6036,7 @@ val join_with(val sep, struct args *args)
   return cat_str_get(&cs);
 }
 
-val fmt_join(struct args *args)
+val fmt_join(varg args)
 {
   return join_with(nil, args);
 }
@@ -6845,7 +6845,7 @@ val lequal(val left, val right)
   return or2(equal(left, right), less(left, right));
 }
 
-val lessv(val first, struct args *rest)
+val lessv(val first, varg rest)
 {
   cnum index = 0;
 
@@ -6859,7 +6859,7 @@ val lessv(val first, struct args *rest)
   return t;
 }
 
-val greaterv(val first, struct args *rest)
+val greaterv(val first, varg rest)
 {
   cnum index = 0;
 
@@ -6873,7 +6873,7 @@ val greaterv(val first, struct args *rest)
   return t;
 }
 
-val lequalv(val first, struct args *rest)
+val lequalv(val first, varg rest)
 {
   cnum index = 0;
 
@@ -6887,7 +6887,7 @@ val lequalv(val first, struct args *rest)
   return t;
 }
 
-val gequalv(val first, struct args *rest)
+val gequalv(val first, varg rest)
 {
   cnum index = 0;
 
@@ -8396,10 +8396,10 @@ static NORETURN void callerror(val fun, val msg)
   abort();
 }
 
-INLINE val do_generic_funcall(val fun, struct args *args_in)
+INLINE val do_generic_funcall(val fun, varg args_in)
 {
   int variadic, fixparam, reqargs;
-  struct args *args = args_in;
+  varg args = args_in;
 
   switch (type(fun)) {
   case FUN:
@@ -8649,7 +8649,7 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
   internal_error("corrupt function type field");
 }
 
-val generic_funcall(val fun, struct args *args)
+val generic_funcall(val fun, varg args)
 {
   if (dbg_backtrace) {
     val ret;
@@ -9157,7 +9157,7 @@ val pa_12_1(val fun2, val arg2)
   return func_f1(cons(fun2, arg2), do_pa_12_1);
 }
 
-static val do_pa_12_1_v(val fcons, struct args *args)
+static val do_pa_12_1_v(val fcons, varg args)
 {
   return funcall2(car(fcons), args_get_list(args), cdr(fcons));
 }
@@ -9222,7 +9222,7 @@ val pa_1234_34(val fun4, val arg1, val arg2)
   return func_f2(cons(fun4, cons(arg1, arg2)), do_pa_1234_34);
 }
 
-val transposev(struct args *list)
+val transposev(varg list)
 {
   val func = list_f;
 
@@ -9251,7 +9251,7 @@ val transpose(val seq)
   return make_like(transposev(args), seq);
 }
 
-static val do_chain(val fun1_list, struct args *args)
+static val do_chain(val fun1_list, varg args)
 {
   val arg = nil;
 
@@ -9287,12 +9287,12 @@ val chain(val first_fun, ...)
   return func_f0v(out, do_chain);
 }
 
-val chainv(struct args *funlist)
+val chainv(varg funlist)
 {
   return func_f0v(args_get_list(funlist), do_chain);
 }
 
-static val do_chand(val fun1_list, struct args *args)
+static val do_chand(val fun1_list, varg args)
 {
   val arg = nil;
 
@@ -9310,22 +9310,22 @@ static val do_chand(val fun1_list, struct args *args)
 }
 
 
-val chandv(struct args *funlist)
+val chandv(varg funlist)
 {
   return func_f0v(args_get_list(funlist), do_chand);
 }
 
-static val do_juxt(val funcs, struct args *args)
+static val do_juxt(val funcs, varg args)
 {
   return mapcar(pa_12_1(func_n2(apply), args_get_list(args)), funcs);
 }
 
-val juxtv(struct args *funlist)
+val juxtv(varg funlist)
 {
   return func_f0v(args_get_list(funlist), do_juxt);
 }
 
-static val do_and(val fun1_list, struct args *args_in)
+static val do_and(val fun1_list, varg args_in)
 {
   cnum argc = args_in->argc;
   args_decl(args, argc);
@@ -9363,7 +9363,7 @@ val andf(val first_fun, ...)
   return func_f0v(out, do_and);
 }
 
-val andv(struct args *funlist)
+val andv(varg funlist)
 {
   return func_f0v(args_get_list(funlist), do_and);
 }
@@ -9378,7 +9378,7 @@ val swap_12_21(val fun)
   return func_f2(fun, do_swap_12_21);
 }
 
-static val do_or(val fun1_list, struct args *args_in)
+static val do_or(val fun1_list, varg args_in)
 {
   cnum argc = args_in->argc;
   args_decl(args, argc);
@@ -9397,12 +9397,12 @@ static val do_or(val fun1_list, struct args *args_in)
   return ret;
 }
 
-val orv(struct args *funlist)
+val orv(varg funlist)
 {
   return func_f0v(args_get_list(funlist), do_or);
 }
 
-static val do_not(val fun, struct args *args)
+static val do_not(val fun, varg args)
 {
   return null(apply(fun, args_get_list(args)));
 }
@@ -9412,17 +9412,17 @@ val notf(val fun)
   return func_f0v(fun, do_not);
 }
 
-val nandv(struct args *funlist)
+val nandv(varg funlist)
 {
   return notf(andv(funlist));
 }
 
-val norv(struct args *funlist)
+val norv(varg funlist)
 {
   return notf(orv(funlist));
 }
 
-static val do_iff(val env, struct args *args_in)
+static val do_iff(val env, varg args_in)
 {
   cons_bind (condfun, choices, env);
   cons_bind (thenfun, elsefun, choices);
@@ -9584,7 +9584,7 @@ val size_vec(val vec)
   return vec->v.vec[vec_alloc];
 }
 
-val vectorv(struct args *args)
+val vectorv(varg args)
 {
   cnum index = 0;
   val vec = vector(zero, nil);
@@ -10638,7 +10638,7 @@ val alist_remove(val list, val keys)
   return set_diff(list, keys, func_n2(alist_remove_test), nil);
 }
 
-val alist_removev(val list, struct args *keys)
+val alist_removev(val list, varg keys)
 {
   return alist_remove(list, args_get_list(keys));
 }
@@ -10657,7 +10657,7 @@ val alist_nremove(val list, val keys)
   return list;
 }
 
-val alist_nremovev(val list, struct args *keys)
+val alist_nremovev(val list, varg keys)
 {
   return alist_nremove(list, args_get_list(keys));
 }
@@ -11443,7 +11443,7 @@ val sort_group(val seq, val keyfun, val lessfun)
   return partition_by(kf, sorted);
 }
 
-val unique(val seq, val keyfun, struct args *hashv_args)
+val unique(val seq, val keyfun, varg hashv_args)
 {
   val self = lit("unique");
   val hash = hashv(hashv_args);

@@ -133,8 +133,8 @@ static_forward(struct cobj_ops struct_type_ops);
 static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym);
 static val make_struct_type_compat(val name, val super,
                                    val slots, val initfun, val boactor);
-static val call_super_method(val inst, val sym, struct args *);
-static val call_super_fun(val type, val sym, struct args *);
+static val call_super_method(val inst, val sym, varg );
+static val call_super_fun(val type, val sym, varg );
 
 void struct_init(void)
 {
@@ -779,7 +779,7 @@ val allocate_struct(val type)
   memset(name, 0, size_name)
 
 static val make_struct_impl(val self, val type,
-                            struct args *plist, struct args *args)
+                            varg plist, varg args)
 {
   struct struct_type *st = stype_handle(&type, self);
   cnum nslots = st->nslots;
@@ -840,19 +840,19 @@ static val make_struct_impl(val self, val type,
   return sinst;
 }
 
-val make_struct(val type, val plist, struct args *boa)
+val make_struct(val type, val plist, varg boa)
 {
   args_decl_list(pargs, ARGS_MIN, plist);
   return make_struct_impl(lit("make-struct"), type, pargs, boa);
 }
 
-val struct_from_plist(val type, struct args *plist)
+val struct_from_plist(val type, varg plist)
 {
   args_decl_constsize(boa, ARGS_ABS_MIN);
   return make_struct_impl(lit("struct-from-plist"), type, plist, boa);
 }
 
-val struct_from_args(val type, struct args *boa)
+val struct_from_args(val type, varg boa)
 {
   args_decl_constsize(pargs, ARGS_ABS_MIN);
   return make_struct_impl(lit("struct-from-args"), type, pargs, boa);
@@ -1512,7 +1512,7 @@ val static_slot_home(val stype, val sym)
 
 static val do_super(struct struct_type *st,
                     val inst, val sym, val self,
-                    struct args *args)
+                    varg args)
 {
   val type = st->self;
   cnum i;
@@ -1547,7 +1547,7 @@ static val do_super(struct struct_type *st,
               type, nao);
 }
 
-static val call_super_method(val inst, val sym, struct args *args)
+static val call_super_method(val inst, val sym, varg args)
 {
   val type = struct_type(inst);
   val self = lit("call-super-method");
@@ -1555,7 +1555,7 @@ static val call_super_method(val inst, val sym, struct args *args)
   return do_super(st, inst, sym, self, args);
 }
 
-static val call_super_fun(val type, val sym, struct args *args)
+static val call_super_fun(val type, val sym, varg args)
 {
   val self = lit("call-super-fun");
   struct struct_type *st = stype_handle(&type, self);
@@ -1647,7 +1647,7 @@ static val method_fun(val env, varg args)
 static val method_args_fun(val dargs, varg args)
 {
   val self = lit("method");
-  struct args *da = dargs->a.args;
+  varg da = dargs->a.args;
   val fun = dargs->a.car;
   val strct = dargs->a.cdr;
   cnum da_nargs = da->fill + c_num(length(da->list), self);
@@ -1664,7 +1664,7 @@ val method(val strct, val slotsym)
   return func_f0v(cons(slot(strct, slotsym), strct), method_fun);
 }
 
-val method_args(val strct, val slotsym, struct args *args)
+val method_args(val strct, val slotsym, varg args)
 {
   if (!args_more(args, 0))
     return func_f0v(cons(slot(strct, slotsym), strct), method_fun);
@@ -1701,7 +1701,7 @@ val uslot(val slot)
   return func_f1(slot, uslot_fun);
 }
 
-static val umethod_fun(val sym, struct args *args)
+static val umethod_fun(val sym, varg args)
 {
   val self = lit("umethod");
 
@@ -1723,11 +1723,11 @@ static val umethod_fun(val sym, struct args *args)
   }
 }
 
-static val umethod_args_fun(val dargs, struct args *args)
+static val umethod_args_fun(val dargs, varg args)
 {
   val self = lit("umethod");
   val sym = dargs->a.car;
-  struct args *da = dargs->a.args;
+  varg da = dargs->a.args;
 
   if (!args_more(args, 0)) {
     uw_throwf(type_error_s, lit("~a: object argument required to call ~s"),
@@ -1753,7 +1753,7 @@ static val umethod_args_fun(val dargs, struct args *args)
   }
 }
 
-val umethod(val slot, struct args *args)
+val umethod(val slot, varg args)
 {
   if (!args_more(args, 0))
     return func_f0v(slot, umethod_fun);

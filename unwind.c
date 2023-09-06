@@ -436,7 +436,7 @@ val uw_find_frames_by_mask(val mask_in)
         }
       case UW_FCALL:
         {
-          struct args *frargs = fr->fc.args;
+          varg frargs = fr->fc.args;
           args_decl(acopy, frargs->argc);
           args_copy(acopy, frargs);
           frame = allocate_struct(fcall_frame_type);
@@ -488,7 +488,7 @@ val uw_last_form_expanded(void)
 
 #endif
 
-val uw_invoke_catch(val catch_frame, val sym, struct args *args)
+val uw_invoke_catch(val catch_frame, val sym, varg args)
 {
   uw_frame_t *ex, *ex_point;
 
@@ -513,14 +513,14 @@ val uw_invoke_catch(val catch_frame, val sym, struct args *args)
   abort();
 }
 
-val uw_muffle_warning(val exc, struct args *args)
+val uw_muffle_warning(val exc, varg args)
 {
   (void) exc;
   (void) args;
   return uw_rthrow(continue_s, nil);
 }
 
-val uw_trace_error(val ctx, val exc, struct args *args)
+val uw_trace_error(val ctx, val exc, varg args)
 {
   cons_bind (stream, prefix, ctx);
   error_trace(exc, args_get_list(args), stream, prefix);
@@ -607,7 +607,7 @@ void uw_push_handler(uw_frame_t *fr, val matches, val fun)
 
 #if CONFIG_DEBUG_SUPPORT
 
-void uw_push_fcall(uw_frame_t *fr, val fun, struct args *args)
+void uw_push_fcall(uw_frame_t *fr, val fun, varg args)
 {
   memset(fr, 0, sizeof *fr);
   fr->fc.type = UW_FCALL;
@@ -651,7 +651,7 @@ val uw_exception_subtype_p(val sub, val sup)
   }
 }
 
-static void invoke_handler(uw_frame_t *fr, struct args *args)
+static void invoke_handler(uw_frame_t *fr, varg args)
 {
   val saved_dyn_env = dyn_env;
   val cur_pkg_alist = deref(cur_package_alist_loc);
@@ -775,12 +775,12 @@ val uw_rthrow(val sym, val args)
   abort();
 }
 
-val uw_rthrowv(val sym, struct args *arglist)
+val uw_rthrowv(val sym, varg arglist)
 {
   return uw_rthrow(sym, args_get_list(arglist));
 }
 
-val uw_rthrowfv(val sym, val fmt, struct args *args)
+val uw_rthrowfv(val sym, val fmt, varg args)
 {
   val stream = make_string_output_stream();
   (void) formatv(stream, fmt, args);
@@ -821,7 +821,7 @@ val uw_ethrowf(val sym, val fmt, ...)
   abort();
 }
 
-val uw_errorfv(val fmt, struct args *args)
+val uw_errorfv(val fmt, varg args)
 {
   val stream = make_string_output_stream();
   (void) formatv(stream, fmt, args);
@@ -988,7 +988,7 @@ val uw_register_subtype(val sub, val sup)
   return sup;
 }
 
-static val register_exception_subtypes(struct args *args)
+static val register_exception_subtypes(varg args)
 {
   val types = args_copy_to_list(args);
   reduce_left(func_n2(uw_register_subtype), types, nil, nil);

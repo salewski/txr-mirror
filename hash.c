@@ -1619,7 +1619,7 @@ static val equal_based_p(val equal, val eql, val eq, val wkeys)
   return null(eql);
 }
 
-val hashv(struct args *args)
+val hashv(varg args)
 {
   val self = lit("hash");
   val wkeys = nil, wvals = nil, equal = nil, eql = nil, wand = nil, wor = nil;
@@ -1680,12 +1680,12 @@ val hash_construct(val hashl_args, val pairs)
   return hash;
 }
 
-val hash_from_pairs_v(val pairs, struct args *hashv_args)
+val hash_from_pairs_v(val pairs, varg hashv_args)
 {
   return hash_construct(args_get_list(hashv_args), pairs);
 }
 
-val hash_from_alist_v(val alist, struct args *hashv_args)
+val hash_from_alist_v(val alist, varg hashv_args)
 {
   val hash = hashv(hashv_args);
 
@@ -1699,7 +1699,7 @@ val hash_from_alist_v(val alist, struct args *hashv_args)
   return hash;
 }
 
-val hash_map(val fun, val seq, struct args *hashv_args)
+val hash_map(val fun, val seq, varg hashv_args)
 {
   val self = lit("hash-map");
   seq_iter_t iter;
@@ -1712,7 +1712,7 @@ val hash_map(val fun, val seq, struct args *hashv_args)
   return hash;
 }
 
-val hash_props(struct args *plist)
+val hash_props(varg plist)
 {
   val self = lit("hash-props");
   args_decl_constsize(args, ARGS_MIN);
@@ -1732,7 +1732,7 @@ val hash_props(struct args *plist)
   return hash;
 }
 
-val hash_list(val keys, struct args *hashv_args)
+val hash_list(val keys, varg hashv_args)
 {
   val hash = hashv(hashv_args);
 
@@ -1746,7 +1746,7 @@ val hash_list(val keys, struct args *hashv_args)
   return hash;
 }
 
-val hash_zip(val keys, val vals, struct args *hashv_args)
+val hash_zip(val keys, val vals, varg hashv_args)
 {
   val self = lit("hash-zip");
   seq_iter_t key_iter, val_iter;
@@ -1762,7 +1762,7 @@ val hash_zip(val keys, val vals, struct args *hashv_args)
   return hash;
 }
 
-val group_by(val func, val seq, struct args *hashv_args)
+val group_by(val func, val seq, varg hashv_args)
 {
   val self = lit("group-by");
   val hash = hashv(hashv_args);
@@ -1787,7 +1787,7 @@ val group_by(val func, val seq, struct args *hashv_args)
   }
 }
 
-val group_map(val by_fun, val filter_fun, val seq, struct args *hashv_args)
+val group_map(val by_fun, val filter_fun, val seq, varg hashv_args)
 {
   val hash = group_by(by_fun, seq, hashv_args);
   return hash_update(hash, filter_fun);
@@ -2132,7 +2132,7 @@ val hash_keys_of(val hash, val value, val test, val keyfun)
   return out;
 }
 
-val hash_invert(val hash, val joinfun, val unitfun, struct args *hashv_args)
+val hash_invert(val hash, val joinfun, val unitfun, varg hashv_args)
 {
   val self = lit("hash-invert");
   val hout = hashv(hashv_args);
