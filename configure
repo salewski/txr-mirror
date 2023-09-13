@@ -2860,6 +2860,22 @@ else
   printf "no\n"
 fi
 
+printf "Checking for fchdir ... "
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  int e = fchdir(1);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_FCHDIR 1\n" >> config.h
+else
+  printf "no\n"
+fi
 
 printf "Checking for log2 ... "
 

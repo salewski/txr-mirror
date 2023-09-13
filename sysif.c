@@ -452,7 +452,7 @@ static val mkdir_wrap(val path, val mode)
 }
 #endif
 
-#if HAVE_CHMOD || HAVE_CHOWN || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
+#if HAVE_CHMOD || HAVE_CHOWN || HAVE_FCHDIR || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
 static int get_fd(val stream, val self)
 {
   val fd_in = if3(integerp(stream), stream, stream_fd(stream));
@@ -576,9 +576,19 @@ static val ensure_dir(val path, val mode)
 static val chdir_wrap(val path)
 {
   val self = lit("chdir");
-  char *u8path = utf8_dup_to(c_str(path, self));
-  int err = chdir(u8path);
-  free(u8path);
+  int err;
+
+#if HAVE_FCHDIR
+  if (!stringp(path)) {
+    int fd = get_fd(path, self);
+    err = fchdir(fd);
+  } else
+#endif
+  {
+    char *u8path = utf8_dup_to(c_str(path, self));
+    err = chdir(u8path);
+    free(u8path);
+  }
 
   if (err < 0) {
     int eno = errno;

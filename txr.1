@@ -72513,16 +72513,29 @@ instead of
 
 .coNP Function @ chdir
 .synb
-.mets (chdir << path )
+.mets (chdir >> { path | < stream | << fd })
 .syne
 .desc
 .code chdir
-changes the current working directory to
-.metn path ,
-and returns
+changes the current working directory to the object specified
+by the argument, and returns
 .metn t ,
 or else throws an exception of type
 .codn file-error .
+
+If the argument is a string, it is interpreted as a
+.metn path ,
+in which case the POSIX
+.code chdir
+function is used. If the argument is a
+.meta stream
+then an integer file descriptor is retrieved from that stream using the
+.code fileno
+function. That descriptor can be specified directly as a
+.meta fd
+argument. In the case of these these two argument types, the
+.code fchdir
+function is used.
 
 .coNP Function @ pwd
 .synb
