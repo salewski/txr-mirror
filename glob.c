@@ -29,6 +29,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <glob.h>
 #include "config.h"
 #include "lib.h"
@@ -38,9 +39,17 @@
 #include "signal.h"
 #include "unwind.h"
 #include "glob.h"
+#include "txr.h"
+
+#define GLOB_XNOBRACE (1 << 30)
+#define GLOB_XSTAR (1 << 29)
 
 static val s_errfunc;
 static uw_frame_t *s_exit_point;
+
+static int super_glob(const char *pattern, int flags,
+                      int (*errfunc) (const char *epath, int eerrno),
+                      glob_t *pglob);
 
 static int errfunc_thunk(const char *errpath, int errcode)
 {
@@ -70,6 +79,9 @@ val glob_wrap(val pattern, val flags, val errfun)
   val self = lit("glob");
   cnum c_flags = c_num(default_arg(flags, zero), self);
   glob_t gl;
+  int (*globfn)(const char *, int,
+                int (*) (const char *, int),
+                glob_t *) = if3((c_flags & GLOB_XSTAR) != 0, super_glob, glob);
 
   if (s_errfunc)
     uw_throwf(error_s, lit("~a: glob cannot be re-entered from "
@@ -77,11 +89,14 @@ val glob_wrap(val pattern, val flags, val errfun)
 
   s_errfunc = default_null_arg(errfun);
 
-  c_flags &= ~GLOB_APPEND;
+  c_flags &= ~(GLOB_APPEND | GLOB_XSTAR | GLOB_XNOBRACE);
+
+  if (globfn == super_glob)
+    c_flags &= ~GLOB_BRACE;
 
   if (stringp(pattern)) {
     char *pat_u8 = utf8_dup_to(c_str(pattern, self));
-    (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
+    (void) globfn(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
     free(pat_u8);
   } else {
     seq_iter_t iter;
@@ -90,7 +105,7 @@ val glob_wrap(val pattern, val flags, val errfun)
 
     while (seq_get(&iter, &elem)) {
       char *pat_u8 = utf8_dup_to(c_str(elem, self));
-      (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
+      (void) globfn(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
       if (s_exit_point)
         break;
       c_flags |= GLOB_APPEND;
@@ -117,6 +132,140 @@ val glob_wrap(val pattern, val flags, val errfun)
     globfree(&gl);
     return out;
   }
+}
+
+static const char *super_glob_find_inner(const char *pattern)
+{
+  enum state { init, bsl, cls } st = init, pst;
+  int ch;
+
+  for (; (ch = *pattern) != 0; pattern++) {
+    switch (st) {
+    case init:
+      if (strncmp(pattern, "/**/", 4) == 0)
+        return pattern + 1;
+      switch (ch) {
+      case '\\':
+        pst = init;
+        st = bsl;
+        break;
+      case '[':
+        st = cls;
+        break;
+      }
+      break;
+    case bsl:
+      st = pst;
+      break;
+    case cls:
+      switch (ch) {
+      case '\\':
+        pst = cls;
+        st = bsl;
+        break;
+      case ']':
+        st = init;
+        break;
+      }
+    }
+  }
+
+  return 0;
+}
+
+static int super_glob_rec(const char *pattern, int flags,
+                          int (*errfunc) (const char *epath, int eerrno),
+                          glob_t *pglob, size_t star_limit)
+{
+  const char *dblstar = 0;
+
+  if (strncmp(pattern, "**/", 3) == 0 || strcmp(pattern, "**") == 0) {
+    dblstar = pattern;
+  } else if ((dblstar = super_glob_find_inner(pattern)) != 0) {
+    /* nothing */
+  } else if (strlen(pattern) >= 3) {
+    const char *end = pattern + strlen(pattern);
+    if (strcmp(end - 3, "/**") == 0)
+      dblstar = end - 2;
+  }
+
+  if (dblstar == 0) {
+    return glob(pattern, flags, errfunc, pglob);
+  } else {
+    size_t i, base_len = strlen(pattern);
+    size_t ds_off = dblstar - pattern;
+    size_t tail_off = ds_off + 2;
+    size_t limit = star_limit > 10 ? 10 : star_limit;
+
+    for (i = 0; i < limit; i++) {
+      size_t space = base_len - 3 + i * 2;
+      char *pat_copy = coerce(char *, chk_malloc(space + 2));
+      size_t j;
+      char *out = pat_copy + ds_off;
+      int res;
+
+      strncpy(pat_copy, pattern, ds_off);
+
+      for (j = 0; j < i; j++) {
+        if (j > 0)
+          *out++ = '/';
+        *out++ = '*';
+      }
+
+      if (i == 0 && pattern[tail_off] == '/')
+        strcpy(out, pattern + tail_off + 1);
+      else
+        strcpy(out, pattern + tail_off);
+
+      if (i > 0)
+        flags |= GLOB_APPEND;
+
+      res = super_glob_rec(pat_copy, flags, errfunc, pglob, star_limit - i);
+
+      free(pat_copy);
+
+      if (res && res != GLOB_NOMATCH)
+        return res;
+    }
+
+    return 0;
+  }
+}
+
+static int glob_path_cmp(const void *ls, const void *rs)
+{
+  const char *lstr = *convert(const char * const *, ls);
+  const char *rstr = *convert(const char * const *, rs);
+
+  for (; *lstr && *rstr; lstr++, rstr++)
+  {
+    if (*lstr == *rstr)
+      continue;
+    if (*lstr == '/')
+      return -1;
+    if (*rstr == '/')
+      return 1;
+    if (*lstr < *rstr)
+      return -1;
+    if (*lstr > *rstr)
+      return 1;
+  }
+
+  return lstr ? 1 : rstr ? -1 : 0;
+}
+
+static int super_glob(const char *pattern, int flags,
+                      int (*errfunc) (const char *epath, int eerrno),
+                      glob_t *pglob)
+{
+  int res = super_glob_rec(pattern, flags | GLOB_NOSORT, errfunc, pglob, 48);
+
+  if (res == 0 && (flags & GLOB_NOSORT) == 0) {
+    qsort(pglob->gl_pathv, pglob->gl_pathc,
+          sizeof pglob->gl_pathv[0], glob_path_cmp);
+  }
+
+  return 0;
 }
 
 void glob_init(void)
@@ -149,4 +298,6 @@ void glob_init(void)
 #ifdef GLOB_ONLYDIR
   reg_varl(intern(lit("glob-onlydir"), user_package), num_fast(GLOB_ONLYDIR));
 #endif
+  reg_varl(intern(lit("glob-xstar"), system_package), num(GLOB_XSTAR));
+  reg_varl(intern(lit("glob-xnobrace"), user_package), num(GLOB_XNOBRACE));
 }

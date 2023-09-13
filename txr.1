@@ -75854,7 +75854,9 @@ header:
 .codn GLOB_NOSORT ,
 etc.
 
-These values are passed as the optional second argument of the
+These values are passed as an argument to the optional
+.meta flags
+argument of the
 .code glob
 function. They are bitmasks and so multiple values can be combined
 using the
@@ -75881,9 +75883,37 @@ flag is not represented as a \*(TX variable. The
 function uses it internally when calling the C library function
 multiple times, due to having been given multiple patterns.
 
-.coNP Function @ glob
+.coNP Variable @ glob-xnobrace
+.desc
+This value holds an integer bitmask value that may be given as an argument to
+the optional
+.meta flags
+parameter of the
+.code glob*
+function. It may be used alone, combine with the other
+.code glob
+mask values using the
+.code logior
+function.
+
+If used with
+.codn glob* ,
+it disables brace expansion, which is enabled in
+.code glob*
+by default.
+
+If used with the
+.code glob
+function, it has no effect.
+
+This value is a \*(TL extension; it does not appear in the API of the
+.code glob
+C function.
+
+.coNP Functions @ glob and @ glob*
 .synb
 .mets (glob >> { pattern | << patterns } >> [ flags <> [ errfun ]])
+.mets (glob* >> { pattern | << patterns } >> [ flags <> [ errfun ]])
 .syne
 .desc
 The
@@ -75900,6 +75930,38 @@ The function tries to expand the patterns and return a list of strings
 representing the matching pathnames in the file system.
 
 If there are no matches, then an empty list is returned.
+
+The
+.code glob*
+function is a \*(TL extension built on
+.codn glob .
+
+The
+.code glob*
+functions supports a
+.code **
+("double star")
+pattern which matches zero or more path components. The double
+star match is described in detail below.
+
+The
+.code glob*
+function also supports brace expansion, independently of whether or not
+.code glob
+supports brace expansion. Brace expansion is enabled by default in
+.code glob*
+and can be disabled using the
+.code glob-xnobrace
+flag. Brace expansion is described in detail below.
+
+Lastly, the
+.code glob*
+function performs a path-aware sort of the emerging path names that
+is not influenced by locale, whereas the sort performed by
+.code glob
+is influenced by locale, defaulting to a lexicographic sort in the
+.str C
+locale.
 
 The optional
 .meta flags
@@ -75963,6 +76025,162 @@ Details of the semantics of the
 function, and the meaning of all the
 .meta flags
 arguments are given in the documentation for the C function.
+
+The
+.code glob*
+function supports brace expansion, which is enabled by default,
+and can be disabled with
+.codn glob-xnobrace .
+
+On some platforms, such as the GNU C Library, the
+.code glob
+function also supports brace expansion. If available, then the
+.code glob-brace
+variable has a nonzero value and must be included in the
+.meta flags
+argument.
+
+These two brace expansion features are independent; the \*(TL
+.code glob*
+function does not rely on
+.code glob
+for brace expansion, even if it is available.
+
+The brace expansion supported by
+.code glob*
+is a string generation mechanism driven by a syntax which specifies
+comma-separated elements enclosed in braces.
+
+When a single brace expansion appears in a pattern, that pattern turns
+into a list of patterns. There are as many elements in the list
+as there are elements between the braces. Each element replaces the
+braces with a different element from between the braces.
+
+For instance,
+.str x{a,b}y
+denotes the list of strings
+.codn "(\(dqxay\(dq \(dqxby\(dq)" .
+The there are two elements in the list because the braces contain
+two elements. The first string replaces
+.str {a,b}
+with
+.str a
+and the second replaces it with
+.strn b .
+
+When multiple braces occur in a pattern, then all combinations
+(Cartesian product) of the braces is produced.
+
+Braces may also nest. When the element of a brace itself uses braces, then that
+element is subject to brace expansion. The elements which emerge then become
+items of the enclosing brace, as if they were comma-separated elements.
+For instance
+.str x{a,{b,c}y}z
+is equivalent to
+.str x{a,by,cy}z
+which then expands to the three strings
+.strn xaz ,
+.str xbyz
+and
+.strn xcyz .
+
+Braces may be escaped by a backslash to disable their special meaning.
+Likewise, the commas may be escaped by a backslash to preserve their special
+meaning. Brace expansion preserves these backslashes; they appear in the
+resulting patterns, and must be recognized and removed by subsequent
+processing.
+
+When the
+.meta pattern
+arguments of
+.code glob*
+use brace expansion, they those arguments produce multiple patterns.
+The order of these patterns is preserved: the patterns are matched
+in that order. For each pattern, the matching path names are sorted,
+unless the
+.code glob-nosort
+flag is in effect.
+
+The
+.code **
+("double star")
+operator recognized by
+.code glob*
+matches zero or more path components. It may be used more than once.
+It cannot be combined with other characters or globbing operators.
+
+It is valid for
+.str **
+to be an entire pattern. This expands the relative path names of
+all files, directories and other objects in the current directory
+and its children.
+
+Otherwise the double star may appear at the start of a pattern if it is
+followed by a slash; at the end of a patter if it is preceded by a slash,
+or in the middle of a pattern if it is surrounded by two slashes.
+The double star is not recognized in a bracket-enclosed character
+class.
+
+Thus, the following examples all contain one double star:
+
+.verb
+  **
+  foo/**
+  **/bar
+  here/**/there
+.brev
+
+These do not contain a double star; the two asterisks in these
+patterns will be passed to the underlying
+.code glob
+function without being processed as a double star by
+.codn glob* ,
+with unspecified consequences:
+
+.verb
+  foo**
+  **bar
+  here**/there
+  etc/**conf
+  foo[/**/]bar
+.brev
+
+Each double star matches a maximum of ten path components,
+and all of the double stars in a single pattern together do not
+match more than 48 components. Using more than three double
+stars in a pattern is not recommended for performance reasons.
+
+If the double star is followed by a slash, it matches only
+directories.
+
+The
+.code glob*
+function sorts paths in such a way that the slash character
+is ranked lower than all other characters. Thus the path
+.str test/
+sorts before
+.str test-data/
+even though in ASCII and Unicode, the
+.code -
+character has a lower code than the
+.code /
+character.
+
+.TP* Examples:
+
+.verb
+   ;; find all jpg and gif paths under the current directory,
+   ;; (up to ten levels deep).
+   (glob* "**/*.{jpg,gif}")
+
+   ;; find all "2023" directories under the current directory,
+   ;; which have .jpg or .gif files under them, listing those
+   ;; .jpg and .gif paths:
+   (glob* "**/2023/**/*.{jpg,gif}")
+
+   ;; find all "2023" directories under the current directory.
+   (glob* "**/2023/**/")
+.brev
 
 .coNP Variables @, fnm-pathname @, fnm-noescape @, fnm-period @, fnm-leading-dir @ fnm-casefold and @ fnm-extmatch
 .desc

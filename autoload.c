@@ -973,6 +973,28 @@ static val csort_instantiate(void)
   return nil;
 }
 
+static val glob_set_entries(val fun)
+{
+  val sys_name[] = {
+    lit("brace-expand"),
+    nil
+  };
+  val name[] = {
+    lit("glob*"),
+    nil
+  };
+  autoload_sys_set(al_fun, sys_name, fun);
+  autoload_set(al_fun, name, fun);
+  return nil;
+}
+
+static val glob_instantiate(void)
+{
+  load(scat2(stdlib_path, lit("glob")));
+  return nil;
+}
+
+
 val autoload_reg(val (*instantiate)(void),
                  val (*set_entries)(val))
 {
@@ -1043,6 +1065,7 @@ void autoload_init(void)
   autoload_reg(expander_let_instantiate, expander_let_set_entries);
   autoload_reg(load_args_instantiate, load_args_set_entries);
   autoload_reg(csort_instantiate, csort_set_entries);
+  autoload_reg(glob_instantiate, glob_set_entries);
 
   reg_fun(intern(lit("autoload-try-fun"), system_package), func_n1(autoload_try_fun));
 }
