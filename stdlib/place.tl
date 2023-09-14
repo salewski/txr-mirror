@@ -374,6 +374,13 @@
     ^(placelet ((,pl ,place))
        (set ,pl (call (opip ,*opip-args) ,pl)))))
 
+(defmacro ensure (:env env place init-expr)
+  (with-gensyms (existing)
+    (with-update-expander (getter setter) place env
+      ^(iflet ((,existing (,getter)))
+         ,existing
+         (,setter ,init-expr)))))
+
 (defmacro defplace (place-destructuring-args body-sym
                     (getter-sym setter-sym update-body) :
                     ((ssetter-sym clobber-body))

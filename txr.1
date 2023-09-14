@@ -14384,6 +14384,19 @@ value into
 and returns
 .codn t .
 
+.meIP (ensure < place << init-expr )
+If the place is
+.codn nil ,
+evaluates
+.codn init-expr ,
+stores that value into
+.meta place
+and returns it.
+Otherwise, returns the value of
+.meta place
+without changing its value or evaluating
+.codn init-expr .
+
 .meIP (inc < place <> [ delta ])
 Increments
 .meta place
@@ -42857,6 +42870,41 @@ expression, stores the resulting value into
 .meta place
 and returns
 .codn t .
+
+.coNP Macro @ ensure
+.synb
+.mets (ensure < place << init-expr )
+.syne
+.desc
+The
+.code ensure
+macro examines the value of
+.metn place .
+
+If the current value is
+.codn nil ,
+then
+.meta init-expr
+is evaluated. The value is stored in
+.meta place
+and becomes the result of the
+.code ensure
+form.
+
+If the value of
+.meta place
+is other than
+.codn nil ,
+then the form yields that value.
+In this case,
+.meta init-expr
+isn't evaluated, and
+.meta place
+isn't modified.
+
+The
+.meta place
+expression is evaluated only once to determine the place.
 
 .coNP Macros @ inc and @ dec
 .synb
