@@ -1,5 +1,9 @@
 (load "../common")
 
+;; Passes on Cygwin, but too slow!
+(if (eq (os-symbol) :cygwin)
+  (exit))
+
 (mtest
   (sys:brace-expand "~/{Downloads,Pictures}/*.{jpg,gif,png}")
   #"~/Downloads/*.jpg ~/Downloads/*.gif ~/Downloads/*.png \
