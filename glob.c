@@ -91,8 +91,10 @@ val glob_wrap(val pattern, val flags, val errfun)
 
   c_flags &= ~(GLOB_APPEND | GLOB_XSTAR | GLOB_XNOBRACE);
 
+#ifdef GLOB_BRACE
   if (globfn == super_glob)
     c_flags &= ~GLOB_BRACE;
+#endif
 
   if (stringp(pattern)) {
     char *pat_u8 = utf8_dup_to(c_str(pattern, self));
@@ -136,7 +138,7 @@ val glob_wrap(val pattern, val flags, val errfun)
 
 static const char *super_glob_find_inner(const char *pattern)
 {
-  enum state { init, bsl, cls } st = init, pst;
+  enum state { init, bsl, cls } st = init, pst = init;
   int ch;
 
   for (; (ch = *pattern) != 0; pattern++) {
