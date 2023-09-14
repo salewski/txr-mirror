@@ -239,8 +239,8 @@ static int super_glob_rec(const char *pattern, int flags,
 
 static int glob_path_cmp(const void *ls, const void *rs)
 {
-  const char *lstr = *convert(const char * const *, ls);
-  const char *rstr = *convert(const char * const *, rs);
+  const unsigned char *lstr = *convert(const unsigned char * const *, ls);
+  const unsigned char *rstr = *convert(const unsigned char * const *, rs);
 
   for (; *lstr && *rstr; lstr++, rstr++)
   {
@@ -256,7 +256,12 @@ static int glob_path_cmp(const void *ls, const void *rs)
       return 1;
   }
 
-  return lstr ? 1 : rstr ? -1 : 0;
+  if (!*lstr)
+    return -1;
+  if (!*rstr)
+    return 1;
+
+  return 0;
 }
 
 static int super_glob(const char *pattern, int flags,
