@@ -186,7 +186,12 @@ static int super_glob_rec(const char *pattern, int flags,
   } else if (strlen(pattern) >= 3) {
     const char *end = pattern + strlen(pattern);
     if (strcmp(end - 3, "/**") == 0)
-      dblstar = end - 2;
+    {
+      const char *maybe_sl_dblstar = end - 3;
+
+      if (maybe_sl_dblstar == pattern || maybe_sl_dblstar[-1] != '\\')
+        dblstar = maybe_sl_dblstar + 1;
+    }
   }
 
   if (dblstar == 0) {
