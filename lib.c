@@ -9460,17 +9460,18 @@ val dupl(val fun)
   return func_f1(fun, do_dup);
 }
 
-val vector(val length, val initval)
+static val *vec_allocate(ucnum len, val self)
 {
-  val self = lit("vector");
-  unsigned i;
-  ucnum len = c_unum(length, self);
   ucnum alloc_plus = len + 2;
   ucnum size = if3(alloc_plus > len, alloc_plus, convert(ucnum, -1));
-  val *v = coerce(val *, chk_xalloc(size, sizeof *v, self));
+  return coerce(val *, chk_xalloc(size, sizeof (val), self));
+}
+
+static val vec_own(val *v, val length)
+{
   val vec = make_obj();
+
   vec->v.type = VEC;
-  initval = default_null_arg(initval);
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
@@ -9478,8 +9479,27 @@ val vector(val length, val initval)
   vec->v.vec = v;
   v[vec_alloc] = length;
   v[vec_length] = length;
-  for (i = 0; i < alloc_plus - 2; i++)
-    vec->v.vec[i] = initval;
+
+  return vec;
+}
+
+static void vec_init(val *v, ucnum len, val initval_in)
+{
+  ucnum i;
+  val initval = default_null_arg(initval_in);
+  v += 2;
+  for (i = 0; i < len; i++)
+    v[i] = initval;
+}
+
+val vector(val length, val initval)
+{
+  val self = lit("vector");
+
+  ucnum len = c_unum(length, self);
+  val *v = vec_allocate(len, self);
+  val vec = vec_own(v, length);
+  vec_init(v, len, initval);
   return vec;
 }
 
@@ -9647,18 +9667,10 @@ val copy_vec(val vec_in)
 {
   val self = lit("copy-vec");
   val length = length_vec(vec_in);
-  ucnum alloc_plus = c_unum(length, self) + 2;
-  val *v = coerce(val *, chk_xalloc(alloc_plus, sizeof *v, self));
-  val vec = make_obj();
-  vec->v.type = VEC;
-#if HAVE_VALGRIND
-  vec->v.vec_true_start = v;
-#endif
-  v += 2;
-  vec->v.vec = v;
-  v[vec_alloc] = length;
-  v[vec_length] = length;
-  memcpy(vec->v.vec, vec_in->v.vec, (alloc_plus - 2) * sizeof *vec->v.vec);
+  ucnum len = c_unum(length, self);
+  val *v = vec_allocate(len, self);
+  val vec = vec_own(v, length);
+  memcpy(v + 2, vec_in->v.vec, len * sizeof *v);
   return vec;
 }
 
@@ -9929,6 +9941,43 @@ val cat_vec(val list)
   return vec;
 toobig:
   uw_throwf(error_s, lit("~a: resulting vector too large"), self, nao);
+}
+
+val nested_vec_of_v(val initval, struct args *args)
+{
+  val self = lit("nested-vec-of");
+  cnum index = 0;
+
+  if (!args_more(args, index))
+    return nil;
+
+  {
+    val dim = args_get(args, &index);
+
+    if (args_more(args, index)) {
+      ucnum i, n = c_num(dim, self);
+      val *rawvec = vec_allocate(n, self);
+      args_decl(args_copy, max(args->fill, ARGS_MIN));
+      int gc_save = gc_state(0);
+      val vec;
+
+      args_cat_from(args_copy, args, index);
+
+      for (i = 0; i < n; i++)
+        rawvec[i + 2] = nested_vec_of_v(initval, args_copy);
+
+      vec = vec_own(rawvec, dim);
+      gc_state(gc_save);
+      return vec;
+    } else {
+      return vector(dim, initval);
+    }
+  }
+}
+
+val nested_vec_v(struct args *args)
+{
+  return nested_vec_of_v(nil, args);
 }
 
 static val simple_lazy_stream_func(val stream, val lcons)

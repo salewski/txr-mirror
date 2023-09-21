@@ -27930,6 +27930,87 @@ It returns
 a single large vector formed by catenating those vectors together in
 order.
 
+.coNP Functions @ nested-vec and @ nested-vec-of
+.synb
+.mets (nested-vec << dimension *)
+.mets (nested-vec-of < object << dimension *)
+.syne
+.desc
+The
+.code nested-vec-of
+function constructs a nested vector according to the
+.meta dimension
+arguments, described in detail below.
+
+The
+.code nested-vec
+function is equivalent to
+.code nested-vec-of
+with an
+.meta object
+argument of
+.codn nil .
+
+When there are no
+.meta dimension
+arguments,
+.code nested-vec-of
+returns
+.codn nil .
+
+If there is exactly one
+.meta dimension
+argument, it must be a nonnegative integer. A newly created
+having that many elements is returned, with each element of the
+vector being
+.metn object .
+
+If there are two or more
+.meta dimension
+arguments, nested vector is returned. The first
+.meta dimension
+argument specifies the outermost dimension: a vector of that many elements are
+returned. Each element of that vector is a vector whose length is given by the
+second dimension. This nesting pattern continues through the remaining
+dimensions. The last dimension specifies the length of vectors which
+are filled with
+.metn object .
+
+From the above it follows that if a zero-valued
+.meta dimension
+is encountered, every vector corresponding to that level of nesting shall be empty,
+and that shall be the last dimension regardless of the presence of additional
+.meta dimension
+arguments.
+
+.TP* Examples:
+
+.verb
+  (nested-vec) -> nil
+
+  (nested-vec-of 0 4) -> #(0 0 0 0)
+
+  (nested-vec-of 0 4 3) -> #(#(0 0 0)
+                             #(0 0 0)
+                             #(0 0 0)
+                             #(0 0 0))
+
+  (nested-vec-of 'a 4 3 2) -> #(#(#(a a) #(a a) #(a a))
+                                #(#(a a) #(a a) #(a a))
+                                #(#(a a) #(a a) #(a a))
+                                #(#(a a) #(a a) #(a a)))
+
+  (nested-vec-of 'a 1 1 1) -> #(#(#(a)))
+  (nested-vec-of 'a 1 1 0) -> #(#(#()))
+  (nested-vec-of 'a 1 0 1) -> #(#())
+  (nested-vec-of 'a 1 0) -> #(#())
+  (nested-vec-of 'a 0 1) -> #()
+  (nested-vec-of 'a 0) -> #()
+
+  (nested-vec-of 'a 4 0 1) #(#() #() #() #())
+  (nested-vec-of 'a 4 0) #(#() #() #() #()))
+.brev
+
 .SS* Buffers
 
 .coNP The @ buf type

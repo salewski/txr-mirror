@@ -30,3 +30,24 @@
     (fill-vec v3 2 -1) #(1 0 2)
     (fill-vec v3 3 -3) #(3 3 3))
     (fill-vec v3 0 -2 -1) #(3 0 3))
+
+(mtest
+  (nested-vec) nil
+  (nested-vec-of 0 4) #(0 0 0 0)
+  (nested-vec-of 0 4 3) #(#(0 0 0)
+                          #(0 0 0)
+                          #(0 0 0)
+                          #(0 0 0))
+  (nested-vec-of 'a 4 3 2) #(#(#(a a) #(a a) #(a a))
+                             #(#(a a) #(a a) #(a a))
+                             #(#(a a) #(a a) #(a a))
+                             #(#(a a) #(a a) #(a a)))
+  (nested-vec-of 'a 1 1 1) #(#(#(a)))
+  (nested-vec-of 'a 1 1 0) #(#(#()))
+  (nested-vec-of 'a 1 0 1) #(#())
+  (nested-vec-of 'a 1 0) #(#())
+  (nested-vec-of 'a 0 1) #()
+  (nested-vec-of 'a 0) #()
+
+  (nested-vec-of 'a 4 0 1) #(#() #() #() #())
+  (nested-vec-of 'a 4 0) #(#() #() #() #()))

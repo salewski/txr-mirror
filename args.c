@@ -106,6 +106,15 @@ varg args_cat(varg to, varg from)
   return to;
 }
 
+varg args_cat_from(varg to, varg from, cnum index)
+{
+  size_t size = sizeof *from->arg * (from->fill - index);
+  to->list = from->list;
+  memcpy(to->arg + to->fill, from->arg + index, size);
+  to->fill += from->fill - index;
+  return to;
+}
+
 varg args_cat_zap(varg to, varg from)
 {
   size_t size = sizeof *from->arg * from->fill;

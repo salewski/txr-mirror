@@ -202,6 +202,7 @@ val args_get_checked(val name, varg args, cnum *arg_index);
 varg args_copy(varg to, varg from);
 varg args_copy_zap(varg to, varg from);
 varg args_cat(varg to, varg from);
+varg args_cat_from(varg to, varg from, cnum index);
 varg args_cat_zap(varg to, varg from);
 varg args_cat_zap_from(varg to, varg from, cnum index);
 varg args_copy_reverse(varg to, varg from, cnum nargs);
