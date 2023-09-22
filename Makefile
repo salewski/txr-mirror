@@ -31,6 +31,8 @@ ifeq ($(parallelmake),)
 .NOTPARALLEL:
 endif
 
+.DELETE_ON_ERROR:
+
 VERBOSE :=
 TXR_CFLAGS := -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
               $(LANG_FLAGS) $(DIAG_FLAGS) $(DBG_FLAGS) $(PLATFORM_CFLAGS) \
