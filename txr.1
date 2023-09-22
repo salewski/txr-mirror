@@ -13870,7 +13870,7 @@ index 1, up to and not including index 3, as if by the call
   (call '(1 2 3 4) '(0 2)) -> (1 2)
 .brev
 
-A list of indices applied to a sequence is equivalent to using the
+A sequence applied to a list of index arguments is equivalent to using the
 select function, as if
 .code "(select '(1 2 3 4) '(0 2))"
 were called.
@@ -15834,10 +15834,13 @@ If two or more arguments are present after
 .metn function ,
 then the last of these arguments is interpreted as
 .metn trailing-args .
-The previous arguments represent leading arguments which are applied to
-.metn function ,
-prior to the arguments taken from
-.metn trailing-args .
+The previous arguments represent leading arguments.
+When the argument list is formed to which
+.meta function
+is applied, the leading arguments become individual arguments
+presented in the same order, followed by arguments taken from the
+.meta trailing_args
+list.
 
 Note that if
 .meta trailing-args
@@ -16409,9 +16412,9 @@ means that there
 is a variable called
 .codn car ,
 which holds a function, which is retrieved from that
-variable and the argument
+variable and applied to the
 .code 1
-is applied to it. In the expression
+argument. In the expression
 .codn "(car car)" ,
 both occurrences of
 .code car
@@ -30407,8 +30410,8 @@ named
 
 A method named
 .code lambda
-allows a structure to be used as if it were a function. When arguments
-are applied to the structure as if it were a function, the
+allows a structure to be used as if it were a function. When a structure
+is applied to arguments, as if it were a function, the
 .code lambda
 method is invoked with those arguments, with the object itself inserted
 into the leftmost argument position.
@@ -30812,7 +30815,7 @@ The slot name being implicitly quoted is the basis of the term
 name.
 
 A compound designator indicates that the named slot is a function,
-and arguments are to be applied to it. The following equivalence applies
+which is to be applied to arguments.  The following equivalence applies
 in this case, except that
 .code o
 is evaluated only once:
@@ -30822,7 +30825,7 @@ is evaluated only once:
 .brev
 
 A DWIM designator similarly indicates that the named slot is a function,
-and arguments are to be applied to it. The following equivalence applies:
+which is to be applied to arguments. The following equivalence applies:
 
 .verb
   (qref obj [name arg ...])  <-->  [(slot obj 'name) o arg ...]
@@ -33230,7 +33233,7 @@ This method can be called by name, using the syntax given
 in the above syntactic description.
 
 However, the intended use is that it allows the structure instance itself to be
-used as a function.  When arguments are applied to a structure object as if it
+used as a function.  When a structure is applied to arguments as if it
 were a function, this is erroneous, unless that object has a
 .code lambda
 method. In that case, the arguments are passed to the lambda method.
@@ -56340,9 +56343,9 @@ and taking the returned value.
 The remaining
 .meta hash-arg
 arguments determine what kind of hash table is created,
-as if they were applied to the
+as if the
 .code hash
-function.
+function were applied to them.
 
 If the sequence contains duplicate elements (according to the
 hash table equality in effect for the hash table being
@@ -60012,7 +60015,7 @@ function is the functional equivalent of the
 operator. It accepts
 functional arguments and returns a function.
 
-The resulting function takes its arguments, if any, and applies them to
+The resulting function passes its arguments to
 .metn condfun .
 If
 .meta condfun
@@ -60229,9 +60232,11 @@ If one or more additional
 are passed to
 .codn apf ,
 then these are stored in the function which is returned.
-When the function is invoked, it prepends all of these stored
-arguments to those that it is being given, and the resulting combined
-arguments are applied. Thus the
+When that function is invoked, it prepends all of the stored
+arguments to the passed arguments, and applies the
+.metn function .
+to the resulting combined argument list.
+Thus the
 .metn arg s
 become the leftmost arguments of
 .metn function .
@@ -60256,7 +60261,7 @@ macro.
 
 .verb
   ;; Function returned by [apf +] accepts the
-  ;; (1 2 3) list and applies it to +, as
+  ;; (1 2 3) list and applies + to it, as
   ;; if (+ 1 2 3) were called.
 
   (call [apf +] '(1 2 3)) -> 6
@@ -68524,10 +68529,11 @@ the slots of
 to be in the UTC time zone.
 
 Note: these functions work by converting the slots into arguments
-which are applied to
+to which 
 .code make-time
 or
-.codn make-time-utc .
+.code make-time-utc
+is applied.
 
 Note: if the
 .code gmtoff
