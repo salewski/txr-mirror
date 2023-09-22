@@ -56322,20 +56322,24 @@ its properties, such as weakness.
 
 .coNP Function @ hash-map
 .synb
-.mets (hash-map < fun < sequence << hash-arg *)
+.mets (hash-map < function < sequence << hash-arg *)
 .syne
 .desc
 The
 .code hash-map
-function constructs a function out of a
-.metn sequence .
+function constructs a a hash table from a
+.meta sequence
+of keys and a
+.meta function
+which maps them to values.
+
 The
-.meta fun
+.meta function
 argument must be a function that can be called with one argument.
 
 The elements of
 .meta sequence
-become the hash keys. The value associated with each key
+become the keys of the returned hash table. The value associated with each key
 is determined by passing that value to function
 .meta fun
 and taking the returned value.
