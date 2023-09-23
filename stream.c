@@ -1132,6 +1132,9 @@ int w_open_mode(const wchar_t *wname, const struct stdio_mode m)
                if3(m.create, if3(!m.notrunc, O_TRUNC, 0) | O_CREAT, 0) |
                if3(m.append, O_APPEND, 0) |
                if3(m.excl, O_EXCL, 0) |
+#if O_TMPFILE
+               if3(m.tmpfile, O_TMPFILE, 0) |
+#endif
                if3(m.nonblock, O_NONBLOCK, 0));
   char *stkname = coerce(char *, alloca(nsiz));
   int fd;
@@ -1463,6 +1466,16 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
     m.write = 1;
     m.create = 1;
     m.notrunc = 1;
+    break;
+  case 'T':
+    ms++;
+#if O_TMPFILE
+    m.read = 1;
+    m.write = 1;
+    m.tmpfile = 1;
+#else
+    m.malformed = 1;
+#endif
     break;
   default:
     break;

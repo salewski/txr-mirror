@@ -118,13 +118,14 @@ struct stdio_mode {
   unsigned linebuf : 1;
   unsigned gzip : 1;
   unsigned gzlevel : 4;
+  unsigned tmpfile : 1;
   int buforder : 5;
   int redir[STDIO_MODE_NREDIRS][2];
 };
 
-#define stdio_mode_init_blank { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
-#define stdio_mode_init_r     { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
-#define stdio_mode_init_rpb   { 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
+#define stdio_mode_init_blank { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
+#define stdio_mode_init_r     { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
+#define stdio_mode_init_rpb   { 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, { { 0 } } }
 
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
 #define std_output (deref(lookup_var_l(nil, stdout_s)))

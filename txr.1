@@ -61837,7 +61837,7 @@ Note that it permits no whitespace characters:
 .mono
 .mets < mode-string := [ < mode ] [ < options ]
 .mets < mode := { < selector [ + ] | + }
-.mets < selector := { r | w | a | m }
+.mets < selector := { r | w | a | m | T }
 .mets < options := { b | x | l | u | i | n | < digit |
 .mets \ \ \ \ \ \ \ \ \ \ \ \ \ \  <> z[ digit ] | < redirection }
 .mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
@@ -61898,6 +61898,17 @@ are appended.
 The file is opened for reading and writing. If it doesn't exist,
 it is created. The read position is at the beginning of the file,
 but writes are appended to the end regardless of the position.
+.coIP T
+This selector may be used on operating systems which support the
+.code O_TMPFILE
+mode of the
+.code open
+POSIX C library function. The
+.meta path
+must specify a directory to which the calling process has write permission. An
+anonymous, unlinked file will be created in the filesystem which holds that
+directory, open for reading and writing. See additional notes at the
+end of this section.
 .RE
 .IP
 The meanings of the option characters are:
@@ -62001,6 +62012,47 @@ function; the syntax performs I/O redirections in the child process
 created by that function, and is described in that function's
 documentation.
 .RE
+.IP
+The
+.code O_TMPFILE
+flag on which the
+.str T
+mode selector depends was introduced by the Linux kernel, and is likely only
+supported on Linux systems. It is not supported on all filesystem types.
+
+The
+.code T
+mode offers a way to create temporary files in a robust way in any file system
+which supports the mechanism. There is no concern about choosing a unique
+file name, since the file doesn't have one.
+The file is guaranteed to disappear if the process is terminated in any manner.
+In contrast, traditional temporary files which are initially named a name and
+then unlinked may remain if the process is abruptly terminated before it is
+able to call
+.codn unlink .
+
+On Linux, it is possible to link a file created with
+.str T
+into the filesystem, according to the following pattern:
+
+.verb
+  ;; atomically create file called "name" with content "hello"
+
+  (let* ((stream (open-file "." "T"))
+         (fd (fileno stream)))
+    (put-string "hello\en" stream)
+    (flush-stream stream)
+    (rlink `/proc/self/fd/@fd` "name"))
+.brev
+
+The atomic creation of a file can be simulated by the familiar pattern of
+writing to a visible temporary file and then renaming. However, the above
+pattern eliminates the risk that a temporary file will be left behind if the
+procedure is interrupted for any reason before reaching the
+.code rlink
+call. Any reason includes process termination that
+cannot be intercepted and handled, and operating
+system failure or power loss.
 
 .coNP Function @ open-tail
 .synb
