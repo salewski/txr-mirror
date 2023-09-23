@@ -2665,6 +2665,26 @@ else
   printf "no\n"
 fi
 
+printf "Checking for linkat ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+#include <fcntl.h>
+
+int main(void)
+{
+  int e1 = linkat(AT_FDCWD, "foo", AT_FDCWD, "bar", AT_SYMLINK_FOLLOW);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_LINKAT 1\n" >> config.h
+  have_unistd=y
+else
+  printf "no\n"
+fi
+
 printf "Checking for POSIX mkdir ... "
 
 cat > conftest.c <<!

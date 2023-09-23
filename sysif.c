@@ -957,14 +957,18 @@ static val symlink_wrap(val target, val to)
   return t;
 }
 
-static val link_wrap(val target, val to)
+static val link_wrap_common(val target, val to, val follow_link, val self)
 {
-  val self = lit("link");
   const wchar_t *wtarget = c_str(target, self);
   const wchar_t *wto = c_str(to, self);
   char *u8target = utf8_dup_to(wtarget);
   char *u8to = utf8_dup_to(wto);
+#if HAVE_LINKAT
+  int err = linkat(AT_FDCWD, u8target, AT_FDCWD, u8to,
+                   if3(follow_link, AT_SYMLINK_FOLLOW, 0));
+#else
   int err = link(u8target, u8to);
+#endif
   free(u8target);
   free(u8to);
 
@@ -976,6 +980,18 @@ static val link_wrap(val target, val to)
 
   return t;
 }
+
+static val link_wrap(val target, val to)
+{
+  return link_wrap_common(target, to, nil, lit("link"));
+}
+
+#if HAVE_LINKAT
+static val rlink_wrap(val target, val to)
+{
+  return link_wrap_common(target, to, t, lit("rlink"));
+}
+#endif
 
 static val readlink_wrap(val path)
 {
@@ -2783,6 +2799,9 @@ void sysif_init(void)
   reg_fun(intern(lit("symlink"), user_package), func_n2(symlink_wrap));
   reg_fun(intern(lit("link"), user_package), func_n2(link_wrap));
   reg_fun(intern(lit("readlink"), user_package), func_n1(readlink_wrap));
+#if HAVE_LINKAT
+  reg_fun(intern(lit("rlink"), user_package), func_n2(rlink_wrap));
+#endif
 #endif
 
 #if HAVE_FCNTL

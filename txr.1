@@ -73601,10 +73601,11 @@ of the
 .code s-ififo
 type and the permission mode bits.
 
-.coNP Functions @ symlink and @ link
+.coNP Functions @, symlink @ link and @ rlink
 .synb
 .mets (symlink < target << path )
 .mets (link < target << path )
+.mets (rlink < target << path )
 .syne
 .desc
 The
@@ -73617,12 +73618,23 @@ are the absolute or relative path
 .meta target
 does not actually have to exist.
 
-The link function creates a hard link. The object at
+The
+.code link
+function creates a hard link. The object at
 .meta target
 is installed
 into the filesystem at
 .meta path
 also.
+
+The
+.code rlink
+function is like
+.code link
+except that if
+.meta path
+is a symbolic link, it is resolved.
+
 
 If these functions succeed, they return
 .codn t .
