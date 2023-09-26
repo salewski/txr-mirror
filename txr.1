@@ -56576,6 +56576,50 @@ Separate the integers 1\(en10 into even and odd, and sum these groups:
   -> #H(() (t 30) (nil 25))
 .brev
 
+.coNP Function @ hist-sort
+.synb
+.mets (hist-sort < sequence << option *)
+.syne
+.desc
+The
+.code hist-sort
+function produces a histogram in the form of an association list,
+which is sorted in descending order of frequency. The keys in the
+association list are elements of
+.meta sequence
+and the values are the frequency values: positive integers
+indicating how many times the keys occur in
+.metn sequence .
+
+Note: for a description of association lists, see the
+.code assoc
+function, and the section Association Lists in which its description is
+contained.
+
+The
+.code hist-sort
+function works by internally constructing a hash table, which is not
+returned.  Elements of
+.meta sequence
+serve as keys in that hash. The trailing arguments
+.mono
+.meti << option *
+.onom
+if any, consist of the same keywords that are understood by the
+.code hash
+function, and determine the properties of that hash.
+
+.TP* Examples
+
+.verb
+(hist-sort nil) -> nil
+
+(hist-sort '(3 4 5)) -> ((3 . 1) (4 . 1) (5 . 1))
+
+(hist-sort '("a" "b" "c" "a" "b" "a" "b" "a"))
+-> (("a" . 4) ("b" . 3) ("c" . 1))
+.brev
+
 .coNP Functions @ make-similar-hash and @ copy-hash
 .synb
 .mets (make-similar-hash << hash )

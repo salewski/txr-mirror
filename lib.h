@@ -705,7 +705,7 @@ extern val null_string;
 
 extern val identity_f, identity_star_f;
 extern val equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
-extern val list_f, less_f, greater_f;
+extern val list_f, less_f, greater_f, gt_f;
 
 extern val prog_string;
 
@@ -1340,6 +1340,7 @@ val sort_group(val seq, val keyfun, val lessfun);
 val unique(val seq, val keyfun, varg hashv_args);
 val uniq(val seq);
 val grade(val seq, val lessfun, val keyfun_in);
+val hist_sort(val seq, varg hashv_args);
 val nrot(val seq, val n_in);
 val rot(val seq, val n_in);
 val find(val list, val key, val testfun, val keyfun);

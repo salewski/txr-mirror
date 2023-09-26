@@ -133,7 +133,7 @@ val nil_string;
 
 val identity_f, identity_star_f;
 val equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
-val list_f, less_f, greater_f;
+val list_f, less_f, greater_f, gt_f;
 
 val prog_string;
 
@@ -174,6 +174,8 @@ const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NOTSEQ,   /* TNOD */
   SEQ_NOTSEQ,   /* DARG */
 };
+
+static val hist_succ_f;
 
 val identity(val obj)
 {
@@ -11565,6 +11567,20 @@ val grade(val seq, val lessfun, val keyfun_in)
   return nil;
 }
 
+static val hist_succ(val left, val right)
+{
+  (void) right;
+  return succ(left);
+}
+
+val hist_sort(val seq, varg hashv_args)
+{
+  val hash = group_reduce(hashv(hashv_args),
+                          identity_f, hist_succ_f,
+                          seq, zero, nil);
+  return nsort(hash_alist(hash), gt_f, cdr_f);
+}
+
 val nrot(val seq, val n_in)
 {
   val len = length(seq);
@@ -13957,8 +13973,8 @@ static void obj_init(void)
           &user_package, &public_package,
           &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
-          &identity_f, &identity_star_f, &less_f, &greater_f,
-          &prog_string, &cobj_hash, &lazy_streams_binding,
+          &identity_f, &identity_star_f, &less_f, &greater_f, &gt_f,
+          &prog_string, &cobj_hash, &lazy_streams_binding, &hist_succ_f,
           convert(val *, 0));
 
   nil_string = lit("nil");
@@ -14126,9 +14142,12 @@ static void obj_init(void)
   list_f = func_n0v(listv);
   less_f = func_n2(less);
   greater_f = func_n2(greater);
+  gt_f = func_n2(gt);
   prog_string = string(progname);
 
   cobj_hash = make_hash(hash_weak_none, nil);
+
+  hist_succ_f = func_n2(hist_succ);
 }
 
 static val simple_qref_args_p(val args, val pos)
