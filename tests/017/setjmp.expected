@@ -1,0 +1,4 @@
+setjmp
+result 42
+libpng longjmp
+libpng error 42

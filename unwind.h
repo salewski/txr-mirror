@@ -383,7 +383,16 @@ union uw_frame {
 #endif
 } UW_FRAME_ALIGN;
 
+typedef struct {
+  val de;
+  uw_frame_t *stack;
+  uw_frame_t *menv_stack;
+} uw_snapshot_t;
+
 extern val catch_frame_s;
+
+uw_snapshot_t uw_snapshot(void);
+void uw_restore(const uw_snapshot_t *);
 void uw_push_block(uw_frame_t *, val tag);
 void uw_push_match_env(uw_frame_t *);
 val uw_get_func(val sym);

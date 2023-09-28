@@ -37,6 +37,7 @@
 #include <signal.h>
 #include <wchar.h>
 #include <time.h>
+#include <setjmp.h>
 #include "config.h"
 #if HAVE_INTMAX_T
 #include <stdint.h>
@@ -153,6 +154,8 @@ val enum_s, enumed_s, elemtype_s;
 val align_s, pack_s;
 
 val bool_s;
+
+val jmp_buf_s;
 
 val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
@@ -7315,6 +7318,39 @@ static val dyn_size(val type, val obj)
   return num(tft->dynsize(tft, obj, self));
 }
 
+static val mk_jmp_buf(void)
+{
+  val uchar_type = gethash(ffi_typedef_hash, uchar_s);
+  return carray_blank(num_fast(sizeof (jmp_buf)), uchar_type);
+}
+
+static val rt_setjmp(val jmp, val try_fun, val longjmp_fun)
+{
+  val self = lit("setjmp");
+  val uchar_type = gethash(ffi_typedef_hash, uchar_s);
+  mem_t *ptr = carray_ptr(jmp, uchar_type, self);
+  jmp_buf *jbptr = coerce(jmp_buf *, ptr);
+  int res = 0;
+  uw_snapshot_t uws = uw_snapshot();
+
+  if ((res = setjmp(*jbptr)) == 0) {
+    return funcall(try_fun);
+  } else {
+    uw_restore(&uws);
+    return funcall1(longjmp_fun, num(res));
+  }
+}
+
+static val longjmp_wrap(val jmp, val ret)
+{
+  val self = lit("longjmp");
+  val uchar_type = gethash(ffi_typedef_hash, uchar_s);
+  mem_t *ptr = carray_ptr(jmp, uchar_type, self);
+  jmp_buf *jbptr = coerce(jmp_buf *, ptr);
+  int ri = c_int(ret, self);
+  longjmp(*jbptr, ri);
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -7386,6 +7422,7 @@ void ffi_init(void)
   align_s = intern(lit("align"), user_package);
   pack_s = intern(lit("pack"), user_package);
   bool_s = intern(lit("bool"), user_package);
+  jmp_buf_s = intern(lit("jmp-buf"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
@@ -7516,6 +7553,9 @@ void ffi_init(void)
   reg_fun(intern(lit("get-obj"), user_package), func_n2o(get_obj, 1));
   reg_fun(intern(lit("fill-obj"), user_package), func_n3o(fill_obj, 2));
   reg_fun(intern(lit("dyn-size"), system_package), func_n2(dyn_size));
+  reg_fun(jmp_buf_s, func_n0(mk_jmp_buf));
+  reg_fun(intern(lit("rt-setjmp"), system_package), func_n3(rt_setjmp));
+  reg_fun(intern(lit("longjmp"), user_package), func_n2(longjmp_wrap));
   ffi_typedef_hash = make_hash(hash_weak_none, nil);
   ffi_struct_tag_hash = make_hash(hash_weak_none, nil);
   ffi_init_types();

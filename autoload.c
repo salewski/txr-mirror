@@ -575,7 +575,7 @@ static val ffi_set_entries(val fun)
     lit("deffi-union"), lit("typedef"), lit("sizeof"),
     lit("alignof"), lit("offsetof"), lit("arraysize"), lit("elemsize"),
     lit("elemtype"), lit("ffi"), lit("carray-ref"), lit("carray-sub"),
-    lit("sub-buf"), lit("znew"),
+    lit("sub-buf"), lit("znew"), lit("setjmp"),
     nil
   };
   autoload_set(al_fun, name, fun);

@@ -72,6 +72,8 @@ extern val align_s;
 
 extern val bool_s;
 
+extern val jmp_buf_s;
+
 extern val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 extern struct cobj_class *carray_cls;

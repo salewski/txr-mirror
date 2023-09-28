@@ -167,3 +167,10 @@
             'znew))
   (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
     ^(make-zstruct (ffi ,type) ,*qpairs)))
+
+(defmacro setjmp (:form f jmp-buf longjmp-var try-expr . longjmp-exprs)
+  (unless (bindable longjmp-var)
+    (compile-error f "~s is not a bindable symbol" longjmp-var))
+  ^(sys:rt-setjmp ,jmp-buf
+                  (lambda () ,try-expr)
+                  (lambda (,longjmp-var) ,*longjmp-exprs)))

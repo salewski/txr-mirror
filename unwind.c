@@ -202,6 +202,22 @@ static void uw_abscond_to_exit_point(void)
   }
 }
 
+uw_snapshot_t uw_snapshot(void)
+{
+  uw_snapshot_t snap = {
+    dyn_env, uw_stack, uw_menv_stack
+  };
+
+  return snap;
+}
+
+void uw_restore(const uw_snapshot_t *psnap)
+{
+  dyn_env = psnap->de;
+  uw_stack = psnap->stack;
+  uw_menv_stack = psnap->menv_stack;
+}
+
 void uw_push_block(uw_frame_t *fr, val tag)
 {
   memset(fr, 0, sizeof *fr);

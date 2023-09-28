@@ -88914,6 +88914,196 @@ indicates a byte offset into the
 .code carray
 object's storage, not an array index.
 
+.NP* C Non-Local Jumps
+
+\*(TL supports interfacing with modules that make use of the C
+.code setjmp
+and
+.code longjmp
+feature across their boundaries. It is possible to save a jump
+location in Lisp code with the
+.code setjmp
+macro, such that a foreign function can perform a
+.code longjmp
+to that saved context.
+
+The jump context buffer, known as the type
+.code jmp_buf
+in C, is modelled as a
+.code carray
+object whose element type is
+.codn uchar .
+The function
+.code jmp-buf
+returns such an object.  Foreign functions that return a pointer to a
+.code jmp_buf
+may be suitably defined via
+.code deffi
+such that the pointer is mapped to a
+.code carray
+object whose element type is
+.codn uchar .
+The resulting object will then be usable as a jump buffer.
+
+The features described here are unsafe. When used in certain incorrect ways,
+the behavior is undefined.
+
+Using the
+.code setjmp
+macro and
+.code longjmp
+function as control primitives in Lisp code not interacting with foreign
+functions is strongly discouraged.
+
+There are situations in which the foreign function calling mechanism allocates
+temporary dynamic memory for converting between Lisp and C objects.  These
+situations occur when objects are referenced by pointers, and so are are
+outside of the stack-based argument space. In such a situation, if the foreign
+function performs a
+.code longjmp
+terminating in a
+.code setjmp
+macro in Lisp code, that temporary storage will leak.
+
+.coNP Function @ jmp-buf
+.synb
+.mets (jmp-buf)
+.syne
+.desc
+The
+.code jmp-buf
+function returns a new
+.code carray
+object suitable for use as a jump buffer with the
+.code setjmp
+macro and
+.code longjmp
+function.
+
+.coNP Function @ longjmp
+.synb
+.mets (longjmp < jmp-buf << value )
+.syne
+.desc
+The
+.code longjmp
+function restores the context saved into the
+.meta jmp-buf
+object by the
+.code setjmp
+macro.  If that macro already terminated, the behavior is undefined.
+
+The
+.meta value
+must be an integer in range of the FFI type
+.codn int .
+That value will be observed in the
+.code setjmp
+form, as described.
+If
+.meta value
+is
+.code 0
+(zero) the value
+.code 1
+is used instead. This is a behavior of the underlying
+.code longjmp
+C library function.
+
+Note: a context abandoned via
+.code longjmp
+will not perform unwinding, similarly to
+.codn sys:abscond* .
+The form which is abandoned by
+.code longjmp
+should not be using scoped management of resources that relies on
+.code unwind-protect
+for clean-up.
+
+.coNP Macro @ setjmp
+.synb
+.mets (setjmp < jmp-buf < result-var < main-form << longjmp-form *)
+.syne
+.desc
+The
+.code setjmp
+macro saves the jump context into the
+.meta jmp-buf
+object, and evaluates the
+.meta main-form
+expression.
+
+If the
+.meta main-form
+expression terminates normally then the value
+it produces becomes the result of
+.codn setjmp ,
+which terminates.
+
+If the
+.meta main-form
+performs a
+.code longjmp
+to the context saved in
+.codn jmp-buf ,
+then that form is abruptly terminated, without
+performing any unwinding.
+Then, the zero or more
+.metn longjmp-form s
+are evaluated. The
+.code setjmp
+form terminates, yielding the value of the last
+.meta longjmp-form
+or else
+.codn nil .
+
+The
+.codn longjmp-form s
+are evaluated in a scope in which the
+.code result-var
+symbol is bound as a variable, taking on the
+integer value passed to
+.codn longjmp ,
+which is never zero.
+
+The
+.meta jmp-buf
+argument must be a
+.code carray
+object suitable for use as a jump buffer.
+
+The
+.code result-var
+argument must be a bindable symbol.
+
+Once
+.code setjmp
+terminates, the contents of
+.meta jmp-buf
+become indeterminate. Any
+.code longjmp
+attempt using an indeterminate
+.code jmp-buf
+is undefined behavior.
+
+.TP* Example:
+
+.verb
+  (let ((jb (jmp-buf)))
+    (setjmp jb result
+      (progn (put-line "setjmp")     ;; "setjmp" is printed
+             (longjmp jb 42))
+      (put-line `result is: @result`)))  ;; "result is: 42" is printed
+.brev
+
+.IP
+Note: this example is for illustration only. Using
+.code setjmp
+and
+.code longjmp
+as Lisp control flow constructs in code not interacting with foreign
+functions is strongly discouraged.
+
 .SH* LISP COMPILATION
 
 .SS* Overview
