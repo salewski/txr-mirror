@@ -564,4 +564,60 @@
   [separate-keys evenp (vec-list (range 1 20)) square] (#(4 16 36 64 100 144 196 256 324 400)
                                                         #(1 9 25 49 81 121 169 225 289 361)))
 
+(mtest
+  (flatten '()) ()
+  (flatten '(nil)) ()
+  (flatten '(a)) (a)
+  (flatten '(a b)) (a b)
+  (flatten '(nil b)) (b)
+  (flatten '(a nil)) (a)
 
+  (flatten '((nil))) ()
+  (flatten '((a))) (a)
+  (flatten '((a) (b))) (a b)
+  (flatten '((nil) (b))) (b)
+  (flatten '((a) (nil))) (a)
+
+  (flatten '((a b))) (a b)
+  (flatten '((nil b))) (b)
+  (flatten '((a nil))) (a)
+
+  (flatten '(((())))) nil
+  (flatten '(((())) a)) (a)
+  (flatten '(((()) a))) (a)
+  (flatten '(((() a)))) (a)
+  (flatten '((((a))))) (a)
+
+  (flatten 3) (3)
+  (flatten '(1 . 2)) :error
+  (flatten '(1 2 . 3)) :error
+  (flatten '(1 (2 . 3))) :error)
+
+(mtest
+  (flatten* '()) ()
+  (flatten* '(nil)) ()
+  (flatten* '(a)) (a)
+  (flatten* '(a b)) (a b)
+  (flatten* '(nil b)) (b)
+  (flatten* '(a nil)) (a)
+
+  (flatten* '((nil))) ()
+  (flatten* '((a))) (a)
+  (flatten* '((a) (b))) (a b)
+  (flatten* '((nil) (b))) (b)
+  (flatten* '((a) (nil))) (a)
+
+  (flatten* '((a b))) (a b)
+  (flatten* '((nil b))) (b)
+  (flatten* '((a nil))) (a)
+
+  (flatten* '(((())))) nil
+  (flatten* '(((())) a)) (a)
+  (flatten* '(((()) a))) (a)
+  (flatten* '(((() a)))) (a)
+  (flatten* '((((a))))) (a)
+
+  (flatten* 3) (3)
+  (lforce (flatten* '(1 . 2))) :error
+  (lforce (flatten* '(1 2 . 3))) :error
+  (lforce (flatten* '(1 (2 . 3)))) :error)

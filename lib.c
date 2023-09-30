@@ -3666,12 +3666,11 @@ static val lazy_flatten_scan(val list, val *escape)
         list = cdr(list);
       } else if (atom(a)) {
         return list;
-      } else do {
+      } else {
         push(cdr(list), escape); /* safe mutation: *escape is a local var */
         list = a;
         a = car(list);
-      } while (consp(a));
-      return list;
+      }
     } else if (*escape) {
       list = pop(escape);
     } else {
@@ -3698,7 +3697,9 @@ static val lazy_flatten_func(val lcons)
 
 val lazy_flatten(val list)
 {
-  if (atom(list)) {
+  if (list == nil) {
+    return nil;
+  } if (atom(list)) {
     return cons(list, nil);
   } else {
     val escape = nil;

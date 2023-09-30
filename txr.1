@@ -23103,27 +23103,40 @@ operation: no
 
 .coNP Functions @ flatten and @ flatten*
 .synb
-.mets (flatten << list )
-.mets (flatten* << list )
+.mets (flatten >> { list | << atom })
+.mets (flatten* >> { list | << atom })
 .syne
 .desc
 The
 .code flatten
-function produces a list whose elements are all of the
+function recursively traverses a nested
+.metn list ,
+returning a list whose elements are all of the
 .cod2 non- nil
-atoms contained in the structure of
-.metn list .
+atoms contained in
+.metn list ,
+at any level of nesting.
+If the argument is an
+.meta atom
+rather than a
+.metn list ,
+then it is returned.
+Otherwise, the
+.meta list
+argument must be a proper list, as must all lists
+nested within it.
 
 The
 .code flatten*
-function
-works like
-.code flatten
+function calculates the same result as
+.codn flatten ,
 except that it produces a lazy list. It can be used to lazily flatten an
-infinite lazy structure.
+infinite lazy list.
 
 .TP* Examples:
 .verb
+  (flatten 42) -> 42
+
   (flatten '(1 2 () (3 4))) -> (1 2 3 4)
 
   ;; equivalent to previous, since
@@ -23133,6 +23146,8 @@ infinite lazy structure.
   (flatten nil) -> nil
 
   (flatten '(((()) ()))) -> nil
+
+  (flatten '(a (b . c))) -> ;; error
 .brev
 
 .coNP Functions @ flatcar and @ flatcar*
