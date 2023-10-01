@@ -621,3 +621,27 @@
   (lforce (flatten* '(1 . 2))) :error
   (lforce (flatten* '(1 2 . 3))) :error
   (lforce (flatten* '(1 (2 . 3)))) :error)
+
+(mtest
+  (flatcar ()) (nil)
+  (flatcar 'a) (a)
+  (flatcar '(a . b)) (a b)
+  (flatcar '(nil . nil)) (nil)
+  (flatcar '(nil . b)) (nil b)
+  (flatcar '(b . nil)) (b)
+  (flatcar '(a b . c)) (a b c)
+  (flatcar '(() b . c)) (nil b c)
+  (flatcar '((()) b . c)) (nil b c)
+  (flatcar '(((a)) b . c)) (a b c))
+
+(mtest
+  (flatcar* ()) (nil)
+  (flatcar* 'a) (a)
+  (flatcar* '(a . b)) (a b)
+  (flatcar* '(nil . nil)) (nil)
+  (flatcar* '(nil . b)) (nil b)
+  (flatcar* '(b . nil)) (b)
+  (flatcar* '(a b . c)) (a b c)
+  (flatcar* '(() b . c)) (nil b c)
+  (flatcar* '((()) b . c)) (nil b c)
+  (flatcar* '(((a)) b . c)) (a b c))
