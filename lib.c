@@ -4857,6 +4857,19 @@ val length_list(val list)
   return bn_len;
 }
 
+val length_list_lt(val list, val len)
+{
+  val self = lit("length-list-lt");
+  cnum le = c_num(len, self);
+
+  while (consp(list) && le > 0) {
+    list = cdr(list);
+    le--;
+  }
+
+  return tnil(le > 0);
+}
+
 static val length_proper_list(val list)
 {
   cnum len = 0;
@@ -13144,6 +13157,21 @@ val length(val seq)
     /* fallthrough */
   default:
     type_mismatch(lit("length: ~s is not a sequence"), seq, nao);
+  }
+}
+
+val length_lt(val seq, val len)
+{
+  switch (type(seq)) {
+  case NIL:
+    return if3(plusp(len), t, nil);
+  case CONS:
+  case LCONS:
+    return length_list_lt(seq, len);
+  case LSTR:
+    return length_str_lt(seq, len);
+  default:
+    return lt(length(seq), len);
   }
 }
 

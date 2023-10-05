@@ -22520,6 +22520,62 @@ Common Lisp does not allow the argument to be an atom, except
 for the empty list
 .codn nil .
 
+.coNP Function @ length-list-<
+.synb
+.mets (length-list-< < list << len )
+.syne
+.desc
+The
+.code length-list-<
+function determines whether the length of
+.metn list ,
+is less than the integer
+.metn len .
+
+The expression
+
+.verb
+  (length-list-< x y)
+.brev
+
+is similar to, but usefully different from
+
+.verb
+  (< (length-list x) y)
+.brev
+
+because
+.code length-list-<
+is required to only traverses
+.meta list
+far enough to be able to determine the return value.
+If the end of the list is reached before
+.meta len
+conses are encountered, the function returns
+.codn t ,
+otherwise if
+.code len
+conses are encountered, the function terminates immediately and returns
+.codn nil .
+
+The
+.code length-list-<
+function is therefore safe to use with infinite lazy lists and circular
+lists, for which
+.code length
+would not terminate.
+
+Note: there is more generic function
+.code length-<
+which works with efficiently with different kinds of sequences.
+
+Note: the
+.code length-list-<
+is useful in situations when a decision must be made between two
+algorithms based on the length of one or more input lists.
+The decision can be made without wastefully performing a full pass over the
+input lists to measure their length.
+
 .coNP Function @ copy-cons
 .synb
 .mets (copy-cons << cons )
@@ -34032,6 +34088,36 @@ function is a synonym of
 An attempt to calculate the length of infinite lazy lists will not terminate.
 Iterable objects representing infinite ranges, such as integers and characters
 are invalid arguments.
+
+.coNP Function @ length-<
+.synb
+.mets (length-< < iterable << len )
+.syne
+.desc
+The
+.code length-<
+function efficiently determines whether
+.mono
+.meti (length << iterable)
+.onom
+is less than the integer value
+.metn len .
+In cases when
+.meta iterable
+would have to be fully traversed in order to measure its length, the
+.code length-<
+function avoids this traversal, by making use of the functions
+.code length-str-<
+or
+.code length-list-<
+as appropriate.
+
+Note: this function is useful when a decision must be made between
+two algorithms, depending on whether the length is less than a certain
+small constant. It is also safe on lazy, infinite sequences and
+circular lists, for which
+.code length
+will fail to terminate.
 
 .coNP Function @ empty
 .synb

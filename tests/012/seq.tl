@@ -645,3 +645,23 @@
   (flatcar* '(() b . c)) (nil b c)
   (flatcar* '((()) b . c)) (nil b c)
   (flatcar* '(((a)) b . c)) (a b c))
+
+(mtest
+  (length-< nil 0) nil
+  (length-< nil 1) t
+  (length-< '(a) 1) nil
+  (length-< '(a) 2) t
+  (length-< '(a . b) 1) nil
+  (length-< '(a . b) 2) t)
+
+(mtest
+  (length-< "" 0) nil
+  (length-< "" 1) t
+  (length-< "a" 1) nil
+  (length-< "a" 2) t)
+
+(mtest
+  (length-< #() 0) nil
+  (length-< #() 1) t
+  (length-< #(a) 1) nil
+  (length-< #(a) 2) t)
