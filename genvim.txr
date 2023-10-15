@@ -190,7 +190,7 @@ syn region txr_directive contained matchgroup=Delimiter start="(" matchgroup=Del
 syn region txr_list @(if txr-p "contained ")matchgroup=Delimiter start="\(#[HSRTN]\?\)\?(" matchgroup=Delimiter end=")" contains=@list
 syn region txr_bracket @(if txr-p "contained ")matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=@list
 syn region txr_string @(if txr-p "contained ")start=+#\?\*\?"+ skip=+\\\n+ end=+["\n]+ contains=txr_stresc,txr_numesc,txr_badesc
-syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ skip=+\\\n+ end=+[`\n]+ contains=txr_qat
+syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ skip=+\\\n+ end=+[`\n]+ contains=txr_qat,txr_stresc,txr_numesc,txr_badesc
 syn region txr_regex @(if txr-p "contained ")start="/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region tl_regex @(if txr-p "contained ")start="#/" skip=+\\\n+ end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region txr_buf @(if txr-p "contained ")matchgroup=txr_buf start="#b'" end="'" contains=txr_buf_interior,txr_buf_error
