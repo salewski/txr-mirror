@@ -4245,11 +4245,12 @@ correct!  Please check the above output for any problems, and verify that the
 contents of the generated files config.make and config.h are sane for the
 target platform.
 
-The next step is to build the program with $make.
+For details, see the INSTALL guide.
 
-If that is successful, please follow the INSTALL guide.
+The next step is to build the software by running "$make all". 
+The "all" target is the default one, thus it can be omitted.
 
-Usually, most users just need to "$make tests" and "$make install",
+If that works, most users just need to "$make tests" and "$make install",
 possibly switching to superuser for "$make install" if the prefix
 points to a privileged location like /usr/local/.
 
