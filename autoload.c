@@ -837,7 +837,7 @@ static val quips_instantiate(void)
 static val match_set_entries(val fun)
 {
   val name_noload[] = {
-    lit("all*"), lit("as"), lit("with"), lit("scan"), lit("sme"), lit("match-error"),
+    lit("all*"), lit("as"), lit("with"), lit("scan"), lit("sme"),
     nil
   };
   val name[] = {
@@ -849,6 +849,11 @@ static val match_set_entries(val fun)
     lit("each-match"), lit("append-matches"),
     lit("keep-matches"), lit("each-match-product"),
     lit("append-match-products"), lit("keep-match-products"),
+    lit("match-error"),
+    nil
+  };
+  val sys_name[] = {
+    lit("match-pat-error"),
     nil
   };
   val vname[] = {
@@ -861,6 +866,7 @@ static val match_set_entries(val fun)
   };
 
   autoload_set(al_fun, name, fun);
+  autoload_sys_set(al_fun, sys_name, fun);
   autoload_set(al_var, vname, fun);
   autoload_key_set(al_key, kname, fun);
   intern_only(name_noload);
