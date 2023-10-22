@@ -16681,18 +16681,15 @@ yields
 These three macros arrange for the evaluation of
 .metn test-form ,
 whose value is then compared against the key or keys in each
-.meta normal-clause
-in turn.
+.metn normal-clause .
 When the value matches a key, then the remaining forms of
 .meta normal-clause
 are evaluated, and the value of the last form is returned; subsequent
-clauses are not evaluated. When the value doesn't match any of the keys
-of a
+clauses are not evaluated.
+
+If no
 .meta normal-clause
-then the next
-.meta normal-clause
-is tested.
-If all these clauses are exhausted, and there is no
+matches, and there is no
 .metn else-clause ,
 then the value nil is returned. Otherwise, the forms in the
 .meta else-clause
@@ -16700,6 +16697,12 @@ are evaluated, and the value of the last one is returned.
 If there are no forms, then
 .code nil
 is returned.
+
+If duplicates keys are present in such a way that the value of the
+.meta test-form
+matches multiple
+.metn normal-clause s,
+it is unspecified which of those clauses is evaluated.
 
 The syntax of a
 .meta normal-clause
@@ -45552,9 +45555,8 @@ in the scope of the bindings established by the pattern.
 The
 .code match-case
 macro evaluates the same object against multiple clauses, each consisting of a
-pattern and zero or more forms. The first case whose pattern matches the object
-is selected. The forms associated with a matching clause are evaluated in
-the scope the variables bound by that clause's pattern.
+pattern and zero or more forms. At most one matching clause is identified
+and evaluated.
 
 The
 .code match-ecase
@@ -47524,9 +47526,26 @@ if it is not specified.
 .desc
 The
 .code match-case
-macro successively matches the value of
+macro matches the value of
 .meta expr
 against zero or more patterns.
+
+Normally, the patterns are considered in left-to-right order.
+If the value
+.meta expr
+matches more than one
+.metn pattern ,
+the leftmost
+.meta pattern
+is selected and that clause is evaluated. Under certain conditions,
+detailed below, it is possible for
+.code match-case
+and
+.code match-ecase
+to be transformed into a
+.code casequal
+form. In that case, if there are multiple clauses with equivalent
+patterns, it is not specified which one is evaluated.
 
 The syntax of
 .code match-case
@@ -47575,6 +47594,34 @@ In the same situation, the
 .code match-ecase
 form throws an exception of type
 .codn match-error .
+
+An
+.code match-ecase
+form may be transformed to a
+.code casequal
+form if all the
+.mets pattern s
+are trivial. A trivial pattern is either an atom, or else a vector or list
+expression containing no variables.
+
+A
+.code match-case
+form may be transformed to a
+.code casequal
+form under the same conditions as
+.codn match-case .
+Additionally,
+.code match-case
+may also be transformed if it contains exactly one
+clause which matches any object by means of the key
+.code @nil
+or else a variable match such as
+.codn @abc ,
+if that clause appears last. That clause is transformed into an
+.meta else-clause
+of the
+.code casequal
+form.
 
 .TP* Examples:
 

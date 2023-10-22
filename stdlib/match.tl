@@ -674,26 +674,53 @@
                ,cm.(wrap-guards ^(progn ,*body t)))))
           ())))
 
+(defun non-triv-pat-p (syntax)
+  (ignore syntax)
+  t)
+
+(defun match-case-to-casequal (obj clauses)
+  (let ((dfl-cnt 0))
+    (if (and [all clauses
+                  [chain car [orf [chain non-triv-pat-p not]
+                                  [iff (op equal '@nil)
+                                    (do inc dfl-cnt)]
+                                  (do if-match (@(eq 'sys:var) @nil) @1
+                                    (inc dfl-cnt))]]]
+             (< dfl-cnt 2)
+             (or (zerop dfl-cnt)
+                 (non-triv-pat-p (car (first (last clauses))))))
+      (with-gensyms (otmp)
+        ^(let ((,otmp ,obj))
+           (casequal ,otmp ,*(mapcar (tb ((f . r))
+                                       (or (if-match (@(eq 'sys:var) nil) f
+                                             ^(t ,*r))
+                                           (if-match (@(eq 'sys:var) @sym) f
+                                             ^(t (let ((,sym ,otmp)) ,*r)))
+                                           ^((,f) ,*r)))
+                                     clauses)))))))
+
 (defmacro match-case (:form *match-form* :env e obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
     (compile-error *match-form* "bad clause syntax"))
-  (let* ((result-temp (gensym "result-"))
-         (objvar (gensym "obj-"))
-         (var-list (get-var-list e))
-         (clause-matches [mapcar (op compile-match (car @1)
+  (iflet ((cq (match-case-to-casequal obj clauses)))
+    cq
+    (let* ((result-temp (gensym "result-"))
+           (objvar (gensym "obj-"))
+           (var-list (get-var-list e))
+           (clause-matches [mapcar (op compile-match (car @1)
                                      objvar (copy var-list))
-                                 clauses])
-         (clause-code (collect-each ((cl clauses)
-                                     (cm clause-matches))
-                        (mac-param-bind *match-form* (t . forms) cl
-                          ^(let (,*cm.(get-vars))
-                             ,cm.(wrap-guards ^(set ,result-temp
-                                                    (progn ,*forms))
-                                              t))))))
-    ^(alet ((,objvar ,obj))
-       (let (,result-temp)
-         (or ,*clause-code)
-         ,result-temp))))
+                                   clauses])
+           (clause-code (collect-each ((cl clauses)
+                                       (cm clause-matches))
+                          (mac-param-bind *match-form* (t . forms) cl
+                            ^(let (,*cm.(get-vars))
+                               ,cm.(wrap-guards ^(set ,result-temp
+                                                      (progn ,*forms))
+                                                t))))))
+      ^(alet ((,objvar ,obj))
+         (let (,result-temp)
+           (or ,*clause-code)
+           ,result-temp)))))
 
 (defmacro match-cond (:form *match-form* :env e . clauses)
   (unless [all clauses [andf proper-listp [chain len (op < 1)]]]
@@ -914,10 +941,6 @@
     ^@(as ,(check-sym f 'end obj)
           @(with @(as ,(check-sym f 'end evar t) ,pend)
                  (nthlast ,lend ,obj)))))
-
-(defun non-triv-pat-p (syntax)
-  (ignore syntax)
-  t)
 
 (defun non-triv-pat-p (syntax)
   (match-case syntax
