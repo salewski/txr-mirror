@@ -111,6 +111,7 @@
     "I'm confused; is this piano recital Rimsky-Korsakov or Wernicke–Korsakoff?"
     "TXR Lisp environments use genuine Saskatchewan sealskin bindings."
     "I'm not addicted to procrastination. I can start any time I want to!"
+    "Kant figure something out? Check the Immanuel!"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
