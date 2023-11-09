@@ -59934,6 +59934,72 @@ and the expression
 returns a function similar to
 .codn "(lambda (. rest) 42)" .
 
+.coNP Macro @ tap
+.synb
+.mets (tap << arg +)
+.syne
+.desc
+The
+.code tap
+macro is intended for use in conjunction with
+.codn opip ,
+.code flow
+and other macros in that family. It is a short-hand for writing a pipeline
+element which performs a side-effecting operation, but unconditionally returns
+the original input value.
+
+The exact expansion of
+.code tap
+is unspecified, but the following equivalence indicates a possible
+expansion strategy:
+
+.verb
+  (tap ...)  <--> (prog1 @1 (...))
+.brev
+
+Assuming that expansion strategy, the expression
+.code "(tap put-line `foo: @1`)"
+would expand to
+.codn "(prog1 @1 (put-line `foo: @1`))" .
+
+Note:
+.codn tap ,
+in addition to being useful for inserting necessary
+side effects into pipelines, is also
+useful for inserting temporary debug print forms.  For that purpose, inserting
+the `prinl` function is often enough:
+
+.verb
+  (flow 10 (+ 2) print (* 4))
+.brev
+
+Here, the pipeline will calculate
+.code "(* 4 (+ 2 10))"
+with the side effect of the value of
+.code "(+ 2 10)"
+being printed. With
+.codn tap ,
+the output can be customized, allowing multiple output
+points to be distinguished.
+
+.verb
+  (flow 10
+    (tap put-line `input: @1`)
+    (+ 2)
+    (tap put-line `+ 2: @1`)
+    (* 4)
+    (tap put-line `* 4: @1`))
+  -> 48
+.brev
+
+Output produced:
+
+.verb
+  input: 10
+  + 2: 12
+  * 4: 48
+.brev
+
 .coNP Function @ dup
 .synb
 .mets (dup << func )

@@ -712,7 +712,7 @@ static val op_set_entries(val fun)
     lit("op"), lit("do"), lit("lop"), lit("ldo"), lit("ap"), lit("ip"),
     lit("ado"), lit("ido"), lit("ret"), lit("aret"),
     lit("opip"), lit("oand"), lit("lopip"), lit("loand"),
-    lit("opf"), lit("lopf"), lit("flow"), lit("lflow"),
+    lit("opf"), lit("lopf"), lit("flow"), lit("lflow"), lit("tap"),
     nil
   };
   autoload_set(al_fun, name, fun);

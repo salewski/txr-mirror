@@ -276,3 +276,6 @@
 
 (defmacro lflow (val . opip-args)
   ^(call (lopip ,*opip-args) ,val))
+
+(defmacro tap (. args)
+  ^(prog1 @1 ,args))

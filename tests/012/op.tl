@@ -113,3 +113,15 @@
 (mtest
   (remove-if (opf orf (< 10) (> 5)) (range 0 20)) (5 6 7 8 9 10)
   (remove-if (lopf orf (> 10) (< 5)) (range 0 20)) (5 6 7 8 9 10))
+
+(test
+  (let ((x 0) (y 0))
+    (list (flow x
+            (+ 2)
+            (tap inc y @1)
+            (* 4)
+            (tap inc y @1)
+            (+ 5)
+            (tap inc y @1))
+          y))
+  (13 23))
