@@ -35302,21 +35302,22 @@ would return for the same arguments, and the last element is what
 .code rsearch
 would return.
 
-.coNP Functions @ ref and @ refset
+.coNP Accessor @ ref
 .synb
 .mets (ref < sequence << index )
-.mets (refset < sequence < index << new-value )
+.mets (set (ref < sequence << index ) << new-value )
 .syne
 .desc
 The
 .code ref
-and
-.code refset
-functions perform array-like indexing into sequences, as well as
-objects of type
-.code buf
-and
-.codn carray .
+accessor performs array-like indexing into sequences, as well as
+hash tables and objects of type
+.codn buf ,
+.codn carray ,
+.code tree
+as well as structure objects which define a
+.code lambda
+method.
 
 If the
 .meta sequence
@@ -35345,41 +35346,6 @@ treats it as a list, traversing the structure using
 .cod3 car / cdr
 operations. In the absence of support for these operations,
 the function fails with an error exception.
-
-Similarly, a structure supports
-.code refset
-directly if it has a
-.code lambda-set
-method. This gets called with
-.meta index
-and
-.meta new-value
-as arguments. Then
-.meta new-value
-is returned.
-If a structure lacks a
-.code lambda-set
-method, then
-.code refset
-treats it as a list, traversing the structure using
-.cod3 car / cdr
-operations, and storing
-.meta new-value
-using
-.codn rplaca .
-In the absence of support for these operations,
-the function fails with an error exception.
-
-The
-.code ref
-function retrieves an element of
-.metn sequence ,
-whereas
-.code refset
-overwrites an
-element of
-.meta sequence
-with a new value.
 
 If
 .meta sequence
@@ -35412,6 +35378,82 @@ is a search tree, then
 .code ref
 behaves like
 .codn tree-lookup .
+
+A
+.code ref
+expression may be used as a place. Storing a value into a 
+.code ref
+place is performed using the
+.code refset
+function.
+
+When the
+.code del
+operator is used to delete an index value from a
+.code ref
+place, the
+.meta sequence
+itself must be a place. The deletion calculates a new
+sequence with the item at
+.meta index
+deleted; that new sequence is stored back into the
+.meta sequence
+place. Deletion does not use
+.code refset
+but rather the
+.code replace
+function.
+
+.coNP Function @ refset
+.synb
+.mets (refset < sequence < index << new-value )
+.syne
+.desc
+The
+.code refset
+function performs indexing into
+.meta sequence
+in a manner identical to
+.code ref
+with the purpose of overwriting the indexed element with
+.metn new-value .
+It is a companion function to
+.code ref
+which is used in the implementation of the
+.code ref
+place.
+
+The return value of
+.code ref-set
+is
+.metn new-value .
+
+If
+.meta sequence
+is a structure, it supports
+.code refset
+directly if it has a
+.code lambda-set
+method. This gets called with
+.meta index
+and
+.meta new-value
+as arguments. Then
+.meta new-value
+is returned.
+If a structure lacks a
+.code lambda-set
+method, then
+.code refset
+treats it as a list, traversing the structure using
+.cod3 car / cdr
+operations, and storing
+.meta new-value
+using
+.codn rplaca .
+In the absence of support for these operations,
+the function fails with an error exception.
+
 The
 .code refset
 function is not supported by search trees.
@@ -35422,41 +35464,6 @@ function is strict for out-of-range indices over all sequences,
 including lists. In the case of hashes, a
 .code refset
 of a nonexistent key creates the key.
-
-The
-.code refset
-function returns
-.codn new-value .
-
-The following equivalences hold between
-.code ref
-and
-.codn refset ,
-and the DWIM bracket syntax, provided that
-.meta idx
-is a scalar index and
-.meta sequence
-is a sequence object, rather than a hash.
-
-.verb
-  (ref seq idx) <--> [seq idx]
-
-  (refset seq idx new) <--> (set [seq idx] new)
-.brev
-
-The difference is that
-.code ref
-and
-.code refset
-are first class functions which
-can be used in functional programming as higher order functions, whereas the
-bracket notation is syntactic sugar, and
-.code set
-is an operator, not a function.
-Therefore the brackets cannot replace all uses of
-.code ref
-and
-.codn refset .
 
 .coNP Function @ update
 .synb

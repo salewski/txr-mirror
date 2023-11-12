@@ -665,3 +665,9 @@
   (length-< #() 1) t
   (length-< #(a) 1) nil
   (length-< #(a) 2) t)
+
+(let ((l (list 1 2 3 4)))
+  (del (ref l 1))
+  (test l (1 3 4))
+  (del (second l))
+  (test l (1 4)))

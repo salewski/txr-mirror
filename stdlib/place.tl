@@ -601,13 +601,15 @@
   (deleter
     (with-gensyms (seq-sym ind-sym)
       (ignore args)
-      ^(alet ((,seq-sym ,seq)
-              (,ind-sym ,index))
-         (macrolet ((,deleter ()
-                       ^(prog1 (ref ,',seq-sym ,',ind-sym)
-                               (replace ,',seq-sym nil
-                                        ,',ind-sym (succ ,',ind-sym)))))
-           ,body)))))
+      (with-clobber-expander (seq-ssetter) seq sys:*pl-env*
+        ^(alet ((,seq-sym ,seq)
+                (,ind-sym ,index))
+           (macrolet ((,deleter ()
+                         ^(prog1 (ref ,',seq-sym ,',ind-sym)
+                                 (,',seq-ssetter (replace ,',seq-sym nil
+                                                          ,',ind-sym
+                                                          (succ ,',ind-sym))))))
+             ,body))))))
 
 (defplace (sub seq : (from 0) (to t)) body
   (getter setter
