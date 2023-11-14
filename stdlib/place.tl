@@ -756,15 +756,15 @@
                                   (sys:dwim-del t ,',obj-sym ,*',arg-syms))
                                 ,',oldval-sym)))))
                  ,body))
-            ^(macrolet ((,deleter ()
-                         ^(rlet ((,',obj-sym ,',obj-place)
-                                 ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
-                                           ',arg-syms ',args))
-                            (let ((,',oldval-sym [,',obj-sym ,*',arg-syms]))
-                              (progn
-                                (sys:dwim-del nil ,',obj-sym ,*',arg-syms)
-                                ,',oldval-sym)))))
-                 ,body))))))
+          ^(macrolet ((,deleter ()
+                       ^(rlet ((,',obj-sym ,',obj-place)
+                               ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
+                                         ',arg-syms ',args))
+                          (let ((,',oldval-sym [,',obj-sym ,*',arg-syms]))
+                            (progn
+                              (sys:dwim-del nil ,',obj-sym ,*',arg-syms)
+                              ,',oldval-sym)))))
+               ,body))))))
 
 (defplace (force promise) body
   (getter setter
