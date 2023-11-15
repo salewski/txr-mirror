@@ -13431,7 +13431,7 @@ val dwim_set(val place_p, val seq, varg vargs)
     }
   }
 notplace:
-  uw_throwf(error_s, lit("~a: list form must be place"), self, nao);
+  uw_throwf(error_s, lit("~a: mutated object must be place"), self, nao);
 fewargs:
   uw_throwf(error_s, lit("~a: missing required arguments"), self, nao);
 excargs:
