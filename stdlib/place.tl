@@ -766,6 +766,67 @@
                               ,',oldval-sym)))))
                ,body))))))
 
+(defplace (mref1 seq index) body
+  (getter setter
+    (with-gensyms (obj-sym ind-sym val-sym)
+      (if (place-form-p seq sys:*pl-env*)
+        (with-update-expander (seq-getter seq-setter) seq sys:*pl-env*
+          ^(alet ((,obj-sym (,seq-getter))
+                  (,ind-sym ,index))
+             (macrolet ((,getter () ^(mref ,',obj-sym ,',ind-sym))
+                        (,setter (val)
+                          ^(alet ((,',val-sym ,val))
+                             (,',seq-setter (sys:dwim-set t
+                                                          ,',obj-sym
+                                                          ,',ind-sym
+                                                          ,',val-sym))
+                             ,',val-sym)))
+               ,body)))
+        ^(rlet ((,obj-sym ,seq)
+                (,ind-sym ,index))
+           (macrolet ((,getter () '(mref ,obj-sym ,ind-sym))
+                      (,setter (val)
+                         ^(alet ((,',val-sym ,val))
+                            (sys:dwim-set nil
+                                          ,',obj-sym
+                                          ,',ind-sym
+                                          ,',val-sym)
+                            ,',val-sym)))
+             ,body)))))
+  (ssetter
+    (with-gensyms (val-sym)
+      (if (place-form-p seq sys:*pl-env*)
+        (with-update-expander (seq-getter seq-setter) seq sys:*pl-env*
+          ^(macrolet ((,ssetter (val)
+                        ^(alet ((,',val-sym ,val))
+                           (,',seq-setter
+                             (sys:dwim-set t
+                                           (,',seq-getter)
+                                           ,',index
+                                           ,',val-sym))
+                           ,',val-sym)))
+             ,body))
+        ^(macrolet ((,ssetter (val)
+                      ^(alet ((,',val-sym ,val))
+                         (sys:dwim-set nil
+                                       ,',seq
+                                       ,',index
+                                       ,',val-sym)
+                         ,',val-sym)))
+             ,body))))
+  (deleter
+    (with-gensyms (obj-sym ind-sym)
+      (with-update-expander (seq-getter seq-setter) seq sys:*pl-env*
+        ^(alet ((,obj-sym (,seq-getter))
+                (,ind-sym ,index))
+           (macrolet ((,deleter ()
+                        ^(prog1 (mref ,',obj-sym ,',ind-sym)
+                           (,',seq-setter
+                             (sys:dwim-del ,',(place-form-p seq sys:*pl-env*)
+                                           ,',obj-sym
+                                           ,',index)))))
+             ,body))))))
+
 (defplace (force promise) body
   (getter setter
     (with-gensyms (promise-sym)
@@ -1011,3 +1072,14 @@
 
 (define-place-macro nth (index obj)
   ^(car (nthcdr ,index ,obj)))
+
+(define-place-macro mref (obj . indices)
+  (tree-case indices
+    (() obj)
+    ((x) ^(mref1 ,obj ,x))
+    ((x y) ^(mref1 (ref ,obj ,x) ,y))
+    (t (let* ((l2 (nthlast 2 indices))
+              (bl (ldiff indices l2))
+              (x (car l2))
+              (y (cadr l2)))
+         ^(mref1 (ref (mref ,obj ,*bl) ,x) ,y)))))

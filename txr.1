@@ -35465,6 +35465,143 @@ including lists. In the case of hashes, a
 .code refset
 of a nonexistent key creates the key.
 
+.coNP Accessor @ mref
+.synb
+.mets (mref < sequence << index *)
+.mets (set (mref < sequence << index +) new-value)
+.syne
+.desc
+The
+.code mref
+accessor provides a mechanism for invoking a curried function. Its name
+reflects its usefulness for multi-dimensional indexing into nested sequences.
+
+The associated
+.code mref
+place which makes the operator an accessor provides in-place replacement of
+values in multi-dimensional sequences. There are some restrictions on the
+.meta index
+arguments when
+.code mref
+is used as a place.
+
+The
+.meta sequence
+argument is not necessarily a sequence, but may be object that can be called as
+a function with one argument. Except that
+.code call
+isn't a place, the expression
+.code "(mref x i)"
+is equivalent to
+.codn "(call x i)" :
+invoke the function/object
+.code x
+with argument
+.codn i .
+
+When multiple
+.meta index
+arguments are present, the return value of each previous application
+is expected to be another callable object, to which the next
+.meta index
+argument is applied. Thus
+.code "(mref x i j k)"
+is equivalent to
+.codn "(call (call (call x i) j) k)" .
+This is also equivalent to 
+.codn "[[[x i] j] k]" ,
+provided that under the Lisp-1-style name resolution semantics of the DWIM
+brackets, the symbols
+.codn x ,
+.codn i ,
+.code j
+and
+.code k
+all resolve to bindings in the variable namespace.
+
+The expression
+.code "(mref x)"
+is not equivalent to
+.codn "(call x)" ;
+rather, it is equivalent to
+.codn x :
+there are no
+.meta index
+arguments and so the
+.code x
+object is taken as-is, not being applied to any index.
+
+In more detail, the
+.code mref
+function begins by taking
+.meta sequence
+as its an accumulator object. Then if there are
+.meta index
+arguments, it iterates over them. At each iteration step, it
+replaces the accumulator by treating the accumulator as a callable object
+and applying it to
+.meta index
+value and taking the resulting value as the new accumulator.
+After the iteration, the accumulator becomes the return value of
+the function.
+
+When
+.code mref
+is used as a place, only the rightmost
+.meta index
+argument may be a range. If any other argument is a range object,
+the behavior is unspecified.
+
+When
+.code mref
+is used as a place, and there is only one
+.meta index
+which is a range object, then the
+.meta sequence
+expression is also required to be a place, if it denotes a list or
+range object. If there are no
+.meta index
+augments then
+.meta sequence
+is unconditionally required to be a place.
+
+Note: the functions
+.code nested-vec
+and
+.code nested-vec-of
+may be used to create nested vectors which simulate multi-dimensional arrays.
+
+.TP* Examples:
+
+.verb
+  ;; Indexing:
+  (let ((ar '((1 2 3)
+              (4 5 6)
+              (7 8 9))))
+    (mref ar 1 1))
+  --> 5
+
+  ;; Updating value in nested sequence:
+  (let ((ar (vec (vec (vec  0  1  2  3)
+                      (vec  4  5  6  7))
+                 (vec (vec  8  9 10 11)
+                      (vec 12 13 14 15)))))
+    (set (mref ar 0 0 1..3) "AB")
+    ar)
+  --> #(#(#( 0 #\eA #\eB  3)
+          #( 4   5   6  7))
+        #(#( 8   9  10 11)
+          #(12  13  14 15)))
+
+  ;; Invoking curried function:
+  (let ((cf (lambda (x)
+              (lambda (y)
+                (lambda (z)
+                  (+ x y z))))))
+    [mref cf 1 2 3])
+  --> 6
+.brev
+
 .coNP Function @ update
 .synb
 .mets (update < sequence << function )

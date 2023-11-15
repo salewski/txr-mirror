@@ -1394,6 +1394,7 @@ val ref(val seq, val ind);
 val refset(val seq, val ind, val newval);
 val dwim_set(val place_p, val seq, varg);
 val dwim_del(val place_p, val seq, val ind_range);
+val mref(val obj, varg args);
 val butlast(val seq, val idx);
 val replace(val seq, val items, val from, val to);
 val update(val seq, val fun);

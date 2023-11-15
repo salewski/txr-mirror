@@ -13476,6 +13476,18 @@ val dwim_del(val place_p, val seq, val ind_range)
   }
 }
 
+val mref(val obj, varg args)
+{
+  cnum index = 0;
+
+  while (args_more(args, index)) {
+    val idx = args_get(args, &index);
+    obj = funcall1(obj, idx);
+  }
+
+  return obj;
+}
+
 val butlast(val seq, val idx)
 {
   if (listp(seq)) {
