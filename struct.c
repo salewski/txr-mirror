@@ -332,6 +332,24 @@ static void static_slot_home_fixup(struct struct_type *st)
   }
 }
 
+static void invalidate_special_slot_nonexistence(struct struct_type *st)
+{
+  if (st->spslot != 0) {
+    int i;
+    for (i = 0; i < num_special_slots; i++) {
+      if (st->spslot[i] == coerce(struct stslot *, -1))
+        st->spslot[i] = 0;
+    }
+  }
+}
+
+static void invalidate_special_slots(struct struct_type *st)
+{
+  if (st->spslot != 0)
+    memset(st->spslot, 0, sizeof *st->spslot * num_special_slots);
+}
+
+
 static val get_all_supers(val supers, val self)
 {
   list_collect_decl (all_supers, ptail);
@@ -572,6 +590,7 @@ val make_struct_type(val name, val supers,
     st->nslots = sl;
     st->nstslots = stsl;
     static_slot_home_fixup(st);
+    invalidate_special_slots(st);
 
     sethash(struct_type_hash, name, stype);
 
@@ -1304,17 +1323,6 @@ val static_slot(val stype, val sym)
   no_such_static_slot(self, stype, sym);
 }
 
-static void invalidate_special_slot_nonexistence(struct struct_type *st)
-{
-  if (st->spslot != 0) {
-    int i;
-    for (i = 0; i < num_special_slots; i++) {
-      if (st->spslot[i] == coerce(struct stslot *, -1))
-        st->spslot[i] = 0;
-    }
-  }
-}
-
 val static_slot_set(val stype, val sym, val newval)
 {
   val self = lit("static-slot-set");
@@ -1444,6 +1452,7 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
                                        sizeof *st->stslot,
                                        coerce(mem_t *, &null_ptr)));
     static_slot_home_fixup_rec(st);
+    invalidate_special_slots(st);
     set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
     stsl = &st->stslot[st->nstslots];
 

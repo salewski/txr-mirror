@@ -54,3 +54,17 @@
 
 (test (list-seq (new counter-fast init 0 step 1 limit 0))
       nil)
+
+;; The following reproduced a segfault when the change was made to allow del to
+;; work with structs that have lambda and lambda-set.
+
+(defstruct blah ()
+  (:method lambda-set (me . args)))
+
+(defparm o (new blah))
+
+(set [o 1..20] 42)
+
+(defmeth blah lambda (me . args))
+
+(set [o 1..20] 42)
