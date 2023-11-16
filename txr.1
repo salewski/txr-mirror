@@ -20829,7 +20829,7 @@ and
 are numbers which are of the same kind and have the same numeric value,
 .code eql
 returns
-.metn t ,
+.codn t ,
 even if they are different objects.
 Note that an integers and a floating-point number are not
 .code eql
@@ -24085,7 +24085,7 @@ and
 arguments of
 .code make-lazy-cons
 when the lazy cons is created. These arguments default to
-.meta nil
+.code nil
 if omitted.  A lazy cons also
 has an update function, which is specified by the
 .meta function
@@ -38297,7 +38297,7 @@ for all
 elements,
 .code some
 returns
-.metn nil .
+.codn nil .
 
 The
 .code all
@@ -46916,7 +46916,7 @@ If a
 is specified instead of a
 .metn side-pattern ,
 it must be a bindable symbol or else
-.metn nil .
+.codn nil .
 
 .TP* Examples:
 
@@ -72100,7 +72100,7 @@ then the variable is overwritten if it already exists.
 If the argument is false, then the variable is not modified if it
 already exists.  If the argument is not specified, it defaults
 to the value
-.metn t ,
+.codn t ,
 effectively giving rise to a two-argument form of
 .code setenv
 which creates or overwrites environment variables.
@@ -73169,7 +73169,7 @@ instead of
 .code chdir
 changes the current working directory to the object specified
 by the argument, and returns
-.metn t ,
+.codn t ,
 or else throws an exception of type
 .codn file-error .
 
@@ -73213,7 +73213,7 @@ The
 function removes the directory named by
 .codn path .
 If successful, it returns
-.metn t ,
+.codn t ,
 otherwise it throws an exception of type
 .codn file-error .
 
@@ -83138,7 +83138,7 @@ The
 and
 .code put-jsonl
 functions return
-.metn t .
+.codn t .
 
 Some of the JSON-related functions carry a
 .meta mode-opts
@@ -83243,7 +83243,7 @@ as there are elements in
 The
 .code put-jsons
 function returns
-.metn t .
+.codn t .
 
 .coNP Function @ get-jsons
 .synb
@@ -84370,7 +84370,7 @@ The
 .meta name
 argument of the syntax gives the structure type's name, known as the tag.
 If this argument is the symbol
-.meta nil
+.code nil
 then the structure type is named by a newly generated uninterned
 symbol (with
 .codn gensym ).
@@ -84571,7 +84571,7 @@ The
 .meta name
 argument specifies the name for the union type, known as a tag.
 If this argument is the symbol
-.meta nil
+.code nil
 then the union type is named by a newly generated uninterned
 symbol (with
 .codn gensym ).
@@ -87983,7 +87983,7 @@ If the read is successful, these bytes are decoded, producing a Lisp
 object, which is returned.
 
 If the read is incomplete, the value returned is
-.metn nil .
+.codn nil .
 
 All other stream error situations throw exceptions.
 
@@ -88007,7 +88007,7 @@ semantics of the FFI type and returned. If a by-value update of
 isn't possible, then a new object is decoded from the data and returned.
 
 If the read is incomplete, the value returned is
-.metn nil .
+.codn nil .
 
 All other stream error situations throw exceptions.
 
