@@ -74143,9 +74143,13 @@ The
 function is like
 .code link
 except that if
-.meta path
-is a symbolic link, it is resolved.
-
+.meta target
+is a symbolic link, it is resolved, and the link is made to the
+resulting object.
+On Linux, and some other platforms
+.code link
+will create a hard link ot the symbolic link. The behavior is not specified by
+POSIX.
 
 If these functions succeed, they return
 .codn t .
