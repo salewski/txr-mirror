@@ -43611,6 +43611,59 @@ place denotes a value stored in a dynamic data set such as a hash table,
 then deletion of that place implies deletion of the entry which holds
 that value. If the entry is identified by a key, that key is also removed.
 
+If
+.code place
+is a DWIM bracket expression indexing into a structure, the structure
+is expected to implement the
+.code lambda
+and
+.code lambda-set
+methods. Moreover, the place form must have only two arguments:
+the object and an index argument. In other words, the
+.code del
+form must have this syntax:
+
+.mono
+.mets (del >> [ obj << index ])
+.onom
+
+The
+.code lambda
+method will be invoked with the unmodified
+.meta obj
+and
+.meta index
+arguments to determine the prior value to be returned.
+Then the
+.code lambda-set
+method will be invoked with three arguments:
+.metn obj ,
+a possibly modified
+.meta index
+value and the argument
+.code nil
+representing an empty replacement sequence.
+
+If
+.meta index
+is a sequence or range, it is passed to the
+.code lambda-set
+method unmodified. Otherwise it is expected to be an integer, and
+converted into a one-element range spanning the indicated element.
+For instance, if the
+.meta index
+value is
+.codn 3 ,
+it is converted to the range
+.codn "#R(3 4)" .
+In effect, the
+.code lambda-set
+method is thereby asked to replace the one-element subsequence starting at
+index
+.code 3
+with the empty sequence
+.codn nil .
+
 .coNP Macro @ lset
 .synb
 .mets (lset <> { place }+ << sequence-expr )

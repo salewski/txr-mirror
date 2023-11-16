@@ -13453,9 +13453,6 @@ val dwim_del(val place_p, val seq, val ind_range)
       (void) remhash(seq, ind_range);
       return seq;
     }
-    if (obj_struct_p(seq))
-      uw_throwf(error_s, lit("index/range delete: not supported for structs"),
-                nao);
   default:
     break;
   }
