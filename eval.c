@@ -3276,7 +3276,7 @@ static val me_def_variable(val form, val menv)
                       cons(list(sys_mark_special_s,
                                 list(quote_s, sym, nao), nao), nil));
   val setval = if2(op == defparm_s || op == defparml_s,
-                   cons(list(set_s, sym, initform, nao), nil));
+                   cons(list(setq_s, sym, initform, nao), nil));
   val mksv = nappend2(mkspecial, setval);
 
   (void) menv;
@@ -3365,7 +3365,7 @@ static val me_gun(val form, val menv)
   val expr = (syn_check(form, car(form), cdr, cddr), second(form));
   (void) menv;
   return list(let_s, cons(var, nil),
-              list(gen_s, list(set_s, var, expr, nao), var, nao), nao);
+              list(gen_s, list(setq_s, var, expr, nao), var, nao), nao);
 }
 
 static val me_delay(val form, val menv)
@@ -3452,7 +3452,7 @@ static val me_while_until_star(val form, val menv)
   (void) menv;
   return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
                               cons(list(or_s, once, test, nao), nil),
-                              cons(list(set_s, once, nil, nao), nil),
+                              cons(list(setq_s, once, nil, nao), nil),
                               rest(rest(form)), nao));
 }
 
@@ -4411,7 +4411,7 @@ static val me_case(val form, val menv)
                             tformsym, nao),
                        list(intern(lit("<="), user_package),
                             minkey, tformsym, maxkey, nao),
-                       list(set_s,
+                       list(setq_s,
                             swres,
                             list(switch_s,
                                  if3(minkey == 0,
@@ -4554,7 +4554,7 @@ static val me_whilet(val form, val env)
                    list(let_star_s, lets,
                         list(if_s, car(lastlet),
                              cons(progn_s, body),
-                             list(set_s, not_done, nil, nao), nao), nao), nao), nao);
+                             list(setq_s, not_done, nil, nao), nao), nao), nao), nao);
 }
 
 static val me_iflet_whenlet(val form, val env)
@@ -4673,7 +4673,7 @@ static val me_mlet(val form, val menv)
         ptail_smacs = list_collect(ptail_smacs,
                                    list(sym, list(force_s, gen, nao), nao));
         ptail_sets = list_collect(ptail_sets,
-                                  list(set_s, gen,
+                                  list(setq_s, gen,
                                        list(delay, init, nao), nao));
       } else {
         ptail_osyms = list_collect(ptail_osyms, sym);
@@ -4747,7 +4747,7 @@ static val me_load_for(val form, val menv)
 static val me_push_after_load(val form, val menv)
 {
   (void) menv;
-  return list(set_s,
+  return list(setq_s,
               load_hooks_s,
               list(cons_s,
                    cons(lambda_s, cons(nil, cdr(form))),
@@ -4760,7 +4760,7 @@ static val me_pop_after_load(val form, val menv)
   (void) menv;
   if (cdr(form))
     expand_error(form, lit("~s: no arguments required"), car(form), nao);
-  return list(set_s, load_hooks_s, list(cdr_s, load_hooks_s, nao), nao);
+  return list(setq_s, load_hooks_s, list(cdr_s, load_hooks_s, nao), nao);
 }
 
 void run_load_hooks(val load_dyn_env)

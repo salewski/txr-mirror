@@ -29,11 +29,36 @@
   (whilet ((form (sys:ctx-form ctx))
            (anc (unless (source-loc form)
                   (macro-ancestor form))))
-    (set ctx anc))
+    (sys:setq ctx anc))
   ctx)
 
 (defun sys:loc (ctx)
   (source-loc-str (sys:ctx-form ctx)))
+
+(defun sys:bind-mac-check (ctx-form params obj req fix)
+  (if (and obj (atom obj))
+    (compile-error ctx-form "extra element ~s not matched by params ~a"
+                   obj params)
+    (let ((l (len obj)))
+      (iflet ((problem (cond
+                         ((< l req) "few")
+                         ((and fix (> l fix)) "many"))))
+        (if (zerop l)
+          (compile-error ctx-form "params ~a require arguments" params)
+          (compile-error ctx-form "too ~a elements in ~s for params ~a"
+                         problem obj params))))))
+
+(defun sys:bind-mac-error (ctx-form params obj too-few-p)
+  (cond
+    ((atom obj)
+     (compile-error ctx-form "extra element ~s not matched by params ~a"
+                    obj params))
+    ((null obj)
+     (compile-error ctx-form "params ~a require arguments" params))
+    (t (compile-error ctx-form "too ~a elements in ~s for params ~a"
+                      (if too-few-p "few" "many")
+                      obj params))))
+
 
 (defun compile-error (ctx fmt . args)
   (let* ((nctx (sys:dig ctx))
@@ -61,30 +86,6 @@
     (usr:catch
       (throw 'defr-warning (fmt `@loc: warning: ~s: @fmt` name . args)  tag)
       (continue ()))))
-
-(defun sys:bind-mac-error (ctx-form params obj too-few-p)
-  (cond
-    ((atom obj)
-     (compile-error ctx-form "extra element ~s not matched by params ~a"
-                    obj params))
-    ((null obj)
-     (compile-error ctx-form "params ~a require arguments" params))
-    (t (compile-error ctx-form "too ~a elements in ~s for params ~a"
-                      (if too-few-p "few" "many")
-                      obj params))))
-
-(defun sys:bind-mac-check (ctx-form params obj req fix)
-  (if (and obj (atom obj))
-    (compile-error ctx-form "extra element ~s not matched by params ~a"
-                   obj params)
-    (let ((l (len obj)))
-      (iflet ((problem (cond
-                         ((< l req) "few")
-                         ((and fix (> l fix)) "many"))))
-        (if (zerop l)
-          (compile-error ctx-form "params ~a require arguments" params)
-          (compile-error ctx-form "too ~a elements in ~s for params ~a"
-                         problem obj params))))))
 
 (defun lambda-too-many-args (form)
   (compile-error form "excess arguments given"))

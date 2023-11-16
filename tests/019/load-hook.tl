@@ -19,10 +19,10 @@
 
 (mtest
   (macroexpand-1 '(push-after-load))
-  (set *load-hooks* (cons (lambda ()) *load-hooks*))
+  (sys:setq *load-hooks* (cons (lambda ()) *load-hooks*))
 
   (macroexpand-1 '(push-after-load x))
-  (set *load-hooks* (cons (lambda () x) *load-hooks*))
+  (sys:setq *load-hooks* (cons (lambda () x) *load-hooks*))
 
   (macroexpand-1 '(pop-after-load))
-  (set *load-hooks* (cdr *load-hooks*)))
+  (sys:setq *load-hooks* (cdr *load-hooks*)))
