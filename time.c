@@ -438,7 +438,7 @@ static val time_meth(val utc_p, val time_struct)
                                                 hour, min, sec, dst);
 
   if (gmtoff)
-    out = plus(out, gmtoff);
+    out = minus(out, gmtoff);
 
   return out;
 }
@@ -501,7 +501,7 @@ val time_parse_local(val format, val string)
 #if HAVE_TM_GMTOFF
   {
     long gmtoff = tms.TM_GMTOFF;
-    return num(mktime(&tms) + gmtoff);
+    return num(mktime(&tms) - gmtoff);
   }
 #else
   return num(mktime(&tms));
@@ -516,12 +516,12 @@ val time_parse_utc(val format, val string)
 #if HAVE_TIMEGM && HAVE_TM_GMTOFF
   {
     long gmtoff = tms.TM_GMTOFF;
-    return num_time(timegm(&tms) + gmtoff);
+    return num_time(timegm(&tms) - gmtoff);
   }
 #elif HAVE_TM_GMTOFF
   {
     long gmtoff = tms.TM_GMTOFF;
-    return num_time(timegm_hack(&tms) + tms.gmtoff);
+    return num_time(timegm_hack(&tms) - tms.gmtoff);
   }
 #elif HAVE_TIMEGM
   return num_time(timegm(&tms));
