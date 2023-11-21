@@ -1,3 +1,164 @@
+                                    TXR 292
+                                   2023-11-20
+
+
+  Features
+
+  - Build:
+    - speed up compilation of stdlib with optimal compilation
+      order of several key files.
+    - Revised confusing build instructions in ./configure script.
+    - Makefile improvements:
+      - cruft removed; dependency generation simplified.
+      - mkdir invocations factored out to rule.
+      - DELETE_ON_ERROR: used now.
+
+  - Streams:
+    - A new protocol between the close-stream function and its
+      lower-level implementation allows delegate streams to
+      implement a reference counting discipline for closing.
+    - open-file now supports a "T" mode for O_TMPFILE (on Linux,
+      or anywhere else O_TMPFILE is supported).
+
+  - Sequences:
+    - New functions nested-vec and nested-vec-of for easily
+      constructing (simulated) multi-dimensional arrays.
+    - New mref accessor for multi-dimensional access.
+      - also has a side job calling curried functions.
+    - New csort-group function:
+      - Like sort-group, but uses csort instead of sort for key caching.
+    - New hist-sort function: make histogram of sequence, and sort
+      by descending frequency.
+    - New length-list-< function  for testing whether a list is
+      shorter than a given length without traversing it beyond
+      that length.
+    - New length-< function for testing any sequence's length
+      against a value without traversing/forcing the sequence
+      to calculate its length.
+    - ref now documented as accessor, not just function.
+    - del operator now allowed on places that index into sequences
+      implemented by structures:
+      - requires both lambda and lambda-set methods.
+
+  - Strings:
+    - New str-esc function for generic character escaping.
+    - New shell escaping functions: sh-esc, sh-esc-all, sh-esc-dq
+      and sh-esc-sq.
+
+  - Packages
+    - New feature: local symbol renaming
+      - Symbols can be imported under alternative names.
+      - New use-sym-as function and :use-syms-as defpackage clause.
+      - Better idea than nicknaming packages (package-local nicknames).
+
+  - Functional library:
+    - New: left-inserting pipeline operators: lflow, lopip, loand.
+    - New: macros orf and lorf for condensing certain op syntax.
+    - New: tap macro, for expressing side effects in pipelines while passing
+      through the value.
+
+  - Syntactic places:
+    - New: ensure macro evaluates an expression and stores its value
+      into a place, if that place's current value is nil.
+
+  - Pattern matching:
+    - some match-case instances are now transformed into casequal.
+
+  - FFI:
+    - Now provides a setjmp macro, longjmp function as well
+      as a jmp-buf utility function that allocates a jmp-buf.
+    - Now possible to interact with libraries that use longjmp
+      for error aborts like libpng and such.
+
+  - POSIX:
+    - chdir function takes stream or file descriptor, which are
+      handled via fchdir.
+    - New glob* function to complement glob:
+      - glob* supports the ** (double star) operator for recursing,
+        via its own implementation, not relying on glob providing that.
+      - glob* has its own implementation of brace expansion.
+    - New rlink function which is like link, but resolves the target path
+      if it denotes a symlink.
+
+  - Listener:
+    - *listener-sel-inclusive-p* is now default, since most terminals
+      have block cursors by default.
+    - New feature: auto compound expression mode lets you omit
+      the parentheses.
+
+  - Math:
+    - The tofloat and toint functions are now generic via the
+      user-defined arithmetic struct mechanism.
+
+  - JSON:
+    - Allow integer objects to be printed rather than insisting on
+      numbers being floating-point.
+    - Allow lists (including lazy lists) to print as [ ... ]
+      rather than insisting on vectors.
+
+  - Windows Installer:
+    - Does not require admin privileges any more; will install for
+      just the current user if the user isn't admin.
+
+  - Documentation:
+    - big change: new hashing scheme for navigation and doc lookup.
+    - section titles now hashed in a more robust way that is resistant
+      against most kinds of edits.
+    - stdlib/doc-syms.tl file is now gone: one less thing to maintain.
+    - Numerous fixes in manual.
+
+  Bugs
+
+  - Compiler:
+    - numbers now externalized sanely in .tlo files:
+      - compile-file makes sure base 10 is used for integers
+      - floating point numbers written with sufficient precision
+
+  - Loading:
+    - load-args-process bugfix: :compile action must load.
+
+  - Streams:
+    - close-stream caches only successful result from underlying
+      function.
+    - a few close functions underneath close-stream were returning
+      nil in the successful case.
+
+  - OOP:
+    - Fix segfault looking up special method after the static slots
+      table of the type has been resized.
+
+  - Pattern matching:
+    - Missing autoloads for match-error and sys:match-pat-error,
+      causing compiled files containing pattern matching not to load.
+
+  - Awk macro:
+    - prn returns nil
+
+  - Search trees:
+    - bug: tree-delete-specific-node not using key fun.
+
+  - Lib:
+    - Two bugs in flatten* function.
+    - Bug in deletion of (ref ...) place: incorrect when object is list.
+
+  - Crypt:
+    - less strict error token detection for wider platform support.
+
+  - Time:
+    - time-utc and time-local methods must subtract gmtime, not add.
+    - time-parse-utc and time-parse-local, likewise.
+
+  - Build:
+    - Misspelled PLATFORM_LDLIBS corrected.
+    - Fix for _TIME_BITS being tied to _FILE_OFFSET_BITS
+    - Address autoload circular dependency involving stdlib/error.tl
+      that can fail builds under some library build orders.
+
+  - Vim:
+    - Fix lack of recognition for char escapes in quasilit.
+
+
+
                                     TXR 291
                                    2023-08-06
 

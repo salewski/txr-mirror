@@ -631,7 +631,7 @@ chmod a+x reconfigure
 #
 
 
-txr_ver=291
+txr_ver=292
 
 #
 # The all important banner.
