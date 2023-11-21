@@ -9,7 +9,8 @@
   (put-string "libpng longjmp\nlibpng error 42\n")
   (exit))
 
-(unless (ignerr (dlopen "libpng.so"))
+(unless (ignerr (let ((png (dlopen "libpng.so")))
+                  (nequal cptr-null (dlsym png "png_set_longjmp_fn"))))
   (png-fake-output))
 
 ;; needed by png-set-longjmp-fn API
