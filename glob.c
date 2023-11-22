@@ -82,6 +82,8 @@ val glob_wrap(val pattern, val flags, val errfun)
   int (*globfn)(const char *, int,
                 int (*) (const char *, int),
                 glob_t *) = if3((c_flags & GLOB_XSTAR) != 0, super_glob, glob);
+  size_t i = 0;
+  list_collect_decl (out, ptail);
 
   if (s_errfunc)
     uw_throwf(error_s, lit("~a: glob cannot be re-entered from "
@@ -98,8 +100,16 @@ val glob_wrap(val pattern, val flags, val errfun)
 
   if (stringp(pattern)) {
     char *pat_u8 = utf8_dup_to(c_str(pattern, self));
+    const char *prev = "";
     (void) globfn(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
     free(pat_u8);
+    for (; i < gl.gl_pathc; i++) {
+      const char *path = gl.gl_pathv[i];
+      if (prev == path || strcmp(prev, path) == 0)
+        continue;
+      ptail = list_collect (ptail, string_utf8(path));
+      prev = path;
+    }
   } else {
     seq_iter_t iter;
     val elem;
@@ -107,11 +117,20 @@ val glob_wrap(val pattern, val flags, val errfun)
 
     while (seq_get(&iter, &elem)) {
       char *pat_u8 = utf8_dup_to(c_str(elem, self));
+      const char *prev = "";
       (void) globfn(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
+      free(pat_u8);
       if (s_exit_point)
         break;
       c_flags |= GLOB_APPEND;
-      free(pat_u8);
+
+      for (; i < gl.gl_pathc; i++) {
+        const char *path = gl.gl_pathv[i];
+        if (prev == path || strcmp(prev, path) == 0)
+          continue;
+        ptail = list_collect (ptail, string_utf8(path));
+        prev = path;
+      }
     }
   }
 
@@ -124,16 +143,8 @@ val glob_wrap(val pattern, val flags, val errfun)
     uw_continue(ep);
   }
 
-  {
-    size_t i;
-    list_collect_decl (out, ptail);
-
-    for (i = 0; i < gl.gl_pathc; i++)
-      ptail = list_collect (ptail, string_utf8(gl.gl_pathv[i]));
-
-    globfree(&gl);
-    return out;
-  }
+  globfree(&gl);
+  return out;
 }
 
 static const char *super_glob_find_inner(const char *pattern)

@@ -112,7 +112,7 @@
   (glob* "**/{3,4,5}*/**" glob-xnobrace)
   nil
   (len (glob* "**/proc/**/**"))
-  547)
+  366)
 
 (if (neq (os-symbol) :solaris)
   (test
