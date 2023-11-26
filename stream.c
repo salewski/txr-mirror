@@ -4851,24 +4851,55 @@ static val sh(val command)
 
 #endif
 
-static val sh_esc(val string)
-{
-  return str_esc(lit("|&;<>()$`\\\"' \t\n*?[#~"), chr('\\'), string);
-}
-
-static val sh_esc_all(val string)
-{
-  return str_esc(lit("|&;<>()$`\\\"' \t\n*?[#~=%"), chr('\\'), string);
-}
-
 static val sh_esc_dq(val string)
 {
-  return str_esc(lit("$`\\\"\n"), chr('\\'), string);
+  return str_esc(lit("$`\\\""), chr('\\'), string);
 }
 
 static val sh_esc_sq(val string)
 {
   return str_esc(lit("'"), lit("'\\'"), string);
+}
+
+static val sh_esc_common(val string, int all, val self)
+{
+  const wchar_t *s, *str = c_str(string, self);
+  int sq = 0, dq = 0, es = 0;
+
+  for (s = str; *s; s++)
+  {
+    wchar_t ch = *s;
+
+    if (ch == '\'')
+      es = sq = 1;
+    else if (wcschr(L"$`\\\"", ch))
+      es = dq = 1;
+    else if (wcschr(L"|&;<>() \t\n*?[#~", ch))
+      es = 1;
+    else if (all && wcschr(L"=%", ch))
+      es = 1;
+  }
+
+  if (!es)
+    return string;
+
+  if (!dq)
+    return scat3(chr('"'), string, chr('"'));
+
+  if (!sq)
+    return scat3(chr('\''), string, chr('\''));
+
+  return scat3(chr('\''), sh_esc_sq(string), chr('\''));
+}
+
+static val sh_esc(val string)
+{
+  return sh_esc_common(string, 0, lit("sh-esc"));
+}
+
+static val sh_esc_all(val string)
+{
+  return sh_esc_common(string, 1, lit("sh-esc-all"));
 }
 
 val remove_path(val path, val throw_on_error)
