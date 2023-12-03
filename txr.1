@@ -12604,6 +12604,50 @@ throw an exception:
 In other Lisp dialects, a comma not enclosed by backquote syntax is
 treated as a syntax error by the reader.
 
+\*(TX's quasiquote supports splicing multiple items into a
+.codn quote ,
+if that quote is itself evaluated via an unquote. Concretely,
+these two examples produce the same result:
+
+.verb
+  (eval
+    (eval
+      (let ((args '(a b c)))
+        ^^(let ((a 1) (b 2) (c 3))
+          (list ,',*args)))))
+  -> (1 2 3)
+
+  (eval
+    (eval
+      (let ((args '(a b c)))
+        ^^(let ((a 1) (b 2) (c 3))
+          (list ,*',args)))))
+  -> (1 2 3)
+.brev
+
+The only difference is that the former example uses
+.code ",',*args"
+whereas the latter
+.codn ",*',args" .
+Thus the former example splices
+.code args
+into the quote as if by
+.code "(quote ,*args)"
+which is invalid
+.code quote
+syntax if
+.code args
+doesn't expand to exactly one element. This invalid quote syntax
+is accepted by the quasiquote expander when it occurs in the above unquoting
+and splicing situation. Effectively, it behaves as if the splice distributes
+across the quoted unquote, such that all the arguments of the
+.code quote
+end up individually quoted, and spliced into the surrounding list.
+
+The Common Lisp equivalent this combination,
+.codn ",',@args" ,
+works in some Common Lisp implementations, such as CLISP.
+
 .NP* Quasiquoting non-List Objects
 Quasiquoting is supported over hash table and vector literals (see Vectors
 and Hashes below).  A hash table or vector literal can be quoted, like any
