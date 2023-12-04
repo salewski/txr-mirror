@@ -12542,7 +12542,7 @@ an unquote occurring as a meta-expression, denoting the structure
 This structure is treated specially by the quasiquote expander. Code is generated
 for it such that if
 .meta expr
-evaluates to an value
+evaluates to a value
 .meta val
 which is an
 .codn atom ,
@@ -14851,7 +14851,7 @@ and string literals.
 
 Special operators can also perform code transformations during the expansion
 phase, but that is not considered macroexpansion, but rather an adjustment
-of the representation of the operator into an required executable form.
+of the representation of the operator into a required executable form.
 In effect, it is post-macro compilation phase.
 
 Note that Lisp forms occurring in \*(TX pattern language are not individual
@@ -16379,7 +16379,7 @@ value acts as the index into a vector-like or list-like sequence,
 or a key into a hash table.
 
 .meIP >> [ range << sequence ]
-If the left argument is an range, it denotes selection of a
+If the left argument is a range, it denotes selection of a
 subrange of
 .metn sequence .
 .RE
@@ -33280,7 +33280,7 @@ its
 method is invoked, and the return value is used in place of that
 structure for the purposes of the comparison.
 
-The same applies when an struct is hashed using the
+The same applies when a struct is hashed using the
 .code hash-equal
 function, or implicitly by an
 .code :equal-hash
@@ -39289,7 +39289,7 @@ it supports the
 .code length
 or
 .code car
-methods. An struct object supporting none of these methods is deemed
+methods. A struct object supporting none of these methods is deemed
 not iterable.
 
 In all other cases, if
@@ -46466,7 +46466,7 @@ An unquoted expression occurring in the quasiquote is translated to the
 .onom
 pattern-matching syntax. If
 .meta expr
-is an symbol, then this is a meta-variable:
+is a symbol, then this is a meta-variable:
 .mono
 .meti (sys:var << expr )
 .onom
@@ -55786,7 +55786,7 @@ If
 matches the stream before any characters are accumulated,
 then an empty string is returned.
 
-If the stream ends or an non-exception-throwing error occurs before any
+If the stream ends or a non-exception-throwing error occurs before any
 characters are accumulated, the function returns
 .codn nil .
 
@@ -58282,12 +58282,12 @@ Note: the
 .code tree-insert
 and
 .code tree-insert-node
-functions also has an optional argument indicating whether an duplicate
+functions also has an optional argument indicating whether a duplicate
 insertion replaces an existing element.
 
 Note: although the order of duplicate elements is preserved, when the
 .code tree-lookup
-function is used look up an key which is duplicated, the element
+function is used look up a key which is duplicated, the element
 which is retrieved is unspecified, and can change when the tree is
 reorganized due to insertions and deletions.
 
@@ -65824,7 +65824,7 @@ referencing the storage belonging to another object
 (such as the buffer object produced by the
 .code buf-d
 FFI type's get semantics) the stream operations can change the buffer's size.
-Seeking beyond the end of the buffer an then writing one or more bytes
+Seeking beyond the end of the buffer and then writing one or more bytes
 extends the buffer's length, filling the newly allocated area with zero bytes.
 The
 .code truncate-stream
@@ -66978,7 +66978,7 @@ When a package is deleted with
 .codn delete-package ,
 its symbols are uninterned from all other packages.
 
-An symbol existing in one package can be brought into another package via the
+A symbol existing in one package can be brought into another package via the
 .code use-sym
 function, causing it to be interned in the target package. A symbol which thus exists
 inside a package which is not its home package is called a
@@ -91340,7 +91340,7 @@ is evaluated in the dynamic environment of the caller which invokes
 the execution of the resulting compiled object.
 When a
 .code load-time
-form occurs in the code of an function being processed by
+form occurs in the code of a function being processed by
 .codn compile ,
 then
 .meta form
@@ -92191,7 +92191,7 @@ The two-character sequence
 .key Ctrl-X
 .key Ctrl-V
 ("extended verbatim", "super paste")
-enters into an verbatim insert mode useful for entry of free-form text. It is
+enters into a verbatim insert mode, useful for entry of free-form text. It is
 particularly useful in multiline mode. In this mode, almost every character
 is inserted verbatim, including
 .keyn Enter .
