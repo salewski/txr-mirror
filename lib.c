@@ -14859,7 +14859,8 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
           goto list;
         }
       } else if (sym == rcons_s && have_args
-                 && consp(cdr(args)) && !(cddr(args)))
+                 && consp(cdr(args)) && !(cddr(args)) &&
+                 (!consp(arg) || car(arg) != rcons_s))
       {
         obj_print_impl(arg, out, pretty, ctx);
         put_string(lit(".."), out);

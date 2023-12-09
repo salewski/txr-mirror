@@ -63,3 +63,12 @@
   '(1.234,e+12) (1.234 (sys:unquote e+12))
   '(1.,234) (1.0 (sys:unquote 234)))
 
+(mtest
+  (read "0..1") (rcons 0 1)
+  (read "0..1..2") (rcons 0 (rcons 1 2)))
+
+(mtest
+  (tostring '(rcons 0 1)) "0..1"
+  (tostring '(rcons 0 (rcons 1 2))) "0..1..2"
+  (tostring '(rcons (rcons 0 1) 2)) "(rcons 0..1 2)"
+  (tostring '(rcons (rcons 0 1) (rcons 2 3))) "(rcons 0..1 2..3)")
