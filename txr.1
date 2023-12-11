@@ -82112,11 +82112,29 @@ expression. In this situation, the value of
 .meta expr
 will appear as the return value of the
 .code load
-function. A block named
+function.
+
+When a \*(TL file, or compiled file, is executed from the \*(TX command line
+in such a way that \*(TX will terminate when that file's last form
+has been evaluated, then if that file performs a
+.code return-from
+the
+.code load
+block, the value of
+.meta expr
+will turn into the termination status in exactly the same way as if
+that value were used as an argument to the
+.code exit
+function. However, if \*(TX has been instructed to enter into the
+Listener after executing the file, then the value of
+.meta expr
+is discarded.
+
+A block named
 .code load
 is also established by the
 .code @(load)
-directive in the pattern language, that that directive provides
+directive in the pattern language. That directive provides
 no access to the returned value. The block is also visible to the
 file processed from the command line. When a such a file aborts
 the load via

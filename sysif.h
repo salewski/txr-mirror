@@ -44,6 +44,7 @@ val env(void);
 val replace_env(val env_list);
 val getenv_wrap(val name);
 val errno_to_str(int err);
+val exit_wrap(val status);
 val at_exit_call(val func);
 val at_exit_do_not_call(val func);
 val usleep_wrap(val usec);

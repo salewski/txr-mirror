@@ -1261,26 +1261,25 @@ int txr_main(int argc, char **argv)
 
   {
     if (txr_lisp_p == chr('o')) {
-      val result = nil;
       uw_block_begin (load_s, ret);
-      result = read_compiled_file_noerr(self, parse_stream, spec_file_str,
-                                        std_error);
+      ret = read_compiled_file_noerr(self, parse_stream,
+                                     spec_file_str, std_error);
       uw_block_end;
       if (!enter_repl)
-        return result ? 0 : EXIT_FAILURE;
+        exit_wrap(ret);
     } else if (enter_repl) {
       uw_block_begin (load_s, ret);
-      read_eval_stream_noerr(self, parse_stream, spec_file_str, std_error);
+      ret = read_eval_stream_noerr(self, parse_stream,
+                                   spec_file_str, std_error);
       uw_block_end;
       close_stream(parse_stream, nil);
       run_load_hooks(dyn_env);
       uw_release_deferred_warnings();
     } else {
-      val result = nil;
       uw_block_begin (load_s, ret);
-      result = read_eval_stream(self, parse_stream, std_error);
+      ret = read_eval_stream(self, parse_stream, std_error);
       uw_block_end;
-      return result ? 0 : EXIT_FAILURE;
+      exit_wrap(ret);
     }
   }
 

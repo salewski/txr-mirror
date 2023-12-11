@@ -220,7 +220,7 @@ static val daemon_wrap(val nochdir, val noclose)
 }
 #endif
 
-static val exit_wrap(val status)
+val exit_wrap(val status)
 {
   val self = lit("exit");
   int stat;
