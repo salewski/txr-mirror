@@ -2590,7 +2590,10 @@
                                      (fence (isecp symvec %package-manip%)))
                                 (when *eval*
                                   (let ((pa *package-alist*))
-                                    (sys:vm-execute-toplevel vm-desc)
+                                    (block* err-ret
+                                      (unwind-protect
+                                        (sys:vm-execute-toplevel vm-desc)
+                                        (return* err-ret)))
                                     (when (neq pa *package-alist*)
                                       (set fence t))))
                                 (when (and *emit* (consp form))
