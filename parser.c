@@ -1751,9 +1751,11 @@ val repl(val bindings, val in_stream, val out_stream, val env)
         counter = prev_counter;
       } else {
         val expr = if2(form != read_k,
-                       if3(auto_parens && cdr(forms),
-                           forms,
-                           cons(progn_s, forms)));
+                       if3(consp(forms),
+                           if3(cdr(auto_parens) && cdr(forms),
+                               forms,
+                               cons(progn_s, forms)),
+                           forms));
         val value = if3(form != read_k,
                         eval_intrinsic(expr, nil, env),
                         read_eval_ret_last(nil, prev_counter,
