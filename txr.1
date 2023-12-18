@@ -57736,7 +57736,10 @@ Similarly, if
 .meta map2fun
 is present, specifies a function through which values from
 .meta hash2
-are projected.
+are projected. These two functions are independent of
+.metn joinfun ;
+they are applied to values without regard for whether their
+keys exist in both hashes or just one.
 
 The
 .code hash-diff

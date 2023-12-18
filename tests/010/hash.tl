@@ -63,3 +63,21 @@
 
 (test [hash-map square '(1 2 3)]
       #H(() (1 1) (2 4) (3 9)))
+
+(let ((h1 #H(() (a 1) (b 2) (c 3) (d 4)))
+      (h2 #H(() (b -2) (c -3) (d -4) (e -5))))
+  (mtest
+    (hash-uni h1 h2) #H(() (a 1) (b 2) (c 3) (d 4) (e -5))
+    [hash-uni h1 h2 +] #H(() (a 1) (b 0) (c 0) (d 0) (e -5))
+    [hash-uni h1 h2 + -] #H(() (a -1) (b -4) (c -6) (d -8) (e -5))
+    [hash-uni h1 h2 + : -] #H(() (a 1) (b 4) (c 6) (d 8) (e 5))
+    [hash-uni h1 h2 + - -] #H(() (a -1) (b 0) (c 0) (d 0) (e 5)))
+  (mtest
+    (hash-diff h1 h2) #H(() (a 1))
+    (hash-diff h2 h1) #H(() (e -5)))
+  (mtest
+    (hash-symdiff h1 h2) #H(() (a 1) (e -5))
+    (hash-symdiff h2 h1) #H(() (a 1) (e -5)))
+  (mtest
+    (hash-isec h1 h2) #H(() (b 2) (c 3) (d 4))
+    [hash-isec h1 h2 +] #H(() (b 0) (c 0) (d 0))))
