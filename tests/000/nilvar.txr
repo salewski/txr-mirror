@@ -1,0 +1,3 @@
+@(next :string "a !b c")
+@(coll)@(cases)@{nil /!\S+/}@(or)@{var /\S+/}@(end)@(end)
+@(do (put-line (join-with ":" var)))

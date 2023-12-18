@@ -381,8 +381,10 @@ static val dest_bind(val spec, val bindings, val pattern,
         return t;
       }
       return cons(cons(pattern, value), bindings);
+    } else if (pattern) {
+      return t;
     } else {
-      return funcall2(testfun, pattern, value) ? bindings : t;
+      return bindings;
     }
   } else if (consp(pattern)) {
     val piter = pattern, viter = value;
