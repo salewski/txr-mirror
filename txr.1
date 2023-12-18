@@ -57672,6 +57672,7 @@ or
 .coNP Functions @, hash-uni @, hash-diff @ hash-symdiff and @ hash-isec
 .synb
 .mets (hash-uni < hash1 < hash2 >> [ joinfun >> [ map1fun <> [ map2fun ]]])
+.mets (hash-join < hash1 < hash2 < joinfun >> [ hash1dfl <> [ hash2dfl ]])
 .mets (hash-diff < hash1 << hash2 )
 .mets (hash-symdiff < hash1 << hash2 )
 .mets (hash-isec < hash1 < hash2 <> [ joinfun ])
@@ -57740,6 +57741,47 @@ are projected. These two functions are independent of
 .metn joinfun ;
 they are applied to values without regard for whether their
 keys exist in both hashes or just one.
+
+The
+.code hash-join
+function performs a union operation similar to, but usefully different from
+.codn hash-uni .
+The
+.meta joinfun
+argument is mandatory in
+.codn hash-join ,
+and is applied to all items, regardless of whether they are present
+in just one hash or both hashes.
+The arguments
+.meta hash1dfl
+and
+.meta hash2dfl
+specify default values used in invocations of
+.meta joinfun
+for keys that are present only in one hash. These values default to
+.codn nil .
+For every key that is present only in
+.metn hash1 ,
+.meta joinfun
+is invoked with that key's value as its left argument, and the
+.meta hash2dfl
+value as the right argument.
+Conversely, for every key that is present only in
+.metn hash2 ,
+.meta joinfun
+is invoked with the
+.meta hash1dfl
+value as the left argument,
+and that key's value as its right argument.
+For every key that is present in both hashes,
+.meta joinfun
+is invoked with the values, respectively, from
+.meta hash1
+and
+.metn hash2 .
+The returned hash contains all the keys from both hashes,
+associated with the values returned by
+.metn joinfun .
 
 The
 .code hash-diff

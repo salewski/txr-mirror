@@ -73,6 +73,11 @@
     [hash-uni h1 h2 + : -] #H(() (a 1) (b 4) (c 6) (d 8) (e 5))
     [hash-uni h1 h2 + - -] #H(() (a -1) (b 0) (c 0) (d 0) (e 5)))
   (mtest
+    [hash-join h1 h2 +] :error
+    [hash-join h1 h2 + 0] :error
+    [hash-join h1 h2 + : 0] :error
+    [hash-join h1 h2 + 0 0] #H(() (a 1) (b 0) (c 0) (d 0) (e -5)))
+  (mtest
     (hash-diff h1 h2) #H(() (a 1))
     (hash-diff h2 h1) #H(() (e -5)))
   (mtest

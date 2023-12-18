@@ -1939,6 +1939,47 @@ val hash_uni(val hash1, val hash2, val joinfun, val map1fun, val map2fun)
   }
 }
 
+val hash_join(val hash1, val hash2, val joinfun, val h1dfl, val h2dfl)
+{
+  val self = lit("hash-join");
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_cls));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_cls));
+
+  if (h1->hops != h2->hops)
+    uw_throwf(error_s, lit("~a: ~s and ~s are incompatible hashes"),
+              self, hash1, hash2, nao);
+
+  {
+    val hout = make_similar_hash(hash1);
+    val h1ent, h2ent;
+    struct hash_iter hi;
+
+    hash_iter_init(&hi, hash1, self);
+
+    for (h1ent = hash_iter_next(&hi); h1ent; h1ent = hash_iter_next(&hi)) {
+      val h1val = us_cdr(h1ent);
+      val key = us_car(h1ent);
+      val h2ent = gethash_e(self, hash2, key);
+      val h2val = if3(h2ent, us_cdr(h2ent), h2dfl);
+
+      sethash(hout, key, funcall2(joinfun, h1val, h2val));
+    }
+
+    hash_iter_init(&hi, hash2, self);
+
+    for (h2ent = hash_iter_next(&hi); h2ent; h2ent = hash_iter_next(&hi)) {
+      val h2val = us_cdr(h2ent);
+      val key = us_car(h2ent);
+      val h1ent = gethash_e(self, hash1, us_car(h2ent));
+      val h1val = if3(h1ent, us_cdr(h1ent), h1dfl);
+
+      sethash(hout, key, funcall2(joinfun, h1val, h2val));
+    }
+
+    return hout;
+  }
+}
+
 val hash_diff(val hash1, val hash2)
 {
   val self = lit("hash-diff");
@@ -2246,6 +2287,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-pairs"), user_package), func_n1(hash_pairs));
   reg_fun(intern(lit("hash-alist"), user_package), func_n1(hash_alist));
   reg_fun(intern(lit("hash-uni"), user_package), func_n5o(hash_uni, 2));
+  reg_fun(intern(lit("hash-join"), user_package), func_n5o(hash_join, 3));
   reg_fun(intern(lit("hash-diff"), user_package), func_n2(hash_diff));
   reg_fun(intern(lit("hash-symdiff"), user_package), func_n2(hash_symdiff));
   reg_fun(intern(lit("hash-isec"), user_package), func_n3o(hash_isec, 2));

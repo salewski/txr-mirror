@@ -97,6 +97,7 @@ val hash_values(val hash);
 val hash_pairs(val hash);
 val hash_alist(val hash);
 val hash_uni(val hash1, val hash2, val joinfun, val map1fun, val map2fun);
+val hash_join(val hash1, val hash2, val joinfun, val h1dfl, val h2dfl);
 val hash_diff(val hash1, val hash2);
 val hash_symdiff(val hash1, val hash2);
 val hash_isec(val hash1, val hash2, val joinfun);
