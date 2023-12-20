@@ -244,6 +244,7 @@
     symvec
     lt-frags
     last-form
+    top-form
     closure-spies
     access-spies
 
@@ -2354,7 +2355,7 @@
   (eval (if-match (sys:dvbind @nil @exp) form exp form)))
 
 (defun usr:compile-toplevel (exp : (expanded-p nil))
-  (let ((co (new compiler))
+  (let ((co (new compiler top-form exp))
         (as (new assembler))
         (*dedup* (or *dedup* (hash)))
         (*load-time* nil)

@@ -68,6 +68,7 @@
     recalc
     reelim
     tryjoin
+    warned-insns
     (:static start (gensym "start-"))
     (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr
                         uwprot catch block jend xend))
@@ -538,17 +539,31 @@
       (@(require ((@(as op @(or gapply gcall)) @tgt @idx
                                                . @(all @(or (d @dn)
                                                             @(with (t 0) dn nil))))
-                  . @rest)
+                  . @(with @rest
+                           val nil))
                  [%const-foldable% [bb.symvec idx]]
-                 [none dn (lop member bb.lt-dregs : cadr)])
-        (let* ((co bb.compiler)
-               (dvec co.(get-datavec))
-               (fun [bb.symvec idx])
-               (args (mapcar [iffi true dvec] dn))
-               (val (if (eq op 'gcall)
-                      (apply fun args)
-                      (apply fun (append [args 0..-1] [args -1]))))
-               (dreg co.(get-dreg val)))
+                 [none dn (lop member bb.lt-dregs : cadr)]
+                 (let ((err '#:err))
+                   (set val (let* ((insn (car insns))
+                                   (co bb.compiler)
+                                   (dvec co.(get-datavec))
+                                   (fun [bb.symvec idx])
+                                   (args (mapcar [iffi true dvec] dn))
+                                   (val (usr:catch
+                                          (if (eq op 'gcall)
+                                            (apply fun args)
+                                            (apply fun (append [args 0..-1]
+                                                               [args -1])))
+                                          (error (#:x) err))))
+                              (when (and (eq val err)
+                                         (not (member insn bb.warned-insns)))
+                                (compile-warning co.top-form
+                                                 "function ~s with arguments ~s throws"
+                                                 fun args)
+                                (push insn bb.warned-insns))
+                              val))
+                   (neq val err)))
+        (let* ((dreg bb.compiler.(get-dreg val)))
           ^((mov ,tgt ,dreg) ,*rest)))
       ;; apply to gapply
       (@(require @(with ((getf @(as treg (t @tn)) @idx) . @rest)
