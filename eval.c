@@ -7436,6 +7436,7 @@ void eval_init(void)
   reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(nread, 0));
   reg_fun(intern(lit("read"), user_package), func_n5o(nread, 0));
   reg_fun(intern(lit("iread"), user_package), func_n5o(iread, 0));
+  reg_fun(intern(lit("read-objects"), user_package), func_n5o(read_objects, 0));
   reg_fun(intern(lit("get-json"), user_package), func_n5o(get_json, 0));
   reg_fun(intern(lit("txr-parse"), user_package), func_n4o(txr_parse, 0));
   reg_fun(intern(lit("load"), user_package), func_n1v(loadv));

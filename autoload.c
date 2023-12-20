@@ -464,6 +464,7 @@ static val getput_set_entries(val fun)
   val name[] = {
     lit("get-jsons"), lit("put-jsons"),
     lit("file-get"), lit("file-put"), lit("file-append"),
+    lit("file-get-objects"), lit("file-put-objects"), lit("file-append-objects"),
     lit("file-get-string"), lit("file-put-string"), lit("file-append-string"),
     lit("file-get-lines"), lit("file-put-lines"), lit("file-append-lines"),
     lit("file-get-buf"), lit("file-put-buf"),

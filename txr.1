@@ -64828,6 +64828,28 @@ it may be useful to set
 true in order to obtain better diagnostics. However, source location recording
 incurs a performance and storage penalty.
 
+.coNP Function @ read-objects
+.synb
+.mets (read-objects >> [ source
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \  >> [ err-stream 
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  >> [ err-retval >> [ name <> [ lineno ]]]]])
+.syne
+.desc
+The
+.code read-objects
+function has the same argument syntax and semantics as the
+.code read
+function, except that rather than reading one object, it reads all
+the Lisp objects from the source, and returns a list of these objects.
+
+If the stream is empty, then
+.code read-objects
+returns the empty list
+.codn nil ,
+whereas the
+.code read
+function treats the situation as an error.
+
 .coNP Function @ parse-errors
 .synb
 .mets (parse-errors << stream )
@@ -65760,13 +65782,62 @@ and then close the stream.
 
 These functions are close counterparts of, respectively,
 .codn file-get ,
-.code file-append-string
+.code file-get-string
 and
-.codn file-append-lines .
+.codn file-get-lines .
 
 These functions behave differently when the indicated file
 already exists. Rather than being truncated and overwritten,
 the file is extended by appending the new data to its end.
+
+.coNP Function @ file-get-objects
+.synb
+.mets (file-get-objects < name < [ mode-opts <> [ error-stream ]])
+.syne
+.desc
+The
+.code file-get-objects
+function opens an input text stream over the file indicated by the
+.meta name
+argument, which is a string.
+
+All Lisp objects are read from the stream. Parse errors are
+reported to
+.meta error-stream
+which defaults to
+.code *stdnull*
+(error output is discarded).
+
+If there is a parse error, the function throws an exception,
+otherwise the list of parsed objects is returned.
+
+.coNP Functions @ file-put-objects and @ file-append-objects
+.synb
+.mets (file-put-objects < name < seq <> [ mode-opts ])
+.syne
+.desc
+The functions
+.code file-put-objects
+and
+.code file-append-objects
+open a text stream over the file indicated by the string argument
+.metn name ,
+and write each of the objects contained in sequence
+.meta seq
+into the stream as if using the
+.code prinl
+function on each individual element of
+.metn seq .
+
+The
+.code file-put-objects
+function opens the file using the
+.str w
+mode, which overwrites the file if it exists, whereas
+.code file-append-objects
+uses
+.strn a ,
+which appends to the file.
 
 .coNP Functions @, command-get @ command-get-string and @ command-get-lines
 .synb

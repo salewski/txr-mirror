@@ -62,6 +62,11 @@
     (put-jsonl obj s flat-p))
   t)
 
+(defun put-objects (list : (s *stdout*))
+  (each ((obj list))
+    (prinl obj s)
+  t))
+
 (defun file-get (name : mopt)
   (with-stream (s (open-file name `r@mopt`))
     (read s)))
@@ -73,6 +78,18 @@
 (defun file-append (name obj : mopt)
   (with-stream (s (open-file name `a@mopt`))
     (prinl obj s)))
+
+(defun file-get-objects (name : mopt (err-stream :))
+  (with-stream (s (open-file name `r@mopt`))
+    (read-objects s err-stream)))
+
+(defun file-put-objects (name seq : mopt)
+  (with-stream (s (open-file name `w@mopt`))
+    (put-objects seq s)))
+
+(defun file-append-objects (name seq : mopt)
+  (with-stream (s (open-file name `a@mopt`))
+    (put-objects seq s)))
 
 (defun file-get-string (name : mopt)
   (with-stream (s (open-file name `r@mopt`))

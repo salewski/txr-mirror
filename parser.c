@@ -891,21 +891,31 @@ val read_compiled_file(val self, val stream, val error_stream)
   return read_file_common(self, stream, error_stream, t);
 }
 
-val read_objects_from_string(val string, val error_stream,
-                             val error_return_val, val name_in)
+static val read_objects_common(val stream, val error_stream_in,
+                               val error_return_val, val name,
+                               val lineno, val self)
 {
-  val self = lit("read-objects-from-string");
-  val stream = make_string_byte_input_stream(string);
-  val name = default_arg(name_in, lit("string"));
+  val error_stream = if3(error_stream_in == t,
+                         std_output,
+                         default_arg_strict(error_stream_in, std_null));
   val parser = ensure_parser(stream, name);
+  parser_t *pi = parser_get_impl(self, parser);
   list_collect_decl (out, ptail);
+
+  if (lineno && !missingp(lineno))
+    pi->lineno = c_num(lineno, self);
 
   for (;;) {
     val form = lisp_parse_impl(self, prime_lisp, t, stream,
                                error_stream, unique_s, name, colon_k);
 
     if (form == unique_s) {
-      if (parser_errors(parser) != zero)
+      if (pi->syntax_tree == nao)
+        break;
+      if (pi->errors)
+        if (missingp(error_return_val))
+          uw_throwf(syntax_error_s, lit("read: ~a: errors encountered"),
+                    name, nao);
         return error_return_val;
       break;
     }
@@ -914,6 +924,32 @@ val read_objects_from_string(val string, val error_stream,
   }
 
   return out;
+}
+
+val read_objects_from_string(val string, val error_stream,
+                             val error_return_val, val name_in)
+{
+  val self = lit("read-objects-from-string");
+  val stream = make_string_byte_input_stream(string);
+  val name = default_arg(name_in, lit("string"));
+
+  return read_objects_common(stream, error_stream, error_return_val,
+                             name, one, self);
+}
+
+val read_objects(val source_in, val error_stream, val error_return_val,
+                 val name_in, val lineno_in)
+{
+  val self = lit("read-objects");
+  val source = default_arg_strict(source_in, std_input);
+  val str = stringp(source);
+  val input_stream = if3(str, make_string_byte_input_stream(source), source);
+  val name = default_arg_strict(name_in,
+                                if3(str,
+                                    lit("string"),
+                                    stream_get_prop(input_stream, name_k)));
+  return read_objects_common(input_stream, error_stream, error_return_val,
+                             name, lineno_in, self);
 }
 
 val txr_parse(val source_in, val error_stream,
