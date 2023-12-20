@@ -284,7 +284,7 @@ lex.yy.c: $(top_srcdir)parser.l
 shipped:
 	$(V)$(foreach NAME,$(SHIPPED),                          \
 	   if ! cmp -s $(NAME) $(NAME).shipped; then            \
-	      $(call ABBREV3SH,COPY,$(NAME),$(NAME).shipped);   \
+	      $(call ABBREV3SH,COPY,$(NAME).shipped,$(NAME));   \
 	      cp $(NAME) $(NAME).shipped;                       \
 	   fi;)
 
