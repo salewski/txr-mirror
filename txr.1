@@ -13074,6 +13074,13 @@ is accepted.
 \*(TL allows the circle notation to occur within JSON syntax. See the section
 Notation for Circular and Shared Structure.
 
+\*(TL supports the extension of Lisp comments in JSON. When the
+.code ;
+character (semicolon) occurs in the middle of JSON syntax, outside
+of a token, that character and all characters until the end of the line
+constitute a comment that is discarded. \*(TL never produces comments
+when printing JSON.
+
 \*(TL allows for JSON syntax to be quasiquoted, and provides two extensions
 for writing unquotes and splicing unquotes. Within a JSON quasiquote, the
 .code ~
@@ -13122,6 +13129,12 @@ symbols or structures. These objects have no representation in JSON syntax.
 
   (eval ^#J[~*(list 1.0 2.0 3.0), ~(* 2.0 2), 5.0])
   --> #(1.0 2.0 3.0 4.0 5.0)
+
+  ;; Comment extension
+  #J[1, ; Comment inside JSON.
+     2, ; Another one.
+     3] ; Lisp comment outside of JSON.
+  --> #(1.0 2.0 3.0)
 .brev
 
 .coNP The @ .. notation

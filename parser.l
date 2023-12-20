@@ -918,7 +918,7 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
   yyerrorf(yyg, lit("unrecognized escape \\~a"), chr(yytext[1]), nao);
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>[;][^\n\r]* {
+<SPECIAL,QSPECIAL,NESTED,BRACED,JSON>[;][^\n\r]* {
   /* comment */
 }
 
