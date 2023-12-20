@@ -474,7 +474,8 @@
       (error "access spy stack balance problem in compiler"))))
 
 (defmeth compiler compile (me oreg env form)
-  (set me.last-form form)
+  (unless (atom form)
+    (set me.last-form form))
   (cond
     ((symbolp form)
      (if (bindable form)
