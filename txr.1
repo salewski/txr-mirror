@@ -49198,6 +49198,34 @@ must evaluate to a list. That list is
 integrated into the surrounding list.
 
 .SS* Math Library
+
+The following documentation describes the behavior of the Math Library
+functions as they apply to the native numeric and character types.
+
+The functions also support application-defined structure types.
+That feature is not described here but in the section User-Defined
+Arithmetic Types.
+
+When one or more operands of a Math Library function is a user-defined
+arithmetic structure, no conversions are performed on the operands,
+and the stated restrictions do not apply. The operands are passed to
+the methods as described in the User-Defined Arithmetic Types section.
+The operands need not be numeric.
+
+User-defined arithmetic structures can work with operands which
+are not numbers. If
+.code a
+is such a type, it is possible for an expression such as
+.code "(+ a \(dqabc\(dq)"
+to be meaningful and correct. Similarly, it is possible for an
+apparent division by zero such as
+.code "(/ a 0)"
+to be meaningful and correct, since the
+.code /
+method of the
+.code a
+object decides how to handle zero.
+
 .coNP Functions @, + @ - and @ *
 .synb
 .mets (+ << number *)
