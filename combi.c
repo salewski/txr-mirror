@@ -262,16 +262,26 @@ val perm(val seq, val k)
   }
 }
 
+static val rperm_init(val list, val k)
+{
+  val vec = vector(k, list);
+  val env = vector(two, nil);
+  set(vecref_l(env, zero), list);
+  set(vecref_l(env, one), vec);
+  return env;
+}
+
 static val rperm_while_fun(val env)
 {
-  val vec = cdr(env);
+  val vec = env->v.vec[1];
   return consp(vecref(vec, zero));
 }
 
 static val rperm_gen_fun(val env)
 {
   val self = lit("rperm");
-  cons_bind (list, vec, env);
+  val list = env->v.vec[0];
+  val vec = env->v.vec[1];
   list_collect_decl(out, ptail);
   cnum i;
   cnum len = c_num(length_vec(vec), self);
@@ -292,8 +302,7 @@ static val rperm_gen_fun(val env)
 
 static val rperm_list(val list, val k)
 {
-  val vec = vector(k, list);
-  val env = cons(list, vec);
+  val env = rperm_init(list, k);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_gen_fun));
 }
@@ -307,8 +316,7 @@ static val rperm_vec_gen_fun(val env)
 static val rperm_vec(val ve, val k)
 {
   val list = list_vec(ve);
-  val vec = vector(k, list);
-  val env = cons(list, vec);
+  val env = rperm_init(list, k);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_vec_gen_fun));
 }
@@ -322,8 +330,7 @@ static val rperm_str_gen_fun(val env)
 static val rperm_str(val str, val k)
 {
   val list = list_str(str);
-  val vec = vector(k, list);
-  val env = cons(list, vec);
+  val env = rperm_init(list, k);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_str_gen_fun));
 }
