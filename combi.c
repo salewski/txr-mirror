@@ -210,6 +210,29 @@ static val perm_str(val p, val k)
   }
 }
 
+static val perm_seq_gen_fun(val state)
+{
+  val p = vecref(state, zero);
+  val kk = vecref(state, one);
+  val out = vector(kk, nil);
+  perm_gen_fun_common(state, out, perm_vec_gen_fill);
+  return make_like(out, p);
+}
+
+static val perm_seq(val p, val k)
+{
+  if (k == zero) {
+    return cons(make_like(nil, p), nil);
+  } else {
+    val vec = vec_seq(p);
+    val state = perm_init_common(vec, k);
+    if (!state)
+      return nil;
+    return generate(func_f0(state, perm_while_fun),
+                    func_f0(state, perm_seq_gen_fun));
+  }
+}
+
 val perm(val seq, val k)
 {
   if (null_or_missing_p(k)) {
@@ -235,7 +258,7 @@ val perm(val seq, val k)
   case LIT:
     return perm_str(seq, k);
   default:
-    type_mismatch(lit("perm: ~s is not a sequence"), seq, nao);
+    return perm_seq(seq, k);
   }
 }
 
