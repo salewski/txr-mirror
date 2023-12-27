@@ -262,12 +262,14 @@ val perm(val seq, val k)
   }
 }
 
-static val rperm_init(val list, val k)
+static val rperm_init(val list, val k, val extra)
 {
   val vec = vector(k, list);
-  val env = vector(two, nil);
+  val env = vector(three, nil);
   set(vecref_l(env, zero), list);
   set(vecref_l(env, one), vec);
+  if (extra)
+    set(vecref_l(env, two), extra);
   return env;
 }
 
@@ -302,7 +304,7 @@ static val rperm_gen_fun(val env)
 
 static val rperm_list(val list, val k)
 {
-  val env = rperm_init(list, k);
+  val env = rperm_init(list, k, nil);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_gen_fun));
 }
@@ -316,7 +318,7 @@ static val rperm_vec_gen_fun(val env)
 static val rperm_vec(val ve, val k)
 {
   val list = list_vec(ve);
-  val env = rperm_init(list, k);
+  val env = rperm_init(list, k, nil);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_vec_gen_fun));
 }
@@ -330,9 +332,24 @@ static val rperm_str_gen_fun(val env)
 static val rperm_str(val str, val k)
 {
   val list = list_str(str);
-  val env = rperm_init(list, k);
+  val env = rperm_init(list, k, nil);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_str_gen_fun));
+}
+
+static val rperm_seq_gen_fun(val env)
+{
+  val list = rperm_gen_fun(env);
+  val seq = env->v.vec[2];
+  return make_like(list, seq);
+}
+
+static val rperm_seq(val seq, val k)
+{
+  val list = list_seq(seq);
+  val env = rperm_init(list, k, seq);
+  return generate(func_f0(env, rperm_while_fun),
+                  func_f0(env, rperm_seq_gen_fun));
 }
 
 val rperm(val seq, val k)
@@ -365,7 +382,7 @@ val rperm(val seq, val k)
       return cons(string(L""), nil);
     return rperm_str(seq, k);
   default:
-    type_mismatch(lit("rperm: ~s is not a sequence"), seq, nao);
+    return rperm_seq(seq, k);
   }
 }
 
