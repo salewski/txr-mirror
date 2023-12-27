@@ -362,57 +362,73 @@ val rperm(val seq, val k)
   }
 }
 
-
-static val k_conses(val list, val k)
+static val k_conses(val list, val k, val self)
 {
-  val iter = list, i = k;
-  list_collect_decl (out, ptail);
+  cnum i, n = c_num(k, self);
+  val iter, out = vector(num(n), nil);
 
-  for (; consp(iter) && gt(i, zero); iter = cdr(iter), i = minus(i, one))
-    ptail = list_collect(ptail, iter);
+  for (iter = list, i = 0; i < n && iter; iter = cdr(iter), i++)
+    out->v.vec[i] = iter;
 
-  return (i != zero) ? nil : out;
+  return (i >= n) ? out : nil;
+}
+
+static val comb_init(val list, val k)
+{
+  if (zerop(k))
+    return nil;
+  return k_conses(list, k, lit("comb"));
 }
 
 static val comb_while_fun(val state)
 {
-  return car(state);
+  if (state) {
+    cnum nn = c_num(length_vec(state), lit("comb"));
+    return tnil(nn > 0 && state->v.vec[0]);
+  }
+  return nil;
 }
 
 static void comb_gen_fun_common(val state)
 {
-  val iter;
-  val prev = nil;
+  cnum i, nn = c_num(length_vec(state), lit("comb"));
 
-  for (iter = state; consp(iter); iter = cdr(iter)) {
-    val curr = first(iter);
-    val curr_rest = rest(curr);
-    if (curr_rest != prev && consp(curr_rest)) {
-      rplaca(iter, curr_rest);
+  for (i = nn - 1; i >= 0; i--)
+  {
+    val cur = state->v.vec[i];
+    val re = rest(cur);
+
+    if ((i == nn - 1 && re) ||
+        (i < nn - 1 && re != state->v.vec[i + 1]))
+    {
+      state->v.vec[i] = re;
       return;
-    } else if (rest(iter)) {
-      val next = second(iter);
-      val next_rest = rest(next);
-      val next_rest_rest = rest(next_rest);
-      prev = curr;
-      if (next_rest != curr && consp(next_rest_rest))
-        prev = sys_rplaca(iter, next_rest_rest);
+    } else if (i > 0) {
+      val nxt = state->v.vec[i - 1];
+      val nxt_r = cdr(nxt);
+      val nxt_r_r = cdr(nxt_r);
+
+      if (nxt_r != cur && consp(nxt_r_r)) {
+        cnum j;
+        for (j = i; j < nn; j++, nxt_r_r = cdr(nxt_r_r))
+          state->v.vec[j] = nxt_r_r;
+      }
     }
   }
 
-  rplaca(state, nil);
+  state->v.vec[0] = nil;
 }
 
 static val comb_list_gen_fun(val state)
 {
-  val out = nreverse(mapcar(car_f, state));
+  val out = mapcar_listout(car_f, state);
   comb_gen_fun_common(state);
   return out;
 }
 
 static val comb_list(val list, val k)
 {
-  val state = nreverse(k_conses(list, k));
+  val state = comb_init(list, k);
   return state ? generate(func_f0(state, comb_while_fun),
                           func_f0(state, comb_list_gen_fun))
                : nil;
@@ -421,12 +437,12 @@ static val comb_list(val list, val k)
 static val comb_vec_gen_fun(val state)
 {
   val self = lit("comb");
-  val nn = length_list(state);
+  val nn = length_vec(state);
   cnum i, n = c_num(nn, self);
-  val iter, out = vector(nn, nil);
+  val out = vector(nn, nil);
 
-  for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
-    out->v.vec[i] = car(car(iter));
+  for (i = 0; i < n; i++)
+    out->v.vec[i] = car(state->v.vec[i]);
 
   comb_gen_fun_common(state);
   return out;
@@ -434,7 +450,7 @@ static val comb_vec_gen_fun(val state)
 
 static val comb_vec(val vec, val k)
 {
-  val state = nreverse(k_conses(list_vec(vec), k));
+  val state = comb_init(list_vec(vec), k);
   return generate(func_f0(state, comb_while_fun),
                   func_f0(state, comb_vec_gen_fun));
 }
@@ -442,14 +458,14 @@ static val comb_vec(val vec, val k)
 static val comb_str_gen_fun(val state)
 {
   val self = lit("comb");
-  val nn = length_list(state);
+  val nn = length_vec(state);
   cnum i, n = c_num(nn, self);
-  val iter, out = mkustring(nn);
+  val out = mkustring(nn);
 
   out->st.str[n] = 0;
 
-  for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
-    out->st.str[i] = c_chr(car(car(iter)));
+  for (i = 0; i < n; i++)
+    out->st.str[i] = c_chr(car(state->v.vec[i]));
 
   comb_gen_fun_common(state);
   return out;
@@ -457,7 +473,7 @@ static val comb_str_gen_fun(val state)
 
 static val comb_str(val str, val k)
 {
-  val state = nreverse(k_conses(list_str(str), k));
+  val state = comb_init(list_str(str), k);
   return generate(func_f0(state, comb_while_fun),
                   func_f0(state, comb_str_gen_fun));
 }
@@ -469,11 +485,14 @@ static val comb_hash_while_fun(val state)
 
 static val comb_hash_gen_fun(val hstate)
 {
+  val self = lit("comb");
   cons_bind (state, hash, hstate);
-  val iter, out = make_similar_hash(hash);
+  val nn = length_vec(state);
+  cnum i, n = c_num(nn, self);
+  val out = make_similar_hash(hash);
 
-  for (iter = state; iter; iter = cdr(iter)) {
-    val pair = car(car(iter));
+  for (i = 0; i < n; i++) {
+    val pair = car(state->v.vec[i]);
     sethash(out, car(pair), cdr(pair));
   }
 
@@ -484,7 +503,7 @@ static val comb_hash_gen_fun(val hstate)
 
 static val comb_hash(val hash, val k)
 {
-  val hstate = cons(nreverse(k_conses(hash_alist(hash), k)), hash);
+  val hstate = cons(comb_init(hash_alist(hash), k), hash);
   return generate(func_f0(hstate, comb_hash_while_fun),
                   func_f0(hstate, comb_hash_gen_fun));
 }
