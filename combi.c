@@ -674,6 +674,22 @@ static val rcomb_str(val str, val k)
                   func_f0(state, rcomb_str_gen_fun));
 }
 
+static val rcomb_seq_gen_fun(val sstate)
+{
+  cons_bind (state, seq, sstate);
+  val list = rcomb_list_gen_fun(state);
+  rcomb_gen_fun_common(state);
+  return make_like(list, seq);
+}
+
+static val rcomb_seq(val seq, val k)
+{
+  val state = nreverse(list_vec(vector(k, list_seq(seq))));
+  val sstate = cons(state, seq);
+  return generate(func_f0(state, rcomb_while_fun),
+                  func_f0(sstate, rcomb_seq_gen_fun));
+}
+
 val rcomb(val seq, val k)
 {
   if (!integerp(k))
@@ -701,6 +717,6 @@ val rcomb(val seq, val k)
       return cons(string(L""), nil);
     return rcomb_str(seq, k);
   default:
-    type_mismatch(lit("rcomb: ~s is not a sequence"), seq, nao);
+    return rcomb_seq(seq, k);
   }
 }
