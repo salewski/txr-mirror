@@ -910,13 +910,12 @@ static val read_objects_common(val stream, val error_stream_in,
                                error_stream, unique_s, name, colon_k);
 
     if (form == unique_s) {
-      if (pi->syntax_tree == nao)
-        break;
-      if (pi->errors)
+      if (pi->errors) {
         if (missingp(error_return_val))
           uw_throwf(syntax_error_s, lit("read: ~a: errors encountered"),
                     name, nao);
         return error_return_val;
+      }
       break;
     }
 
