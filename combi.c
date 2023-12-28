@@ -40,10 +40,10 @@
 static val perm_while_fun(val state)
 {
   val self = lit("perm");
-  val p = vecref(state, zero);
+  val vec = vecref(state, zero);
   cnum k = c_num(vecref(state, one), self);
   val c = vecref(state, two);
-  cnum n = c_num(length(p), self);
+  cnum n = c_num(length(vec), self);
   cnum i, j;
 
   for (i = k - 1, j = n - k + 1; i >= 0; i--, j++) {
@@ -81,10 +81,10 @@ static void perm_gen_fun_common(val state, val out,
                                 void (*fill)(val out, cnum i, val v))
 {
   val self = lit("perm");
-  val p = vecref(state, zero);
+  val vec = vecref(state, zero);
   val kk = vecref(state, one);
   val c = vecref(state, two);
-  val nn = length(p);
+  val nn = length(vec);
   val b = vector(nn, nil);
   cnum k = c_num(kk, self);
   cnum i;
@@ -92,15 +92,15 @@ static void perm_gen_fun_common(val state, val out,
   for (i = 0; i < k; i++) {
     cnum ci = c_num(c->v.vec[i], self);
     cnum j = perm_index(ci, b);
-    fill(out, i, p->v.vec[j]);
+    fill(out, i, vec->v.vec[j]);
     b->v.vec[j] = t;
   }
 }
 
-static val perm_init_common(val p, val k_null)
+static val perm_init(val vec, val k_null, val seq)
 {
   uses_or2;
-  val n = length(p);
+  val n = length(vec);
   val k = or2(k_null, n);
 
   if (!fixnump(n))
@@ -110,11 +110,12 @@ static val perm_init_common(val p, val k_null)
   if (gt(k, n)) {
     return nil;
   } else {
-    val state = vector(three, nil);
+    val state = vector(four, nil);
     val c = vector(k, zero);
-    set(vecref_l(state, zero), p);
+    set(vecref_l(state, zero), vec);
     set(vecref_l(state, one), k);
     set(vecref_l(state, two), c);
+    set(vecref_l(state, three), seq);
     deref(vecref_l(c, negone)) = negone;
     return state;
   }
@@ -133,14 +134,14 @@ static val perm_vec_gen_fun(val state)
   return out;
 }
 
-static val perm_vec(val p, val k)
+static val perm_vec(val vec, val k)
 {
-  k = default_arg(k, length_vec(p));
+  k = default_arg(k, length_vec(vec));
 
   if (k == zero) {
     return cons(vector(zero, nil), nil);
   } else {
-    val state = perm_init_common(p, k);
+    val state = perm_init(vec, k, nil);
     if (!state)
       return nil;
     return generate(func_f0(state, perm_while_fun),
@@ -167,12 +168,12 @@ static val perm_list_gen_fun(val state)
   return car(out);
 }
 
-static val perm_list(val p, val k)
+static val perm_list(val list, val k)
 {
-  if (k == zero || (!k && !p)) {
+  if (k == zero || (!k && !list)) {
     return cons(nil, nil);
   } else {
-    val state = perm_init_common(vec_list(p), k);
+    val state = perm_init(vec_list(list), k, nil);
     if (!state)
       return nil;
     return generate(func_f0(state, perm_while_fun),
@@ -195,14 +196,14 @@ static val perm_str_gen_fun(val state)
   return out;
 }
 
-static val perm_str(val p, val k)
+static val perm_str(val str, val k)
 {
-  k = default_arg(k, length_str(p));
+  k = default_arg(k, length_str(str));
 
   if (k == zero) {
     return cons(string(L""), nil);
   } else {
-    val state = perm_init_common(vec_list(list_str(p)), k);
+    val state = perm_init(vec_list(list_str(str)), k, nil);
     if (!state)
       return nil;
     return generate(func_f0(state, perm_while_fun),
@@ -212,20 +213,18 @@ static val perm_str(val p, val k)
 
 static val perm_seq_gen_fun(val state)
 {
-  val p = vecref(state, zero);
-  val kk = vecref(state, one);
-  val out = vector(kk, nil);
-  perm_gen_fun_common(state, out, perm_vec_gen_fill);
-  return make_like(out, p);
+  val list = perm_list_gen_fun(state);
+  val seq = vecref(state, three);
+  return make_like(list, seq);
 }
 
-static val perm_seq(val p, val k)
+static val perm_seq(val seq, val k)
 {
   if (k == zero) {
-    return cons(make_like(nil, p), nil);
+    return cons(make_like(nil, seq), nil);
   } else {
-    val vec = vec_seq(p);
-    val state = perm_init_common(vec, k);
+    val vec = vec_seq(seq);
+    val state = perm_init(vec, k, seq);
     if (!state)
       return nil;
     return generate(func_f0(state, perm_while_fun),
@@ -678,7 +677,6 @@ static val rcomb_seq_gen_fun(val sstate)
 {
   cons_bind (state, seq, sstate);
   val list = rcomb_list_gen_fun(state);
-  rcomb_gen_fun_common(state);
   return make_like(list, seq);
 }
 

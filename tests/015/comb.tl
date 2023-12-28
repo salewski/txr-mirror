@@ -431,3 +431,13 @@
   (rperm '(1) -1) :error
   (rperm "" -1) :error
   (rperm "a" -1) :error)
+
+(mtest
+  (comb "a".."c" 2) (("a" "b") ("a" "c") ("b" "c"))
+  (rcomb "a".."c" 2) (("a" "a") ("a" "b") ("a" "c")
+                      ("b" "b") ("b" "c") ("c" "c"))
+  (perm "a".."c" 2) (("a" "b") ("a" "c") ("b" "a")
+                     ("b" "c") ("c" "a") ("c" "b"))
+  (rperm "a".."c" 2) (("a" "a") ("a" "b") ("a" "c")
+                      ("b" "a") ("b" "b") ("b" "c")
+                      ("c" "a") ("c" "b") ("c" "c")))
