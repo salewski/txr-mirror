@@ -1,0 +1,28 @@
+--- y.tab.c.shipped	2023-12-28 00:00:00.000000000 -0800
++++ y.tab.c.shipped	2023-12-28 00:00:00.000000000 -0800
+@@ -2975,9 +2975,6 @@
+ /* The semantic value of the lookahead symbol.  */
+ YYSTYPE yylval;
+ 
+-    /* Number of syntax errors so far.  */
+-    int yynerrs;
+-
+     int yystate;
+     /* Number of tokens to shift before error messages enabled.  */
+     int yyerrstatus;
+@@ -3031,7 +3028,6 @@
+ 
+   yystate = 0;
+   yyerrstatus = 0;
+-  yynerrs = 0;
+   yychar = YYEMPTY; /* Cause a token to be read.  */
+ 
+   /* Initialize stack pointers.
+@@ -7047,7 +7043,6 @@
+   /* If not already recovering from an error, report this error.  */
+   if (!yyerrstatus)
+     {
+-      ++yynerrs;
+ #if ! YYERROR_VERBOSE
+       yyerror (scnr, parser, YY_("syntax error"));
+ #else

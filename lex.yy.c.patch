@@ -1,0 +1,13 @@
+--- lex.yy.c.shipped	2023-12-28 00:00:00.000000000 -0800
++++ lex.yy.c.shipped   	2023-12-28 00:00:00.000000000 -0800
+@@ -4804,8 +4804,8 @@
+         /* Create the reject buffer large enough to save one state per allowed character. */
+         if ( ! yyg->yy_state_buf )
+             yyg->yy_state_buf = (yy_state_type *)yyalloc(YY_STATE_BUF_SIZE  , yyscanner);
+-            if ( ! yyg->yy_state_buf )
+-                YY_FATAL_ERROR( "out of dynamic memory in yylex()" );
++        if ( ! yyg->yy_state_buf )
++            YY_FATAL_ERROR( "out of dynamic memory in yylex()" );
+ 
+ 		if ( ! yyg->yy_start )
+ 			yyg->yy_start = 1;	/* first start state */
