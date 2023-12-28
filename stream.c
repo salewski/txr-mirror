@@ -4751,6 +4751,16 @@ static val run(val command, val args)
 #else
     status = w_spawnvp(_P_WAIT, c_str(command, self), nargs, wargv);
 #endif
+#ifdef __CYGWIN__
+    /* Cygwin spawnvp reports regular termination status in upper 8 bits, and
+     * termination signal in lower 8 bits. Let's massage it so that we produce
+     * the same behavior as on Linux.
+     */
+    if (status && status < 0x100)
+      status = -1;      /* ensure nil return */
+    else
+      status >>= 8;
+#endif
   }
 
   free(strip_qual(wchar_t **, wargv));
