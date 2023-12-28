@@ -527,6 +527,21 @@ static val comb_hash(val hash, val k)
                   func_f0(hstate, comb_hash_gen_fun));
 }
 
+static val comb_seq_gen_fun(val sstate)
+{
+  cons_bind (state, seq, sstate);
+  val list = comb_list_gen_fun(state);
+  return make_like(list, seq);
+}
+
+static val comb_seq(val seq, val k)
+{
+  val state = comb_init(list_seq(seq), k);
+  val sstate = cons(state, seq);
+  return generate(func_f0(state, comb_while_fun),
+                  func_f0(sstate, comb_seq_gen_fun));
+}
+
 val comb(val seq, val k)
 {
   if (!integerp(k))
@@ -565,7 +580,7 @@ val comb(val seq, val k)
         return nil;
       return comb_hash(seq, k);
     }
-    type_mismatch(lit("comb: ~s is not a sequence"), seq, nao);
+    return comb_seq(seq, k);
   }
 }
 
