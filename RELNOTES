@@ -1,3 +1,51 @@
+                                    TXR 293
+                                   2023-12-28
+
+
+  Features
+
+  - load:
+    - when a top-level load exits by returning from the load block, the block
+      value now becomes termination status of process.
+
+  - JSON:
+    - now supports Lisp comments as an extension.
+
+  - I/O:
+    - New functions read-objects, file-get-objects, file-put-objects,
+      file-append-objects.
+
+  - Hash Tables:
+    - New function hash-join, similar to hash-uni but usefully different.
+
+  Bugs
+
+  - TXR: bug in @{nil ...} variable match.
+  - compiler:
+    - compile-file can now handle top-level forms that
+      perpetrate a non-local exit, without requiring compile-only
+      around them.
+    - optimizer now watches for exceptions during constant folding,
+      similarly to how the front end does.
+  - listener:
+    - several bugs in auto compound expr mode fixed.
+  - perm, rperm, comb, rcomb functions:
+    - now support all sequence types, not only lists, vectors and strings.
+    - comb was skipping combinations: defective function repaired.
+  - glob:
+    - suppress duplicates generated when multiple double
+      star patterns are present (supported by the recent glob*).
+    - fix memory leak that can happen on early exit due to error
+      function performing a nonlocal control transfer.
+  - sh-esc family of functions (recently introduced):
+    - incorrect specifications overhauled.
+  - (rcons ...) print/read consistency issue fixed.
+  - Cygwin: termination status returned by (sh ...) and (run ...)
+    now has the correct integer value, or nil for abnormal exit,
+    like on Linux.
+
+
+
                                     TXR 292
                                    2023-11-20
 

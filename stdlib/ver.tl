@@ -1,2 +1,2 @@
-(defvarl lib-version 292)
+(defvarl lib-version 293)
 (defvarl *lib-version* lib-version)
