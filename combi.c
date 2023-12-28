@@ -502,11 +502,6 @@ static val comb_str(val str, val k)
                   func_f0(state, comb_str_gen_fun));
 }
 
-static val comb_hash_while_fun(val state)
-{
-  return car(car(state));
-}
-
 static val comb_hash_gen_fun(val hstate)
 {
   val self = lit("comb");
@@ -524,11 +519,11 @@ static val comb_hash_gen_fun(val hstate)
   return out;
 }
 
-
 static val comb_hash(val hash, val k)
 {
-  val hstate = cons(comb_init(hash_alist(hash), k), hash);
-  return generate(func_f0(hstate, comb_hash_while_fun),
+  val state = comb_init(hash_alist(hash), k);
+  val hstate = cons(state, hash);
+  return generate(func_f0(state, comb_while_fun),
                   func_f0(hstate, comb_hash_gen_fun));
 }
 
