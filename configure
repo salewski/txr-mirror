@@ -761,7 +761,7 @@ else
   top_srcdir="$(cd "$source_dir" ; pwd -P)"/
 fi
 
-printf "Checking source directory \"%s\" ..." "$top_srcdir"
+printf "Checking source directory \"%s\" ... " "$top_srcdir"
 
 lndir()
 {
@@ -803,11 +803,11 @@ inode()
 
 case "$top_srcdir" in
 " "* | *" "* | *" " )
-  printf " bad (contains spaces)\n"
+  printf "bad (contains spaces)\n"
   exit 1
   ;;
 * )
-  printf " okay\n"
+  printf "okay\n"
   ;;
 esac
 
@@ -825,7 +825,7 @@ else
   build_in_srcdir=y
 fi
 
-printf "Are we using a C++ compiler ..."
+printf "Are we using a C++ compiler ... "
 
 case $ccname in
 *'++' | *'$(CXX)' )
@@ -1224,7 +1224,7 @@ if conftest EXTRA_FLAGS=-Werror ; then
 else
   printf "no\n"
   lang_flags="$lang_flags -U__STRICT_ANSI__"
-  printf "Regenerating config.make ..."
+  printf "Regenerating config.make ... "
   gen_config_make
   printf "done\n"
 fi
@@ -1260,7 +1260,7 @@ if [ "$($make conftest.darwin)" = "yes" ] ; then
   printf "yes\n"
   darwin_target=y
   lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
-  printf "Regenerating config.make ..."
+  printf "Regenerating config.make ... "
   gen_config_make
   printf "done\n"
 else
@@ -1274,7 +1274,7 @@ if ! [ $darwin_target ] ; then
     printf "yes\n"
     android_target=y
     lang_flags="$lang_flags --target=aarch64-unknown-linux-android26 -D_BSD_SOURCE"
-    printf "Regenerating config.make ..."
+    printf "Regenerating config.make ... "
     gen_config_make
     printf "done\n"
   else
@@ -1320,7 +1320,7 @@ fi
 
 
 if [ $do_nopie ] ; then
-  printf "Checking how to disable PIE ..."
+  printf "Checking how to disable PIE ... "
   nopie_flags=
 
   for flag in -nopie -no-pie ; do
@@ -1341,7 +1341,7 @@ if [ $do_nopie ] ; then
     printf "%s\n" "$nopie_flags"
     opt_flags="$opt_flags$nopie_flags"
   else
-    printf " n/a\n"
+    printf "n/a\n"
   fi
 fi
 
@@ -1762,7 +1762,7 @@ else
   printf "no\n"
 fi
 
-printf "Checking for fpclassify ..."
+printf "Checking for fpclassify ... "
 
 cat > conftest.c <<!
 #include <math.h>
@@ -2196,7 +2196,7 @@ fi
 # errno stuff
 #
 
-printf "Checking for strerror_r ..."
+printf "Checking for strerror_r ... "
 
 for type in int 'char *' ; do
   cat > conftest.c <<!
@@ -3418,7 +3418,7 @@ int main(void)
   break
 done
 
-printf "Checking for malloc_usable_size ..."
+printf "Checking for malloc_usable_size ... "
 
 for header in stdlib malloc malloc_np ; do
   cat > conftest.c <<!
@@ -3641,7 +3641,7 @@ struct sizes {
     eval $(tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/  *//')
 
     if [ $SIZEOF_OFF_T -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
-      printf "failed\n"
+      printf " failed\n"
       exit 1
     fi
 
@@ -3796,7 +3796,7 @@ elif conftest EXTRA_LDLIBS="-lsocket -lnsl" ; then
   have_sockets=y
   have_sys_types=y
   conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}-lsocket -lnsl"
-  printf "Need libs for sockets: regenerating config.make ..."
+  printf "Need libs for sockets: regenerating config.make ... "
   gen_config_make
   printf "done\n"
 else
