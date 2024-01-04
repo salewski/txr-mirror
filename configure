@@ -2277,7 +2277,7 @@ fi
 # Check for fields inside struct tm
 #
 
-printf "detecting timezone fields in struct tm ... "
+printf "Detecting timezone fields in struct tm ... "
 
 for try_field in tm_gmtoff __tm_gmtoff ; do
   cat > conftest.c <<!
