@@ -1,5 +1,5 @@
 @(include "../common")
-@(if (eq (os-symbol) :solaris))
+@(if (meq (os-symbol) :openbsd :solaris))
 @  (do (put-line "bar") (exit t))
 @(end)
 @(try)

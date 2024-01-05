@@ -4,9 +4,12 @@
   (exit))
 
 (mtest
-  (crypt nil nil) :error
-  (crypt "a" "bc") "bcshMw5X24ayQ"
-  (crypt "a" "bcd") "bcshMw5X24ayQ")
+  (crypt nil nil) :error)
+
+(if (neq :openbsd (os-symbol))
+  (mtest
+   (crypt "a" "bc") "bcshMw5X24ayQ"
+   (crypt "a" "bcd") "bcshMw5X24ayQ"))
 
 (if (eq :linux (os-symbol))
   (mtest

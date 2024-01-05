@@ -28,7 +28,9 @@
 (when %have-gzip%
   (file-put-string "test-file" "Hello, World!")
   (remove-path "test-file.gz")
-  (shchk "gzip test-file")
+  (cond ((eq (os-symbol) :openbsd)
+         (shchk "gzip -f test-file"))
+        (t (shchk "gzip test-file")))
   (test (file-get-string "test-file.gz" "z") "Hello, World!")
 
   (each ((mode (cons "z" (list-seq "z0".."z9"))))
