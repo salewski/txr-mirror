@@ -3179,6 +3179,8 @@ void sysif_init(void)
   reg_varl(intern(lit("rlimit-fsize"), user_package), num_fast(RLIMIT_FSIZE));
   reg_varl(intern(lit("rlimit-nofile"), user_package), num_fast(RLIMIT_NOFILE));
   reg_varl(intern(lit("rlimit-stack"), user_package), num_fast(RLIMIT_STACK));
+#ifdef RLIMIT_AS
   reg_varl(intern(lit("rlimit-as"), user_package), num_fast(RLIMIT_AS));
+#endif
 #endif
 }
