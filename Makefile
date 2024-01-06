@@ -72,8 +72,7 @@ EXTRA_OBJS-$(add_win_res) += win/txr.res
 STDLIB_SRCS := $(wildcard stdlib/*.tl)
 STDLIB_TLOS := $(patsubst %.tl,%.tlo,$(STDLIB_SRCS))
 
-STDLIB_EARLY_PATS := %/optimize.tlo %/param.tlo %/compiler.tlo %/asm.tlo
-STDLIB_EARLY_TLOS := $(filter $(STDLIB_EARLY_PATS),$(STDLIB_TLOS))
+STDLIB_EARLY_TLOS := $(addprefix stdlib/,optimize.tlo param.tlo compiler.tlo asm.tlo)
 STDLIB_LATE_TLOS := $(filter-out $(STDLIB_EARLY_TLOS),$(STDLIB_TLOS))
 
 ifneq ($(have_git),)
@@ -217,9 +216,7 @@ endif
 
 .PHONY: all
 
-all: $(BUILD_TARGETS) $(STDLIB_TLOS)
-
-$(STDLIB_LATE_TLOS): | $(STDLIB_EARLY_TLOS)
+all: $(BUILD_TARGETS) $(STDLIB_EARLY_TLOS) $(STDLIB_LATE_TLOS)
 
 $(PROG): $(OPT_OBJS) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,$(OPT_FLAGS))
