@@ -968,6 +968,7 @@ static val link_wrap_common(val target, val to, val follow_link, val self)
                    if3(follow_link, AT_SYMLINK_FOLLOW, 0));
 #else
   int err = link(u8target, u8to);
+  (void) follow_link;
 #endif
   free(u8target);
   free(u8to);
