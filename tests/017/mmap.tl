@@ -48,5 +48,5 @@
       (assert (equal (file-get-buf fname) rndbuf0)))
     (remove-path fname)))
 
-(unless (eq (os-symbol) :bsd)
+(unless (meq (os-symbol) :bsd :openbsd)
   (test (ignerr (mmap (ffi char) 4096 prot-read map-anon)) nil))
