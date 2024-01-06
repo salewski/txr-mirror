@@ -5653,6 +5653,7 @@ static val lazy_sub_str(val lstr, val from, val to)
       lsub->ls.props = coerce(struct lazy_string_props *,
                               chk_copy_obj(coerce(mem_t *, lstr->ls.props),
                                            sizeof *lstr->ls.props));
+      gc_hint(pfxcopy);
       return lsub;
     }
   }
