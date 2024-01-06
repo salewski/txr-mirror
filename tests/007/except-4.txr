@@ -1,9 +1,6 @@
 @(include "../common")
-@(if (meq (os-symbol) :openbsd :solaris))
-@  (do (put-line "bar") (exit t))
-@(end)
 @(try)
-@(next (open-command "echo foo; kill $$"))
+@(next (open-command "echo foo; kill -KILL $$"))
 @a
 @(catch)
 @(bind a "bar")

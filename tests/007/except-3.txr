@@ -1,3 +1,3 @@
-@(next (open-command "echo foo; kill $$") :nothrow)
+@(next (open-command "echo foo; kill -KILL $$") :nothrow)
 @a
 @(do (put-line a))
