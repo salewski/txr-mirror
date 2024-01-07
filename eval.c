@@ -759,7 +759,7 @@ static val lookup_symac_lisp1(val menv, val sym)
 
 static val reparent_env(val child, val parent)
 {
-  child->e.up_env = parent;
+  set(mkloc(child->e.up_env, child), parent);
   return child;
 }
 
