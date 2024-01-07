@@ -317,6 +317,8 @@ val vm_copy_closure(val oclosure)
     }
   }
 
+  gc_hint(oclosure);
+
   return nclosure;
 }
 

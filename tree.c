@@ -921,6 +921,7 @@ val copy_search_tree(val tree)
   val ntree = cobj(coerce(mem_t *, ntr), tree_cls, &tree_ops);
   *ntr = *otr;
   ntr->root = nroot;
+  gc_hint(tree);
   return ntree;
 }
 
@@ -933,6 +934,7 @@ val make_similar_tree(val tree)
   *ntr = *otr;
   ntr->root = nil;
   ntr->size = ntr->max_size = 0;
+  gc_hint(tree);
   return ntree;
 }
 
@@ -1013,6 +1015,8 @@ val copy_tree_iter(val iter)
     tdid->highkey = tdis->highkey;
 
   memcpy(tdid->ti.path, tdis->ti.path, sizeof tdid->ti.path[0] * depth);
+
+  gc_hint(iter);
 
   return iter_copy;
 }

@@ -856,6 +856,8 @@ static val make_struct_impl(val self, val type,
 
   uw_catch_end;
 
+  gc_hint(type);
+
   return sinst;
 }
 
@@ -946,6 +948,8 @@ val make_lazy_struct(val type, val argfun)
   sinst = cobj(coerce(mem_t *, si), struct_cls, &struct_inst_ops);
 
   bug_unless (type == st->self);
+
+  gc_hint(type);
 
   si->slot[0] = argfun;
 

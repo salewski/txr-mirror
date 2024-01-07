@@ -2243,12 +2243,13 @@ static struct strm_ops strlist_in_ops =
 
 val make_strlist_input_stream(val list)
 {
-  struct strlist_in *s = coerce(struct strlist_in *, chk_malloc(sizeof *s));
+  struct strlist_in *s = coerce(struct strlist_in *, chk_calloc(sizeof *s, 1));
+  val stream = cobj(coerce(mem_t *, s), stream_cls, &strlist_in_ops.cobj_ops);
   strm_base_init(&s->a);
   s->string = car(list);
   s->pos = zero;
   s->list = cdr(list);
-  return cobj(coerce(mem_t *, s), stream_cls, &strlist_in_ops.cobj_ops);
+  return stream;
 }
 
 struct string_out {
