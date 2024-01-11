@@ -248,9 +248,14 @@ DEFUN(jmp_restore)
 
 #elif __PPC64__
 
+
 DEFUN(jmp_save)
   mflr  %r11
   mfcr  %r12
+#if __ALTIVEC__
+  stvx  %v31, 0, %r3
+  addi  %r3, %r3, 32
+#endif
   std   %r1, 0(%r3)
   std   %r2, 8(%r3)
   std   %r11, 16(%r3)
@@ -274,10 +279,17 @@ DEFUN(jmp_save)
   std   %r29, 160(%r3)
   std   %r30, 168(%r3)
   std   %r31, 176(%r3)
+#if __ALTIVEC__
+  std   %r11, 184(%r3)	/* clobber padding */
+#endif
   li    %r3, 0
   blr
 
 DEFUN(jmp_restore)
+#if __ALTIVEC__
+  lvx   %v31, 0, %r3
+  addi  %r3, %r3, 32
+#endif
   ld    %r31, 176(%r3)
   ld    %r30, 168(%r3)
   ld    %r29, 160(%r3)

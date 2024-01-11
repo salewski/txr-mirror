@@ -86,7 +86,16 @@ struct jmp {
 
 #elif __PPC64__
 
-struct jmp {
+#if __ALTIVEC__
+#define UW_JMP_ALIGN __attribute__ ((aligned (32)))
+#else
+#define UW_JMP_ALIGN
+#endif
+
+struct UW_JMP_ALIGN jmp {
+#if __ALTIVEC__
+  unsigned long vr31[4];
+#endif
   unsigned long r1;
   unsigned long r2;
   unsigned long r11;
