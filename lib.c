@@ -4509,12 +4509,22 @@ mem_t *chk_calloc(size_t n, size_t size)
 
 mem_t *chk_realloc(mem_t *old, size_t size)
 {
-  mem_t *newptr = convert(mem_t *, realloc(old, size));
+  mem_t *newptr = 0;
 
   assert (!async_sig_enabled);
 
-  if (size != 0 && newptr == 0)
-    oom();
+  /* We avoid calling realloc with size == 0.
+   * It was okay in C99; 2023 draft of ISO C says this is undefined.
+   */
+  if (size == 0) {
+    free(old);
+    newptr = convert(mem_t *, malloc(0));
+  } else {
+    newptr = convert(mem_t *, realloc(old, size));
+    if (newptr == 0)
+      oom();
+  }
+
   malloc_bytes += size;
   return newptr;
 }
