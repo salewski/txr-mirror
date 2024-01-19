@@ -6906,7 +6906,7 @@ val mmap_wrap(val type, val len, val prot, val flags,
   int pro = c_int(prot, self);
   int flg = c_int(flags, self);
 
-  if (ln != 0 && nelem == 0)
+  if (!tft->size)
     uw_throwf(error_s, lit("~a: zero-sized element type ~s specified"),
               self, type, nao);
 
