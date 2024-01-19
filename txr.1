@@ -80078,6 +80078,7 @@ or
 to request a shared or private mapping, respectively.
 If a mapping is requested which is neither shared nor private,
 the underlying POSIX function will likely fail.
+
 If a
 .meta source
 is specified, indicating a filesystem object to be mapped, the
@@ -80088,6 +80089,39 @@ is not specified, this means that the mapping will be anonymous.
 In this situation, the
 .code map-anon
 flag must be present.
+
+The
+.meta source
+argument may be an integer file descriptor. If so, this value
+will be passed to the underlying POSIX function directly.
+The
+.meta source
+argument may be a stream object, in which case the
+.code fileno
+function will be applied to it, which must retrieve an integer
+file descriptor which will be passed to the POSIX function.
+The
+.meta source
+argument may be a filename. The specified file is opened as if via
+.codn open-file ,
+with a
+.meta mode-string
+which is
+.str "r+"
+if the
+.meta prot
+argument includes the
+.code prot-write
+flag, otherwise
+.strn "r" .
+The integer file descriptor from this open stream is used in the underlying
+.code mmap
+call. The file is immediately closed when
+.code mmap
+returns. In all cases, the integer file descriptor passed to the POSIX
+function must be a value suitable for conversion to the
+.code int
+type.
 
 Note: in the context of
 .codn mmap ,
