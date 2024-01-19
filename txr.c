@@ -1,4 +1,4 @@
-/* Copyright 2009-2023
+/* Copyright 2009-2024
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
@@ -95,7 +95,7 @@ static void help(void)
   val text = lit(
 "\n"
 "TXR Version ~a\n"
-"Copyright 2009-2023 Kaz Kylheku <kaz@kylheku.com>\n"
+"Copyright 2009-2024 Kaz Kylheku <kaz@kylheku.com>\n"
 "\n"
 "Usage:\n"
 "\n"

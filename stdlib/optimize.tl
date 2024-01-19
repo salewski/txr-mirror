@@ -1,4 +1,4 @@
-;; Copyright 2021-2023
+;; Copyright 2021-2024
 ;; Kaz Kylheku <kaz@kylheku.com>
 ;; Vancouver, Canada
 ;; All rights reserved.
