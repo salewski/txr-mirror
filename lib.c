@@ -121,7 +121,7 @@ val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s, alloc_error_s, stack_overflow_s;
 val path_not_found_s, path_exists_s, path_permission_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
-val gensym_counter_s, length_s;
+val gensym_counter_s, length_s, length_lt_s;
 val rplaca_s, rplacd_s, seq_iter_s;
 val lazy_streams_s;
 
@@ -13183,6 +13183,23 @@ val length_lt(val seq, val len)
     return length_list_lt(seq, len);
   case LSTR:
     return length_str_lt(seq, len);
+  case COBJ:
+    if (obj_struct_p(seq)) {
+      val length_lt_meth = get_special_slot(seq, length_lt_m);
+
+      if (length_lt_meth) {
+        return funcall2(length_lt_meth, seq, len);
+      } else {
+        val length_meth = get_special_slot(seq, length_m);
+
+        if (length_meth)
+          return lt(funcall1(length_meth, seq), len);
+      }
+
+      type_mismatch(lit("~a: ~s has no ~a or ~a method"), length_lt_s,
+                    seq, length_lt_s, length_s, nao);
+    }
+    /* fallthrough */
   default:
     return lt(length(seq), len);
   }
@@ -14167,6 +14184,7 @@ static void obj_init(void)
   continue_s = intern(lit("continue"), user_package);
   name_s = intern(lit("name"), user_package);
   length_s = intern(lit("length"), user_package);
+  length_lt_s = intern(lit("length-<"), user_package);
   rplaca_s = intern(lit("rplaca"), user_package);
   rplacd_s = intern(lit("rplacd"), user_package);
   seq_iter_s = intern(lit("seq-iter"), user_package);

@@ -33549,6 +33549,33 @@ preference is given to
 .codn length ,
 which is likely to be much more efficient.
 
+.coNP Method @ length-<
+.synb
+.mets << object .(length-< << len )
+.syne
+.desc
+If a structure has
+.code length-<
+method, then it can be used as the left argument to the
+.code length-<
+function. The
+.meta len
+argument receives the right argument.
+
+If an object doesn't implement the
+.code length-<
+method, but does implement the
+.code length
+it can also be used as an argument to the
+.code length-<
+function. In that situation, the
+.code length-<
+function will call the
+.code length
+method instead, and then compare the returned value against the
+.meta len
+parameter.
+
 .coNP Methods @, car @ cdr and @ nullify
 .synb
 .mets << object .(car)

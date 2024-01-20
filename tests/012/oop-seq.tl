@@ -55,6 +55,23 @@
 (test (list-seq (new counter-fast init 0 step 1 limit 0))
       nil)
 
+(defstruct integers ()
+  item to next
+  (:method length-< (me len)
+    (cond
+      ((<= len 1) nil)
+      (me.next me.next.(length-< (pred len)))
+      (t)))
+  (:postinit (me)
+    (if (< me.item me.to)
+      (set me.next (lnew integers to me.to item (succ me.item))))))
+
+(let ((ints (new integers item 1 to 10)))
+  (mtest
+    (length-< ints 11) t)
+    (length-< ints 10) nil
+    (length-< ints 9) nil)
+
 ;; The following reproduced a segfault when the change was made to allow del to
 ;; work with structs that have lambda and lambda-set.
 

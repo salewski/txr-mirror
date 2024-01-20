@@ -7741,7 +7741,7 @@ void eval_init(void)
   reg_fun(intern(lit("str-seq"), user_package), func_n1(str_seq));
   reg_fun(intern(lit("length"), user_package), length_f);
   reg_fun(intern(lit("len"), user_package), length_f);
-  reg_fun(intern(lit("length-<"), user_package), func_n2(length_lt));
+  reg_fun(length_lt_s, func_n2(length_lt));
   reg_fun(intern(lit("empty"), user_package), func_n1(empty));
   reg_fun(intern(lit("copy"), user_package), func_n1(copy));
   reg_fun(intern(lit("sub"), user_package), func_n3o(sub, 1));
