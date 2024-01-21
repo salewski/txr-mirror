@@ -113,6 +113,7 @@
     "I'm not addicted to procrastination. I can start any time I want to!"
     "Kant figure out it out by Pure Reason? Check the Immanuel!"
     "Where were you last night? I found strings from another language on your shirt!"
+    "Evidence of amphoric Lisp macros was recently found in ancient clay jars."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
