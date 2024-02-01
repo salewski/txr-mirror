@@ -1418,7 +1418,7 @@ val maphash(val fun, val hash)
 
 val hash_eql(val obj)
 {
-  int lim = 0;
+  int lim = hash_traversal_limit;
   return num_fast(eql_hash(obj, &lim));
 }
 

@@ -86,3 +86,9 @@
   (mtest
     (hash-isec h1 h2) #H(() (b 2) (c 3) (d 4))
     [hash-isec h1 h2 +] #H(() (b 0) (c 0) (d 0))))
+
+(mtest
+  (eql (hash-equal "abc") (hash-equal "abc")) t
+  (eql (hash-equal (expt 2 128)) (hash-equal (expt 2 128))) t
+  (eql (hash-eql "abc") (hash-eql "abc")) nil
+  (eql (hash-eql (expt 2 128)) (hash-eql (expt 2 128))) t)
