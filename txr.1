@@ -57039,9 +57039,10 @@ Separate the integers 1\(en10 into even and odd, and sum these groups:
   -> #H(() (t 30) (nil 25))
 .brev
 
-.coNP Function @ hist-sort
+.coNP Functions @ hist-sort and @ hist-sort-by
 .synb
 .mets (hist-sort < sequence << option *)
+.mets (hist-sort-by < by-fun < sequence << option *)
 .syne
 .desc
 The
@@ -57071,6 +57072,29 @@ serve as keys in that hash. The trailing arguments
 if any, consist of the same keywords that are understood by the
 .code hash
 function, and determine the properties of that hash.
+
+The
+.code hist-sort-by
+function differs from
+.code hist-sort
+in that it requires an additional argument
+.meta by-fun
+with the following semantics: every element of
+.meta sequence
+is passed to
+.meta by-fun
+such that the resulting value is used as the hash key in the resulting
+histogram.
+
+Thus, an invocation of
+.code hist-sort
+is equivalent to an invocation of
+.code hist-sort-by
+where the
+.meta by-fun
+argument is specified as the
+.code identity
+function.
 
 .TP* Examples
 

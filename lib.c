@@ -11600,12 +11600,17 @@ static val hist_succ(val left, val right)
   return succ(left);
 }
 
-val hist_sort(val seq, varg hashv_args)
+val hist_sort_by(val fun, val seq, varg hashv_args)
 {
   val hash = group_reduce(hashv(hashv_args),
-                          identity_f, hist_succ_f,
+                          fun, hist_succ_f,
                           seq, zero, nil);
   return nsort(hash_alist(hash), gt_f, cdr_f);
+}
+
+val hist_sort(val seq, varg hashv_args)
+{
+  return hist_sort_by(identity_f, seq, hashv_args);
 }
 
 val nrot(val seq, val n_in)

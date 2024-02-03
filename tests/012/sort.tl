@@ -93,3 +93,6 @@
   (hist-sort nil) nil
   (hist-sort '(3 4 5)) ((3 . 1) (4 . 1) (5 . 1))
   (hist-sort '("a" "b" "c" "a" "b" "a" "b" "a")) (("a" . 4) ("b" . 3) ("c" . 1)))
+
+(test
+  [hist-sort-by upcase-str '("a" "b" "c" "a" "b" "a" "b" "a")] (("A" . 4) ("B" . 3) ("C" . 1)))

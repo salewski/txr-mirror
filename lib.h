@@ -1342,6 +1342,7 @@ val sort_group(val seq, val keyfun, val lessfun);
 val unique(val seq, val keyfun, varg hashv_args);
 val uniq(val seq);
 val grade(val seq, val lessfun, val keyfun_in);
+val hist_sort_by(val fun, val seq, varg hashv_args);
 val hist_sort(val seq, varg hashv_args);
 val nrot(val seq, val n_in);
 val rot(val seq, val n_in);

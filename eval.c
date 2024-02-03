@@ -7426,6 +7426,7 @@ void eval_init(void)
   reg_fun(intern(lit("uniq"), user_package), func_n1(uniq));
   reg_fun(intern(lit("grade"), user_package), func_n3o(grade, 1));
   reg_fun(intern(lit("hist-sort"), user_package), func_n1v(hist_sort));
+  reg_fun(intern(lit("hist-sort-by"), user_package), func_n2v(hist_sort_by));
 
   reg_fun(intern(lit("nrot"), user_package), func_n2o(nrot, 1));
   reg_fun(intern(lit("rot"), user_package), func_n2o(rot, 1));
