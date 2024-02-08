@@ -1423,7 +1423,12 @@
            (return-from comp-fun-form me.(compile oreg env
                                                   ^(progn ,*args nil))))
           ((@(or identity use + * min max logior logand) @a)
-           (return-from comp-fun-form me.(compile oreg env a)))))
+           (return-from comp-fun-form me.(compile oreg env a)))
+          (@(require (chain . @nil)
+                     (> olev 5)
+                     (can-inline-chain form))
+           (return-from comp-fun-form me.(compile oreg env
+                                                  (inline-chain form))))))
 
       (when (plusp olev)
         (tree-case form
@@ -2297,6 +2302,34 @@
                              (nreverse check-opts))
                    ,*lm-body))
               lm-expr)))))
+
+(defun inline-chain-rec (form arg)
+  (match-ecase form
+    ((chain @fun)
+     ^(call ,fun ,arg))
+    ((chain @fun . @rest)
+     (inline-chain-rec ^(chain ,*rest) ^(call ,fun ,arg)))))
+
+(defun can-inline-chain (form)
+  (let (yes)
+    (each ((f (cdr form)))
+      (if-match @(or @(symbolp)
+                     (sys:lisp1-value @(symbolp))
+                     (lambda . @lam))
+                f
+        (if lam (set yes t))
+        (return-from can-inline-chain nil)))
+    yes))
+
+(defun inline-chain (form)
+  (match-case form
+    ((chain @fun) fun)
+    ((chain @fun . @rest)
+     (with-gensyms (args)
+       ^(lambda ,args
+          ,(inline-chain-rec ^(chain ,*rest)
+                             ^(apply ,fun ,args)))))
+    ((chain) form)))
 
 (defun orig-form (form)
   (whilet ((anc (macro-ancestor form)))

@@ -90939,7 +90939,12 @@ More peephole optimizations are applied.
 .IP 6
 Additional iterations of the levels 4 and 5 optimizations are performed,
 if the previous iterations have coalesced some basic blocks of the program
-graph.
+graph. Also, at this level,
+.code chain
+expressions containing lambdas are inlined, eliminating the closures.
+These expressions arise out of
+.code opip
+syntax and its derivatives.
 .IP 7
 Certain more rarely applicable optimizations are applied which reduce code size
 by merging some identical code blocks, or improving some more rarely
