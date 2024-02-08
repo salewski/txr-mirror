@@ -2274,7 +2274,7 @@
                                     (t (add ^(,var-sym (if ,al-val
                                                          (pop ,al-val)
                                                          ,init-form)))))
-                                (push (list* var-sym have-sym init-form) check-opts)))
+                                  (push (list* var-sym have-sym init-form) check-opts)))
                               (if pars.rest
                                 (add ^(,pars.rest ,al-val))
                                 (add ^(,ign-2 (if ,al-val
