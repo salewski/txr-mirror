@@ -2303,12 +2303,25 @@
                    ,*lm-body))
               lm-expr)))))
 
+(defun simplify-variadic-lambda (form)
+  (if-match @(require (lambda @(and @params @(or @(end (@nil . @rest))
+                                                 @rest))
+                        [sys:apply . @args])
+                      rest
+                      (eq 1 (count rest (flatten args)))
+                      (eq [args -1] rest))
+            form
+    ^(lambda (,*(butlastn 0 params) ,rest)
+       [call ,*(butlastn 1 args) ,rest])
+    form))
+
 (defun inline-chain-rec (form arg)
   (match-ecase form
     ((chain @fun)
-     ^(call ,fun ,arg))
+     ^(call ,(simplify-variadic-lambda fun) ,arg))
     ((chain @fun . @rest)
-     (inline-chain-rec ^(chain ,*rest) ^(call ,fun ,arg)))))
+     (inline-chain-rec ^(chain ,*rest)
+                       ^(call ,(simplify-variadic-lambda fun) ,arg)))))
 
 (defun can-inline-chain (form)
   (let (yes)
