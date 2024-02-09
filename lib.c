@@ -3471,6 +3471,23 @@ val tree_find(val obj, val tree, val testfun)
   return nil;
 }
 
+static val cons_find_rec(val obj, val tree, val testfun)
+{
+  uses_or2;
+  if (funcall2(testfun, obj, tree))
+    return t;
+  else if (consp(tree))
+    return or2(cons_find_rec(obj, us_car(tree), testfun),
+               cons_find_rec(obj, us_cdr(tree), testfun));
+  else
+    return nil;
+}
+
+val cons_find(val obj, val tree, val testfun)
+{
+  return cons_find_rec(obj, tree, default_arg(testfun, equal_f));
+}
+
 val countqual(val obj, val seq)
 {
   val self = lit("countqual");

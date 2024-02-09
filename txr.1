@@ -23313,14 +23313,17 @@ infinite lazy structure.
   --> (a b c d e f g nil z nil h)
 .brev
 
-.coNP Function @ tree-find
+.coNP Functions @ tree-find and @ cons-find
 .synb
-.mets (tree-find < obj < tree << test-function )
+.mets (tree-find < obj < tree <> [ test-function ])
+.mets (cons-find < obj < tree <> [ test-function ])
 .syne
 .desc
 The
 .code tree-find
-function searches
+and
+.code cons-find
+function search
 .meta tree
 for an occurrence of
 .metn obj .
@@ -23338,9 +23341,14 @@ arguments, and has conventions similar to
 .code eql
 or
 .codn equal .
+If an argument is omitted, the default function is
+.codn equal .
 
+Under both
 .code tree-find
-works as follows.  If
+and
+.codn cons-find ,
+if
 .meta tree
 is equivalent to
 .meta obj
@@ -23348,13 +23356,17 @@ under
 .metn test-function ,
 then
 .code t
-is returned to announce a successful finding.
-If this test fails, and
-.meta tree
-is an atom,
+is returned to announce a successful finding. Next, if the mismatched
+.meta obj
+is an atom, both functions return
 .code nil
-is returned immediately to
-indicate that the find failed.  Otherwise,
+to indicate that the search failed.
+
+If none of the above cases occur, the semantics of the functions diverge, as
+follows.
+
+In the case of
+.codn tree-find ,
 .meta tree
 is taken to be a proper list,
 and
@@ -23368,6 +23380,22 @@ arguments, stopping at the first element
 which returns a
 .cod2 non- nil
 value.
+
+In the case of
+.codn cons-find ,
+.meta tree
+is taken to be
+.codn cons -cell-based
+tree structure. The
+.code cons-find
+function is recursively applied to the
+.code car
+and
+.code cdr
+fields of
+.metn tree .
+Thus a match may be found in any position in the structure, including the
+dotted position of a list.
 
 .coNP Functions @, memq @ memql and @ memqual
 .synb

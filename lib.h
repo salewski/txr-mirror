@@ -858,6 +858,7 @@ val remqual_lazy(val obj, val list);
 val remove_if_lazy(val pred, val list, val key);
 val keep_if_lazy(val pred, val list, val key);
 val tree_find(val obj, val tree, val testfun);
+val cons_find(val obj, val tree, val testfun);
 val countqual(val obj, val list);
 val countql(val obj, val list);
 val countq(val obj, val list);

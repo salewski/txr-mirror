@@ -4142,18 +4142,6 @@ static val transform_op(val forms, val syms, val rg)
   }
 }
 
-static val cons_find(val obj, val structure, val test)
-{
-  uses_or2;
-
-  if (funcall2(test, obj, structure))
-    return structure;
-  if (atom(structure))
-    return nil;
-  return or2(cons_find(obj, car(structure), test),
-             cons_find(obj, cdr(structure), test));
-}
-
 static val supplement_op_syms(val ssyms)
 {
   list_collect_decl (outsyms, tl);
@@ -7370,6 +7358,7 @@ void eval_init(void)
   reg_fun(intern(lit("remove-if*"), user_package), func_n3o(remove_if_lazy, 2));
   reg_fun(intern(lit("keep-if*"), user_package), func_n3o(keep_if_lazy, 2));
   reg_fun(intern(lit("tree-find"), user_package), func_n3o(tree_find, 2));
+  reg_fun(intern(lit("cons-find"), user_package), func_n3o(cons_find, 2));
   reg_fun(intern(lit("countqual"), user_package), func_n2(countqual));
   reg_fun(intern(lit("countql"), user_package), func_n2(countql));
   reg_fun(intern(lit("countq"), user_package), func_n2(countq));
