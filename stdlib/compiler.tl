@@ -2307,7 +2307,7 @@
   (if-match @(require (lambda @(and @params @(end @rest))
                         [sys:apply . @args])
                       rest
-                      (eq 1 (count rest (flatten args)))
+                      (eq 1 [cons-count rest args eq])
                       (eq [args -1] rest))
             form
     ^(lambda (,*(butlastn 0 params) ,rest)
