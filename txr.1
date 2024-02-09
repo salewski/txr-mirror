@@ -47579,7 +47579,8 @@ and
 must be possibly dotted list patterns.
 The last pattern,
 .metn epat ,
-must be either an atom or a possibly dotted list pattern.
+may be any pattern: it may be an atom match for the terminating
+atom, or a possibly dotted list pattern matching the list suffix.
 
 Important to the semantics of
 .code sme

@@ -602,6 +602,16 @@
   (match @gs 0 gs) :error
   (match @gs :gs gs) :gs)
 
+(mtest
+  (match @(end @x) '(1 . 2) x) 2
+  (match @(end @(evenp @x)) '(1 . 2) x) 2
+  (match @(end (@z . @x)) '(1 . 2) (list z x)) (1 2)
+  (match @(end (@z . @(evenp @x))) '(1 . 2) (list z x)) (1 2))
+
+(mtest
+  (match @(sme (@a) (@b) @x) '(0 1 . 2) (list a b x)) (0 1 2)
+  (match @(sme (@a) (@b) @(evenp @x)) '(0 1 . 2) (list a b x)) (0 1 2))
+
 (compile-only
   (eval-only
     (with-compile-opts (nil unused)

@@ -895,12 +895,6 @@
     (compile-error f "~s: list pattern expected, not ~s" op pat)
     pat))
 
-(defun check-end (f op pat)
-  (if (and (listp pat)
-           (meq (car pat) 'sys:expr 'sys:var 'sys:quasi))
-    (compile-error f "~s: list or atom pattern expected, not ~s" op pat)
-    pat))
-
 (defun check-sym (f op sym : nil-ok)
   (cond
     ((bindable sym) sym)
@@ -914,7 +908,7 @@
 
 (defun pat-len (pat)
   (if (consp pat)
-    (let ((var-op-pos (pos-if (op meq 'sys:var 'sys:expr 'sys:quasi)
+    (let ((var-op-pos (pos-if (lop meq 'sys:var 'sys:expr 'sys:quasi)
                               (butlastn 0 pat))))
       (if var-op-pos var-op-pos (len pat)))
     0))
@@ -922,24 +916,22 @@
 (defmatch sme (:form f sta mid end : (mvar (gensym)) eobj)
   (let* ((psta (loosen (check f 'sme sta)))
          (pmid (loosen (check f 'sme mid)))
-         (pend (check-end f 'sme end))
          (lsta (pat-len psta))
          (lmid (pat-len pmid))
-         (lend (pat-len pend))
+         (lend (pat-len end))
          (obj (gensym)))
     ^@(as ,(check-sym f 'sme obj)
           @(and ,psta
                 @(with @(scan @(as ,(check-sym f 'sme mvar) ,pmid))
                        (nthcdr ,lsta ,obj))
-                @(with @(as ,(check-sym f 'sme eobj t) ,pend)
+                @(with @(as ,(check-sym f 'sme eobj t) ,end)
                        (nthlast ,lend (nthcdr ,lmid ,mvar)))))))
 
 (defmatch end (:form f end : evar)
-  (let* ((pend (check-end f 'end end))
-         (lend (pat-len pend))
+  (let* ((lend (pat-len end))
          (obj (gensym)))
     ^@(as ,(check-sym f 'end obj)
-          @(with @(as ,(check-sym f 'end evar t) ,pend)
+          @(with @(as ,(check-sym f 'end evar t) ,end)
                  (nthlast ,lend ,obj)))))
 
 (defun non-triv-pat-p (syntax)
