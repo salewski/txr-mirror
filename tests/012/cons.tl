@@ -24,3 +24,12 @@
   (cons-find "d" '("a" (("b") . "d") "c")) t
   (cons-find "d" '("a" . "d")) t
   (cons-find nil '("a" (("b")) "c")) t)
+
+(mtest
+  (cons-count "abc" "abc") 1
+  (cons-count "abc" "abc" (fun eq)) 0
+  (cons-count "b" '("b" . "b")) 2
+  (cons-count "b" '(3 . "b")) 1
+  (cons-count "b" '("b" . 3)) 1
+  (cons-count "b" '(("b" . "b") ("b" . "b"))) 4
+  (cons-count nil '(1 (2 3 (4)))) 3)

@@ -7364,6 +7364,7 @@ void eval_init(void)
   reg_fun(intern(lit("countq"), user_package), func_n2(countq));
   reg_fun(intern(lit("count-if"), user_package), func_n3o(count_if, 2));
   reg_fun(intern(lit("count"), user_package), func_n4o(count, 2));
+  reg_fun(intern(lit("cons-count"), user_package), func_n3o(cons_count, 2));
   reg_fun(intern(lit("posqual"), user_package), func_n2(posqual));
   reg_fun(intern(lit("rposqual"), user_package), func_n2(rposqual));
   reg_fun(intern(lit("posql"), user_package), func_n2(posql));

@@ -36112,6 +36112,47 @@ The function returns the count of the number keys for which
 .meta predfun
 returns true.
 
+.coNP Function @ cons-count
+.synb
+.mets (cons-count < obj < tree <> [ test-function ])
+.syne
+.desc
+The
+.code cons-count
+function returns the number of times the object
+.meta obj
+occurs in the
+.code cons
+cell structure
+.metn tree ,
+under the equality imposed by the
+.metn test-function .
+
+If the optional
+.meta test-function
+argument is omitted, it defaults to
+.codn equal .
+
+First,
+.meta obj
+and
+.meta tree
+are compared using
+.metn test-function .
+If they are equal, that counts as one occurrence.
+
+Then, if
+.meta tree
+is a
+.code cons
+cell, the function recurses over the
+.code car
+and
+.code cdr
+fields.
+
+The sum of all these counts is returned.
+
 .coNP Functions @, posq @ posql and @ posqual
 .synb
 .mets (posq < object << sequence )

@@ -3596,6 +3596,25 @@ val count(val item, val seq, val testfun_in, val keyfun_in)
 
 }
 
+static val cons_count_rec(val item, val tree, val testfun)
+{
+  val hc = if3(funcall2(testfun, item, tree), one, zero);
+
+  if (consp(tree)) {
+    val ac = cons_count_rec(item, us_car(tree), testfun);
+    val dc = cons_count_rec(item, us_cdr(tree), testfun);
+
+    return plus(plus(hc, ac), dc);
+  }
+
+  return hc;
+}
+
+val cons_count(val item, val tree, val testfun_in)
+{
+  return cons_count_rec(item, tree, default_arg(testfun_in, equal_f));
+}
+
 val some_satisfy(val seq, val pred_in, val key_in)
 {
   val pred = default_arg(pred_in, identity_f);
