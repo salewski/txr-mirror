@@ -2304,8 +2304,7 @@
               lm-expr)))))
 
 (defun simplify-variadic-lambda (form)
-  (if-match @(require (lambda @(and @params @(or @(end (@nil . @rest))
-                                                 @rest))
+  (if-match @(require (lambda @(and @params @(end @rest))
                         [sys:apply . @args])
                       rest
                       (eq 1 (count rest (flatten args)))
