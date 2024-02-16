@@ -43098,7 +43098,7 @@ returning an expanded version of the form.
 
 The
 .meta proto-form
-is a compound for which has a shape very similar to a lambda
+is a compound form which has a shape very similar to a lambda
 expression, and may be a lambda expression.
 
 The first element of
@@ -43132,22 +43132,22 @@ specifies the top-level environment.
 .TP* Examples:
 
 .verb
-;; No expansion: argument is returned
-(macroexpand-params '(foo (arg) body)) -> (foo (arg) body)
+  ;; No expansion: argument is returned
+  (macroexpand-params '(foo (arg) body)) -> (foo (arg) body)
 
-;; Expand :key macro
-(macroexpand-params '(bar (:key a b c -- d (e 1234 f-p)) body))
---> (bar (a b c . #:g0014)
-      (let (d e f-p)
-        (let ((#:g0015 (memp :d #:g0014)))
-          (when #:g0015
-            (set d (cadr #:g0015))))
-        (let ((#:g0015 (memp :e #:g0014)))
-          (cond 
-            (#:g0015 (set e (cadr #:g0015))
-                     (set f-p t))
-            (t (set e 1234))))
-        body))
+  ;; Expand :key macro
+  (macroexpand-params '(bar (:key a b c -- d (e 1234 f-p)) body))
+  --> (bar (a b c . #:g0014)
+        (let (d e f-p)
+          (let ((#:g0015 (memp :d #:g0014)))
+            (when #:g0015
+              (set d (cadr #:g0015))))
+          (let ((#:g0015 (memp :e #:g0014)))
+            (cond
+              (#:g0015 (set e (cadr #:g0015))
+                       (set f-p t))
+              (t (set e 1234))))
+          body))
 .brev
 
 .SS* Mutation of Syntactic Places
