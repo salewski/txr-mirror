@@ -15276,6 +15276,28 @@ closures, but are captured in delimited continuations.
   (let (:a nil)) -> error, :a and nil can't be used as variables
 .brev
 
+.TP* "Rationale:"
+
+\*(TL follows ANSI Common Lisp in making
+.code let
+the parallel binding construct, and
+.code let*
+the sequential one. In that language, the situation exists for historic
+reasons: mainly that
+.code let
+was initially understood as being a macro for an immediately-called
+.code lambda
+where the parameters come into existence simultaneously, receiving the
+evaluated values of all the argument expressions. The need for sequential
+binding was recognized later, by which time
+.code let
+was cemented as a parallel binding construct.
+There are very good arguments for, in a new design, using the
+.code let
+name for the construct which has sequential semantics.
+Nevertheless, in this matter, \*(TL remains compatible with dialects like
+ANSI CL and Emacs Lisp.
+
 .coNP Operator @ progv
 .synb
 .mets (progv < symbols-expr < values-expr << body-form *)
