@@ -3089,9 +3089,8 @@ static val rem_impl(val (*eqfun)(val, val), val name,
   }
 }
 
-val remove_if(val pred, val seq_in, val keyfun_in)
+static val rem_if_impl(val pred, val seq_in, val keyfun_in, val self)
 {
-  val self = lit("remove-if");
   val keyfun = default_null_arg(keyfun_in);
 
   switch (type(seq_in)) {
@@ -3188,9 +3187,14 @@ val keepqual(val obj, val seq, val keyfun)
   return rem_impl(nequal, lit("keepqual"), obj, seq, keyfun);
 }
 
+val remove_if(val pred, val seq, val keyfun)
+{
+  return rem_if_impl(pred, seq, keyfun, lit("remove-if"));
+}
+
 val keep_if(val pred, val seq, val keyfun)
 {
-  return remove_if(notf(pred), seq, keyfun);
+  return rem_if_impl(notf(pred), seq, keyfun, lit("keep-if"));
 }
 
 val keep_keys_if(val pred, val seq_in, val keyfun_in)
