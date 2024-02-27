@@ -1545,6 +1545,12 @@ void seq_build_init(seq_build_t *bu, val likeobj)
     bu->ops = &sb_buf_ops;
     break;
   case COBJ:
+    if (likeobj->co.cls == seq_iter_cls)
+    {
+      struct seq_iter *si = coerce(struct seq_iter *, likeobj->co.handle);
+      seq_build_init(bu, si->inf.obj);
+      break;
+    }
     if (obj_struct_p(likeobj)) {
       val from_list_meth = get_special_slot(likeobj, from_list_m);
 
