@@ -1472,12 +1472,29 @@ static void seq_build_buf_finish(seq_build_t *bu)
 
 static void seq_build_list_add(seq_build_t *bu, val item)
 {
-  bu->obj = cons(item, bu->obj);
+  val obj = bu->obj;
+
+  if (obj) {
+    val head = us_cdr(obj);
+    val nobj = cons(item, head);
+    us_rplacd(obj, nobj);
+    bu->obj = nobj;
+  } else {
+    val nobj = cons(item, nil);
+    us_rplacd(nobj, nobj);
+    bu->obj = nobj;
+  }
 }
 
 static void seq_build_list_finish(seq_build_t *bu)
 {
-  bu->obj = nreverse(bu->obj);
+  val obj = bu->obj;
+
+  if (obj) {
+    val head = us_cdr(obj);
+    us_rplacd(obj, nil);
+    bu->obj = head;
+  }
 }
 
 static void seq_build_struct_finish(seq_build_t *bu)
