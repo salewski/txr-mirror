@@ -471,6 +471,7 @@ struct seq_iter_ops {
 
 typedef struct seq_build {
   val obj;
+  val self;
   union {
     val from_list_meth;
     val carray_type;
@@ -480,7 +481,7 @@ typedef struct seq_build {
 
 struct seq_build_ops {
   void (*add)(struct seq_build *, val);
-  void (*pend)(struct seq_build *, val, val self);
+  void (*pend)(struct seq_build *, val);
   void (*finish)(struct seq_build *);
   void (*mark)(struct seq_build *);
 };
@@ -763,9 +764,9 @@ val iter_more(val iter);
 val iter_item(val iter);
 val iter_step(val iter);
 val iter_reset(val iter, val obj);
-void seq_build_init(seq_build_t *bu, val likeobj);
+void seq_build_init(val self, seq_build_t *bu, val likeobj);
 void seq_add(seq_build_t *bu, val item);
-void seq_pend(seq_build_t *bu, val items, val self);
+void seq_pend(seq_build_t *bu, val items);
 val seq_finish(seq_build_t *bu);
 NORETURN val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)

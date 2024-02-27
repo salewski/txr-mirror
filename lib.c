@@ -1406,11 +1406,11 @@ val iter_reset(val iter, val obj)
   }
 }
 
-static void seq_build_generic_pend(seq_build_t *bu, val seq, val self)
+static void seq_build_generic_pend(seq_build_t *bu, val seq)
 {
   seq_iter_t it;
   val elem;
-  seq_iter_init(self, &it, seq);
+  seq_iter_init(bu->self, &it, seq);
 
   while (seq_get(&it, &elem))
     bu->ops->add(bu, elem);
@@ -1456,12 +1456,11 @@ static void seq_build_buf_add(seq_build_t *bu, val item)
   buf_put_uchar(buf, len, item);
 }
 
-static void seq_build_buf_pend(seq_build_t *bu, val seq, val self)
+static void seq_build_buf_pend(seq_build_t *bu, val seq)
 {
   val buf = bu->obj;
   val len = length_buf(buf);
 
-  (void) self;
   replace_buf(buf, seq, len, len);
 }
 
@@ -1544,8 +1543,10 @@ static struct seq_build_ops
                                    seq_build_list_finish,
                                    seq_build_obj_mark);
 
-void seq_build_init(seq_build_t *bu, val likeobj)
+void seq_build_init(val self, seq_build_t *bu, val likeobj)
 {
+  bu->self = self;
+
   switch (type(likeobj)) {
   case VEC:
     bu->obj = vector(zero, nil);
@@ -1565,7 +1566,7 @@ void seq_build_init(seq_build_t *bu, val likeobj)
     if (likeobj->co.cls == seq_iter_cls)
     {
       struct seq_iter *si = coerce(struct seq_iter *, likeobj->co.handle);
-      seq_build_init(bu, si->inf.obj);
+      seq_build_init(self, bu, si->inf.obj);
       break;
     }
     if (obj_struct_p(likeobj)) {
@@ -1599,9 +1600,9 @@ void seq_add(seq_build_t *bu, val item)
   bu->ops->add(bu, item);
 }
 
-void seq_pend(seq_build_t *bu, val items, val self)
+void seq_pend(seq_build_t *bu, val items)
 {
-  bu->ops->pend(bu, items, self);
+  bu->ops->pend(bu, items);
 }
 
 val seq_finish(seq_build_t *bu)
@@ -3234,7 +3235,7 @@ static val rem_impl(val (*eqfun)(val, val), val self,
   val elem;
 
   seq_iter_init(self, &it, seq);
-  seq_build_init(&bu, seq);
+  seq_build_init(self, &bu, seq);
 
   while (seq_get(&it, &elem)) {
     val key = keyfun ? funcall1(keyfun, elem) : elem;
@@ -3253,7 +3254,7 @@ static val rem_if_impl(val pred, val seq, val keyfun_in, val self)
   val elem;
 
   seq_iter_init(self, &it, seq);
-  seq_build_init(&bu, seq);
+  seq_build_init(self, &bu, seq);
 
   while (seq_get(&it, &elem)) {
     val key = keyfun ? funcall1(keyfun, elem) : elem;
@@ -3313,7 +3314,7 @@ val keep_keys_if(val pred, val seq, val keyfun_in)
   val elem;
 
   seq_iter_init(self, &it, seq);
-  seq_build_init(&bu, seq);
+  seq_build_init(self, &bu, seq);
 
   while (seq_get(&it, &elem)) {
     val key = keyfun ? funcall1(keyfun, elem) : elem;
@@ -3335,8 +3336,8 @@ val separate(val pred, val seq, val keyfun_in)
   val elem;
 
   seq_iter_init(self, &it, seq);
-  seq_build_init(&yea, seq);
-  seq_build_init(&nay, seq);
+  seq_build_init(self, &yea, seq);
+  seq_build_init(self, &nay, seq);
 
   while (seq_get(&it, &elem)) {
     val key = keyfun ? funcall1(keyfun, elem) : elem;
@@ -3356,8 +3357,8 @@ val separate_keys(val pred, val seq, val keyfun_in)
   val elem;
 
   seq_iter_init(self, &it, seq);
-  seq_build_init(&yea, seq);
-  seq_build_init(&nay, seq);
+  seq_build_init(self, &yea, seq);
+  seq_build_init(self, &nay, seq);
 
   while (seq_get(&it, &elem)) {
     val key = keyfun ? funcall1(keyfun, elem) : elem;
