@@ -1498,13 +1498,14 @@ static void seq_build_list_finish(seq_build_t *bu)
 
 static void seq_build_struct_finish(seq_build_t *bu)
 {
-  bu->obj = funcall1(bu->u.from_list_meth, nreverse(bu->obj));
+  seq_build_list_finish(bu);
+  bu->obj = funcall1(bu->u.from_list_meth, bu->obj);
 }
 
 static void seq_build_carray_finish(seq_build_t *bu)
 {
-  bu->obj = carray_list(nreverse(bu->obj), bu->u.carray_type, nil);
-
+  seq_build_list_finish(bu);
+  bu->obj = carray_list(bu->obj, bu->u.carray_type, nil);
 }
 
 static struct seq_build_ops
