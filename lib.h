@@ -469,6 +469,26 @@ struct seq_iter_ops {
 #define seq_iter_ops_init(get, peek) { get, peek, seq_iter_mark_op }
 #define seq_iter_ops_init_nomark(get, peek) { get, peek, 0 }
 
+typedef struct seq_build {
+  seq_info_t inf;
+  val obj;
+  union {
+    val from_list_meth;
+    val carray_type;
+  } u;
+  struct seq_build_ops *ops;
+} seq_build_t;
+
+struct seq_build_ops {
+  void (*add)(struct seq_build *, val);
+  void (*pend)(struct seq_build *, val, val self);
+  void (*finish)(struct seq_build *);
+  void (*mark)(struct seq_build *);
+};
+
+#define seq_build_ops_init(add, pend, finish, mark) \
+  { add, pend, finish, mark }
+
 extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
 
 #define SEQ_KIND_PAIR(A, B) ((A) << 3 | (B))
@@ -744,6 +764,10 @@ val iter_more(val iter);
 val iter_item(val iter);
 val iter_step(val iter);
 val iter_reset(val iter, val obj);
+void seq_build_init(seq_build_t *bu, val likeobj);
+void seq_add(seq_build_t *bu, val item);
+void seq_pend(seq_build_t *bu, val items, val self);
+val seq_finish(seq_build_t *bu);
 NORETURN val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)
 {

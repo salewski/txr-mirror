@@ -1406,6 +1406,188 @@ val iter_reset(val iter, val obj)
   }
 }
 
+static void seq_build_generic_pend(seq_build_t *bu, val seq, val self)
+{
+  seq_iter_t it;
+  val elem;
+  seq_iter_init(self, &it, seq);
+
+  while (seq_get(&it, &elem))
+    bu->ops->add(bu, elem);
+}
+
+static void seq_build_obj_mark(seq_build_t *bu)
+{
+  gc_mark(bu->obj);
+}
+
+static void seq_build_struct_mark(seq_build_t *bu)
+{
+  gc_mark(bu->obj);
+  gc_mark(bu->u.from_list_meth);
+}
+
+static void seq_build_carray_mark(seq_build_t *bu)
+{
+  gc_mark(bu->obj);
+  gc_mark(bu->u.carray_type);
+}
+
+static void seq_build_vec_add(seq_build_t *bu, val item)
+{
+  vec_push(bu->obj, item);
+}
+
+static void seq_build_str_add(seq_build_t *bu, val item)
+{
+  string_extend(bu->obj, item, nil);
+}
+
+static void seq_build_str_finish(seq_build_t *bu)
+{
+  string_finish(bu->obj);
+}
+
+static void seq_build_buf_add(seq_build_t *bu, val item)
+{
+  val buf = bu->obj;
+  val len = length_buf(buf);
+
+  buf_put_uchar(buf, len, item);
+}
+
+static void seq_build_buf_pend(seq_build_t *bu, val seq, val self)
+{
+  val buf = bu->obj;
+  val len = length_buf(buf);
+
+  (void) self;
+  replace_buf(buf, seq, len, len);
+}
+
+static void seq_build_buf_finish(seq_build_t *bu)
+{
+  buf_trim(bu->obj);
+}
+
+static void seq_build_list_add(seq_build_t *bu, val item)
+{
+  bu->obj = cons(item, bu->obj);
+}
+
+static void seq_build_list_finish(seq_build_t *bu)
+{
+  bu->obj = nreverse(bu->obj);
+}
+
+static void seq_build_struct_finish(seq_build_t *bu)
+{
+  bu->obj = funcall1(bu->u.from_list_meth, nreverse(bu->obj));
+}
+
+static void seq_build_carray_finish(seq_build_t *bu)
+{
+  bu->obj = carray_list(nreverse(bu->obj), bu->u.carray_type, nil);
+
+}
+
+static struct seq_build_ops
+  sb_vec_ops = seq_build_ops_init(seq_build_vec_add,
+                                  seq_build_generic_pend,
+                                  0,
+                                seq_build_obj_mark);
+
+static struct seq_build_ops
+  sb_str_ops = seq_build_ops_init(seq_build_str_add,
+                                  seq_build_generic_pend,
+                                  seq_build_str_finish,
+                                  seq_build_obj_mark);
+
+static struct seq_build_ops
+  sb_buf_ops = seq_build_ops_init(seq_build_buf_add,
+                                  seq_build_buf_pend,
+                                  seq_build_buf_finish,
+                                  seq_build_obj_mark);
+
+static struct seq_build_ops
+  sb_struct_ops = seq_build_ops_init(seq_build_list_add,
+                                     seq_build_generic_pend,
+                                     seq_build_struct_finish,
+                                     seq_build_struct_mark);
+
+static struct seq_build_ops
+  sb_carray_ops = seq_build_ops_init(seq_build_list_add,
+                                     seq_build_generic_pend,
+                                     seq_build_carray_finish,
+                                     seq_build_carray_mark);
+
+static struct seq_build_ops
+  sb_list_ops = seq_build_ops_init(seq_build_list_add,
+                                   seq_build_generic_pend,
+                                   seq_build_list_finish,
+                                   seq_build_obj_mark);
+
+void seq_build_init(seq_build_t *bu, val likeobj)
+{
+  switch (type(likeobj)) {
+  case VEC:
+    bu->obj = vector(zero, nil);
+    bu->ops = &sb_vec_ops;
+    break;
+  case STR:
+  case LIT:
+  case LSTR:
+    bu->obj = string(L"");
+    bu->ops = &sb_str_ops;
+    break;
+  case BUF:
+    bu->obj = make_buf(zero, zero, num_fast(32));
+    bu->ops = &sb_buf_ops;
+    break;
+  case COBJ:
+    if (obj_struct_p(likeobj)) {
+      val from_list_meth = get_special_slot(likeobj, from_list_m);
+
+      if (from_list_meth) {
+        bu->obj = nil;
+        bu->u.from_list_meth = from_list_meth;
+        bu->ops = &sb_struct_ops;
+        break;
+      }
+    }
+    if (likeobj->co.cls == carray_cls) {
+      bu->obj = nil;
+      bu->u.carray_type = carray_type(likeobj);
+      bu->ops = &sb_carray_ops;
+    }
+    /* fallthrough */
+  case NIL:
+  case CONS:
+  case LCONS:
+  default:
+    bu->obj = nil;
+    bu->ops = &sb_list_ops;
+    break;
+  }
+}
+
+void seq_add(seq_build_t *bu, val item)
+{
+  bu->ops->add(bu, item);
+}
+
+void seq_pend(seq_build_t *bu, val items, val self)
+{
+  bu->ops->pend(bu, items, self);
+}
+
+val seq_finish(seq_build_t *bu)
+{
+  if (bu->ops->finish)
+    bu->ops->finish(bu);
+  return bu->obj;
+}
+
 val throw_mismatch(val self, val obj, type_t t)
 {
   type_mismatch(lit("~a: ~s is not of type ~s"), self, obj, code2type(t), nao);
@@ -3020,141 +3202,43 @@ val rmember_if(val pred, val list, val key)
   return found;
 }
 
-static val rem_impl(val (*eqfun)(val, val), val name,
-                    val obj, val seq_in, val keyfun_in)
+static val rem_impl(val (*eqfun)(val, val), val self,
+                    val obj, val seq, val keyfun_in)
 {
   val keyfun = default_null_arg(keyfun_in);
+  seq_iter_t it;
+  seq_build_t bu;
+  val elem;
 
-  switch (type(seq_in)) {
-  case NIL:
-    return nil;
-  case CONS:
-  case LCONS:
-  case COBJ:
-    {
-      list_collect_decl (out, ptail);
-      val list = seq_in;
-      val lastmatch = cons(nil, list);
+  seq_iter_init(self, &it, seq);
+  seq_build_init(&bu, seq);
 
-      gc_hint(list);
-
-      for (; list; list = cdr(list)) {
-        val elem = car(list);
-        val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-        if (eqfun(key, obj)) {
-          ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-          lastmatch = list;
-        }
-      }
-      ptail = list_collect_nconc(ptail, cdr(lastmatch));
-      return out;
-    }
-  case LIT:
-  case STR:
-  case LSTR:
-    {
-      val out = mkustring(zero);
-      val str = seq_in;
-      cnum len = c_fixnum(length_str(str), name), i;
-
-      for (i = 0; i < len; i++) {
-        val elem = chr_str(str, num_fast(i));
-        val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-        if (!eqfun(key, obj))
-          string_extend(out, elem, tnil(i == len - 1));
-      }
-
-      return out;
-    }
-  case VEC:
-    {
-      val out = vector(zero, nil);
-      val vec = seq_in;
-      cnum len = c_fixnum(length_vec(vec), name), i;
-
-      for (i = 0; i < len; i++) {
-        val elem = vecref(vec, num_fast(i));
-        val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-        if (!eqfun(key, obj))
-          vec_push(out, elem);
-      }
-
-      return out;
-    }
-  default:
-    uw_throwf(error_s, lit("~a: ~s isn't a sequence"), name, seq_in, nao);
+  while (seq_get(&it, &elem)) {
+    val key = keyfun ? funcall1(keyfun, elem) : elem;
+    if (!eqfun(key, obj))
+      seq_add(&bu, elem);
   }
+
+  return seq_finish(&bu);
 }
 
-static val rem_if_impl(val pred, val seq_in, val keyfun_in, val self)
+static val rem_if_impl(val pred, val seq, val keyfun_in, val self)
 {
   val keyfun = default_null_arg(keyfun_in);
+  seq_iter_t it;
+  seq_build_t bu;
+  val elem;
 
-  switch (type(seq_in)) {
-  case NIL:
-    return nil;
-  case CONS:
-  case LCONS:
-  case COBJ:
-    {
-      list_collect_decl (out, ptail);
-      val list = seq_in;
-      val lastmatch = cons(nil, list);
+  seq_iter_init(self, &it, seq);
+  seq_build_init(&bu, seq);
 
-      gc_hint(list);
-
-      for (; list; list = cdr(list)) {
-        val elem = car(list);
-        val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-        if (funcall1(pred, key)) {
-          ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-          lastmatch = list;
-        }
-      }
-      ptail = list_collect_nconc(ptail, cdr(lastmatch));
-      return out;
-    }
-  case LIT:
-  case STR:
-  case LSTR:
-    {
-      val out = mkustring(zero);
-      val str = seq_in;
-      cnum len = c_fixnum(length_str(str), self), i;
-
-      for (i = 0; i < len; i++) {
-        val elem = chr_str(str, num_fast(i));
-        val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-        if (!funcall1(pred, key))
-          string_extend(out, elem, tnil(i == len - 1));
-      }
-
-      return out;
-    }
-  case VEC:
-    {
-      val out = vector(zero, nil);
-      val vec = seq_in;
-      cnum len = c_fixnum(length_vec(vec), self), i;
-
-      for (i = 0; i < len; i++) {
-        val elem = vecref(vec, num_fast(i));
-        val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-        if (!funcall1(pred, key))
-          vec_push(out, elem);
-      }
-
-      return out;
-    }
-  default:
-    uw_throwf(error_s, lit("~a: ~s isn't a sequence"), self, seq_in, nao);
+  while (seq_get(&it, &elem)) {
+    val key = keyfun ? funcall1(keyfun, elem) : elem;
+    if (!funcall1(pred, key))
+      seq_add(&bu, elem);
   }
+
+  return seq_finish(&bu);
 }
 
 val remq(val obj, val seq, val keyfun)
