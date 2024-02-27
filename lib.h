@@ -470,7 +470,6 @@ struct seq_iter_ops {
 #define seq_iter_ops_init_nomark(get, peek) { get, peek, 0 }
 
 typedef struct seq_build {
-  seq_info_t inf;
   val obj;
   union {
     val from_list_meth;
