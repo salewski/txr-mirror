@@ -1521,14 +1521,12 @@ static void seq_build_struct_finish(seq_build_t *bu)
 {
   seq_build_list_finish(bu);
   bu->obj = funcall1(bu->u.from_list_meth, bu->obj);
-  seq_build_convert_to_finished(bu);
 }
 
 static void seq_build_carray_finish(seq_build_t *bu)
 {
   seq_build_list_finish(bu);
   bu->obj = carray_list(bu->obj, bu->u.carray_type, nil);
-  seq_build_convert_to_finished(bu);
 }
 
 static void seq_build_improper_add(seq_build_t *bu, val item)
