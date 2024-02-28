@@ -10889,7 +10889,18 @@ val mapcar_listout(val fun, val seq)
 
 val mapcar(val fun, val seq)
 {
-  return make_like(mapcar_listout(fun, seq), seq);
+  val self = lit("mapcar");
+  seq_iter_t iter;
+  seq_build_t build;
+  val elem;
+
+  seq_iter_init(self, &iter, seq);
+  seq_build_init(self, &build, seq);
+
+  while (seq_get(&iter, &elem))
+    seq_add(&build, funcall1(fun, elem));
+
+  return seq_finish(&build);
 }
 
 val mapcon(val fun, val list)
@@ -10909,15 +10920,16 @@ val mappend(val fun, val seq)
 {
   val self = lit("mappend");
   seq_iter_t iter;
+  seq_build_t build;
   val elem;
-  list_collect_decl (out, ptail);
 
   seq_iter_init(self, &iter, seq);
+  seq_build_init(self, &build, seq);
 
   while (seq_get(&iter, &elem))
-    ptail = list_collect_append(ptail, funcall1(fun, elem));
+    seq_pend(&build, funcall1(fun, elem));
 
-  return make_like(out, seq);
+  return seq_finish(&build);
 }
 
 val mapdo(val fun, val seq)
