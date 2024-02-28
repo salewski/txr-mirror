@@ -1438,9 +1438,16 @@ static void seq_build_vec_add(seq_build_t *bu, val item)
   vec_push(bu->obj, item);
 }
 
+static void seq_build_convert_to_list(seq_build_t *bu, val list);
+
 static void seq_build_str_add(seq_build_t *bu, val item)
 {
-  string_extend(bu->obj, item, nil);
+  if (chrp(item)) {
+    string_extend(bu->obj, item, nil);
+  } else {
+    seq_build_convert_to_list(bu, list_str(bu->obj));
+    bu->ops->add(bu, item);
+  }
 }
 
 static void seq_build_str_finish(seq_build_t *bu)
@@ -1451,17 +1458,14 @@ static void seq_build_str_finish(seq_build_t *bu)
 static void seq_build_buf_add(seq_build_t *bu, val item)
 {
   val buf = bu->obj;
-  val len = length_buf(buf);
 
-  buf_put_uchar(buf, len, item);
-}
-
-static void seq_build_buf_pend(seq_build_t *bu, val seq)
-{
-  val buf = bu->obj;
-  val len = length_buf(buf);
-
-  replace_buf(buf, seq, len, len);
+  if (integerp(item)) {
+    val len = length_buf(buf);
+    buf_put_uchar(buf, len, item);
+  } else {
+    seq_build_convert_to_list(bu, mapcar_listout(identity_f, buf));
+    bu->ops->add(bu, item);
+  }
 }
 
 static void seq_build_buf_finish(seq_build_t *bu)
@@ -1522,7 +1526,7 @@ static struct seq_build_ops
 
 static struct seq_build_ops
   sb_buf_ops = seq_build_ops_init(seq_build_buf_add,
-                                  seq_build_buf_pend,
+                                  seq_build_generic_pend,
                                   seq_build_buf_finish,
                                   seq_build_obj_mark);
 
@@ -1543,6 +1547,20 @@ static struct seq_build_ops
                                    seq_build_generic_pend,
                                    seq_build_list_finish,
                                    seq_build_obj_mark);
+
+static void seq_build_convert_to_list(seq_build_t *bu, val list)
+{
+  if (list) {
+    val tail = lastcons(list);
+    us_rplacd(tail, list);
+    bu->obj = tail;
+  } else {
+    bu->obj = nil;
+  }
+
+  bu->ops = &sb_list_ops;
+}
+
 
 void seq_build_init(val self, seq_build_t *bu, val likeobj)
 {
