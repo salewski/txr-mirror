@@ -3785,24 +3785,27 @@ val lazy_flatcar(val tree)
 
 static val tuples_func(val n, val lcons)
 {
-  list_collect_decl (out, ptail);
+  seq_build_t bu;
   us_cons_bind (iter_in, fill, lcons);
   val iter = iter_in;
   val count;
 
+  seq_build_init(lit("tuples"), &bu, iter);
+
   for (count = n; count != zero && iter_more(iter);
        count = minus(count, one), iter = iter_step(iter))
-    ptail = list_collect(ptail, iter_item(iter));
+    seq_add(&bu, iter_item(iter));
 
   if (!missingp(fill))
     for (; gt(count, zero); count = minus(count, one))
-      ptail = list_collect(ptail, fill);
+      seq_add(&bu, fill);
 
   if (iter_more(iter))
     us_rplacd(lcons, make_lazy_cons_car_cdr(us_lcons_fun(lcons), iter, fill));
   else
     us_rplacd(lcons, nil);
-  us_rplaca(lcons, make_like(out, iter_in));
+
+  us_rplaca(lcons, seq_finish(&bu));
 
   return nil;
 }

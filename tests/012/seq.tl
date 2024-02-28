@@ -263,7 +263,7 @@
   list)
 
 (test
-  (lforce (tuples 2 "abc" 3)) :error)
+  (lforce (tuples 2 "abc" 3)) ("ab" (#\c 3)))
 
 (test
   (take 3 (tuples 3 (range 0))) ((0 1 2) (3 4 5) (6 7 8)))
