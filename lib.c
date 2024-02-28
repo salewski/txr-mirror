@@ -1489,6 +1489,19 @@ static void seq_build_list_add(seq_build_t *bu, val item)
   }
 }
 
+static void seq_build_convert_to_improper(seq_build_t *bu, val atom);
+
+static void seq_build_list_pend(seq_build_t *bu, val item)
+{
+  while (consp(item)) {
+    seq_build_list_add(bu, us_car(item));
+    item = us_cdr(item);
+  }
+
+  if (item)
+    seq_build_convert_to_improper(bu, item);
+}
+
 static void seq_build_list_finish(seq_build_t *bu)
 {
   val obj = bu->obj;
@@ -1510,6 +1523,25 @@ static void seq_build_carray_finish(seq_build_t *bu)
 {
   seq_build_list_finish(bu);
   bu->obj = carray_list(bu->obj, bu->u.carray_type, nil);
+}
+
+static void seq_build_improper_add(seq_build_t *bu, val item)
+{
+  val atom = butlastn(zero, bu->obj);
+  (void) item;
+  uw_throwf(error_s, lit("~a: cannot add after atom ~s"), bu->self, atom, nao);
+}
+
+static void seq_build_improper_pend(seq_build_t *bu, val item)
+{
+  val atom = butlastn(zero, bu->obj);
+  (void) item;
+  uw_throwf(error_s, lit("~a: cannot append after atom ~s"), bu->self, atom, nao);
+}
+
+static void seq_build_improper_finish(seq_build_t *bu)
+{
+  (void) bu;
 }
 
 static struct seq_build_ops
@@ -1544,9 +1576,15 @@ static struct seq_build_ops
 
 static struct seq_build_ops
   sb_list_ops = seq_build_ops_init(seq_build_list_add,
-                                   seq_build_generic_pend,
+                                   seq_build_list_pend,
                                    seq_build_list_finish,
                                    seq_build_obj_mark);
+
+static struct seq_build_ops
+  sb_improper_ops = seq_build_ops_init(seq_build_improper_add,
+                                       seq_build_improper_pend,
+                                       seq_build_improper_finish,
+                                       seq_build_obj_mark);
 
 static void seq_build_convert_to_list(seq_build_t *bu, val list)
 {
@@ -1561,6 +1599,20 @@ static void seq_build_convert_to_list(seq_build_t *bu, val list)
   bu->ops = &sb_list_ops;
 }
 
+static void seq_build_convert_to_improper(seq_build_t *bu, val atom)
+{
+  val obj = bu->obj;
+
+  if (obj) {
+    val head = us_cdr(obj);
+    us_rplacd(obj, atom);
+    bu->obj = head;
+  } else {
+    bu->obj = atom;
+  }
+
+  bu->ops = &sb_improper_ops;
+}
 
 void seq_build_init(val self, seq_build_t *bu, val likeobj)
 {
