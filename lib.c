@@ -1545,11 +1545,6 @@ static void seq_build_improper_pend(seq_build_t *bu, val item)
   uw_throwf(error_s, lit("~a: cannot append after atom ~s"), bu->self, atom, nao);
 }
 
-static void seq_build_improper_finish(seq_build_t *bu)
-{
-  (void) bu;
-}
-
 static struct seq_build_ops
   sb_vec_ops = seq_build_ops_init(seq_build_vec_add,
                                   seq_build_generic_pend,
@@ -1589,7 +1584,7 @@ static struct seq_build_ops
 static struct seq_build_ops
   sb_improper_ops = seq_build_ops_init(seq_build_improper_add,
                                        seq_build_improper_pend,
-                                       seq_build_improper_finish,
+                                       0,
                                        seq_build_obj_mark);
 
 static struct seq_build_ops
