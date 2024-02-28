@@ -471,6 +471,7 @@ struct seq_iter_ops {
 
 typedef struct seq_build {
   val obj;
+  loc tail;
   val self;
   union {
     val from_list_meth;

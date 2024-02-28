@@ -1475,45 +1475,18 @@ static void seq_build_buf_finish(seq_build_t *bu)
 
 static void seq_build_list_add(seq_build_t *bu, val item)
 {
-  val obj = bu->obj;
-
-  if (obj) {
-    val head = us_cdr(obj);
-    val nobj = cons(item, head);
-    us_rplacd(obj, nobj);
-    bu->obj = nobj;
-  } else {
-    val nobj = cons(item, nil);
-    us_rplacd(nobj, nobj);
-    bu->obj = nobj;
-  }
+  bu->tail = list_collect(bu->tail, item);
 }
 
-static void seq_build_convert_to_improper(seq_build_t *bu, val atom);
-
-static void seq_build_list_pend(seq_build_t *bu, val item)
+static void seq_build_list_pend(seq_build_t *bu, val items)
 {
-  while (consp(item)) {
-    seq_build_list_add(bu, us_car(item));
-    item = us_cdr(item);
-  }
-
-  if (item)
-    seq_build_convert_to_improper(bu, item);
+  bu->tail = list_collect_nconc(bu->tail, items);
 }
 
 static void seq_build_convert_to_finished(seq_build_t *bu);
 
 static void seq_build_list_finish(seq_build_t *bu)
 {
-  val obj = bu->obj;
-
-  if (obj) {
-    val head = us_cdr(obj);
-    us_rplacd(obj, nil);
-    bu->obj = head;
-  }
-
   seq_build_convert_to_finished(bu);
 }
 
@@ -1527,20 +1500,6 @@ static void seq_build_carray_finish(seq_build_t *bu)
 {
   seq_build_list_finish(bu);
   bu->obj = carray_list(bu->obj, bu->u.carray_type, nil);
-}
-
-static void seq_build_improper_add(seq_build_t *bu, val item)
-{
-  val atom = butlastn(zero, bu->obj);
-  (void) item;
-  uw_throwf(error_s, lit("~a: cannot add after atom ~s"), bu->self, atom, nao);
-}
-
-static void seq_build_improper_pend(seq_build_t *bu, val item)
-{
-  val atom = butlastn(zero, bu->obj);
-  (void) item;
-  uw_throwf(error_s, lit("~a: cannot append after atom ~s"), bu->self, atom, nao);
 }
 
 static struct seq_build_ops
@@ -1580,40 +1539,19 @@ static struct seq_build_ops
                                    seq_build_obj_mark);
 
 static struct seq_build_ops
-  sb_improper_ops = seq_build_ops_init(seq_build_improper_add,
-                                       seq_build_improper_pend,
-                                       0,
-                                       seq_build_obj_mark);
-
-static struct seq_build_ops
   sb_finished_ops = seq_build_ops_init(0, 0, 0, seq_build_obj_mark);
 
 static void seq_build_convert_to_list(seq_build_t *bu, val list)
 {
   if (list) {
-    val tail = lastcons(list);
-    us_rplacd(tail, list);
-    bu->obj = tail;
+    bu->obj = list;
+    bu->tail = tail(list);
   } else {
     bu->obj = nil;
+    bu->tail = mkcloc(bu->obj);
   }
 
   bu->ops = &sb_list_ops;
-}
-
-static void seq_build_convert_to_improper(seq_build_t *bu, val atom)
-{
-  val obj = bu->obj;
-
-  if (obj) {
-    val head = us_cdr(obj);
-    us_rplacd(obj, atom);
-    bu->obj = head;
-  } else {
-    bu->obj = atom;
-  }
-
-  bu->ops = &sb_improper_ops;
 }
 
 static void seq_build_convert_to_finished(seq_build_t *bu)
@@ -1652,6 +1590,7 @@ void seq_build_init(val self, seq_build_t *bu, val likeobj)
 
       if (from_list_meth) {
         bu->obj = nil;
+        bu->tail = mkcloc(bu->obj);
         bu->u.from_list_meth = from_list_meth;
         bu->ops = &sb_struct_ops;
         break;
@@ -1659,6 +1598,7 @@ void seq_build_init(val self, seq_build_t *bu, val likeobj)
     }
     if (likeobj->co.cls == carray_cls) {
       bu->obj = nil;
+      bu->tail = mkcloc(bu->obj);
       bu->u.carray_type = carray_type(likeobj);
       bu->ops = &sb_carray_ops;
     }
@@ -1668,6 +1608,7 @@ void seq_build_init(val self, seq_build_t *bu, val likeobj)
   case LCONS:
   default:
     bu->obj = nil;
+    bu->tail = mkcloc(bu->obj);
     bu->ops = &sb_list_ops;
     break;
   }
