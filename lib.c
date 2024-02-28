@@ -1502,6 +1502,8 @@ static void seq_build_list_pend(seq_build_t *bu, val item)
     seq_build_convert_to_improper(bu, item);
 }
 
+static void seq_build_convert_to_finished(seq_build_t *bu);
+
 static void seq_build_list_finish(seq_build_t *bu)
 {
   val obj = bu->obj;
@@ -1511,18 +1513,22 @@ static void seq_build_list_finish(seq_build_t *bu)
     us_rplacd(obj, nil);
     bu->obj = head;
   }
+
+  seq_build_convert_to_finished(bu);
 }
 
 static void seq_build_struct_finish(seq_build_t *bu)
 {
   seq_build_list_finish(bu);
   bu->obj = funcall1(bu->u.from_list_meth, bu->obj);
+  seq_build_convert_to_finished(bu);
 }
 
 static void seq_build_carray_finish(seq_build_t *bu)
 {
   seq_build_list_finish(bu);
   bu->obj = carray_list(bu->obj, bu->u.carray_type, nil);
+  seq_build_convert_to_finished(bu);
 }
 
 static void seq_build_improper_add(seq_build_t *bu, val item)
@@ -1586,6 +1592,9 @@ static struct seq_build_ops
                                        seq_build_improper_finish,
                                        seq_build_obj_mark);
 
+static struct seq_build_ops
+  sb_finished_ops = seq_build_ops_init(0, 0, 0, seq_build_obj_mark);
+
 static void seq_build_convert_to_list(seq_build_t *bu, val list)
 {
   if (list) {
@@ -1612,6 +1621,11 @@ static void seq_build_convert_to_improper(seq_build_t *bu, val atom)
   }
 
   bu->ops = &sb_improper_ops;
+}
+
+static void seq_build_convert_to_finished(seq_build_t *bu)
+{
+  bu->ops = &sb_finished_ops;
 }
 
 void seq_build_init(val self, seq_build_t *bu, val likeobj)
