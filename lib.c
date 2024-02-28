@@ -1547,7 +1547,7 @@ static struct seq_build_ops
   sb_vec_ops = seq_build_ops_init(seq_build_vec_add,
                                   seq_build_generic_pend,
                                   0,
-                                seq_build_obj_mark);
+                                  seq_build_obj_mark);
 
 static struct seq_build_ops
   sb_str_ops = seq_build_ops_init(seq_build_str_add,
