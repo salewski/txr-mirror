@@ -3897,15 +3897,17 @@ val tuples_star(val n, val seq, val fill)
 static val partition_by_func(val func, val lcons)
 {
   seq_build_t bu;
-  us_cons_bind (flast, seq, lcons);
+  us_cons_bind (flast, iter, lcons);
   val fnext = nil;
 
-  seq_build_init(lit("partition-by"), &bu, seq);
+  seq_build_init(lit("partition-by"), &bu, iter);
 
-  seq_add(&bu, pop(&seq));
+  seq_add(&bu, iter_item(iter));
+  iter = iter_step(iter);
 
-  while (seq) {
-    val next = car(seq);
+  while (iter_more(iter)) {
+    val next = iter_item(iter);
+
     fnext = funcall1(func, next);
 
     if (!equal(flast, fnext))
@@ -3913,26 +3915,27 @@ static val partition_by_func(val func, val lcons)
 
     seq_add(&bu, next);
 
-    seq = cdr(seq);
+    iter = iter_step(iter);
     flast = fnext;
   }
 
-  us_rplacd(lcons, if2(seq,
+  us_rplacd(lcons, if2(iter_more(iter),
                        make_lazy_cons_car_cdr(us_lcons_fun(lcons),
-                                              fnext, seq)));
+                                              fnext, iter)));
   us_rplaca(lcons, seq_finish(&bu));
   return nil;
 }
 
 val partition_by(val func, val seq)
 {
+  val iter = iter_begin(seq);
   seq = nullify(seq);
 
-  if (!seq)
+  if (!iter_more(iter))
     return nil;
 
   return make_lazy_cons_car_cdr(func_f1(func, partition_by_func),
-                                funcall1(func, car(seq)), seq);
+                                funcall1(func, iter_item(iter)), iter);
 }
 
 static val partition_if_countdown_funv(val envcons, varg args)
