@@ -483,12 +483,13 @@ typedef struct seq_build {
 struct seq_build_ops {
   void (*add)(struct seq_build *, val);
   void (*pend)(struct seq_build *, val);
+  void (*nconc)(struct seq_build *, val);
   void (*finish)(struct seq_build *);
   void (*mark)(struct seq_build *);
 };
 
-#define seq_build_ops_init(add, pend, finish, mark) \
-  { add, pend, finish, mark }
+#define seq_build_ops_init(add, pend, nconc, finish, mark) \
+  { add, pend, nconc, finish, mark }
 
 extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
 
@@ -768,6 +769,7 @@ val iter_reset(val iter, val obj);
 void seq_build_init(val self, seq_build_t *bu, val likeobj);
 void seq_add(seq_build_t *bu, val item);
 void seq_pend(seq_build_t *bu, val items);
+void seq_nconc(seq_build_t *bu, val items);
 val seq_finish(seq_build_t *bu);
 NORETURN val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)

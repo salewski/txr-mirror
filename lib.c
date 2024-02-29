@@ -1480,6 +1480,11 @@ static void seq_build_list_add(seq_build_t *bu, val item)
 
 static void seq_build_list_pend(seq_build_t *bu, val items)
 {
+  bu->tail = list_collect_append(bu->tail, items);
+}
+
+static void seq_build_list_nconc(seq_build_t *bu, val items)
+{
   bu->tail = list_collect_nconc(bu->tail, items);
 }
 
@@ -1505,11 +1510,13 @@ static void seq_build_carray_finish(seq_build_t *bu)
 static struct seq_build_ops
   sb_vec_ops = seq_build_ops_init(seq_build_vec_add,
                                   seq_build_generic_pend,
+                                  seq_build_generic_pend,
                                   0,
                                   seq_build_obj_mark);
 
 static struct seq_build_ops
   sb_str_ops = seq_build_ops_init(seq_build_str_add,
+                                  seq_build_generic_pend,
                                   seq_build_generic_pend,
                                   seq_build_str_finish,
                                   seq_build_obj_mark);
@@ -1517,11 +1524,13 @@ static struct seq_build_ops
 static struct seq_build_ops
   sb_buf_ops = seq_build_ops_init(seq_build_buf_add,
                                   seq_build_generic_pend,
+                                  seq_build_generic_pend,
                                   seq_build_buf_finish,
                                   seq_build_obj_mark);
 
 static struct seq_build_ops
   sb_struct_ops = seq_build_ops_init(seq_build_list_add,
+                                     seq_build_generic_pend,
                                      seq_build_generic_pend,
                                      seq_build_struct_finish,
                                      seq_build_struct_mark);
@@ -1529,17 +1538,19 @@ static struct seq_build_ops
 static struct seq_build_ops
   sb_carray_ops = seq_build_ops_init(seq_build_list_add,
                                      seq_build_generic_pend,
+                                     seq_build_generic_pend,
                                      seq_build_carray_finish,
                                      seq_build_carray_mark);
 
 static struct seq_build_ops
   sb_list_ops = seq_build_ops_init(seq_build_list_add,
                                    seq_build_list_pend,
+                                   seq_build_list_nconc,
                                    seq_build_list_finish,
                                    seq_build_obj_mark);
 
 static struct seq_build_ops
-  sb_finished_ops = seq_build_ops_init(0, 0, 0, seq_build_obj_mark);
+  sb_finished_ops = seq_build_ops_init(0, 0, 0, 0, seq_build_obj_mark);
 
 static void seq_build_convert_to_list(seq_build_t *bu, val list)
 {
@@ -1622,6 +1633,11 @@ void seq_add(seq_build_t *bu, val item)
 void seq_pend(seq_build_t *bu, val items)
 {
   bu->ops->pend(bu, items);
+}
+
+void seq_nconc(seq_build_t *bu, val items)
+{
+  bu->ops->nconc(bu, items);
 }
 
 val seq_finish(seq_build_t *bu)
