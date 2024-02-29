@@ -3951,10 +3951,12 @@ static val partition_if_countdown_funv(val envcons, varg args)
 
 static val partition_if_func(val func, val lcons)
 {
-  list_collect_decl (out, ptail);
+  seq_build_t bu;
   us_cons_bind (prev_item, iter, lcons);
 
-  ptail = list_collect(ptail, prev_item);
+  seq_build_init(lit("partition-if"), &bu, iter);
+
+  seq_add(&bu, prev_item);
 
   while (iter_more(iter)) {
     val next_item = iter_item(iter);
@@ -3962,14 +3964,14 @@ static val partition_if_func(val func, val lcons)
     prev_item = next_item;
     if (different)
       break;
-    ptail = list_collect(ptail, next_item);
+    seq_add(&bu, next_item);
     iter = iter_step(iter);
   }
 
   us_rplacd(lcons, if2(iter_more(iter),
                        make_lazy_cons_car_cdr(us_lcons_fun(lcons),
                                               prev_item, iter_step(iter))));
-  us_rplaca(lcons, make_like(out, iter));
+  us_rplaca(lcons, seq_finish(&bu));
   return nil;
 }
 
