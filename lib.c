@@ -3896,12 +3896,13 @@ val tuples_star(val n, val seq, val fill)
 
 static val partition_by_func(val func, val lcons)
 {
-  list_collect_decl (out, ptail);
-  us_cons_bind (flast, seq_in, lcons);
-  val seq = seq_in;
+  seq_build_t bu;
+  us_cons_bind (flast, seq, lcons);
   val fnext = nil;
 
-  ptail = list_collect(ptail, pop(&seq));
+  seq_build_init(lit("partition-by"), &bu, seq);
+
+  seq_add(&bu, pop(&seq));
 
   while (seq) {
     val next = car(seq);
@@ -3910,7 +3911,7 @@ static val partition_by_func(val func, val lcons)
     if (!equal(flast, fnext))
       break;
 
-    ptail = list_collect(ptail, next);
+    seq_add(&bu, next);
 
     seq = cdr(seq);
     flast = fnext;
@@ -3919,7 +3920,7 @@ static val partition_by_func(val func, val lcons)
   us_rplacd(lcons, if2(seq,
                        make_lazy_cons_car_cdr(us_lcons_fun(lcons),
                                               fnext, seq)));
-  us_rplaca(lcons, make_like(out, seq_in));
+  us_rplaca(lcons, seq_finish(&bu));
   return nil;
 }
 
