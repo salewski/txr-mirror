@@ -16265,14 +16265,12 @@ For this reason,
 may be any object that is iterable by
 .codn iter-begin .
 
-.meIP >> [ sequence << index-list ]
-Elements specified
-by
-.metn index-list ,
-which may be a list or vector,
-are extracted from
+.meIP >> [ sequence << index-seq ]
+Elements of
 .meta sequence
-and returned as a sequence
+specified by elements of
+.metn index-seq ,
+are extracted and returned as a sequence
 of the same kind as
 .metn sequence .
 
@@ -16288,7 +16286,7 @@ is one. If a sequence is assigned to this place,
 then elements of the sequence are distributed to the
 specified locations.
 
-The following equivalences hold between index-list-based indexing
+The following equivalences hold between index-sequence-based indexing
 and the
 .code select
 and
@@ -16300,18 +16298,18 @@ always returns the value assigned, whereas
 returns its first argument:
 
 .verb
-  [seq idx-list] <--> (select seq idx-list)
+  [seq idx-seq] <--> (select seq idx-seq)
 
-  (set [seq idx-list] new) <--> (replace seq new idx-list)
+  (set [seq idx-seq] new) <--> (replace seq new idx-seq)
 .brev
 
 Note that unlike the select function, this does not support
 .mono
-.meti >> [ hash << index-list ]
+.meti >> [ hash << index-seq ]
 .onom
 because since hash keys may be lists, that syntax is
 indistinguishable from a simple hash lookup where
-.meta index-list
+.meta index-seq
 is the key.
 
 .meIP >> [ hash < key <> [ alt ]]
@@ -34570,7 +34568,7 @@ and must be taken into account.
 .coNP Function @ replace
 .synb
 .mets (replace < sequence < replacement-sequence >> [ from <> [ to ]])
-.mets (replace < sequence < replacement-sequence << index-list )
+.mets (replace < sequence < replacement-sequence << index-seq )
 .syne
 .desc
 The
@@ -34618,9 +34616,9 @@ The
 function has two invocation styles, distinguished by the
 type of the third argument. If the third argument is a sequence, then it
 is deemed to be the
-.meta index-list
+.meta index-seq
 parameter of the second form.
-Otherwise, if the third argument is missing, or is not a list, then
+Otherwise, if the third argument is missing, or is not a sequence, then
 it is deemed to be the
 .meta from
 argument of the first form.
@@ -34655,14 +34653,14 @@ The second form of the replace function replaces a subsequence of
 elements from
 .meta sequence
 given by
-.metn index-list ,
+.metn index-seq ,
 with their counterparts
 from
 .metn replacement-sequence .
 If
 .meta replacement-sequence
 has at least as many elements as are indicated in
-.metn index-list ,
+.metn index-seq ,
 then the indicated elements of
 .meta sequence
 are overwritten with successive elements from
@@ -34670,29 +34668,29 @@ are overwritten with successive elements from
 If
 .meta replacement-sequence
 contains fewer elements than
-.metn index-list ,
+.metn index-seq ,
 then the excess elements indicated in
-.meta index-list
+.meta index-seq
 which have no counterparts in the
 .meta replacement-sequence
 are deleted.
 Whenever a negative value occurs in
-.meta index-list
+.meta index-seq
 the original length of
 .meta sequence
 (before any deletions) is added to that value.
 Furthermore, similar restrictions apply on
-.meta index-list
+.meta index-seq
 as under the
 select function. Namely, the replacement stops when an index value
 in
-.meta index-list
+.meta index-seq
 is encountered which is out of range for
 .metn sequence .
 furthermore, if
 .meta sequence
 is a list, or if any deletions take place, then
-.meta index-list
+.meta index-seq
 must
 be monotonically increasing, after consideration of the
 displacement of negative values, or else the behavior
@@ -34742,8 +34740,8 @@ method according to the following equivalences:
   (replace o items from to)
   <--> o.(lambda-set (rcons from to) items)
 
-  (replace o items index-list)
-  <--> o.(lambda-set index-list items)
+  (replace o items index-seq)
+  <--> o.(lambda-set index-seq items)
 .brev
 
 Thus, the
@@ -34752,12 +34750,12 @@ and
 .meta to
 arguments are converted to single range object,
 whereas an
-.meta index-list
+.meta index-seq
 is passed as-is.
 It is an error if the
 .code from
 argument is a sequence, indicating an
-.metn index-list ,
+.metn index-seq ,
 and a
 .code to
 argument is also given; the situation is diagnosed. If either
@@ -36623,7 +36621,7 @@ which defaults to
 
 .coNP Function @ select
 .synb
-.mets (select < sequence >> { index-list | << function })
+.mets (select < sequence >> { index-seq | << function })
 .syne
 .desc
 The
@@ -36634,31 +36632,31 @@ which consists of those elements of
 .meta sequence
 which are identified by
 the indices in
-.metn index-list ,
-which may be a list or a vector.
+.metn index-seq ,
+which is required to be a sequence.
 
-If
+If a
 .meta function
-is given instead of
-.metn index-list ,
+argument is given instead of
+.metn index-seq ,
 then
 .meta function
 is invoked with
 .meta sequence
 as its argument. The return value is then taken as
 if it were the
-.meta index-list
+.meta index-seq
 argument .
 
 If
 .meta sequence
 is a sequence, then
-.meta index-list
+.meta index-seq
 consists of numeric
 indices. The length of the sequence, as reported by the
 .code length
 function, is added to every
-.meta index-list
+.meta index-seq
 value which is negative.
 The
 .code select
@@ -36668,13 +36666,13 @@ greater than or equal to the length of the sequence.
 this strict behavior,
 .code select
 would not be able to terminate if
-.meta index-list
+.meta index-seq
 is infinite.)
 
 If
 .meta sequence
 is, more specifically, a list-like sequence, then
-.meta index-list
+.meta index-seq
 must contain monotonically increasing
 numeric values, even if no value is out of range, since the
 .code select
@@ -36684,22 +36682,22 @@ are ordered. (Rationale: optimization.)
 This requirement for monotonicity applies to the values which
 result after negative indices are displaced by the sequence length
 Also, in this list-like sequence case, values taken from
-.meta index-list
+.meta index-seq
 which are still negative after being displaced by the sequence length are
 ignored.
 
 If
 .meta sequence
 is a hash, then
-.meta index-list
+.meta index-seq
 is a list of keys. A new hash is
 returned which contains those elements of
 .meta sequence
 whose keys appear
 in
-.metn index-list .
+.metn index-seq .
 All of
-.meta index-list
+.meta index-seq
 is processed, even if it contains
 keys which are not in
 .metn sequence .
@@ -36717,7 +36715,7 @@ values back to the foreign representation.
 
 .coNP Function @ reject
 .synb
-.mets (reject < sequence >> { index-list | << function })
+.mets (reject < sequence >> { index-seq | << function })
 .syne
 .desc
 The
@@ -36727,31 +36725,31 @@ function returns a sequence, of the same kind as
 which consists of all those elements of
 .meta sequence
 which are not identified by the indices in
-.metn index-list ,
+.metn index-seq ,
 which may be a list or a vector.
 
 If
 .meta function
 is given instead of
-.metn index-list ,
+.metn index-seq ,
 then
 .meta function
 is invoked with
 .meta sequence
 as its argument. The return value is then taken as
 if it were the
-.meta index-list
+.meta index-seq
 argument .
 
 If
 .code sequence
 is a hash, then
-.meta index-list
+.meta index-seq
 represents a list of keys. The
 .code reject
 function returns a duplicate of the hash, in which
 the keys specified in
-.meta index-list
+.meta index-seq
 do not appear.
 
 Otherwise if
@@ -37145,7 +37143,7 @@ does not produce empty pieces.
 
 .coNP Function @ partition*
 .synb
-.mets (partition* < sequence >> { index-list | < index | << function })
+.mets (partition* < sequence >> { index-seq | < index | << function })
 .syne
 .desc
 If
@@ -37159,18 +37157,18 @@ it is not called.
 
 The
 .metn index ,
-.metn index-list ,
+.metn index-seq ,
 and
 .meta function
 arguments are subject to the same restrictions and treatment
 as the corresponding arguments of the
 .code partition
 function, with the following difference: the index positions indicated by
-.code index-list
+.code index-seq
 are required to be strictly increasing, rather than nondecreasing.
 
 If the second argument is of the form
-.metn index-list ,
+.metn index-seq ,
 then
 .code partition*
 produces a
@@ -37180,12 +37178,12 @@ The pieces are formed by deleting from
 .meta sequence
 the elements at the positions given
 in
-.metn index-list ,
+.metn index-seq ,
 such that the pieces are the remaining nonempty substrings from
 between the deleted elements, maintaining their order.
 
 If
-.meta index-list
+.meta index-seq
 is empty then a one-element list containing the entire
 .meta sequence
 is returned.
@@ -94109,8 +94107,11 @@ Until \*(TX 289, the
 .code replace
 function had different semantics in the handling of the
 .meta index-list
-and
-.metn replacement-sequence .
+argument (now called
+.metn index-seq )
+and the
+.meta replacement-sequence
+argument.
 When the
 .meta index-list
 contained more indices than elements of
@@ -94681,7 +94682,9 @@ and
 .code partition*
 ignored negative indices in their
 .meta index-list
-argument. The new behavior is that the length of the input sequence
+argument (now called
+.metn index-seq ).
+The new behavior is that the length of the input sequence
 is added to any negative index values. The resulting values are then
 ignored if they are still negative.
 .IP 165
