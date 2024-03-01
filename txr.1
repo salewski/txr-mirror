@@ -36928,7 +36928,7 @@ otherwise
 
 .coNP Function @ partition
 .synb
-.mets (partition < sequence >> { index-list | < index | << function })
+.mets (partition < sequence >> { index-seq | < index | << function })
 .syne
 .desc
 If
@@ -36954,20 +36954,20 @@ of appearance, a sequence
 to the original is produced.
 
 If the second argument is of the form
-.metn index-list ,
+.metn index-seq ,
 or if an
-.meta index-list
+.meta index-seq
 was produced from the
 .meta index
 or
 .meta function
-arguments, each value in that list must be an integer. Each integer
+arguments, each value in that sequence must be an integer. Each integer
 value which is nonnegative specifies the index position
 given by its value. Each integer value which is negative
 specifies an index position given by adding the length of
 .meta sequence
 to its value. The sequence index positions thus denoted by
-.meta index-list
+.meta index-seq
 shall be strictly nondecreasing. Each successive element
 is expected to designate an index position at least as high
 as all previous elements, otherwise the behavior is unspecified.
@@ -36975,13 +36975,13 @@ Leading index positions which are (still) negative, or zero, are effectively
 ignored.
 
 If
-.meta index-list
+.meta index-seq
 is empty then a one-element list containing the entire
 .meta sequence
 is returned.
 
 If
-.meta index-list
+.meta index-seq
 is an infinite lazy list, the function shall terminate if that
 list eventually produces an index position which is greater than or equal to
 the length of
@@ -36991,20 +36991,20 @@ If the second argument is a function, then this function is applied
 to
 .metn sequence ,
 and the return value of this call is then used in place of the
-second argument, which must be a single index value, which is then
+second argument, which must either be a single index value, which is then
 taken as if it were the
 .meta index
-argument, or else a list of indices, which are taken as the
-.meta index-list
+argument, or else a sequence of indices, which are taken as the
+.meta index-seq
 argument.
 
-If the second argument is an atom other than a function, it is assumed to be
-an integer index, and is turned into an
-.meta index-list
-of one element.
+If the second argument is neither a sequence, nor a function, then it is
+assumed to be an integer index, and is turned into an
+.meta index-seq
+sequence containing one element.
 
 After the
-.meta index-list
+.meta index-seq
 is obtained as an argument, or determined from the
 .meta index
 or
@@ -37013,11 +37013,11 @@ arguments, the
 .code partition
 function then divides
 .meta sequence
-according to the indices given by that list.
+according to the indices.
 The first partition begins with the first element of
 .metn sequence .
 The second partition begins at the first position in
-.metn index-list ,
+.metn index-seq ,
 and so on. Indices beyond the length of the sequence are ignored,
 as are indices less than or equal to zero.
 
@@ -37032,8 +37032,8 @@ as are indices less than or equal to zero.
 
 .coNP Functions @ split and @ split*
 .synb
-.mets (split < sequence >> { index-list | < index | << function })
-.mets (split* < sequence >> { index-list | < index | << function })
+.mets (split < sequence >> { index-seq | < index | << function })
+.mets (split* < sequence >> { index-seq | < index | << function })
 .syne
 .desc
 If
@@ -37068,20 +37068,20 @@ in that the elements indicated by the split indices are removed.
 
 The
 .metn index ,
-.metn index-list ,
+.metn index-seq ,
 and
 .meta function
 arguments are subject to the same restrictions and treatment
 as the corresponding arguments of the
 .code partition
 function, with the following difference: the index positions indicated by
-.code index-list
+.code index-seq
 are required to be strictly increasing, rather than nondecreasing.
 
 If the second argument is of the form
-.metn index-list ,
+.metn index-seq ,
 or if an
-.meta index-list
+.meta index-seq
 was produced from the
 .meta index
 or
@@ -37090,19 +37090,21 @@ arguments, then the
 .code split
 function divides
 .meta sequence
-according to the indices indicated in the list. The first piece always begins
+according to the indices indicated in
+.metn index-seq .
+The first piece always begins
 with the first element of
 .metn sequence .
 Each subsequent piece begins with the position indicated by
 an element of
-.metn index-list .
+.metn index-seq .
 Negative indices are ignored.
 If
-.meta index-list
+.meta index-seq
 includes index zero,
 then an empty first piece is generated.
 If
-.meta index-list
+.meta index-seq
 includes an index greater than or equal to the length of
 .meta sequence
 (equivalently, an index beyond the last element of the sequence)

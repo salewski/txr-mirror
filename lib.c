@@ -4003,8 +4003,8 @@ static val partition_func(val base, val lcons)
   val len = nil;
 
   for (;;) {
-    if (indices) {
-      val raw_index = pop(&indices);
+    if (iter_more(indices)) {
+      val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
                       plus(raw_index, if3(len, len, len = length(seq))),
                       raw_index);
@@ -4019,7 +4019,8 @@ static val partition_func(val base, val lcons)
         if (rest) {
           val fun = us_lcons_fun(lcons);
           us_func_set_env(fun, index);
-          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest,
+                                                  iter_step(indices)));
         } else {
           us_rplacd(lcons, nil);
         }
@@ -4042,8 +4043,8 @@ static val split_func(val base, val lcons)
   val len = nil;
 
   for (;;) {
-    if (indices) {
-      val raw_index = pop(&indices);
+    if (iter_more(indices)) {
+      val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
                       plus(raw_index, if3(len, len, len = length(seq))),
                       raw_index);
@@ -4059,7 +4060,8 @@ static val split_func(val base, val lcons)
         if (rest) {
           val fun = us_lcons_fun(lcons);
           us_func_set_env(fun, index);
-          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest,
+                                                  iter_step(indices)));
         } else {
           us_rplacd(lcons, cons(rsub, nil));
         }
@@ -4082,8 +4084,8 @@ static val split_star_func(val base, val lcons)
   val len = nil;
 
   for (;;) {
-    if (indices) {
-      val raw_index = pop(&indices);
+    if (iter_more(indices)) {
+      val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
                       plus(raw_index, if3(len, len, len = length(seq))),
                       raw_index);
@@ -4099,7 +4101,8 @@ static val split_star_func(val base, val lcons)
         if (rest) {
           val fun = us_lcons_fun(lcons);
           us_func_set_env(fun, succ(index));
-          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest,
+                                                  iter_step(indices)));
         } else {
           us_rplacd(lcons, cons(rsub, nil));
         }
@@ -4135,7 +4138,8 @@ static val partition_split_common(val seq, val indices,
   if (!seqp(indices))
     indices = cons(indices, nil);
 
-  return make_lazy_cons_car_cdr(func_f1(zero, split_fptr), seq, indices);
+  return make_lazy_cons_car_cdr(func_f1(zero, split_fptr), seq,
+                                iter_begin(indices));
 }
 
 val partition(val seq, val indices)
