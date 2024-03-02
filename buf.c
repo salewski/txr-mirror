@@ -227,6 +227,19 @@ val buf_set_length(val buf, val len, val init_val)
   return buf_do_set_len(buf, b, len, init_val, self);
 }
 
+val buf_free(val buf)
+{
+  val self = lit("buf-free");
+  struct buf *b = buf_handle(buf, self);
+  if (b->size) {
+    free(b->data);
+    b->data = 0;
+    b->len = b->size = zero;
+    return t;
+  }
+  return nil;
+}
+
 val length_buf(val buf)
 {
   val self = lit("length-buf");

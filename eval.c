@@ -57,10 +57,17 @@
 #include "filter.h"
 #include "tree.h"
 #include "vm.h"
+#include "buf.h"
 #include "eval.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
+
+#if CONFIG_SMALL_MEM
+#define MAP_ALLOCA_LIMIT   1024
+#else
+#define MAP_ALLOCA_LIMIT   4096
+#endif
 
 typedef val (*opfun_t)(val, val);
 
@@ -5776,9 +5783,13 @@ static val map_common(val self, val fun, varg lists,
     return map_fn(fun, args_atz(lists, 0));
   } else {
     cnum i, idx, argc = args_count(lists, self);
+    int over_limit = (argc > MAP_ALLOCA_LIMIT);
     val arg0 = args_at(lists, 0);
     seq_iter_t *iter_array = coerce(seq_iter_t *,
-                                    alloca(argc * sizeof *iter_array));
+                                    if3(over_limit,
+                                        chk_malloc(argc * sizeof *iter_array),
+                                        alloca(argc * sizeof *iter_array)));
+    val buf = if2(over_limit, make_owned_buf(one, coerce(mem_t *, iter_array)));
     seq_build_t out = { 0 };
     args_decl(args_fun, max(argc, ARGS_MIN));
 
@@ -5798,8 +5809,11 @@ static val map_common(val self, val fun, varg lists,
         val elem;
         seq_iter_t *iter = &iter_array[i];
 
-        if (!seq_get(iter, &elem))
+        if (!seq_get(iter, &elem)) {
+          if (buf)
+            buf_free(buf);
           return collect_fn != 0 ? seq_finish(&out) : nil;
+        }
 
         args_fun->arg[i] = elem;
       }
