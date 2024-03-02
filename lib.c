@@ -9227,16 +9227,6 @@ val pa_12_1(val fun2, val arg2)
   return func_f1(cons(fun2, arg2), do_pa_12_1);
 }
 
-static val do_pa_12_1_v(val fcons, varg args)
-{
-  return funcall2(car(fcons), args_get_list(args), cdr(fcons));
-}
-
-static val pa_12_1_v(val fun2, val arg2)
-{
-  return func_f0v(cons(fun2, arg2), do_pa_12_1_v);
-}
-
 static val do_pa_123_3(val fcons, val arg3)
 {
   return funcall3(car(fcons), car(cdr(fcons)), cdr(cdr(fcons)), arg3);
@@ -9290,35 +9280,6 @@ static val do_pa_1234_34(val fcons, val arg3, val arg4)
 val pa_1234_34(val fun4, val arg1, val arg2)
 {
   return func_f2(cons(fun4, cons(arg1, arg2)), do_pa_1234_34);
-}
-
-val transposev(varg list)
-{
-  val func = list_f;
-
-  if (!args_more(list, 0))
-    return nil;
-
-  switch (type(args_at(list, 0))) {
-  case STR:
-  case LSTR:
-  case LIT:
-    func = pa_12_1_v(func_n2(cat_str), nil);
-    break;
-  case VEC:
-    func = func_n0v(vectorv);
-    break;
-  default:
-    break;
-  }
-
-  return mapcarv(func, list);
-}
-
-val transpose(val seq)
-{
-  args_decl_list(args, ARGS_MIN, tolist(seq));
-  return make_like(transposev(args), seq);
 }
 
 static val do_chain(val fun1_list, varg args)

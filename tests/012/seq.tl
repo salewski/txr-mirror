@@ -756,3 +756,69 @@
               (lambda (z)
                 (+ x y z))))))
   (test [mref cf 1 2 3] 6))
+
+(test
+  (zip) nil)
+
+(mtest
+  (zip '()) nil
+  (zip #()) #()
+  (zip "") ""
+  (zip #b'') #b'')
+
+(mtest
+  (zip '(a)) ((a))
+  (zip '(a b)) ((a) (b))
+  (zip '(a b c)) ((a) (b) (c)))
+
+(mtest
+  (zip #(a)) #(#(a))
+  (zip #(a b)) #(#(a) #(b))
+  (zip #(a b c)) #(#(a) #(b) #(c)))
+
+(mtest
+  (zip "a") ("a")
+  (zip "ab") ("a" "b")
+  (zip "abc") ("a" "b" "c"))
+
+(mtest
+  (zip #b'aa') (#b'aa')
+  (zip #b'aabb') (#b'aa' #b'bb')
+  (zip #b'aabbcc') (#b'aa' #b'bb' #b'cc'))
+
+(mtest
+  (zip '(a) '(b)) ((a b))
+  (zip '(a c) '(b d)) ((a b) (c d))
+  (zip '(a c e) '(b d f)) ((a b) (c d) (e f))
+  (zip '(a d) '(b e) '(c f)) ((a b c) (d e f)))
+
+(mtest
+  (zip #(a) #(b)) #(#(a b))
+  (zip #(a c) #(b d)) #(#(a b) #(c d))
+  (zip #(a c e) #(b d f)) #(#(a b) #(c d) #(e f))
+  (zip #(a d) #(b e) #(c f)) #(#(a b c) #(d e f)))
+
+(mtest
+  (zip #(a) #(b)) #(#(a b))
+  (zip #(a c) #(b d)) #(#(a b) #(c d))
+  (zip #(a c e) #(b d f)) #(#(a b) #(c d) #(e f))
+  (zip #(a d) #(b e) #(c f)) #(#(a b c) #(d e f)))
+
+(mtest
+  (zip "a" "b") ("ab")
+  (zip "ac" "bd") ("ab" "cd")
+  (zip "ace" "bdf") ("ab" "cd" "ef")
+  (zip "ad" "bef" "cf") ("abc" "def"))
+
+(mtest
+  (zip #b'aa' #b'bb') (#b'aabb')
+  (zip #b'aacc' #b'bbdd') (#b'aabb' #b'ccdd')
+  (zip #b'aaccee' #b'bbddff') (#b'aabb' #b'ccdd' #b'eeff')
+  (zip #b'aaddee' #b'bbeeff' #b'ccff') (#b'aabbcc' #b'ddeeff'))
+
+(test
+  (zip "ab" "ijklm" "xy") ("aix" "bjy"))
+
+(test
+  (zip "ab" '(#\i #\j) #("x" "y")) ("aix" "bjy"))
+

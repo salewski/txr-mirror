@@ -115,6 +115,7 @@ val last_form_evaled;
 
 val call_f, iter_begin_f, iter_from_binding_f, iter_more_f;
 val iter_item_f, iter_step_f;
+val join_f;
 
 val origin_hash;
 
@@ -5835,6 +5836,54 @@ static val mapdov(val fun, varg lists)
   return map_common(lit("mapdo"), fun, lists, 0, mapdo);
 }
 
+static val zip_fun(val ziparg0, varg args)
+{
+  seq_build_t bu;
+  cnum index = 0;
+  seq_build_init(lit("zip"), &bu, ziparg0);
+  while (args_more(args, index))
+    seq_add(&bu, args_get(args, &index));
+  return seq_finish(&bu);
+}
+
+static val zipv(varg zipargs)
+{
+  if (!args_more(zipargs, 0))
+    return nil;
+
+  {
+    val ziparg0 = args_at(zipargs, 0);
+    val func = nil;
+
+    switch (type(ziparg0)) {
+    case NIL:
+    case CONS:
+    case LCONS:
+      func = list_f;
+      break;
+    case STR:
+    case LSTR:
+    case LIT:
+      func = join_f;
+      break;
+    case VEC:
+      func = func_n0v(vectorv);
+      break;
+    default:
+      func = func_f0v(ziparg0, zip_fun);
+      break;
+    }
+
+    return mapcarv(func, zipargs);
+  }
+}
+
+static val transpose(val seq)
+{
+  args_decl_list(args, ARGS_MIN, tolist(seq));
+  return make_like(zipv(args), seq);
+}
+
 static val lazy_mapcar_func(val env, val lcons)
 {
   us_cons_bind (fun, iter, env);
@@ -6951,7 +7000,7 @@ void eval_init(void)
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &pm_table, &last_form_evaled,
           &call_f, &iter_begin_f, &iter_from_binding_f, &iter_more_f,
-          &iter_item_f, &iter_step_f,
+          &iter_item_f, &iter_step_f, &join_f,
           &unbound_s, &origin_hash, &const_foldable_hash,
           &unused_arg_s, convert(val *, 0));
   top_fb = make_hash(hash_weak_and, nil);
@@ -6969,6 +7018,7 @@ void eval_init(void)
   iter_more_f = func_n1(iter_more);
   iter_item_f = func_n1(iter_item);
   iter_step_f = func_n1(iter_step);
+  join_f = func_n0v(fmt_join);
 
   origin_hash = make_eq_hash(hash_weak_keys);
 
@@ -7294,7 +7344,7 @@ void eval_init(void)
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
   reg_fun(intern(lit("transpose"), user_package), func_n1(transpose));
-  reg_fun(intern(lit("zip"), user_package), func_n0v(transposev));
+  reg_fun(intern(lit("zip"), user_package), func_n0v(zipv));
   reg_fun(intern(lit("interpose"), user_package), func_n2(interpose));
 
   reg_fun(intern(lit("second"), user_package), second_f);
@@ -7519,11 +7569,8 @@ void eval_init(void)
 
   reg_fun(intern(lit("fmt-simple"), system_package), func_n5o(fmt_simple, 1));
   reg_fun(intern(lit("fmt-flex"), system_package), func_n2v(fmt_flex));
-  {
-    val join_f = func_n0v(fmt_join);
-    reg_fun(intern(lit("fmt-join"), system_package), join_f);
-    reg_fun(intern(lit("join"), user_package), join_f);
-  }
+  reg_fun(intern(lit("fmt-join"), system_package), join_f);
+  reg_fun(intern(lit("join"), user_package), join_f);
   reg_fun(intern(lit("join-with"), user_package), func_n1v(join_with));
 
   reg_varl(user_package_s = intern(lit("user-package"), user_package), user_package);
