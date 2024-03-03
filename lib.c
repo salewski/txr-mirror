@@ -9682,11 +9682,11 @@ val list_vec(val vec)
 {
   val self = lit("list-vec");
   list_collect_decl (list, ptail);
-  int i, len;
+  ucnum i, len;
 
   type_check(self, vec, VEC);
 
-  len = c_num(vec->v.vec[vec_length], self);
+  len = c_unum(vec->v.vec[vec_length], self);
 
   for (i = 0; i < len; i++)
     ptail = list_collect(ptail, vec->v.vec[i]);
