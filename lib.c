@@ -11541,10 +11541,11 @@ val unique(val seq, val keyfun, varg hashv_args)
   val hash = hashv(hashv_args);
   val kf = default_arg(keyfun, identity_f);
   seq_iter_t iter;
+  seq_build_t build;
   val elem;
-  list_collect_decl (out, ptail);
 
   seq_iter_init(self, &iter, seq);
+  seq_build_init(self, &build, seq);
 
   while (seq_get(&iter, &elem)) {
     val new_p;
@@ -11552,10 +11553,10 @@ val unique(val seq, val keyfun, varg hashv_args)
     (void) gethash_c(self, hash, funcall1(kf, elem), mkcloc(new_p));
 
     if (new_p)
-      ptail = list_collect(ptail, elem);
+      seq_add(&build, elem);
   }
 
-  return make_like(out, seq);
+  return seq_finish(&build);
 }
 
 val uniq(val seq)
