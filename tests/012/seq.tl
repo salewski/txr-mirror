@@ -825,3 +825,59 @@
 (vtest
   [apply mapcar join (list-seq "aaa".."zzz")]
   (transpose (list-seq "aaa".."zzz")))
+
+(mtest
+  (ref "a".."z" 0) :error
+  (ref (rcons 'foo 'bar)) :error)
+
+(mtest
+  (ref 1..6 0) 1
+  (ref 1..6 1) 2
+  (ref 1..6 4) 5
+  (ref 1..6 5) :error
+  (ref 1..6 -1) 5
+  (ref 1..6 -2) 4
+  (ref 1..6 -5) 1
+  (ref 1..6 -6) :error)
+
+(mtest
+  (ref 1..: 0) 1
+  (ref 1..: 1) 2
+  (ref 1..: 4) 5
+  (ref 1..: -1) :error
+  (ref 1..: -2) :error)
+
+(mtest
+  (ref 1..t 0) 1
+  (ref 1..t 1) 2
+  (ref 1..t 4) 5
+  (ref 1..t -1) :error
+  (ref 1..: -2) :error)
+
+(mtest
+  (ref #\a..#\f 0) #\a
+  (ref #\a..#\f 1) #\b
+  (ref #\a..#\f 4) #\e
+  (ref #\a..#\f 5) :error
+  (ref #\a..#\f -1) #\e
+  (ref #\a..#\f -2) #\d
+  (ref #\a..#\f -5) #\a
+  (ref #\a..#\f -6) :error)
+
+(mtest
+  (ref #\a..: 0) #\a
+  (ref #\a..: 1) #\b
+  (ref #\a..: 4) #\e
+  (ref #\a..: -1) :error
+  (ref #\a..: -2) :error)
+
+(mtest
+  (ref #\a..t 0) #\a
+  (ref #\a..t 1) #\b
+  (ref #\a..t 4) #\e
+  (ref #\a..t -1) :error
+  (ref #\a..: -2) :error)
+
+
+(mtest
+  (ref 1..6 0.0) (1.0 2.0 3.0 4.0 5.0))

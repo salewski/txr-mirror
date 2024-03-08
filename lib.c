@@ -8537,7 +8537,7 @@ INLINE val do_generic_funcall(val fun, varg args_in)
     case 0:
       callerror(fun, lit("missing required arguments"));
     case 1:
-      return sub(args->arg[0], fun->rn.from, fun->rn.to);
+      return rangeref(fun, args->arg[0]);
     default:
       callerror(fun, lit("too many arguments"));
     }
@@ -13288,6 +13288,8 @@ val ref(val seq, val ind)
     return vecref(seq, ind);
   case BUF:
     return buf_get_uchar(seq, ind);
+  case RNG:
+    return rangeref(seq, ind);
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
@@ -14037,6 +14039,37 @@ val in_range_star(val range, val num)
     val to = range->rn.to;
     return and2(lequal(from, num), less(num, to));
   }
+}
+
+val rangeref(val range, val ind)
+{
+  val self = lit("rangeref");
+
+  if (integerp(ind))
+  {
+    val fr = range->rn.from;
+    val to = range->rn.to;
+    val eind = ind;
+
+    if (to != t && to != colon_k) {
+      val len = minus(to, fr);
+
+      if (minusp(eind))
+        eind = plus(eind, len);
+
+      if (minusp(eind) || ge(eind, len))
+        goto err;
+    } else if (minusp(eind)) {
+      goto err;
+    }
+
+    return plus(fr, eind);
+  err:
+    uw_throwf(error_s, lit("~a: ~s is out of range for ~s"),
+              self, ind, range, nao);
+  }
+
+  return sub(ind, range->rn.from, range->rn.to);
 }
 
 #if CONFIG_LOCALE_TOLERANCE

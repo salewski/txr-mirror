@@ -16411,10 +16411,17 @@ The
 value acts as the index into a vector-like or list-like sequence,
 or a key into a hash table.
 
-.meIP >> [ range << sequence ]
-If the left argument is a range, it denotes selection of a
-subrange of
-.metn sequence .
+.meIP >> [ range >> { seq | << ind }]
+If the left argument is a range, and there is one argument, the
+semantics is that of the
+.code rangeref
+function: either the selection of a point from the range by
+an integer index
+.metn ind ,
+or the selection of a subrange of sequence
+.meta seq
+according to the endpoints of
+.metn range .
 .RE
 .PP
 
@@ -25797,6 +25804,69 @@ The following equivalences hold:
   (in-range* r x)  <-->  (and (lequal (from r) x)
                               (less x (to r)))
 .brev
+
+.coNP Function @ rangeref
+.synb
+.mets (rangeref < range >> [ idx | << seq ])
+.syne
+.desc
+The
+.code rangeref
+function requires its
+.meta range
+argument to be a range object.
+
+It supports two semantics, based on the type of the second argument.
+
+If the second argument is an integer, then it is interpreted as
+.metn idx .
+The function then treats the
+.meta range
+as if it were a sequence. The
+.meta range
+must be a numeric or character range. 
+The
+.code from
+field of
+.meta range
+is added to
+.meta idx
+to form the tentative return value.
+
+If the
+.code to
+field is a value other than
+.code t
+or the
+.code :
+(colon) symbol, then the tentative value must be less than
+the value of this field, or an exception is thrown.
+In other words,
+.meta ind
+must indicate a point within the range.
+
+After the above range check is performed, if applicable,
+the tentative value is returned.
+
+If the second argument isn't an integer, it is interpreted
+as a sequence
+.metn seq .
+The
+.meta range
+object's values are used to extract a subrange of
+.metn seq ,
+according to the following equivalence:
+
+.verb
+  (rangeref r s)  <-->  (sub s (from r) (to r))
+.brev
+
+except that
+.code r
+and
+.code s
+are evaluated only once, in that order.
+
 .SS* Characters and Strings
 .coNP Functions @ mkstring and @ str
 .synb
@@ -35510,6 +35580,13 @@ is a search tree, then
 .code ref
 behaves like
 .codn tree-lookup .
+
+If
+.meta sequence
+is a range object, then
+.code ref
+behaves like
+.codn rangeref .
 
 A
 .code ref
