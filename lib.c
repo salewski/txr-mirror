@@ -11677,55 +11677,35 @@ val find(val item, val seq, val testfun_in, val keyfun_in)
   val keyfun = default_arg(keyfun_in, identity_f);
   seq_info_t si = seq_info(seq);
 
-  switch (si.kind) {
-  case SEQ_NIL:
-    return nil;
-  case SEQ_LISTLIKE:
+  switch (si.type) {
+  case STR:
+  case LIT:
+    if (keyfun == identity_f &&
+        (testfun == equal_f || testfun == eql_f || testfun == eq_f))
     {
-      gc_hint(seq);
+      const wchar_t ch = c_chr(item);
+      const wchar_t *cstr = c_str(seq, self);
+      if (wcschr(cstr, ch))
+        return item;
+      return nil;
+    }
+    /* fallthrough */
+  default:
+    {
+      val elem;
+      seq_iter_t it;
 
-      for (seq = z(si.obj); seq; seq = cdr(seq)) {
-        val elem = car(seq);
+      seq_iter_init_with_info(self, &it, si, 0);
+
+      while (seq_get(&it, &elem)) {
         val key = funcall1(keyfun, elem);
-
         if (funcall2(testfun, item, key))
           return elem;
       }
     }
-    return nil;
-  case SEQ_VECLIKE:
-    switch (si.type) {
-    case STR:
-    case LIT:
-      if (keyfun == identity_f &&
-          (testfun == equal_f || testfun == eql_f || testfun == eq_f))
-      {
-        const wchar_t ch = c_chr(item);
-        const wchar_t *cstr = c_str(seq, self);
-        if (wcschr(cstr, ch))
-          return item;
-        return nil;
-      }
-      /* fallthrough */
-    default:
-      {
-        val vec = si.obj;
-        cnum len = c_fixnum(length(vec), self);
-        cnum i;
-
-        for (i = 0; i < len; i++) {
-          val elem = ref(vec, num_fast(i));
-          val key = funcall1(keyfun, elem);
-          if (funcall2(testfun, item, key))
-            return elem;
-        }
-      }
-      break;
-    }
-    return nil;
-  default:
-    unsup_obj(self, seq);
+    break;
   }
+  return nil;
 }
 
 val rfind(val item, val seq, val testfun_in, val keyfun_in)
