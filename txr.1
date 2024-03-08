@@ -15850,6 +15850,13 @@ function invokes
 .metn function ,
 passing it the given arguments, if any.
 
+.meta function
+need not be a function; other kinds of objects
+can be used in place of functions with various semantics.
+The details are given in the description of the
+.code dwim
+operator.
+
 .TP* Examples:
 Apply
 .code lambda
@@ -16069,7 +16076,7 @@ retrieve a global macro expander using the function
 .mets (set (dwim >> { integer | << range } << obj-place ) << new-value )
 .mets <> '[' argument *']'
 .mets (set >> '[' obj-place < index <> [ alt ]']' << new-value )
-.mets (set >> '[{' integer | << range } << obj-place']' << new-value )
+.mets (set >> '[{' integer | << range } << obj-place ']' << new-value )
 .syne
 .desc
 The
@@ -16425,10 +16432,17 @@ according to the endpoints of
 .RE
 .PP
 
-Note that the various above forms are not actually special cases of
+Note that the various above forms are not actually cases of the
 .code dwim
-but the consequence of the objects appearing as the first argument being
-callable as functions, and their respective semantics.
+operator but the due to the semantics of the left argument objects being used
+as functions.  All of the semantics described above is available in any
+situation in which an object is used as a function: for instance, as an
+argument of the
+.code call
+or
+.code apply
+operators, or the functional argument in
+.codn mapcar .
 
 .TP* "Range Indexing:"
 Vector and list range indexing is based from zero, meaning
