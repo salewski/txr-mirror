@@ -11719,14 +11719,16 @@ val rfind(val item, val seq, val testfun_in, val keyfun_in)
   case SEQ_NIL:
     return nil;
   case SEQ_LISTLIKE:
+  default:
     {
       val found = nil;
-      gc_hint(seq);
+      val elem;
+      seq_iter_t it;
 
-      for (seq = z(si.obj); seq; seq = cdr(seq)) {
-        val elem = car(seq);
+      seq_iter_init_with_info(self, &it, si, 0);
+
+      while (seq_get(&it, &elem)) {
         val key = funcall1(keyfun, elem);
-
         if (funcall2(testfun, item, key))
           found = elem;
       }
@@ -11761,10 +11763,9 @@ val rfind(val item, val seq, val testfun_in, val keyfun_in)
       }
       break;
     }
-    return nil;
-  default:
-    unsup_obj(self, seq);
+    break;
   }
+  return nil;
 }
 
 val find_max(val seq, val testfun_in, val keyfun_in)
