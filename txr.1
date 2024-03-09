@@ -38156,12 +38156,16 @@ The
 parameter specifies the window contents which are used for the
 processing of elements which are closer than
 .meta range
-to either end of the sequence.  The argument may be a sequence containing
-at least twice
+to either end of the sequence. Except if it is of list type,
+.meta boundary
+must be a sequence containing at least twice
 .meta range
 number of elements (one less than the window size): if it has additional
 elements, they are not used. If it is a list, it may be shorter than twice
-.metn range .
+.metn range ;
+in this case, the value
+.code nil
+is substituted for the missing elements.
 The argument
 may also be one of the two keyword symbols
 .code :wrap
@@ -38173,12 +38177,7 @@ If
 .meta boundary
 is a sequence, it may be regarded as divided into two pieces of
 .meta range
-length. If it is a list of insufficient length, then missing elements
-are supplied as
-.code nil
-to make two
-.metn range 's
-worth of elements. These two pieces then flank
+length. These two pieces then flank
 .code sequence
 on either end. The left half of
 .meta boundary
