@@ -25,7 +25,9 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 
-(load-for (usr:var %const-foldable% "constfun"))
+(load-for
+  (usr:var %const-foldable% "constfun")
+  (usr:macro when-opt "comp-opts"))
 
 (compile-only
   (defstruct live-info nil
@@ -555,12 +557,13 @@
                                             (apply fun (append [args 0..-1]
                                                                [args -1])))
                                           (error (#:x) err))))
-                              (when (and (eq val err)
-                                         (not (member insn bb.warned-insns)))
-                                (compile-warning co.top-form
-                                                 "function ~s with arguments ~s throws"
-                                                 fun args)
-                                (push insn bb.warned-insns))
+                              (when-opt usr:constant-throws
+                                (when (and (eq val err)
+                                           (not (member insn bb.warned-insns)))
+                                  (diag co.top-form
+                                        "function ~s with arguments ~s throws"
+                                        fun args)
+                                  (push insn bb.warned-insns)))
                               val))
                    (neq val err)))
         (let* ((dreg bb.compiler.(get-dreg val)))

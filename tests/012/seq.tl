@@ -826,9 +826,11 @@
   [apply mapcar join (list-seq "aaa".."zzz")]
   (transpose (list-seq "aaa".."zzz")))
 
+(eval-only (set *compile-opts*.constant-throws nil))
+
 (mtest
   (ref "a".."z" 0) :error
-  (ref (rcons 'foo 'bar)) :error)
+  (ref (rcons 'foo 'bar) 0) :error)
 
 (mtest
   (ref 1..6 0) 1

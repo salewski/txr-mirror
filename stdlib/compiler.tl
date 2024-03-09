@@ -30,31 +30,9 @@
 (load-for (usr:var %const-foldable% "constfun"))
 
 (compile-only
-  (load-for (struct sys:param-parser-base "param")))
-
-(defstruct usr:compile-opts ()
-  usr:shadow-fun
-  usr:shadow-var
-  usr:shadow-cross
-  usr:unused
-  usr:log-level)
-
-(defsymacro %warning-syms% '(usr:shadow-fun usr:shadow-var usr:shadow-cross
-                             usr:unused usr:log-level))
-
-(defvar usr:*compile-opts* (new compile-opts usr:unused t))
-
-(defmacro when-opt (compile-opt . forms)
-  (with-gensyms (optval)
-    ^(whenlet ((,optval *compile-opts*.,compile-opt))
-       (macrolet ((diag (. args)
-                    ^(opt-controlled-diag ,',optval ,*args)))
-         ,*forms))))
-
-(defun opt-controlled-diag (optval . args)
-  (caseq optval
-    (:error (compile-error . args))
-    ((t :warn) (compile-warning . args))))
+  (load-for
+    (struct sys:param-parser-base "param")
+    (macro when-opt "comp-opts")))
 
 (defstruct (frag oreg code : fvars ffuns pars) nil
   oreg
@@ -2386,11 +2364,13 @@
     (when ece.throws
       (del [%eval-cache% form])
       (let ((of ece.orig-form))
-        (when (or (source-loc of)
-                  (and (consp of)
-                       (neq system-package (symbol-package (car of)))))
-          (compile-warning ece.orig-form
-                           "constant expression ~s throws" ece.orig-form))))))
+        (when-opt constant-throws
+          (when (or (source-loc of)
+                    (and (consp of)
+                         (neq system-package (symbol-package (car of)))))
+            (unless *compile-opts*.usr:constant-throws
+              (diag ece.orig-form "constant expression ~s throws"
+                    ece.orig-form))))))))
 
 (defun system-symbol-p (sym)
   (member (symbol-package sym)

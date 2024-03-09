@@ -91362,7 +91362,8 @@ and not to propagate compiled versions of the macros which produced it.
 .coNP Structure @ compile-opts
 .synb
 .mets (defstruct compile-opts ()
-.mets \ \ shadow-fun shadow-var shadow-cross unused log-level)
+.mets \ \ shadow-fun shadow-var shadow-cross unused
+.mets \ \ log-level constant-throws)
 .syne
 .desc
 The
@@ -91461,6 +91462,13 @@ to emit an informational message whenever a file is compiled.
 The value 2 causes informational messages emitted for each compound
 top-level that is compiled, if it is a compound form beginning with
 a symbol.
+.coIP constant-throws
+Diagnostic option,
+.code t
+by default. Controls whether the compiler issues diagnostics when
+it encounters a constant expression, whose evaluation throws
+an exception, such as
+.codn "(/ 0 0)" .
 .RE
 
 .coNP Special Variable @ *compile-opts*
