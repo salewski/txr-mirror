@@ -115,6 +115,7 @@
     "Where were you last night? I found strings from another language on your shirt!"
     "Evidence of amphoric Lisp macros was recently found in ancient clay jars."
     "Remember, the car function does not make a copy. Thus, caring is sharing."
+    "It's lipid-based and used in fatty foods, yet called 'lecithin'. Go figure."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
