@@ -771,6 +771,10 @@ void seq_add(seq_build_t *bu, val item);
 void seq_pend(seq_build_t *bu, val items);
 void seq_nconc(seq_build_t *bu, val items);
 val seq_finish(seq_build_t *bu);
+val seq_append2(val self, val seq0, val seq1);
+val seq_appendv(val self, varg seqs);
+val seq_nconc2(val self, val seq0, val seq1);
+val seq_nconcv(val self, varg seqs);
 NORETURN val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)
 {

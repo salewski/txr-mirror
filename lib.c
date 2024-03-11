@@ -1647,6 +1647,80 @@ val seq_finish(seq_build_t *bu)
   return bu->obj;
 }
 
+val seq_append2(val self, val seq0, val seq1)
+{
+  seq_build_t bu;
+
+  seq_build_init(self, &bu, seq0);
+
+  seq_pend(&bu, seq0);
+  seq_pend(&bu, seq1);
+
+  return seq_finish(&bu);
+}
+
+val seq_appendv(val self, varg seqs)
+{
+  cnum index = 0;
+  val seq0;
+  seq_build_t bu;
+
+  if (!args_more(seqs, index))
+    return nil;
+
+  seq0 = args_get(seqs, &index);
+
+  if (!args_more(seqs, index))
+    return seq0;
+
+  seq_build_init(self, &bu, seq0);
+
+  seq_pend(&bu, seq0);
+
+  do
+    seq_pend(&bu, args_get(seqs, &index));
+  while (args_more(seqs, index));
+
+  return seq_finish(&bu);
+}
+
+val seq_nconc2(val self, val seq0, val seq1)
+{
+  seq_build_t bu;
+
+  seq_build_init(self, &bu, seq0);
+
+  seq_nconc(&bu, seq0);
+  seq_nconc(&bu, seq1);
+
+  return seq_finish(&bu);
+}
+
+val seq_nconcv(val self, varg seqs)
+{
+  cnum index = 0;
+  val seq0;
+  seq_build_t bu;
+
+  if (!args_more(seqs, index))
+    return nil;
+
+  seq0 = args_get(seqs, &index);
+
+  if (!args_more(seqs, index))
+    return seq0;
+
+  seq_build_init(self, &bu, seq0);
+
+  seq_nconc(&bu, seq0);
+
+  do
+    seq_nconc(&bu, args_get(seqs, &index));
+  while (args_more(seqs, index));
+
+  return seq_finish(&bu);
+}
+
 val throw_mismatch(val self, val obj, type_t t)
 {
   type_mismatch(lit("~a: ~s is not of type ~s"), self, obj, code2type(t), nao);
@@ -2677,25 +2751,12 @@ val us_nreverse(val in)
 
 val append2(val list1, val list2)
 {
-  list_collect_decl (out, ptail);
-
-  ptail = list_collect_append (ptail, list1);
-  ptail = list_collect_append (ptail, list2);
-
-  return out;
+  return seq_append2(lit("append"), list1, list2);
 }
 
 val appendv(varg lists)
 {
-  cnum index = 0;
-  list_collect_decl (out, ptail);
-
-  while (args_more(lists, index)) {
-    val item = args_get(lists, &index);
-    ptail = list_collect_append(ptail, item);
-  }
-
-  return out;
+  return seq_appendv(lit("append"), lists);
 }
 
 static val appendl(val lists)
@@ -2706,12 +2767,7 @@ static val appendl(val lists)
 
 val nappend2(val list1, val list2)
 {
-  list_collect_decl (out, ptail);
-
-  ptail = list_collect_nconc (ptail, list1);
-  ptail = list_collect_nconc (ptail, list2);
-
-  return out;
+  return seq_nconc2(lit("nconc"), list1, list2);
 }
 
 val revappend(val list1, val list2)
@@ -2736,13 +2792,7 @@ val nreconc(val list1, val list2)
 
 val nconcv(varg lists)
 {
-  cnum index = 0;
-  list_collect_decl (out, ptail);
-
-  while (args_more(lists, index))
-    ptail = list_collect_nconc(ptail, args_get(lists, &index));
-
-  return out;
+  return seq_nconcv(lit("nconc"), lists);
 }
 
 val sub_list(val list, val from, val to)
