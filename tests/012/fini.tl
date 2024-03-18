@@ -21,7 +21,7 @@
   (put-line "after with-objects"))
 
 (mapcar (ret (new derived)) (range 1 20))
-(sys:gc)
+(sys:gc t)
 
 (defstruct multi ()
   (:init (me)
