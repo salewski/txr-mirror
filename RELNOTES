@@ -1,3 +1,78 @@
+                                    TXR 294
+                                   2024-03-17
+
+
+  Features
+
+  - Compiler:
+    - Now generates inline code for chained functions and lambdas, such
+      as that arising out of the opip syntax.
+
+  - OOP:
+    - new special method length-< lets a lazy sequence object implement support
+      for being tested with the length-< function (is the length less than a
+      given integer without forcing existence).
+
+  - Lib:
+    - New hist-sort-by function: hist-sort with a mapping function.
+    - New functions cons-count and cons-find.
+    - New function rangeref for obtaining an intermediate value from
+      a range using an integer index as if it were a sequence.
+      - For consistency: because ranges can be treated as sequences.
+
+  - Pattern matching:
+    - End pattern in @(sme) and @(end) can be any pattern now, not
+      a list pattern.
+
+  - Internals:
+    - New framework introduced for gathering items into a sequence,
+      called "seq_iter".
+      - Takes into account the type of sequence being constructed up-front,
+        to avoid the overhead of collecting a list and then coercing it.
+    - Functions that have been improved with seq_build and in some
+      cases seq_iter: keep-keys-if, separate, separate-keys, tuples, mapcar,
+      mappend, mapdo, partition-by, partition-if, partition, split, split*,
+      zip, unique, find, rfind, window-map, append, nconc.
+
+  Bugs
+
+  - stability:
+    - gc problem in iter-begin.
+    - gc problem in sub-str on lazy string arg.
+    - gc issue in eval in code related to binding special variables.
+    - gc correctness issues in make-strlist-input-stream,
+      make-struct, make-lazy-struct, copy-search-tree,
+      make-similar-tree, copy-fun (for VM functions).
+  - build:
+    - fix in configure script for BSD grep.
+    - fixes in ordering issues in compilation of stdlib to actually achieve the
+      shortest bootstrapping time.
+  - ports:
+    - fixes for OpenBSD.
+    - Support PPC64 with Altivec more properly by saving and restoring
+      VR31 register. Fixes a reported failure to build and pass tests.
+      - Not a perfect fix: pragmatic whack-a-mole approach based on
+        empirically seeing which Altivec registers occur in the code,
+        needing saving.
+    - cygwin:
+      - fixed broken handling of drive-relative paths.
+      - handling of termination status in run and sh functions fixed
+        to be like that on POSIX platforms.
+  - documentation:
+    - source parameter of mmap documented.
+  - mmap: too low length confusingly diagnosed: as "zero-sized element type".
+  - hash-eql: always returning zero due to regression.
+  - mapcar, mappend, mapdo: avoid alloca request proportional to number of
+    args, switching to malloc over a certain size.
+  - list-vec: accidental use of int type to hold vector length: fail on
+    64 bit systems with vectors having more than 4G entries.
+  - misc:
+    - avoid realloc to size zero, since latest ISO C draft makes
+      it undefined behavior.
+    - keep-if: don't report as remove-if in errors.
+
+
+
                                     TXR 293
                                    2023-12-28
 
