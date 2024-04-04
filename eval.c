@@ -7294,6 +7294,7 @@ void eval_init(void)
   reg_fun(intern(lit("lcons-fun"), user_package), func_n1(lcons_fun));
   reg_fun(intern(lit("lcons-car"), user_package), func_n1(lcons_car));
   reg_fun(intern(lit("lcons-cdr"), user_package), func_n1(lcons_cdr));
+  reg_fun(intern(lit("lcons-force"), user_package), func_n1(lcons_force));
   reg_fun(car_s, car_f);
   reg_fun(cdr_s, cdr_f);
   reg_fun(rplaca_s, func_n2(rplaca));

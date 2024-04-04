@@ -933,6 +933,7 @@ void rcyc_cons(val cons);
 void rcyc_empty(void);
 val lcons_fun(val lcons);
 INLINE val us_lcons_fun(val lcons) { return lcons->lc.func; }
+val lcons_force(val lcons);
 val list(val first, ...); /* terminated by nao */
 val listv(varg );
 val consp(val obj);

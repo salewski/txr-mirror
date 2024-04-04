@@ -24373,6 +24373,32 @@ cons to store state information necessary for the propagation of a lazy list.
 If that state information consists of no more than two values, then
 no additional context object need be allocated.
 
+.coNP Function @ lcons-force
+.synb
+.mets (lcons-force << object )
+.syne
+.desc
+The
+.code lcons-function
+recursively forces a lazy cons.
+
+If the argument
+.meta object
+is of
+.code lcons
+type, and has not been previously forced, then it is forced. The
+associated lazy function is invoked. Then,
+.code lcons-force
+is recursively invoked on the
+.code car
+and
+.code cdr
+fields of the lazy cons.
+
+The
+.code lcons-force
+function returns its argument.
+
 .coNP Macro @ lcons
 .synb
 .mets (lcons < car-expression << cdr-expression )
@@ -24523,6 +24549,12 @@ function. These arguments have opposite polarity: if
 is true, then
 .meta throw-on-error-p
 shall be false, and vice versa.
+
+Note: the
+.code lcons-force
+function may be used on the return value of
+.code get-lines
+to force the lazy list.
 
 .coNP Macro @ close-lazy-streams
 .synb

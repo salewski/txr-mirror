@@ -4863,6 +4863,18 @@ val lcons_fun(val lcons)
   return lcons->lc.func;
 }
 
+val lcons_force(val lcons)
+{
+  val iter = lcons;
+
+  while (type(iter) == LCONS && iter->lc.func) {
+    lcons_force(car(iter));
+    iter = us_cdr(iter);
+  }
+
+  return lcons;
+}
+
 val list(val first, ...)
 {
   va_list vl;
