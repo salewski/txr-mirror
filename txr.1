@@ -65953,6 +65953,121 @@ returns, the child process terminates as if by a call to
 .code exit*
 with an argument of zero.
 
+.coNP Functions @, map-command-lines @ map-command-str and @ map-command-buf
+.synb
+.mets (map-command-lines < cmd < lines <> [ mode-opts ])
+.mets (map-command-str < cmd < str <> [ mode-opts ])
+.mets (map-command-buf < cmd < buf >> [ pos >> [ bytes <> [ skip ]]]]])
+.syne
+.desc
+The
+.codn map-command-lines ,
+.code map-command-str
+and
+.code map-command-buf
+functions filter data through an external command.
+
+The
+.meta cmd
+parameter has the same meaning as the corresponding parameter in the
+.meta open-command
+function. The command open with the
+.str w
+mode, which is implied.
+
+The
+.meta mode-opts
+optional argument, if present, specifies extra mode options,
+which must be compatible with
+.codn w .
+
+The
+.meta lines
+argument in
+.code map-command-lines
+must be a sequence of strings. These strings are transmitted to
+the command as newline-terminated lines, as if by the
+.code put-lines
+function. Simultaneously, the output of the command is read and divided into
+lines as if by the
+.code get-lines
+function. The entire output of the command is read before the
+function terminates, and the list of lines is returned.
+
+Similarly, the
+.meta str
+argument in
+.code map-command-str
+is transmitted to the executing command as its complete input, as if by
+.codn put-string .
+Simultaneously, the output of the command is captured as a single string,
+as if using the
+.code get-string
+function. That string is returned.
+
+The
+.meta buf
+argument in
+.code map-command-buf
+must be a buffer. The bytes of the buffer are transmitted to the
+executing command, whose output bytes are gathered into a new buffer
+object which is returned. The optional
+.meta pos
+argument, which defaults to zero, specifies the starting position within
+.metn buf .
+Bytes from that position to the end of the buffer are transmitted
+to the command. The optional
+.meta bytes
+argument specifies a limit on the number of bytes of the command's output that
+should be accumulated into a buffer. The default is unlimited.
+The optional
+.meta skip
+argument, defaulting to zero, specifies how many initial bytes
+of the command's output must be discarded prior to reading the
+bytes that are to be accumulated.
+
+.coNP Functions @, map-process-lines @ map-process-str and @ map-process-buf
+.synb
+.mets (map-process-lines < program < args < lines <> [ mode-opts ])
+.mets (map-process-str < program < args < str <> [ mode-opts ])
+.mets (map-process-buf < program < args < buf
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \   >> [ pos >> [ bytes <> [ skip ]]]]])
+.syne
+.desc
+The
+.codn map-process-lines ,
+.code map-process-str
+and
+.code map-process-buf
+are counterparts to
+.codn map-command-lines ,
+.code map-command-str
+and
+.code map-command-buf
+which specify the external process differently.
+
+Instead of the
+.meta cmd
+parameter, these functions feature a pair of parameters
+.meta program
+and
+.meta args
+which have the same semantics as the
+.meta program
+and
+.meta argument-list
+parameters of
+.metn open-process .
+
+Thus the relationship between these groups of three functions is
+like that between
+.code open-command
+and
+.codn open-process .
+
+In all other regards, these functions are identical to their
+counterparts.
+
 .SS* I/O-Related Convenience Functions
 
 The functions in this group create a stream, perform an I/O operation

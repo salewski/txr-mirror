@@ -477,6 +477,8 @@ static val getput_set_entries(val fun)
     lit("command-get-buf"), lit("command-put-buf"),
     lit("command-get-json"), lit("command-put-json"),
     lit("command-get-jsons"), lit("command-put-jsons"),
+    lit("map-command-lines"), lit("map-process-lines"), lit("map-command-str"),
+    lit("map-process-str"), lit("map-command-buf"), lit("map-process-buf"),
     lit("close-lazy-streams"),
     nil
   };

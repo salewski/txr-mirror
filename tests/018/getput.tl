@@ -31,3 +31,11 @@
     (true (contains "syntax error" errors)) t
     (true (contains "unterminated" errors)) t
     (true (contains ":1" errors)) t))
+
+(mtest
+  (map-command-lines "tr '[a-z]' '[A-Z]'" '#"a b c") #"A B C"
+  (map-process-lines "tr" '#"[a-z] [A-Z]" '#"a b c") #"A B C"
+  (map-command-str "tr '[a-z]' '[A-Z]'" "abc") "ABC"
+  (map-process-str "tr" '#"[a-z] [A-Z]" "abc") "ABC"
+  (map-command-buf "tr '[a-z]' '[A-Z]'" #b'616263') #b'414243'
+  (map-process-buf "tr" '#"[a-z] [A-Z]" #b'616263') #b'414243')
