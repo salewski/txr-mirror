@@ -24580,10 +24580,11 @@ sets up special monitoring of the the functions
 .code lazy-stream-cons
 and
 .codn get-lines .
-Whenever these functions register an I/O stream with a lazy list, that stream is
-recorded in a hidden. When the
+Whenever these functions register an I/O stream with a lazy list, in the
+dynamic scope of this environment, that stream is
+recorded in a hidden list associated with the innermost enclosing
 .code close-lazy-streams
-form terminates, it invokes the
+form. When the form terminates, it invokes
 .code close-stream
 on each stream in the hidden list.
 
