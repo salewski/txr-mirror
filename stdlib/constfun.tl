@@ -32,8 +32,8 @@
     atan2 sinh cosh tanh asinh acosh atanh log log10 log2 exp sqrt
     logand logior logxor logtest lognot logtrunc sign-extend ash bit mask
     width logcount bitset cum-norm-dist inv-cum-norm n-choose-k n-perm-k
-    fixnump bignump floatp integerp numberp signum bignum-len divides sys:bits
-    digpow digits poly rpoly b< b> b<= b=> b= b+ b- b* b/ neg
+    fixnump bignump floatp integerp numberp arithp signum bignum-len divides
+    sys:bits digpow digits poly rpoly b< b> b<= b=> b= b+ b- b* b/ neg
     pred ppred ppred pppred succ ssucc ssucc sssucc
     car cdr caar cadr cdar cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr
     caaaar caaadr caadar caaddr cadaar cadadr caddar cadddr cdaaar cdaadr
@@ -42,45 +42,48 @@
     caddadr cadddar caddddr cdaaaar cdaaadr cdaadar cdaaddr cdadaar cdadadr
     cdaddar cdadddr cddaaar cddaadr cddadar cddaddr cdddaar cdddadr cddddar
     cdddddr first rest identity use typeof atom null false true have
-    consp listp endp proper-listp length-list second third fourth fifth
-    sixth seventh eighth ninth tenth nthcdr nth tailp
+    consp cons-count listp endp proper-listp length-list length-list-<
+    second third fourth fifth sixth seventh eighth ninth tenth nthcdr nth tailp
     memq memql memqual rmemq rmemql rmemqual countq countql countqual
     posq posql posqual rposq rposql rposqual eq eql equal meq meql mequal
     neq neql nequal max min clamp bracket take drop if or and progn
     prog1 prog2 nilf ignore tf display-width sys:fmt-simple
     sys:fmt-flex sys:fmt-join packagep
     symbolp keywordp bindable stringp length-str
-    coded-length cmp-str string-lt str= str< str> str<= str>= int-str
-    flo-str num-str int-flo flo-int tofloat toint tointz less greater
+    coded-length cmp-str string-lt str= str< str> str<= str>=
+    str-esc sh-esc sh-esc-all sh-esc-dq sh-esc-sq
+    int-str flo-str num-str int-flo flo-int tofloat toint tointz less greater
     lequal gequal chrp chr-isalnum chr-isalnum chr-isalpha chr-isascii
     chr-iscntrl chr-isdigit chr-digit chr-isgraph chr-islower chr-isprint
     chr-ispunct chr-isspace chr-isblank chr-isunisp chr-isupper chr-isxdigit
     chr-xdigit chr-toupper chr-tolower num-chr int-chr chr-num chr-int
     chr-str span-str compl-span-str break-str vectorp length-vec size-vec
-    assq assql assoc rassq rassql rassoc prop memp length len empty ref
-    rangep from to in-range in-range* nullify))
+    assq assql assoc rassq rassql rassoc prop memp length len length-< empty
+    ref mref rangep from to in-range in-range* nullify rangeref))
 
 (defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
 
 (defvarl %effect-free-funs%
   '(append append* revappend list list* zip interpose copy-list reverse
-   flatten flatten* flatcar flatcar* tuples remq remql remqual
-   keepq keepq keepqual remq* remql* remq* make-sym gensym
-   mkstring copy-str upcase-str downcase-str cat-str split-str spl
-   split-str-set sspl tok-str tok tok-where list-str trim-str
-   get-lines lazy-str length-str-> length-str->= length-str-<
-   length-str-<= vector vec vector-list list-vector list-vec
-   copy-vec sub-vec cat-vec acons acons-new aconsql-new alist-remove
-   copy-cons copy-tree copy-alist plist-to-alist improper-plist-to-alist
-   merge sort shuffle list-seq vec-seq str-seq copy sub seq-begin
-   iter-begin rcons make-like nullify symbol-value symbol-function
-   symbol-macro boundp fboundp mboundp special-operator-p special-var-p
-   copy-fun func-get-form func-get-name func-get-env functionp
-   interp-fun-p vm-fun-p fun-fixparam-count fun-optparam-count
-   fun-variadic sys:ctx-form sys:ctx-name range range* rlist rlist*
-   repeat pad weave promisep rperm perm comb rcomb source-loc
-   source-loc-str macro-ancestor cptr-int cptr-obj cptr-buf
-   int-cptr cptrp cptr-type cptr-size-hint))
+    flatten flatten* flatcar flatcar* tuples remq remql remqual
+    keepq keepq keepqual remq* remql* remq* make-sym gensym
+    mkstring copy-str upcase-str downcase-str cat-str split-str spl
+    split-str-set sspl tok-str tok tok-where list-str trim-str
+    get-lines lazy-str length-str-> length-str->= length-str-<
+    length-str-<= vector vec vector-list list-vector list-vec
+    copy-vec sub-vec cat-vec acons acons-new aconsql-new alist-remove
+    copy-cons copy-tree copy-alist plist-to-alist improper-plist-to-alist
+    list-seq vec-seq str-seq copy sub seq-begin
+    iter-begin rcons make-like nullify symbol-value symbol-function
+    symbol-macro boundp fboundp mboundp special-operator-p special-var-p
+    copy-fun func-get-form func-get-name func-get-env functionp
+    interp-fun-p vm-fun-p fun-fixparam-count fun-optparam-count
+    fun-variadic sys:ctx-form sys:ctx-name range range* rlist rlist*
+    repeat pad weave promisep rperm perm comb rcomb source-loc
+    source-loc-str macro-ancestor cptr-int cptr-obj cptr-buf
+    int-cptr cptrp cptr-type cptr-size-hint
+    lexical-symacro-p lexical-fun-p lexical-macro-p lexical-binding-kind
+    lexical-fun-binding-kind))
 
 (defvarl %effect-free% (hash-uni %const-foldable%
                                  (hash-list %effect-free-funs% :eq-based)))
