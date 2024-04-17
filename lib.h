@@ -456,6 +456,7 @@ typedef struct seq_iter {
     val vbound;
     cnum cbound;
     val next;
+    val dargs;
   } ul;
   struct seq_iter_ops *ops;
 } seq_iter_t;
@@ -766,6 +767,7 @@ val iter_more(val iter);
 val iter_item(val iter);
 val iter_step(val iter);
 val iter_reset(val iter, val obj);
+val iter_catv(varg iters);
 void seq_build_init(val self, seq_build_t *bu, val likeobj);
 void seq_add(seq_build_t *bu, val item);
 void seq_pend(seq_build_t *bu, val items);

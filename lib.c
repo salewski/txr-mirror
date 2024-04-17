@@ -869,6 +869,47 @@ static void seq_iter_rewind(seq_iter_t *it)
   }
 }
 
+static int seq_iter_get_cat(seq_iter_t *it, val *pval)
+{
+  val dargs = it->ul.dargs;
+  cnum index = it->ui.index;
+  varg args = dargs->a.args;
+  val iter = dargs->a.car;
+
+  for (;;) {
+    if (iter_more(iter)) {
+      *pval = iter_item(iter);
+      set(mkloc(dargs->a.car, dargs), iter_step(iter));
+      return 1;
+    }
+    if (!args_more(args, index))
+      return 0;
+    iter = iter_begin(args_get(args, &index));
+    it->ui.index = index;
+    set(mkloc(dargs->a.car, dargs), iter);
+  }
+}
+
+static int seq_iter_peek_cat(seq_iter_t *it, val *pval)
+{
+  val dargs = it->ul.dargs;
+  cnum index = it->ui.index;
+  varg args = dargs->a.args;
+  val iter = dargs->a.car;
+
+  for (;;) {
+    if (iter_more(iter)) {
+      *pval = iter_item(iter);
+      return 1;
+    }
+    if (!args_more(args, index))
+      return 0;
+    iter = iter_begin(args_get(args, &index));
+    it->ui.index = index;
+    set(mkloc(dargs->a.car, dargs), iter);
+  }
+}
+
 static void seq_iter_mark_op(struct seq_iter *it)
 {
   gc_mark(it->ui.iter);
@@ -932,6 +973,9 @@ struct seq_iter_ops si_oop_ops = seq_iter_ops_init(seq_iter_get_oop,
 
 struct seq_iter_ops si_fast_oop_ops = seq_iter_ops_init(seq_iter_get_fast_oop,
                                                         seq_iter_peek_fast_oop);
+
+struct seq_iter_ops si_cat_ops = seq_iter_ops_init(seq_iter_get_cat,
+                                                   seq_iter_peek_cat);
 
 void seq_iter_init_with_info(val self, seq_iter_t *it,
                              seq_info_t si, int support_rewind)
@@ -1404,6 +1448,26 @@ val iter_reset(val iter, val obj)
       return iter_begin(obj);
     }
   }
+}
+
+val iter_catv(varg iters)
+{
+  cnum index = 0;
+  if (args_more(iters, index)) {
+    val iter0 = iter_begin(args_get(iters, &index));
+    val dargs = dyn_args(iters, iter0, nil);
+    val si_obj, iter;
+    struct seq_iter *si = coerce(struct seq_iter *, chk_calloc(1, sizeof *si));
+    si->inf.type = DARG;
+    si->inf.obj = dargs;
+    si->ui.index = index;
+    si->ul.dargs = dargs;
+    si->ops = &si_cat_ops;
+    si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+    gc_hint(iter);
+    return si_obj;
+  }
+  return nil;
 }
 
 static void seq_build_generic_pend(seq_build_t *bu, val seq)

@@ -39990,6 +39990,63 @@ is invoked on
 .meta seq
 and the result is returned.
 
+.coNP Function @ iter-cat
+.synb
+.mets (iter-cat << seq *)
+.syne
+.desc
+The
+.code iter-cat
+function produces a catenated iterator: an object suitable for traversing
+the abstract sequence formed by the catenation of the
+.meta seq
+arguments. This is accomplished without actually catenating the argument
+sequences.
+
+If no arguments are given to
+.code iter-cat
+then it returns
+.codn nil .
+Otherwise, the abstract semantics of the catenated iterator is as follows.
+The iterator retains all of the
+.meta seq
+objects. It converts the first
+.meta seq
+object to an iterator as if by
+.code iter-begin
+on it. This is referred to as the individual iterator. When that iterator is
+exhausted of items,
+.code iter-begin
+is called on the next
+.meta seq
+object to produce the next individual iterator.
+
+Note: under this semantics, the catenated iterator's
+.code iter-more
+operation does not simply report the value returned by the
+.code iter-more
+call on the individual iterator. When the individual iterator's
+.code iter-more
+function returns
+.codn nil ,
+the catenated operator then switches to the individual iterator of the next
+.meta seq
+object in the argument sequence. This is repeated as many times as necessary
+until an iterator is found for which
+The
+.code iter-item
+function, when applied to a catenated iterator, similarly potentially
+searches through the argument space.
+.code iter-more
+yields true, or the arguments are exhausted.
+
+.TP* Examples:
+
+.verb
+  ;; Create an iterator that produces 0, 1, ... 9, 20, 21, ... 29
+  (iter-cat 0..10 20..30)
+.brev
+
 .coNP Function @ seq-begin
 .synb
 .mets (seq-begin << object )
