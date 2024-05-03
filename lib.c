@@ -6073,7 +6073,7 @@ static void cat_str_measure(struct cat_str *cs, val item, val self)
     return;
   }
 
-  uw_throwf(error_s, lit("~a: ~s neither character, string nor sequence"),
+  uw_throwf(error_s, lit("~a: ~s is neither a character, string nor sequence"),
             self, item, nao);
 oflow:
   uw_throwf(error_s, lit("~a: string length overflow"), self, nao);
