@@ -62457,8 +62457,25 @@ If
 .meta pretty-p
 is true, then
 .code print
-does not strive for read-print consistency.
-Strings are printed by sending their characters to the output
+does not strive for read-print consistency. In \*(TX, the term
+.I "pretty printing"
+refers to rendering a printed representation of an object
+without the notational details required to unambiguously delimit the object,
+and represent its value and type without ambiguity.
+For instance, the four-character string
+.strn abcd ,
+the two-byte buffer object
+.code #b'abcd'
+as well as the symbol
+.code abcd
+all pretty-print as
+.codn abcd .
+To understand the meaning, the user has to refer to the documentation
+of the specific application which produces that representation.
+
+When
+.code pretty-p
+is true, strings are printed by sending their characters to the output
 stream, as if by the
 .code put-string
 function, rather than being rendered in the string literal notation
@@ -62467,13 +62484,20 @@ characters.  Likewise, character objects are printed via
 .code put-char
 rather than the
 .code #\e
-notation. Buffer objects are printed by sending their bytes to the
-output stream using
-.code put-byte
-rather than being rendered in the
-.code #b
 notation.
-Symbols are printed without their package prefix, except that
+
+When
+.code pretty-p
+is true, buffer objects are printed as strings of hexadecimal
+digit pairs, without being embedded in the
+.code #b'...'
+notation, and without any line breaks.
+This behavior is new in \*(TX 275; see the COMPATIBILITY
+section.
+
+The
+.code pretty-p
+flag causes symbols to be printed without their package prefix, except that
 symbols from the keyword package are still printed with the leading colon.
 Floating-point objects are printed as if using the
 .code format
@@ -94405,6 +94429,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 294
+Until \*(TX 294, the
+.code pprint
+function rendered a buffer object simply by sending its raw bytes to
+the destination stream, rather than rendering the object as a stream of
+hexadecimal digit pairs.  The old behavior is restored with compatibility
+values of 294 or lower.
 .IP 289
 Until \*(TX 289, the
 .code replace

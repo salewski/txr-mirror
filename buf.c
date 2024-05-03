@@ -876,8 +876,13 @@ val buf_pprint(val buf, val stream_in)
   cnum len = c_num(b->len, self);
   mem_t *data = b->data;
 
-  while (len-- > 0)
-    put_byte(num_fast(*data++), stream);
+  if (opt_compat && opt_compat <= 294) {
+    while (len-- > 0)
+      put_byte(num_fast(*data++), stream);
+  } else {
+    while (len-- > 0)
+      format(stream, lit("~,02x"), num_fast(*data++), nao);
+  }
 
   return t;
 }

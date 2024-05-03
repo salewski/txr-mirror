@@ -2979,11 +2979,20 @@ static val fmt_tostring(val obj)
 
 static val fmt_cat(val obj, val sep)
 {
-  return if3(stringp(obj),
-             obj,
-             if3(if3(opt_compat && opt_compat <= 174, listp(obj), seqp(obj)),
-                 cat_str(mapcar(func_n1(tostringp), obj), sep),
-                 tostringp(obj)));
+  switch (type(obj)) {
+  case LIT:
+  case STR:
+  case LSTR:
+    return obj;
+  case BUF:
+    if (!opt_compat || opt_compat > 294)
+      return tostringp(obj);
+    /* fallthrough */
+  default:
+    return if3(if3(opt_compat && opt_compat <= 174, listp(obj), seqp(obj)),
+               cat_str(mapcar(func_n1(tostringp), obj), sep),
+               tostringp(obj));
+  }
 }
 
 static val do_format_field(val obj, val n, val sep,
