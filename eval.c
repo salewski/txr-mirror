@@ -2990,7 +2990,8 @@ static val fmt_cat(val obj, val sep)
     /* fallthrough */
   default:
     return if3(if3(opt_compat && opt_compat <= 174, listp(obj), seqp(obj)),
-               cat_str(mapcar(func_n1(tostringp), obj), sep),
+               cat_str(mapcar(func_n1(tostringp), obj),
+                       default_arg(sep, lit(" "))),
                tostringp(obj));
   }
 }
@@ -3053,7 +3054,7 @@ static val do_format_field(val obj, val n, val sep,
 
 val format_field(val obj, val modifier, val filter, val eval_fun)
 {
-  val n = zero, sep = lit(" ");
+  val n = zero, sep = nil;
   val plist = nil;
   val range_ix = nil;
 
@@ -3101,7 +3102,7 @@ static val fmt_simple(val obj, val n, val sep,
 {
   return do_format_field(fmt_tostring(obj),
                          default_arg(n, zero),
-                         default_arg(sep, lit(" ")),
+                         sep,
                          default_null_arg(range_ix),
                          default_null_arg(plist),
                          nil);
@@ -3110,7 +3111,7 @@ static val fmt_simple(val obj, val n, val sep,
 static val fmt_flex(val obj, val plist, varg args)
 {
   cnum ix = 0;
-  val n = zero, sep = lit(" ");
+  val n = zero, sep = nil;
   val range_ix = nil;
 
   while (args_more(args, ix)) {
