@@ -11151,6 +11151,8 @@ static val lazy_interpose(val sep, val list)
 
 val interpose(val sep, val seq)
 {
+  val self = lit("interpose");
+
   switch (type(seq)) {
   case NIL:
     return nil;
@@ -11171,14 +11173,26 @@ val interpose(val sep, val seq)
     }
   case LCONS:
     return lazy_interpose(sep, seq);
-  case LIT:
-  case STR:
-  case LSTR:
-    return cat_str(interpose(sep, tolist(seq)), nil);
-  case VEC:
-    return vec_list(interpose(sep, tolist(seq)));
   default:
-    type_mismatch(lit("interpose: ~s is not a sequence"), seq, nao);
+    {
+      seq_build_t bu;
+      seq_iter_t it;
+      val elem;
+
+      seq_build_init(self, &bu, seq);
+      seq_iter_init(self, &it, seq);
+
+      if (seq_get(&it, &elem)) {
+        seq_add(&bu, elem);
+
+        while (seq_get(&it, &elem)) {
+          seq_add(&bu, sep);
+          seq_add(&bu, elem);
+        }
+      }
+
+      return seq_finish(&bu);
+    }
   }
 }
 
