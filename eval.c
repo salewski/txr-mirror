@@ -3161,7 +3161,7 @@ val subst_vars(val forms, val env, val filter)
                                     pa_123_1(func_n3(eval), env, form)),
                        rest(forms));
         } else {
-          str = fmt_cat(str, lit(" "));
+          str = fmt_cat(str, nil);
           forms = cons(filter_string_tree(filter, str), rest(forms));
         }
 
