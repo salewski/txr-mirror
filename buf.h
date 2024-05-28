@@ -115,6 +115,8 @@ val buf_get_cptr(val buf, val pos);
 val buf_print(val buf, val stream);
 val buf_pprint(val buf, val stream);
 
+val buf_str_sep(val buf, val sep, val self);
+
 void buf_hex(val buf, char *, size_t, int);
 
 val make_buf_stream(val buf_opt);

@@ -6237,6 +6237,40 @@ val fmt_join(varg args)
   return join_with(nil, args);
 }
 
+val fmt_str_sep(val sep, val str, val self)
+{
+  ucnum lsep = c_unum(length_str(sep), self);
+  ucnum lstr = c_unum(length_str(str), self);
+  const wchar_t *csep = c_str(sep, self);
+  const wchar_t *cstr = c_str(str, self);
+  ucnum total = (lstr > 0 ? (lstr - 1) * lsep + lstr : 0) + 1;
+  ucnum i;
+  wchar_t *out = chk_wmalloc(total);
+  wchar_t *ptr = out, *end = out + total;
+
+  for (i = 0; i < lstr; i++) {
+    if (i > 0) {
+      if (end - ptr <= convert(ptrdiff_t, lsep))
+        break;
+      wcscpy(ptr, csep);
+      ptr += lsep;
+    }
+    if (end - ptr <= 1)
+      break;
+    *ptr++ = cstr[i];
+  }
+
+  if (i < lstr) {
+    free(out);
+    uw_throwf(error_s, lit("~a: string length overflow"), self, nao);
+  }
+
+  *ptr = 0;
+
+  return string_own(out);
+}
+
+
 val split_str_keep(val str, val sep, val keep_sep_opt, val count_opt)
 {
   val self = lit("split-str");

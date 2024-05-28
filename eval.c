@@ -2979,14 +2979,18 @@ static val fmt_tostring(val obj)
 
 static val fmt_cat(val obj, val sep)
 {
+  val self = lit("quasistring formatting");
+
   switch (type(obj)) {
   case LIT:
   case STR:
   case LSTR:
-    return obj;
+    return if3(null_or_missing_p(sep), obj, fmt_str_sep(sep, obj, self));
   case BUF:
     if (!opt_compat || opt_compat > 294)
-      return tostringp(obj);
+      return if3(null_or_missing_p(sep),
+                 fmt_cat(tostringp(obj), sep),
+                 buf_str_sep(obj, sep, self));
     /* fallthrough */
   default:
     return if3(if3(opt_compat && opt_compat <= 174, listp(obj), seqp(obj)),

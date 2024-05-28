@@ -9632,11 +9632,14 @@ than a list or string, it will be converted to a string as if by the
 .code tostring
 function in \*(TL.
 
-A list is converted to a string in a special way: the elements are
-individually converted to a string and then they are catenated together.
-The default separator string is a single space: an alternate separation
-can be specified as an argument in the brace substitution syntax.
-Empty lists turn into an empty string.
+A value which is a sequence is converted to a string in a special way: the
+elements are individually converted to strings and then they are catenated
+together.  The default separator string for most sequences is a single space:
+an alternate separation can be specified as an argument in the brace
+substitution syntax.  Empty sequences turn into an empty string.
+More details are given in the 
+.B "Output Variables: Separation"
+section below.
 
 Lists may be output within
 .code @(repeat)
@@ -9669,6 +9672,56 @@ for the output clause. The syntax for this is
 .onom
 The filter specification syntax is the same as in the output clause.
 See Output Filtering below.
+
+.NP* Output Variables: Buffer Objects
+
+When the value of an output variable is a buffer (object of type
+.codn buf ),
+it is rendered as a sequence of hexadecimal digit pairs, with
+no line breaks. The digits
+.code a
+through
+.code f
+are rendered in lower case.
+
+.NP* Output Variables: Separation
+
+As mentioned in the previous section, the value of a variable
+can be a sequence. The individual elements of a sequence are turned
+into strings, and then catenated together with the separator,
+which may be specified as a string modifier in the variable syntax.
+
+For most sequences, the default separator is a space.
+
+When the value of a variable is a character string, and the
+separator is not specified, the string is output as-is.
+Effectively, the string is treated as a sequence but with an
+empty default separator.
+
+When the value of a variable is a buffer, it is rendered in
+hexadecimal, as described in the previous section.
+If a separator string modifier is specified, it separates
+pairs of digits, rather than individual digits.
+
+Example:
+
+.verb
+  @(bind str "string")
+  @(bind buf #b'cafef00d')
+  @(output)
+  @{str[0..3] "--"}
+  @{buf[0..2] ":"}
+  @{buf[2..4] "/"}
+  @(end)
+.brev
+
+The above example produces the output
+
+.verb
+  s--t--r
+  ca:fe
+  f0/0d
+.brev
 
 .NP* Output Variables: Indexing
 
@@ -9724,6 +9777,11 @@ argument specifies an alternate
 separator string, and
 .code 10
 specifies the field width.
+
+When a variable includes indexing, separation and a field width,
+the indexing operation is first applied to select a subsequence.
+Then separation is applied to produce a textual representation.
+Finally the representation is rendered din the specified field width.
 
 .NP* Output Substitutions
 

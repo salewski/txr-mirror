@@ -887,6 +887,30 @@ val buf_pprint(val buf, val stream_in)
   return t;
 }
 
+val buf_str_sep(val buf, val sep, val self)
+{
+  struct buf *b = buf_handle(buf, self);
+  ucnum len = c_unum(b->len, self);
+  val ret = null_string;
+
+  if (len > 0) {
+    val stream = make_string_output_stream();
+    ucnum i = 0;
+
+    goto first;
+
+    while (i < len) {
+      put_string(sep, stream);
+    first:
+      format(stream, lit("~,02x"), num_fast(b->data[i++]), nao);
+    }
+
+    ret = get_string_from_stream(stream);
+  }
+
+  return ret;
+}
+
 void buf_hex(val buf, char *hex, size_t sz, int caps)
 {
   val self = lit("buf-hex");
