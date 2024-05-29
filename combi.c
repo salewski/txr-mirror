@@ -37,6 +37,16 @@
 #include "hash.h"
 #include "combi.h"
 
+static void check_k(val k, val self)
+{
+  if (!integerp(k))
+    type_mismatch(lit("~a: ~s is not an integer"), self, k, nao);
+
+  if (minusp(k))
+    uw_throwf(numeric_error_s, lit("~a: ~s is not a positive integer"),
+              self, k, nao);
+}
+
 static val perm_while_fun(val state)
 {
   val self = lit("perm");
@@ -237,12 +247,7 @@ val perm(val seq, val k)
   if (null_or_missing_p(k)) {
     k = nil;
   } else {
-    if (!integerp(k))
-      type_mismatch(lit("perm: ~s is not an integer"), k, nao);
-
-    if (minusp(k))
-      uw_throwf(numeric_error_s, lit("perm: ~s is not a positive integer"),
-                k, nao);
+    check_k(k, lit("perm"));
   }
 
   switch (type(seq)) {
@@ -353,12 +358,7 @@ static val rperm_seq(val seq, val k)
 
 val rperm(val seq, val k)
 {
-  if (!integerp(k))
-    type_mismatch(lit("rperm: ~s is not an integer"), k, nao);
-
-  if (minusp(k))
-    uw_throwf(numeric_error_s, lit("rperm: ~s is not a positive integer"),
-              k, nao);
+  check_k(k, lit("rperm"));
 
   switch (type(seq)) {
   case NIL:
@@ -543,12 +543,7 @@ static val comb_seq(val seq, val k)
 
 val comb(val seq, val k)
 {
-  if (!integerp(k))
-    type_mismatch(lit("comb: ~s is not an integer"), k, nao);
-
-  if (minusp(k))
-    uw_throwf(numeric_error_s, lit("comb: ~s is not a positive integer"),
-              k, nao);
+  check_k(k, lit("comb"));
 
   switch (type(seq)) {
   case CONS:
@@ -690,12 +685,7 @@ static val rcomb_seq(val seq, val k)
 
 val rcomb(val seq, val k)
 {
-  if (!integerp(k))
-    type_mismatch(lit("rcomb: ~s is not an integer"), k, nao);
-
-  if (minusp(k))
-    uw_throwf(numeric_error_s, lit("rcomb: ~s is not a positive integer"),
-              k, nao);
+  check_k(k, lit("rcomb"));
 
   switch (type(seq)) {
   case CONS:
