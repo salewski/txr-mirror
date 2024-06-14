@@ -213,7 +213,7 @@ static val perm_str(val str, val k)
   if (k == zero) {
     return cons(string(L""), nil);
   } else {
-    val state = perm_init(vec_list(list_str(str)), k, nil);
+    val state = perm_init(vec_seq(str), k, nil);
     if (!state)
       return nil;
     return generate(func_f0(state, perm_while_fun),
