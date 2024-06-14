@@ -1224,11 +1224,12 @@ static void seq_iter_mark(val seq_iter)
     si->ops->mark(si);
 }
 
-static struct cobj_ops seq_iter_ops = cobj_ops_init(eq,
-                                                    cobj_print_op,
-                                                    cobj_destroy_free_op,
-                                                    seq_iter_mark,
-                                                    cobj_eq_hash_op);
+static struct cobj_ops
+  seq_iter_cobj_ops = cobj_ops_init(eq,
+                                    cobj_print_op,
+                                    cobj_destroy_free_op,
+                                    seq_iter_mark,
+                                    cobj_eq_hash_op);
 
 val seq_begin(val obj)
 {
@@ -1237,7 +1238,7 @@ val seq_begin(val obj)
   struct seq_iter *si = coerce(struct seq_iter *, chk_calloc(1, sizeof *si));
   seq_iter_init(self, si, obj);
   iter = si->ui.iter;
-  si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+  si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_cobj_ops);
   gc_hint(iter);
   gc_hint(obj);
   return si_obj;
@@ -1293,7 +1294,7 @@ val iter_begin(val obj)
                                      chk_calloc(1, sizeof *si));
         seq_iter_init_with_info(self, si, sinf, 0);
         iter = si->ui.iter;
-        si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+        si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_cobj_ops);
         gc_hint(iter);
         gc_hint(obj);
         return si_obj;
@@ -1307,7 +1308,7 @@ static val iter_dynamic(struct seq_iter *si_orig)
   struct seq_iter *si = coerce(struct seq_iter *,
                                chk_copy_obj(coerce(mem_t *, si_orig),
                                             sizeof *si));
-  return cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+  return cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_cobj_ops);
 }
 
 val iter_more(val iter)
@@ -1463,7 +1464,7 @@ val iter_catv(varg iters)
     si->ui.index = index;
     si->ul.dargs = dargs;
     si->ops = &si_cat_ops;
-    si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
+    si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_cobj_ops);
     gc_hint(iter);
     return si_obj;
   }
