@@ -35,6 +35,7 @@
 #include "unwind.h"
 #include "eval.h"
 #include "hash.h"
+#include "gc.h"
 #include "combi.h"
 
 static void check_k(val k, val self)
@@ -263,6 +264,96 @@ val perm(val seq, val k)
     return perm_str(seq, k);
   default:
     return perm_seq(seq, k);
+  }
+}
+
+static int permi_get(struct seq_iter *it, val *pval)
+{
+  val state = it->inf.obj;
+
+  if (it->ul.next) {
+    if (it->ui.iter || perm_while_fun(state)) {
+      it->ui.iter = nil;
+      *pval = perm_seq_gen_fun(state);
+      return 1;
+    }
+  }
+
+  it->ul.next = nil;
+  return 0;
+}
+
+static int permi_peek(struct seq_iter *it, val *pval)
+{
+  val state = it->inf.obj;
+
+  if (it->ul.next) {
+    if (it->ui.iter || perm_while_fun(state)) {
+      it->ui.iter = t;
+      *pval = state;
+      *pval = perm_seq_gen_fun(state);
+      return 1;
+    }
+  }
+
+  it->ul.next = nil;
+  return 0;
+}
+
+static void permi_clone(const struct seq_iter *sit, struct seq_iter *dit)
+{
+  val state = sit->inf.obj;
+  val c = vecref(state, two);
+  val state_copy = copy_vec(state);
+
+  *dit = *sit;
+  dit->inf.obj = state_copy;
+  set(vecref_l(state_copy, two), copy_vec(c));
+}
+
+struct seq_iter_ops permi_ops = seq_iter_ops_init_clone(permi_get,
+                                                        permi_peek,
+                                                        permi_clone);
+
+static val permi_iter(val state)
+{
+  val obj;
+  struct seq_iter *it = coerce(struct seq_iter *, chk_calloc(1, sizeof *it));
+
+  it->inf.obj = state;
+  it->inf.type = NIL;
+  it->inf.kind = SEQ_NOTSEQ;
+
+  it->ui.iter = nil;
+  it->ul.next = t;
+  it->ops = &permi_ops;
+
+  obj = cobj(coerce(mem_t *, it), seq_iter_cls, &seq_iter_cobj_ops);
+
+  gc_hint(obj);
+  gc_hint(state);
+
+  return obj;
+}
+
+val permi(val seq, val k)
+{
+  val self = lit("permi");
+
+  if (null_or_missing_p(k)) {
+    k = nil;
+  } else {
+    check_k(k, self);
+  }
+
+  if (k == zero) {
+    return cons(make_like(nil, seq), nil);
+  } else {
+    val vec = vec_seq(seq);
+    val state = perm_init(vec, k, seq);
+    if (!state)
+      return nil;
+    return permi_iter(state);
   }
 }
 

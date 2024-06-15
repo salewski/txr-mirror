@@ -910,7 +910,7 @@ static int seq_iter_peek_cat(seq_iter_t *it, val *pval)
   }
 }
 
-static void seq_iter_mark_op(struct seq_iter *it)
+void seq_iter_mark_op(struct seq_iter *it)
 {
   gc_mark(it->ui.iter);
 }
@@ -976,6 +976,14 @@ struct seq_iter_ops si_fast_oop_ops = seq_iter_ops_init(seq_iter_get_fast_oop,
 
 struct seq_iter_ops si_cat_ops = seq_iter_ops_init(seq_iter_get_cat,
                                                    seq_iter_peek_cat);
+
+static void seq_iter_clone(seq_iter_t *dit, const seq_iter_t *sit)
+{
+  if (sit->ops->clone)
+    sit->ops->clone(sit, dit);
+  else
+    *dit = *sit;
+}
 
 void seq_iter_init_with_info(val self, seq_iter_t *it,
                              seq_info_t si, int support_rewind)
@@ -1128,7 +1136,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
     }
     if (it->inf.obj->co.cls == seq_iter_cls)
     {
-      *it = *coerce(struct seq_iter *, it->inf.obj->co.handle);
+      seq_iter_clone(it, coerce(struct seq_iter *, it->inf.obj->co.handle));
       break;
     }
     if (it->inf.obj->co.cls == tree_iter_cls)
@@ -1224,12 +1232,11 @@ static void seq_iter_mark(val seq_iter)
     si->ops->mark(si);
 }
 
-static struct cobj_ops
-  seq_iter_cobj_ops = cobj_ops_init(eq,
-                                    cobj_print_op,
-                                    cobj_destroy_free_op,
-                                    seq_iter_mark,
-                                    cobj_eq_hash_op);
+struct cobj_ops seq_iter_cobj_ops = cobj_ops_init(eq,
+                                                  cobj_print_op,
+                                                  cobj_destroy_free_op,
+                                                  seq_iter_mark,
+                                                  cobj_eq_hash_op);
 
 val seq_begin(val obj)
 {

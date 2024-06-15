@@ -465,10 +465,13 @@ struct seq_iter_ops {
   int (*get)(struct seq_iter *, val *pval);
   int (*peek)(struct seq_iter *, val *pval);
   void (*mark)(struct seq_iter *);
+  void (*clone)(const struct seq_iter *, struct seq_iter *);
 };
 
-#define seq_iter_ops_init(get, peek) { get, peek, seq_iter_mark_op }
-#define seq_iter_ops_init_nomark(get, peek) { get, peek, 0 }
+#define seq_iter_ops_init(get, peek) { get, peek, seq_iter_mark_op, 0 }
+#define seq_iter_ops_init_nomark(get, peek) { get, peek, 0, 0 }
+#define seq_iter_ops_init_clone(get, peek, clone) \
+  { get, peek, seq_iter_mark_op, clone }
 
 typedef struct seq_build {
   val obj;
@@ -745,12 +748,16 @@ typedef unsigned long alloc_bytes_t;
 extern alloc_bytes_t malloc_bytes;
 extern alloc_bytes_t gc_bytes;
 
+extern struct cobj_class *seq_iter_cls;
+extern struct cobj_ops seq_iter_cobj_ops;
+
 val identity(val obj);
 val built_in_type_p(val sym);
 val typeof(val obj);
 val subtypep(val sub, val sup);
 val typep(val obj, val type);
 seq_info_t seq_info(val cobj);
+void seq_iter_mark_op(struct seq_iter *it);
 void seq_iter_init_with_info(val self, seq_iter_t *it,
                              seq_info_t si, int support_rewind);
 void seq_iter_init(val self, seq_iter_t *it, val obj);
