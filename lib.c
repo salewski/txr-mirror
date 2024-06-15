@@ -764,6 +764,12 @@ static int seq_iter_peek_oop(seq_iter_t *it, val *pval)
   return 0;
 }
 
+static void seq_iter_mark_oop(seq_iter_t *it)
+{
+  gc_mark(it->ui.iter);
+  gc_mark(it->ul.next);
+}
+
 static int seq_iter_get_fast_oop(seq_iter_t *it, val *pval)
 {
   val iter = it->ui.iter;
@@ -910,6 +916,11 @@ static int seq_iter_peek_cat(seq_iter_t *it, val *pval)
   }
 }
 
+static void seq_iter_mark_cat(struct seq_iter *it)
+{
+  gc_mark(it->ul.dargs);
+}
+
 void seq_iter_mark_op(struct seq_iter *it)
 {
   gc_mark(it->ui.iter);
@@ -968,14 +979,18 @@ struct seq_iter_ops si_chr_ops = seq_iter_ops_init_nomark(seq_iter_get_chr,
 struct seq_iter_ops si_num_ops = seq_iter_ops_init(seq_iter_get_num,
                                                    seq_iter_peek_num);
 
-struct seq_iter_ops si_oop_ops = seq_iter_ops_init(seq_iter_get_oop,
-                                                   seq_iter_peek_oop);
+struct seq_iter_ops si_oop_ops = seq_iter_ops_init_mark(seq_iter_get_oop,
+                                                        seq_iter_peek_oop,
+                                                        seq_iter_mark_oop);
 
-struct seq_iter_ops si_fast_oop_ops = seq_iter_ops_init(seq_iter_get_fast_oop,
-                                                        seq_iter_peek_fast_oop);
+struct seq_iter_ops si_fast_oop_ops =
+  seq_iter_ops_init_mark(seq_iter_get_fast_oop,
+                         seq_iter_peek_fast_oop,
+                         seq_iter_mark_oop);
 
-struct seq_iter_ops si_cat_ops = seq_iter_ops_init(seq_iter_get_cat,
-                                                   seq_iter_peek_cat);
+struct seq_iter_ops si_cat_ops = seq_iter_ops_init_mark(seq_iter_get_cat,
+                                                        seq_iter_peek_cat,
+                                                        seq_iter_mark_cat);
 
 static void seq_iter_clone(seq_iter_t *dit, const seq_iter_t *sit)
 {

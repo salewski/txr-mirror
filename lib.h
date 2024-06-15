@@ -470,6 +470,7 @@ struct seq_iter_ops {
 
 #define seq_iter_ops_init(get, peek) { get, peek, seq_iter_mark_op, 0 }
 #define seq_iter_ops_init_nomark(get, peek) { get, peek, 0, 0 }
+#define seq_iter_ops_init_mark(get, peek, mark) { get, peek, mark, 0 }
 #define seq_iter_ops_init_clone(get, peek, clone) \
   { get, peek, seq_iter_mark_op, clone }
 
