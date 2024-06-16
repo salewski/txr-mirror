@@ -776,6 +776,7 @@ val iter_item(val iter);
 val iter_step(val iter);
 val iter_reset(val iter, val obj);
 val iter_catv(varg iters);
+val copy_iter(val iter);
 void seq_build_init(val self, seq_build_t *bu, val likeobj);
 void seq_add(seq_build_t *bu, val item);
 void seq_pend(seq_build_t *bu, val items);

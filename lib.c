@@ -1493,6 +1493,22 @@ val iter_catv(varg iters)
   return nil;
 }
 
+val copy_iter(val iter)
+{
+  if (type(iter) == COBJ && iter->co.cls == seq_iter_cls) {
+    val iter_copy;
+    const struct seq_iter *sit = coerce(struct seq_iter *, iter->co.handle);
+    struct seq_iter *dit = coerce(struct seq_iter *,
+                                  chk_calloc(1, sizeof *dit));
+    seq_iter_clone(dit, sit);
+    iter_copy = cobj(coerce(mem_t *, dit), seq_iter_cls, &seq_iter_cobj_ops);
+    gc_hint(iter);
+    return iter_copy;
+  } else {
+    return iter;
+  }
+}
+
 static void seq_build_generic_pend(seq_build_t *bu, val seq)
 {
   seq_iter_t it;

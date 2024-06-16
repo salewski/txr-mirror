@@ -7839,6 +7839,7 @@ void eval_init(void)
   reg_fun(intern(lit("iter-step"), user_package), func_n1(iter_step));
   reg_fun(intern(lit("iter-reset"), user_package), func_n2(iter_reset));
   reg_fun(intern(lit("iter-cat"), user_package), func_n0v(iter_catv));
+  reg_fun(intern(lit("copy-iter"), user_package), func_n1(copy_iter));
 
   reg_fun(intern(lit("rcons"), user_package), func_n2(rcons));
   reg_fun(intern(lit("rangep"), user_package), func_n1(rangep));
