@@ -1496,17 +1496,42 @@ val iter_catv(varg iters)
 
 val copy_iter(val iter)
 {
-  if (type(iter) == COBJ && iter->co.cls == seq_iter_cls) {
-    val iter_copy;
-    const struct seq_iter *sit = coerce(struct seq_iter *, iter->co.handle);
-    struct seq_iter *dit = coerce(struct seq_iter *,
-                                  chk_calloc(1, sizeof *dit));
-    seq_iter_clone(dit, sit);
-    iter_copy = cobj(coerce(mem_t *, dit), seq_iter_cls, &seq_iter_cobj_ops);
-    gc_hint(iter);
-    return iter_copy;
-  } else {
+  val self = lit("copy-iter");
+
+  switch (type(iter)) {
+  case CHR:
+  case NUM:
+  case BGNUM:
     return iter;
+  case COBJ:
+    if (iter->co.cls == seq_iter_cls) {
+      val iter_copy;
+      const struct seq_iter *sit = coerce(struct seq_iter *, iter->co.handle);
+      struct seq_iter *dit = coerce(struct seq_iter *,
+                                    chk_calloc(1, sizeof *dit));
+      seq_iter_clone(dit, sit);
+      iter_copy = cobj(coerce(mem_t *, dit), seq_iter_cls, &seq_iter_cobj_ops);
+      gc_hint(iter);
+      return iter_copy;
+    }
+    if (obj_struct_p(iter)) {
+      val copy_meth = get_special_slot(iter, copy_m);
+      if (copy_meth)
+        return funcall1(copy_meth, iter);
+    }
+    unsup_obj(self, iter);
+    /* fallthrough */
+  default:
+    {
+      seq_info_t sinf = seq_info(iter);
+      switch (sinf.kind) {
+      case SEQ_NIL:
+      case SEQ_LISTLIKE:
+        return sinf.obj;
+      default:
+        unsup_obj(self, iter);
+      }
+    }
   }
 }
 

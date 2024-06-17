@@ -21565,6 +21565,10 @@ as if by:
 .mono
 .meti (copy-cptr << object )
 .onom
+.coIP seq-iter
+.mono
+.meti (copy-iter << object )
+.onom
 .RE
 
 .IP
@@ -40080,6 +40084,55 @@ is ignored,
 is invoked on
 .meta seq
 and the result is returned.
+
+.coNP Function @ copy-iter
+.synb
+.mets (copy-iter << iter )
+.syne
+.desc
+The
+.code copy-iter
+produces a duplicate
+.meta iter
+such that the duplicate iterator will traverse
+the same sequence of items as
+.meta iter
+starting at the current point in the sequence indicated by iter.
+
+For some kinds of iterators, such as integers and conses,
+.code copy-iter
+just returns
+.metn iter .
+
+If
+.meta iter
+is a structure object, then if it supports the
+.code copy
+method, that method is invoked and its return value is taken
+as the iterator copy. Otherwise,
+.meta iter
+must implement a list-like sequence, in which case the object
+is just returned. If
+.code iter
+is a structure which neither supports a
+.code copy
+method nor implements a list-like sequence by supporting the
+.code car
+method, an error exception is thrown.
+
+Note: iterators of type
+.code seq-iter
+can be copied with the
+.code copy
+function (which for those objects is defined in terms of
+.codn copy-iter ).
+However, the
+.code copy
+function has the wrong semantics for other kinds of iterator
+objects. It refuses to copy certain atoms such as numbers,
+and in the case of conses it behaves like
+.codn copy-list ,
+which is unnecessary.
 
 .coNP Function @ iter-cat
 .synb
