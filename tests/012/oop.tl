@@ -149,3 +149,13 @@
     c.(tweak) :error
     c.(increment 1) (api-z increment #S(api-z) 1)
     c.(decrement) :error))
+
+(defstruct node ()
+  left right)
+
+(test (copy (new node left 1 right 2)) #S(node left 1 right 2))
+
+(defmeth node copy (me)
+  (new node left (succ me.left) right (succ me.right)))
+
+(test (copy (new node left 1 right 2)) #S(node left 2 right 3))

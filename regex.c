@@ -822,7 +822,8 @@ static struct cobj_ops char_set_obj_ops = cobj_ops_init(eq,
                                                         cobj_print_op,
                                                         char_set_cobj_destroy,
                                                         cobj_mark_op,
-                                                        cobj_eq_hash_op);
+                                                        cobj_eq_hash_op,
+                                                        0);
 
 static nfa_state_t *nfa_state_accept(void)
 {
@@ -1495,7 +1496,8 @@ static struct cobj_ops regex_obj_ops = cobj_ops_init(eq,
                                                      regex_print,
                                                      regex_destroy,
                                                      regex_mark,
-                                                     cobj_eq_hash_op);
+                                                     cobj_eq_hash_op,
+                                                     0);
 
 static val reg_nullable(val);
 

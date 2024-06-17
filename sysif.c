@@ -2245,7 +2245,8 @@ static struct cobj_ops cptr_dl_ops = cobj_ops_init(cobj_equal_handle_op,
                                                    cptr_print_op,
                                                    cptr_dl_destroy_op,
                                                    cobj_mark_op,
-                                                   cobj_handle_hash_op);
+                                                   cobj_handle_hash_op,
+                                                   0);
 
 static val dlopen_wrap(val name, val flags)
 {
@@ -2403,7 +2404,9 @@ static struct cobj_ops opendir_ops = cobj_ops_init(eq,
                                                    cobj_print_op,
                                                    opendir_free,
                                                    opendir_mark,
-                                                   cobj_eq_hash_op);
+                                                   cobj_eq_hash_op,
+                                                   0);
+
 static val opendir_wrap(val path, val prefix_p)
 {
   val self = lit("opendir");

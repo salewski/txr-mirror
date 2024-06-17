@@ -204,7 +204,8 @@ static struct cobj_ops sha1_ops = cobj_ops_init(cobj_equal_handle_op,
                                                        cobj_print_op,
                                                        cobj_destroy_free_op,
                                                        cobj_mark_op,
-                                                       cobj_handle_hash_op);
+                                                       cobj_handle_hash_op,
+                                                       0);
 
 val sha1_begin(void)
 {
@@ -389,7 +390,8 @@ static struct cobj_ops sha256_ops = cobj_ops_init(cobj_equal_handle_op,
                                                        cobj_print_op,
                                                        cobj_destroy_free_op,
                                                        cobj_mark_op,
-                                                       cobj_handle_hash_op);
+                                                       cobj_handle_hash_op,
+                                                       0);
 
 val sha256_begin(void)
 {
@@ -574,7 +576,8 @@ static struct cobj_ops md5_ops = cobj_ops_init(cobj_equal_handle_op,
                                                        cobj_print_op,
                                                        cobj_destroy_free_op,
                                                        cobj_mark_op,
-                                                       cobj_handle_hash_op);
+                                                       cobj_handle_hash_op,
+                                                       0);
 
 val md5_begin(void)
 {

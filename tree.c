@@ -849,7 +849,8 @@ static struct cobj_ops tree_ops = cobj_ops_init(tree_equal_op,
                                                 tree_print_op,
                                                 cobj_destroy_free_op,
                                                 tree_mark,
-                                                tree_hash_op);
+                                                tree_hash_op,
+                                                copy_search_tree);
 
 val tree(val keys_in, val key_fn, val less_fn, val equal_fn, val dup_in)
 {
@@ -967,7 +968,8 @@ static struct cobj_ops tree_iter_ops = cobj_ops_init(eq,
                                                      cobj_print_op,
                                                      cobj_destroy_free_op,
                                                      tree_iter_mark,
-                                                     cobj_eq_hash_op);
+                                                     cobj_eq_hash_op,
+                                                     copy_tree_iter);
 
 val tree_begin(val tree, val lowkey, val highkey)
 {

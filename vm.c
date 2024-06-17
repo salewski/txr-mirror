@@ -1357,14 +1357,16 @@ static_def(struct cobj_ops vm_desc_ops =
                 cobj_print_op,
                 vm_desc_destroy,
                 vm_desc_mark,
-                cobj_eq_hash_op));
+                cobj_eq_hash_op,
+                0));
 
 static_def(struct cobj_ops vm_closure_ops =
   cobj_ops_init(eq,
                 cobj_print_op,
                 cobj_destroy_free_op,
                 vm_closure_mark,
-                cobj_eq_hash_op));
+                cobj_eq_hash_op,
+                0));
 
 void vm_init(void)
 {

@@ -107,12 +107,12 @@ val struct_type_s, meth_s, print_s, make_struct_lit_s;
 val init_k, postinit_k;
 val slot_s, derived_s;
 
-val nullify_s, from_list_s, lambda_set_s;
+val copy_s, nullify_s, from_list_s, lambda_set_s;
 
 val iter_begin_s, iter_more_s, iter_item_s, iter_step_s, iter_reset_s;
 
 static val *special_sym[num_special_slots] = {
-  &equal_s, &nullify_s, &from_list_s, &lambda_s, &lambda_set_s,
+  &equal_s, &copy_s, &nullify_s, &from_list_s, &lambda_s, &lambda_set_s,
   &length_s, &length_lt_s, &car_s, &cdr_s, &rplaca_s, &rplacd_s,
   &iter_begin_s, &iter_more_s, &iter_item_s, &iter_step_s, &iter_reset_s,
   &plus_s
@@ -149,6 +149,7 @@ void struct_init(void)
   postinit_k = intern(lit("postinit"), keyword_package);
   slot_s = intern(lit("slot"), user_package);
   derived_s = intern(lit("derived"), user_package);
+  copy_s = intern(lit("copy"), user_package);
   nullify_s = intern(lit("nullify"), user_package);
   from_list_s = intern(lit("from-list"), user_package);
   lambda_set_s = intern(lit("lambda-set"), user_package);
@@ -1875,6 +1876,15 @@ static ucnum struct_inst_hash(val obj, int *count, ucnum seed)
   return out;
 }
 
+static val struct_inst_clone(val strct)
+{
+  val copy_meth = get_special_slot(strct, copy_m);
+
+  return if3(copy_meth,
+             funcall1(copy_meth, strct),
+             copy_struct(strct));
+}
+
 static val get_special_static_slot(struct struct_type *st,
                                    enum special_slot idx, val stslot)
 {
@@ -2038,9 +2048,10 @@ val get_special_slot_by_type(val stype, enum special_slot spidx)
 
 static_def(struct cobj_ops struct_type_ops =
            cobj_ops_init(eq, struct_type_print, struct_type_destroy,
-                         struct_type_mark, cobj_eq_hash_op));
+                         struct_type_mark, cobj_eq_hash_op, 0));
 
 struct cobj_ops struct_inst_ops =
   cobj_ops_init_ex(struct_inst_equal, struct_inst_print,
                    cobj_destroy_free_op, struct_inst_mark,
-                   struct_inst_hash, struct_inst_equalsub);
+                   struct_inst_hash, struct_inst_clone,
+                   struct_inst_equalsub);

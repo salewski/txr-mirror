@@ -1319,7 +1319,8 @@ static struct cobj_ops prot_array_ops = cobj_ops_init(eq,
                                                       cobj_print_op,
                                                       cobj_destroy_free_op,
                                                       prot_array_mark,
-                                                      cobj_eq_hash_op);
+                                                      cobj_eq_hash_op,
+                                                      0);
 
 val *gc_prot_array_alloc(cnum size, val *obj)
 {

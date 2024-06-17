@@ -36,7 +36,7 @@ extern struct cobj_ops struct_inst_ops;
 extern struct cobj_class *struct_cls;
 
 enum special_slot {
-  equal_m, nullify_m, from_list_m, lambda_m, lambda_set_m,
+  equal_m, copy_m, nullify_m, from_list_m, lambda_m, lambda_set_m,
   length_m, length_lt_m, car_m, cdr_m, rplaca_m, rplacd_m,
   iter_begin_m, iter_more_m, iter_item_m, iter_step_m, iter_reset_m,
   plus_m,

@@ -1251,7 +1251,8 @@ struct cobj_ops seq_iter_cobj_ops = cobj_ops_init(eq,
                                                   cobj_print_op,
                                                   cobj_destroy_free_op,
                                                   seq_iter_mark,
-                                                  cobj_eq_hash_op);
+                                                  cobj_eq_hash_op,
+                                                  copy_iter);
 
 val seq_begin(val obj)
 {
@@ -10660,7 +10661,8 @@ static struct cobj_ops cptr_ops = cobj_ops_init(cobj_equal_handle_op,
                                                 cptr_print_op,
                                                 cobj_destroy_stub_op,
                                                 cobj_mark_op,
-                                                cobj_handle_hash_op);
+                                                cobj_handle_hash_op,
+                                                copy_cptr);
 
 val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops)
 {
@@ -13298,18 +13300,8 @@ val copy(val seq)
   case CPTR:
     return copy_cptr(seq);
   case COBJ:
-    if (seq->co.cls == hash_cls)
-      return copy_hash(seq);
-    if (seq->co.cls == random_state_cls)
-      return make_random_state(seq, nil);
-    if (seq->co.cls == carray_cls)
-      return copy_carray(seq);
-    if (seq->co.cls == tree_cls)
-      return copy_search_tree(seq);
-    if (seq->co.cls == tree_iter_cls)
-      return copy_tree_iter(seq);
-    if (obj_struct_p(seq))
-      return copy_struct(seq);
+    if (seq->co.ops->clone)
+      return seq->co.ops->clone(seq);
     /* fallthrough */
   default:
     type_mismatch(lit("copy: cannot copy object of type ~s"),

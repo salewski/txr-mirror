@@ -121,7 +121,8 @@ static struct cobj_ops parser_ops = cobj_ops_init(eq,
                                                   cobj_print_op,
                                                   parser_destroy,
                                                   parser_mark,
-                                                  cobj_eq_hash_op);
+                                                  cobj_eq_hash_op,
+                                                  0);
 
 void parser_common_init(parser_t *p)
 {

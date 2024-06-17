@@ -1062,7 +1062,8 @@ static struct cobj_ops cont_ops = cobj_ops_init(eq,
                                                 cobj_print_op,
                                                 cont_destroy,
                                                 cont_mark,
-                                                cobj_eq_hash_op);
+                                                cobj_eq_hash_op,
+                                                0);
 
 static void call_copy_handlers(uw_frame_t *upto)
 {

@@ -346,28 +346,32 @@ static struct cobj_ops ffi_type_builtin_ops =
                 ffi_type_print_op,
                 cobj_destroy_free_op,
                 ffi_type_mark,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                0);
 
 static struct cobj_ops ffi_type_struct_ops =
   cobj_ops_init(eq,
                 ffi_type_print_op,
                 ffi_type_struct_destroy_op,
                 ffi_struct_type_mark,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                0);
 
 static struct cobj_ops ffi_type_ptr_ops =
   cobj_ops_init(eq,
                 ffi_type_print_op,
                 cobj_destroy_free_op,
                 ffi_ptr_type_mark,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                0);
 
 static struct cobj_ops ffi_type_enum_ops =
   cobj_ops_init(eq,
                 ffi_type_print_op,
                 cobj_destroy_free_op,
                 ffi_enum_type_mark,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                0);
 
 cnum ffi_type_size(struct txr_ffi_type *tft)
 {
@@ -440,7 +444,8 @@ static struct cobj_ops ffi_closure_ops =
                 ffi_closure_print_op,
                 ffi_closure_destroy_op,
                 ffi_closure_mark_op,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                0);
 
 #endif
 
@@ -5412,7 +5417,8 @@ static struct cobj_ops ffi_call_desc_ops =
                 ffi_call_desc_print_op,
                 ffi_call_desc_destroy_op,
                 ffi_call_desc_mark_op,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                0);
 
 val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes,
                        val name_in)
@@ -5954,14 +5960,16 @@ static struct cobj_ops carray_borrowed_ops =
                 carray_print_op,
                 cobj_destroy_free_op,
                 carray_mark_op,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                copy_carray);
 
 static struct cobj_ops carray_owned_ops =
   cobj_ops_init(eq,
                 carray_print_op,
                 carray_destroy_op,
                 carray_mark_op,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                copy_carray);
 
 val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
 {
@@ -6888,7 +6896,8 @@ static struct cobj_ops carray_mmap_ops =
                 carray_print_op,
                 carray_munmap_op,
                 carray_mark_op,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                copy_carray);
 
 val mmap_wrap(val type, val len, val prot, val flags,
               val source_opt, val offset_opt, val addr_opt)
@@ -7091,7 +7100,8 @@ static struct cobj_ops union_ops =
                 cobj_print_op,
                 union_destroy_op,
                 union_mark_op,
-                cobj_eq_hash_op);
+                cobj_eq_hash_op,
+                0);
 
 static val make_union_common(mem_t *data, struct txr_ffi_type *tft)
 {

@@ -311,15 +311,16 @@ struct cobj_ops {
   void (*destroy)(val self);
   void (*mark)(val self);
   ucnum (*hash)(val self, int *count, ucnum seed);
+  val (*clone)(val self);
   val (*equalsub)(val self);
 };
 
-#define cobj_ops_init(equal, print, destroy, mark, hash) \
-  { equal, print, destroy, mark, hash, 0 }
+#define cobj_ops_init(equal, print, destroy, mark, hash, clone) \
+  { equal, print, destroy, mark, hash, clone, 0 }
 
 #define cobj_ops_init_ex(equal, print, destroy, mark, hash, \
-                         equalsub) \
-  { equal, print, destroy, mark, hash, equalsub }
+                         clone, equalsub) \
+  { equal, print, destroy, mark, hash, clone, equalsub }
 
 /* Default operations for above structure.
  * Default equal is eq

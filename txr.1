@@ -21523,6 +21523,13 @@ the type of the argument, as follows:
 .meti (copy-hash << object )
 .onom
 .IP "struct type"
+If
+.meta object
+implements the special
+.code copy
+method, then that method is invoked and the return value of that
+method call is returned as the copy. Otherwise the object is copied
+as if by:
 .mono
 .meti (copy-struct << object )
 .onom
@@ -32002,10 +32009,15 @@ method similar to the following:
 .brev
 
 which can then be invoked on whatever object needs copying.
-(Note that this method is not a special structure function, and is thus
-not taken into account by the
+
+Note that a method named
 .code copy
-function.)
+is a special structure function. When an object provides this
+method, the
+.code copy
+function uses the method to copy the object, rather than using
+.codn copy-struct .
+
 Since this logic is generic, it can be placed in a base
 method. The
 .code copied
@@ -33483,6 +33495,27 @@ the function can be called using
 which looks up the function in the struct
 .meta type
 directly.
+
+.coNP Method @ copy
+.synb
+.mets << object .(copy)
+.syne
+.desc
+The special method
+.code copy
+is expected to produce a copy of the object. The
+.code copy
+function will use this method if it is available, otherwise fall back on
+.codn copy-struct .
+The method is responsible for all semantics of the copy operation;
+whatever object the method returns is taken to be a copy of
+.metn object .
+
+It is a recommended practice that the returned object be of the same type as
+.metn object .
+It is also a recommended practice that the returned object be newly created,
+distinct from any object which existed prior to the method being called.  The
+objects held in that object's slots need not be new.
 
 .coNP Method @ equal
 .synb

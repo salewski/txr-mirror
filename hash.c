@@ -955,7 +955,8 @@ static struct cobj_ops hash_ops = cobj_ops_init(hash_equal_op,
                                                 hash_print_op,
                                                 cobj_destroy_free_op,
                                                 hash_mark,
-                                                hash_hash_op);
+                                                hash_hash_op,
+                                                copy_hash);
 
 static val hash_assoc(val key, ucnum hash, val list)
 {
@@ -1281,7 +1282,8 @@ static struct cobj_ops hash_iter_ops = cobj_ops_init(eq,
                                                      cobj_print_op,
                                                      cobj_destroy_free_op,
                                                      hash_iter_mark,
-                                                     cobj_eq_hash_op);
+                                                     cobj_eq_hash_op,
+                                                     0);
 
 void hash_iter_init(struct hash_iter *hi, val hash, val self)
 {

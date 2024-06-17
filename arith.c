@@ -5151,7 +5151,8 @@ static struct cobj_ops psq_ops = cobj_ops_init(cobj_equal_handle_op,
                                                cptr_print_op,
                                                cobj_destroy_free_op,
                                                cobj_mark_op,
-                                               cobj_handle_hash_op);
+                                               cobj_handle_hash_op,
+                                               0);
 
 static val quant_fun(val psqo, varg args)
 {
