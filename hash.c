@@ -1283,7 +1283,7 @@ static struct cobj_ops hash_iter_ops = cobj_ops_init(eq,
                                                      cobj_destroy_free_op,
                                                      hash_iter_mark,
                                                      cobj_eq_hash_op,
-                                                     0);
+                                                     copy_hash_iter);
 
 void hash_iter_init(struct hash_iter *hi, val hash, val self)
 {
@@ -1400,6 +1400,24 @@ val hash_reset(val iter, val hash)
     memset(hi, 0, sizeof *hi);
   }
   return iter;
+}
+
+val copy_hash_iter(val iter)
+{
+  val self = lit("copy-hash-iter");
+  val hi_obj;
+  struct hash_iter *ohi = coerce(struct hash_iter *,
+                                 cobj_handle(self, iter, hash_iter_cls));
+  struct hash_iter *nhi = coerce(struct hash_iter *,
+                                 chk_copy_obj(coerce(mem_t *, ohi),
+                                              sizeof *ohi));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, ohi->hash,
+                                                     hash_cls));
+
+  hi_obj = cobj(coerce(mem_t *, nhi), hash_iter_cls, &hash_iter_ops);
+  h->usecount++;
+  gc_hint(iter);
+  return hi_obj;
 }
 
 val maphash(val fun, val hash)
@@ -2309,6 +2327,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
   reg_fun(intern(lit("hash-peek"), user_package), func_n1(hash_peek));
   reg_fun(intern(lit("hash-reset"), user_package), func_n2(hash_reset));
+  reg_fun(intern(lit("copy-hash-iter"), user_package), func_n1(copy_hash_iter));
   reg_fun(intern(lit("set-hash-traversal-limit"), system_package),
           func_n1(set_hash_traversal_limit));
   reg_fun(intern(lit("gen-hash-seed"), user_package), func_n0(gen_hash_seed));

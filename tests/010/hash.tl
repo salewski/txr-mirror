@@ -92,3 +92,14 @@
   (eql (hash-equal (expt 2 128)) (hash-equal (expt 2 128))) t
   (eql (hash-eql "abc") (hash-eql "abc")) nil
   (eql (hash-eql (expt 2 128)) (hash-eql (expt 2 128))) t)
+
+(let* ((h #H(() (a 1) (b 2) (c 3) (d 4)))
+       (hi1 (hash-begin h))
+       (hi2 (progn (hash-next hi1) (copy-hash-iter hi1))))
+  (mvtest
+    (hash-next hi1) (hash-next hi2)
+    (hash-next hi2) (hash-next hi1)
+    (hash-next hi1) (hash-next hi2)
+    (hash-next hi2) (hash-next hi1)
+    (hash-next hi1) nil
+    (hash-next hi2) nil))

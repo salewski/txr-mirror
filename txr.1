@@ -21557,6 +21557,10 @@ as if by:
 .mono
 .meti (copy-search-tree << object )
 .onom
+.coIP hash-iter
+.mono
+.meti (copy-hash-iter << object )
+.onom
 .coIP tree-iter
 .mono
 .meti (copy-tree-iter << object )
@@ -58513,6 +58517,24 @@ hash value in that variable, or else sets the variable
 to
 .code nil
 if there is no next value.
+
+.coNP Function @ copy-hash-iter
+.synb
+.mets (copy-hash-iter << iter )
+.syne
+.desc
+The
+.code copy-hash-iter
+function creates and returns a duplicate of the
+.meta iter
+object, which must be a hash iterator returned by
+.codn hash-begin .
+
+The returned object has the same state as the original; it references the same
+traversal position in the same hash. However, it is independent of the original.
+Calls to
+.code hash-next
+on the original have no effect on the duplicate and vice versa.
 
 .coNP Special Variable @ *hash-seed*
 .desc

@@ -77,6 +77,7 @@ val hash_begin(val hash);
 val hash_next(val iter);
 val hash_peek(val iter);
 val hash_reset(val iter, val hash);
+val copy_hash_iter(val iter);
 val hash_eql(val obj);
 val hash_equal(val obj, val seed);
 val hashv(struct args *args);
