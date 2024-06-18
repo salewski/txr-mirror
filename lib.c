@@ -1441,7 +1441,6 @@ val iter_step(val iter)
 val iter_reset(val iter, val obj)
 {
   val self = lit("iter-reset");
-  seq_info_t sinf = seq_info(obj);
 
   switch (type(iter)) {
   case CHR:
@@ -1452,6 +1451,7 @@ val iter_reset(val iter, val obj)
     if (iter->co.cls == seq_iter_cls)
     {
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
+      seq_info_t sinf = seq_info(obj);
       seq_iter_init_with_info(self, si, sinf, 0);
       if (si->ops->mark)
         mut(iter);
@@ -1464,12 +1464,16 @@ val iter_reset(val iter, val obj)
       if (iter_reset_meth)
         return funcall2(iter_reset_meth, obj, iter);
     }
-    switch (sinf.kind) {
-    case SEQ_NIL:
-    case SEQ_LISTLIKE:
-      return sinf.obj;
-    default:
-      return iter_begin(obj);
+
+    {
+      seq_info_t sinf = seq_info(obj);
+      switch (sinf.kind) {
+      case SEQ_NIL:
+      case SEQ_LISTLIKE:
+        return sinf.obj;
+      default:
+        return iter_begin(obj);
+      }
     }
   }
 }
