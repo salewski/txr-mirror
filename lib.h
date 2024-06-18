@@ -474,6 +474,8 @@ struct seq_iter_ops {
 #define seq_iter_ops_init_mark(get, peek, mark) { get, peek, mark, 0 }
 #define seq_iter_ops_init_clone(get, peek, clone) \
   { get, peek, seq_iter_mark_op, clone }
+#define seq_iter_ops_init_full(get, peek, mark, clone) \
+  { get, peek, mark, clone }
 
 typedef struct seq_build {
   val obj;

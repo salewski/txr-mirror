@@ -926,6 +926,12 @@ void seq_iter_mark_op(struct seq_iter *it)
   gc_mark(it->ui.iter);
 }
 
+static void seq_iter_clone_op(const struct seq_iter *sit, struct seq_iter *dit)
+{
+  *dit = *sit;
+  dit->ui.iter = copy(sit->ui.iter);
+}
+
 struct seq_iter_ops si_null_ops = seq_iter_ops_init_nomark(seq_iter_get_nil,
                                                            seq_iter_peek_nil);
 
@@ -935,11 +941,13 @@ struct seq_iter_ops si_list_ops = seq_iter_ops_init(seq_iter_get_list,
 struct seq_iter_ops si_vec_ops = seq_iter_ops_init_nomark(seq_iter_get_vec,
                                                           seq_iter_peek_vec);
 
-struct seq_iter_ops si_hash_ops = seq_iter_ops_init(seq_iter_get_hash,
-                                                    seq_iter_peek_hash);
+struct seq_iter_ops si_hash_ops = seq_iter_ops_init_clone(seq_iter_get_hash,
+                                                          seq_iter_peek_hash,
+                                                          seq_iter_clone_op);
 
-struct seq_iter_ops si_tree_ops = seq_iter_ops_init(seq_iter_get_tree,
-                                                    seq_iter_peek_tree);
+struct seq_iter_ops si_tree_ops = seq_iter_ops_init_clone(seq_iter_get_tree,
+                                                          seq_iter_peek_tree,
+                                                          seq_iter_clone_op);
 
 struct seq_iter_ops si_range_cnum_ops =
   seq_iter_ops_init_nomark(seq_iter_get_range_cnum,
@@ -979,14 +987,16 @@ struct seq_iter_ops si_chr_ops = seq_iter_ops_init_nomark(seq_iter_get_chr,
 struct seq_iter_ops si_num_ops = seq_iter_ops_init(seq_iter_get_num,
                                                    seq_iter_peek_num);
 
-struct seq_iter_ops si_oop_ops = seq_iter_ops_init_mark(seq_iter_get_oop,
+struct seq_iter_ops si_oop_ops = seq_iter_ops_init_full(seq_iter_get_oop,
                                                         seq_iter_peek_oop,
-                                                        seq_iter_mark_oop);
+                                                        seq_iter_mark_oop,
+                                                        seq_iter_clone_op);
 
 struct seq_iter_ops si_fast_oop_ops =
-  seq_iter_ops_init_mark(seq_iter_get_fast_oop,
+  seq_iter_ops_init_full(seq_iter_get_fast_oop,
                          seq_iter_peek_fast_oop,
-                         seq_iter_mark_oop);
+                         seq_iter_mark_oop,
+                         seq_iter_clone_op);
 
 struct seq_iter_ops si_cat_ops = seq_iter_ops_init_mark(seq_iter_get_cat,
                                                         seq_iter_peek_cat,
