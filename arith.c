@@ -86,6 +86,10 @@ val r_scalbln_s, r_yn_s;
 
 val tofloat_s, toint_s;
 
+val quant_state_s;
+
+static struct cobj_class *quant_cls;
+
 val make_bignum(void)
 {
   val n = make_obj();
@@ -5147,18 +5151,19 @@ val lcmv(varg nlist)
   return nary_op(lit("lcm"), lcm, abso_self, nlist, zero);
 }
 
-static struct cobj_ops psq_ops = cobj_ops_init(cobj_equal_handle_op,
-                                               cptr_print_op,
-                                               cobj_destroy_free_op,
-                                               cobj_mark_op,
-                                               cobj_handle_hash_op,
-                                               0);
+static struct cobj_ops quant_ops = cobj_ops_init(cobj_equal_handle_op,
+                                                 cptr_print_op,
+                                                 cobj_destroy_free_op,
+                                                 cobj_mark_op,
+                                                 cobj_handle_hash_op,
+                                                 0);
 
-static val quant_fun(val psqo, varg args)
+static val quant_fun(val state, varg args)
 {
   val self = lit("quantile");
   cnum idx = 0;
-  struct psquare *psq = coerce(struct psquare *, psqo->cp.handle);
+  struct psquare *psq = coerce(struct psquare *,
+                               cobj_handle(self, state, quant_cls));
 
   while (args_more(args, idx)) {
     val arg = args_get(args, &idx);
@@ -5185,7 +5190,7 @@ val quantile(val pv, val grsize_in, val rate_in)
   val self = lit("quantile");
   double p = c_flo(to_float(self, pv), self);
   struct psquare *psq = coerce(struct psquare *, chk_malloc(sizeof *psq));
-  val psqo = cptr_typed(coerce(mem_t *, psq), nil, &psq_ops);
+  val state = cobj(coerce(mem_t *, psq), quant_cls, &quant_ops);
   if (missingp(grsize_in)) {
     psq_init(psq, p);
   } else {
@@ -5195,7 +5200,7 @@ val quantile(val pv, val grsize_in, val rate_in)
                       c_flo(to_float(self, rate_in), self));
     psq_init_grouped(psq, p, grsize, rate);
   }
-  return func_f0v(psqo, quant_fun);
+  return func_f0v(state, quant_fun);
 }
 
 static val arith_set_entries(val fun)
@@ -5518,6 +5523,10 @@ void arith_init(void)
 #endif
 
   autoload_reg(arith_instantiate, arith_set_entries);
+
+  quant_state_s = intern(lit("quantile-state"), user_package);
+
+  quant_cls = cobj_register(quant_state_s);
 }
 
 void arith_compat_fixup(int compat_ver)
