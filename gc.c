@@ -142,6 +142,7 @@ struct prot_array {
   val arr[FLEX_ARRAY];
 };
 
+val gc_prot_array_s;
 struct cobj_class *prot_array_cls;
 
 val prot1(val *loc)
@@ -1183,7 +1184,8 @@ void gc_late_init(void)
   reg_fun(intern(lit("set-stack-limit"), user_package), func_n1(set_stack_limit));
   reg_fun(intern(lit("get-stack-limit"), user_package), func_n0(get_stack_limit));
 
-  prot_array_cls = cobj_register(intern(lit("gc-prot-array"), system_package));
+  gc_prot_array_s = intern(lit("gc-prot-array"), system_package);
+  prot_array_cls = cobj_register(gc_prot_array_s);
 }
 
 /*
