@@ -7898,6 +7898,7 @@ void eval_init(void)
   reg_fun(force_s, func_n1(force));
   reg_fun(intern(lit("promisep"), user_package), func_n1(promisep));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
+  reg_fun(intern(lit("rpermi"), user_package), func_n2o(rpermi, 1));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
   reg_fun(intern(lit("permi"), user_package), func_n2o(permi, 1));
   reg_fun(intern(lit("comb"), user_package), func_n2(comb));

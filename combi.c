@@ -475,6 +475,90 @@ val rperm(val seq, val k)
   }
 }
 
+static int rpermi_get(struct seq_iter *it, val *pval)
+{
+  val env = it->inf.obj;
+
+  if (it->ul.next) {
+    *pval = it->ui.iter;
+    it->ui.iter = nil;
+    it->ul.next = 0;
+    return 1;
+  }
+
+  if (rperm_while_fun(env)) {
+    *pval = rperm_seq_gen_fun(env);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int rpermi_peek(struct seq_iter *it, val *pval)
+{
+  val env = it->inf.obj;
+
+  if (it->ul.next) {
+    *pval = it->ui.iter;
+    it->ui.iter = nil;
+    return 1;
+  }
+
+  if (rperm_while_fun(env)) {
+    it->ui.iter = *pval = rperm_seq_gen_fun(env);
+    it->ul.next = t;
+    return 1;
+  }
+
+  return 0;
+}
+
+static void rpermi_clone(const struct seq_iter *sit, struct seq_iter *dit)
+{
+  val env = sit->inf.obj;
+  val list = vecref(env, zero);
+  val vec = vecref(env, one);
+  val extra = vecref(env, two);
+  val nenv = vector(three, nil);
+
+  set(vecref_l(nenv, zero), list);
+  set(vecref_l(nenv, one), copy_vec(vec));
+  set(vecref_l(nenv, two), extra);
+
+  *dit = *sit;
+
+  dit->inf.obj = nenv;
+}
+
+struct seq_iter_ops rpermi_ops = seq_iter_ops_init_clone(rpermi_get,
+                                                         rpermi_peek,
+                                                         rpermi_clone);
+
+val rpermi(val seq, val k)
+{
+  check_k(k, lit("rpermi"));
+
+  if (k == zero) {
+    return cons(make_like(nil, seq), nil);
+  } else {
+    val obj;
+    val list = list_seq(seq);
+    val env = rperm_init(list, k, seq);
+    struct seq_iter *it = coerce(struct seq_iter *, chk_calloc(1, sizeof *it));
+
+    it->inf.obj = env;
+    it->inf.kind = SEQ_NOTSEQ;
+
+    it->ops = &rpermi_ops;
+
+    obj = cobj(coerce(mem_t *, it), seq_iter_cls, &seq_iter_cobj_ops);
+
+    gc_hint(seq);
+
+    return obj;
+  }
+}
+
 static val k_conses(val list, val k, val self)
 {
   cnum i, n = c_num(k, self);
