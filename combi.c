@@ -471,6 +471,8 @@ val rperm(val seq, val k)
       return cons(string(L""), nil);
     return rperm_str(seq, k);
   default:
+    if (zerop(k))
+      return cons(make_like(nil, seq), nil);
     return rperm_seq(seq, k);
   }
 }
@@ -748,6 +750,10 @@ val comb(val seq, val k)
         return nil;
       return comb_hash(seq, k);
     }
+    if (k == zero)
+      return cons(make_like(nil, seq), nil);
+    if (gt(k, length(seq)))
+      return nil;
     return comb_seq(seq, k);
   }
 }
@@ -879,6 +885,8 @@ val rcomb(val seq, val k)
       return cons(string(L""), nil);
     return rcomb_str(seq, k);
   default:
+    if (k == zero)
+      return cons(make_like(nil, seq), nil);
     return rcomb_seq(seq, k);
   }
 }

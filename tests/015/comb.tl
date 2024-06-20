@@ -441,3 +441,13 @@
   (rperm "a".."c" 2) (("a" "a") ("a" "b") ("a" "c")
                       ("b" "a") ("b" "b") ("b" "c")
                       ("c" "a") ("c" "b") ("c" "c")))
+
+(mtest
+  (perm '(1 2 3) 0) (nil)
+  (rperm '(1 2 3) 0) (nil)
+  (comb '(1 2 3) 0) (nil)
+  (rcomb '(1 2 3) 0) (nil)
+  (perm 1..4 0) (nil)
+  (rperm 1..4 0) (nil)
+  (comb 1..4 0) (nil)
+  (rcomb 1..4 0) (nil))
