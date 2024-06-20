@@ -311,9 +311,9 @@ static void permi_clone(const struct seq_iter *sit, struct seq_iter *dit)
   set(vecref_l(state_copy, two), copy_vec(c));
 }
 
-struct seq_iter_ops permi_ops = seq_iter_ops_init_clone(permi_get,
-                                                        permi_peek,
-                                                        permi_clone);
+static struct seq_iter_ops permi_ops = seq_iter_ops_init_clone(permi_get,
+                                                               permi_peek,
+                                                               permi_clone);
 
 static val permi_iter(val state)
 {
@@ -530,9 +530,9 @@ static void rpermi_clone(const struct seq_iter *sit, struct seq_iter *dit)
   dit->inf.obj = nenv;
 }
 
-struct seq_iter_ops rpermi_ops = seq_iter_ops_init_clone(rpermi_get,
-                                                         rpermi_peek,
-                                                         rpermi_clone);
+static struct seq_iter_ops rpermi_ops = seq_iter_ops_init_clone(rpermi_get,
+                                                                rpermi_peek,
+                                                                rpermi_clone);
 
 val rpermi(val seq, val k)
 {
