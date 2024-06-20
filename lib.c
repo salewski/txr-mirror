@@ -553,6 +553,29 @@ static int seq_iter_peek_range_number(seq_iter_t *it, val *pval)
   return 0;
 }
 
+static val length_str_range(val from, val to)
+{
+  val self = lit("length");
+
+  if (eql(length_str(from), length_str(to))) {
+    const wchar_t *fs = c_str(from, self);
+    const wchar_t *ts = c_str(to, self);
+    val out = one;
+    cnum i;
+
+    for (i = 0; fs[i]; i++)
+      out = mul(out, num(labs(ts[i] - fs[i]) + 1));
+
+    gc_hint(from);
+    gc_hint(to);
+
+    return out;
+  } else {
+    uw_throwf(type_error_s, lit("~a: ~s..~s are of unequal length"),
+              self, from, to, nao);
+  }
+}
+
 static int seq_iter_get_range_str(seq_iter_t *it, val *pval)
 {
   if (it->ui.vn) {
@@ -13348,6 +13371,21 @@ val copy(val seq)
   }
 }
 
+static val length_rng(val rng)
+{
+  val fv = from(rng);
+  val tv = to(rng);
+
+  if (stringp(fv)) {
+    if (!stringp(tv))
+      type_mismatch(lit("length: both fields of ~s must be strings"),
+                    rng, nao);
+    return length_str_range(fv, tv);
+  }
+
+  return minus(to(rng), from(rng));
+}
+
 val length(val seq)
 {
   switch (type(seq)) {
@@ -13363,7 +13401,7 @@ val length(val seq)
   case VEC:
     return length_vec(seq);
   case RNG:
-    return minus(to(seq), from(seq));
+    return length_rng(seq);
   case BUF:
     return length_buf(seq);
   case COBJ:
