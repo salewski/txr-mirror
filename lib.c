@@ -590,8 +590,14 @@ static int seq_iter_get_range_str(seq_iter_t *it, val *pval)
     *pval = it->ui.vn;
 
     for (; l > 0; l--) {
-      if (++nx[l - 1] <= bn[l - 1])
-        break;
+      if (in[l - 1] < bn[l - 1]) {
+        if (++nx[l - 1] <= bn[l - 1])
+          break;
+      } else {
+        if (--nx[l - 1] >= bn[l - 1])
+          break;
+      }
+
       nx[l - 1] = in[l - 1];
     }
 
@@ -663,33 +669,6 @@ static int seq_iter_peek_rev_range_number(seq_iter_t *it, val *pval)
     *pval = pred(it->ui.iter);
     return 1;
   }
-  return 0;
-}
-
-static int seq_iter_get_rev_range_str(seq_iter_t *it, val *pval)
-{
-  if (it->ui.vn) {
-    val init = from(it->inf.obj);
-    val len = length_str(init);
-    val next = copy_str(it->ui.vn);
-    cnum l = c_num(len, nil);
-    wchar_t *nx = strip_qual(wchar_t *, c_str(next, nil));
-    const wchar_t *in = c_str(init, nil);
-    const wchar_t *bn = c_str(it->ul.vbound, nil);
-
-    *pval = it->ui.vn;
-
-    for (; l > 0; l--) {
-      if (--nx[l - 1] >= bn[l - 1])
-        break;
-      nx[l - 1] = in[l - 1];
-    }
-
-    it->ui.vn = if2(l > 0, next);
-
-    return 1;
-  }
-
   return 0;
 }
 
@@ -1000,10 +979,6 @@ struct seq_iter_ops si_rev_range_number_ops =
   seq_iter_ops_init(seq_iter_get_rev_range_number,
                     seq_iter_peek_rev_range_number);
 
-struct seq_iter_ops si_rev_range_str_ops =
-  seq_iter_ops_init(seq_iter_get_rev_range_str,
-                    seq_iter_peek_range_str);
-
 struct seq_iter_ops si_chr_ops = seq_iter_ops_init_nomark(seq_iter_get_chr,
                                                           seq_iter_peek_chr);
 
@@ -1133,7 +1108,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
       case LSTR:
         it->ui.vn = copy_str(rf);
         it->ul.vbound = rt;
-        it->ops = &si_rev_range_str_ops;
+        it->ops = &si_range_str_ops;
         if (eql(length_str(rf), length_str(rt)))
           break;
         /* fallthrough */

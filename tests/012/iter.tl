@@ -58,6 +58,10 @@
    "F06" "F07" "F08" "F09" "F10"))
 
 (test
+  (list-seq "AC".."CA")
+  ("AC" "AB" "AA" "BC" "BB" "BA" "CC" "CB" "CA"))
+
+(test
   [mapcar identity [3..6 0..10]] (3 4 5))
 
 ;; iterating from fixnum to bignum was rejected in up to txr-269.

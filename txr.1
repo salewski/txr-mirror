@@ -39690,20 +39690,17 @@ and
 steps through the same values in reverse order.
 
 A string range consists of two strings of equal length. If the strings are
-of unequal length, an error exception is thrown. For the range to operate
-as intended, the strings must meet some additional requirements. If the
-.code from
-string is lexicographically lesser than the
-.code to
-string, as determined by the
-.code less
-function, then the range is ascending, otherwise it is descending. The string
-range iterates by incrementing (or decrementing, in the case of a descending range)
-the characters of the
+of unequal length, an error exception is thrown.
+The sequence denoted by a string range is a sequence of strings formed
+from the the Cartesian product of the character ranges formed by
+positionally-corresponding characters from the two strings.
+The order of the sequence is such that the rightmost character varies most
+frequently.  In more detail, the string range iterates over successive strings
+by incrementing or decrementing the characters of the
 .code from
 string until they are equal to those of the
 .code to
-string. The last character has priority. For instance, the range
+string. The rightmost character has priority. For instance, the range
 .code "\(dqAA\(dq..\(dqCC\(dq"
 iterates over the strings
 .codn "AA" ,
@@ -39724,6 +39721,21 @@ character attains the value of the corresponding character in the
 string, that character is reset to its starting value, and its left neighbor,
 if it exists, is incremented instead. If no left neighbor exists, the
 iteration terminates.
+For every character position in the string pair, it is independently
+determined whether the iteration for that position is ascending or descending,
+such that the range
+.code "\(dqAC\(dq..\(dqCA\(dq"
+iterates over the strings
+.codn "AC" ,
+.codn "AB" ,
+.codn "AA" ,
+.codn "BC" ,
+.codn "BB" ,
+.codn "BA" ,
+.codn "CC" ,
+.code "CB"
+and
+.codn "CA" .
 
 Search trees are iterable. Iteration entails an in-order visits of the elements
 of a tree. A tree iterator created by
