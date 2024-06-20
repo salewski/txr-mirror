@@ -39623,17 +39623,6 @@ is a number.
 
 If
 .meta seq
-is an iterator produced by
-.code iter-begin
-then an iterator similar to that iterator is returned, which can continue
-iterating the same sequence. The iterator may be
-.meta seq
-itself or share state with
-.metn seq ,
-and thus may not be relied on to produce an independent, parallel iteration.
-
-If
-.meta seq
 is a structure which supports the
 .code iter-begin
 method, then that method is called and its return value is returned.
@@ -39646,6 +39635,18 @@ or
 .code car
 methods. A struct object supporting none of these methods is deemed
 not iterable.
+
+Otherwise, if
+.meta seq
+is an iterator object of
+.code seq-iter
+type, such as one produced by
+.codn iter-begin ,
+then an iterator similar to that iterator is returned, as if produced
+by applying the
+.code copy-iter
+function to
+.metn seq .
 
 In all other cases, if
 .meta seq
