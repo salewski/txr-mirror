@@ -330,7 +330,6 @@ static val permi_iter(val state)
 
   obj = cobj(coerce(mem_t *, it), seq_iter_cls, &seq_iter_cobj_ops);
 
-  gc_hint(obj);
   gc_hint(state);
 
   return obj;
