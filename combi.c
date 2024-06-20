@@ -452,26 +452,26 @@ val rperm(val seq, val k)
 
   switch (type(seq)) {
   case NIL:
-    if (zerop(k))
+    if (k == zero)
       return cons(nil, nil);
     return nil;
   case CONS:
   case LCONS:
-    if (zerop(k))
+    if (k == zero)
       return cons(nil, nil);
     return rperm_list(seq, k);
   case VEC:
-    if (zerop(k))
+    if (k == zero)
       return cons(vector(zero, nil), nil);
     return rperm_vec(seq, k);
   case STR:
   case LSTR:
   case LIT:
-    if (zerop(k))
+    if (k == zero)
       return cons(string(L""), nil);
     return rperm_str(seq, k);
   default:
-    if (zerop(k))
+    if (k == zero)
       return cons(make_like(nil, seq), nil);
     return rperm_seq(seq, k);
   }
@@ -574,7 +574,7 @@ static val k_conses(val list, val k, val self)
 
 static val comb_init(val list, val k)
 {
-  if (zerop(k))
+  if (k == zero)
     return nil;
   return k_conses(list, k, lit("comb"));
 }
