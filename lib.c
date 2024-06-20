@@ -419,7 +419,7 @@ static val seq_iterable(seq_info_t si)
 
 static void NORETURN unsup_obj(val self, val obj)
 {
-  uw_throwf(error_s, lit("~a: unsupported object ~s"), self, obj, nao);
+  uw_throwf(type_error_s, lit("~a: unsupported object ~s"), self, obj, nao);
   abort();
 }
 
@@ -1413,7 +1413,7 @@ val iter_step(val iter)
     {
       val next = cdr(iter);
       if (next && !consp(next))
-        uw_throwf(error_s, lit("~a: ~s is not a cons"), self, next, nao);
+        uw_throwf(type_error_s, lit("~a: ~s is not a cons"), self, next, nao);
       return next;
     }
   case COBJ:
@@ -1438,7 +1438,7 @@ val iter_step(val iter)
       if (next) {
         seq_info_t sinf = seq_info(next);
         if (sinf.kind != SEQ_LISTLIKE)
-          uw_throwf(error_s, lit("~a: ~s is improperly terminated"),
+          uw_throwf(type_error_s, lit("~a: ~s is improperly terminated"),
                     self, iter, nao);
       }
       return next;
@@ -2311,7 +2311,7 @@ val last(val seq, val n)
                    sub(seq, neg(n), t),
                    sub(seq, t, t)));
   default:
-    uw_throwf(error_s, lit("last: ~s isn't a sequence"), seq, nao);
+    uw_throwf(type_error_s, lit("last: ~s isn't a sequence"), seq, nao);
   }
 }
 
@@ -2321,7 +2321,7 @@ val nthcdr(val pos, val list)
   cnum n = c_num(pos, self);
 
   if (n < 0)
-    uw_throwf(error_s, lit("~a: negative index ~s given"), self, pos, nao);
+    uw_throwf(range_error_s, lit("~a: negative index ~s given"), self, pos, nao);
 
   gc_hint(list);
 
@@ -2608,7 +2608,7 @@ again:
     }
     /* fallthrough */
   default:
-    uw_throwf(error_s, lit("cannot append ~s"), deref(ptail), nao);
+    uw_throwf(type_error_s, lit("cannot append ~s"), deref(ptail), nao);
   }
 }
 
@@ -2643,7 +2643,7 @@ again:
     set(ptail, tolist(obj));
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot nconc to ~s"), tailobj, nao);
+    uw_throwf(type_error_s, lit("cannot nconc to ~s"), tailobj, nao);
   }
 }
 
@@ -2683,7 +2683,7 @@ again:
     set(ptail, tolist(obj));
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot append to ~s"), tailobj, nao);
+    uw_throwf(type_error_s, lit("cannot append to ~s"), tailobj, nao);
   }
 }
 
@@ -2720,7 +2720,7 @@ again:
     replace_buf(tailobj, obj, t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, tailobj, nao);
+    uw_throwf(type_error_s, lit("cannot nconc ~s to ~s"), obj, tailobj, nao);
   }
 }
 
@@ -2787,7 +2787,7 @@ again:
     replace_buf(deref(ptail), reverse(obj), t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot append to ~s"), tailobj, nao);
+    uw_throwf(type_error_s, lit("cannot append to ~s"), tailobj, nao);
   }
 }
 
@@ -2829,7 +2829,7 @@ val nreverse(val in)
       return in;
     }
   default:
-    uw_throwf(error_s, lit("~a: cannot reverse ~s"), self, in, nao);
+    uw_throwf(type_error_s, lit("~a: cannot reverse ~s"), self, in, nao);
   }
 }
 
@@ -2872,7 +2872,7 @@ val reverse(val seq_in)
       return obj;
     }
   default:
-    uw_throwf(error_s, lit("~a: cannot reverse ~s"), self, seq_in, nao);
+    uw_throwf(type_error_s, lit("~a: cannot reverse ~s"), self, seq_in, nao);
   }
 }
 
@@ -3048,7 +3048,7 @@ val replace_list(val list, val items, val from, val to)
     seq_iter_init(self, &wh_iter, from);
 
     if (!missingp(to))
-      uw_throwf(error_s,
+      uw_throwf(type_error_s,
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
@@ -3177,7 +3177,7 @@ val lazy_appendv(varg args)
     return nonempty;
 
   if (atom(nonempty))
-    uw_throwf(error_s, lit("append*: cannot append to atom ~s"),
+    uw_throwf(type_error_s, lit("append*: cannot append to atom ~s"),
               nonempty, nao);
 
   {
@@ -4023,7 +4023,8 @@ val tuples(val n, val seq, val fill)
   val iter = iter_begin(seq);
 
   if (!plusp(n) || !integerp(n))
-    uw_throwf(error_s, lit("~a: positive integer required, not ~s"), self, n, nao);
+    uw_throwf(range_error_s, lit("~a: positive integer required, not ~s"),
+              self, n, nao);
 
   if (!iter_more(iter))
     return nil;
@@ -4067,7 +4068,8 @@ val tuples_star(val n, val seq, val fill)
   list_collect_decl (tuple, ptail);
 
   if (!plusp(n) || !integerp(n))
-    uw_throwf(error_s, lit("~a: positive integer required, not ~s"), self, n, nao);
+    uw_throwf(range_error_s, lit("~a: positive integer required, not ~s"),
+              self, n, nao);
 
   for (i = 0; i < cn; i++, iter = iter_step(iter))
   {
@@ -4772,7 +4774,7 @@ mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
 
   if (newelems <= oldelems ||
       ((newelems > no_oflow || elsize > no_oflow) && bytes / elsize != newelems))
-    uw_throw(error_s, lit("array size overflow"));
+    uw_throw(alloc_error_s, lit("array size overflow"));
 
   return chk_realloc(old, bytes);
 }
@@ -4811,7 +4813,7 @@ mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
     if (((newfilled > no_oflow || elsize > no_oflow) &&
          newbytes / elsize != newfilled) ||
         (newsize < newbytes))
-      uw_throw(error_s, lit("array size overflow"));
+      uw_throw(alloc_error_s, lit("array size overflow"));
 
     if (oldsize != newsize)
       old = chk_realloc(old, newsize);
@@ -4836,7 +4838,7 @@ wchar_t *chk_wrealloc(wchar_t *old, size_t nwchar)
 {
   size_t size = nwchar * sizeof (wchar_t);
   if (size < nwchar)
-    uw_throw(error_s, lit("string size overflow"));
+    uw_throw(alloc_error_s, lit("string size overflow"));
   return coerce(wchar_t *, chk_realloc(coerce(mem_t *, old),
                                        sizeof (wchar_t) * nwchar));
 }
@@ -4856,7 +4858,7 @@ wchar_t *chk_substrdup(const wchar_t *str, size_t off, size_t len)
   if (off >= size - 1)
     return chk_strdup(L"");
   if (off + len < off)
-    uw_throw(error_s, lit("string size overflow"));
+    uw_throw(alloc_error_s, lit("string size overflow"));
   nchar = min(size - off, len + 1);
   copy = chk_wmalloc(nchar);
   wmemcpy(copy, str, nchar - 1);
@@ -4879,7 +4881,7 @@ char *chk_substrdup_utf8(const char *str, size_t off, size_t len)
   if (off >= size - 1)
     return chk_strdup_utf8("");
   if (off + len < off)
-    uw_throw(error_s, lit("string size overflow"));
+    uw_throw(alloc_error_s, lit("string size overflow"));
   nchar = min(size - off, len + 1);
   copy = coerce(char *, chk_malloc(nchar));
   memcpy(copy, str, nchar - 1);
@@ -4894,7 +4896,7 @@ unsigned char *chk_strdup_8bit(const wchar_t *str)
   for (i = 0; i < nchar; i++) {
     if (str[i] < 0 || str[i] > 255) {
       free(copy);
-      uw_throwf(error_s, lit("cannot coerce ~s to 8 bit"),
+      uw_throwf(numeric_error_s, lit("cannot coerce ~s to 8 bit"),
                 string(str), nao);
     }
     copy[i] = str[i];
@@ -4915,7 +4917,7 @@ mem_t *chk_xalloc(ucnum m, ucnum n, val self)
   size_t size = mn;
 
   if ((m > 0 && mn / m != n) || convert(ucnum, size) != mn)
-    uw_throwf(error_s, lit("~a: memory allocation size overflow"),
+    uw_throwf(alloc_error_s, lit("~a: memory allocation size overflow"),
               self, nao);
 
   return chk_malloc(size);
@@ -5075,7 +5077,7 @@ val endp(val obj)
     return t;
   if (consp(obj))
     return nil;
-  uw_throwf(error_s, lit("endp: list improperly terminated by ~s"),
+  uw_throwf(type_error_s, lit("endp: list improperly terminated by ~s"),
             obj, nao);
 }
 
@@ -5331,7 +5333,7 @@ val mkstring(val len, val ch_in)
 {
   val self = lit("mkstring");
   size_t l = if3(minusp(len),
-                 (uw_throwf(error_s, lit("~a: negative size ~s specified"),
+                 (uw_throwf(range_error_s, lit("~a: negative size ~s specified"),
                             self, len, nao), 0),
                  c_num(len, self));
   wchar_t *str = chk_wmalloc(l + 1);
@@ -5350,7 +5352,7 @@ val mkustring(val len)
 {
   val self = lit("mkustring");
   cnum l = if3(minusp(len),
-               (uw_throwf(error_s, lit("~a: negative size ~s specified"),
+               (uw_throwf(range_error_s, lit("~a: negative size ~s specified"),
                           len, nao), 0),
                c_num(len, self));
   wchar_t *str = chk_wmalloc(l + 1);
@@ -5462,10 +5464,10 @@ val string_extend(val str, val tail, val finish_in)
     else if (integerp(tail))
       delta = c_fixnum(tail, self);
     else
-      uw_throwf(error_s, lit("~a: tail ~s bad type"), self, str, nao);
+      uw_throwf(type_error_s, lit("~a: tail ~s bad type"), self, str, nao);
 
     if (NUM_MAX - delta - 1 < len)
-      uw_throwf(error_s, lit("~a: overflow"), self, nao);
+      uw_throwf(alloc_error_s, lit("~a: overflow"), self, nao);
 
     needed = len + delta + 1;
 
@@ -5963,8 +5965,8 @@ val replace_str(val str_in, val items, val from, val to)
   val len = length_str(str_in);
 
   if (type(str_in) != STR) {
-    uw_throwf(error_s, lit("~a: ~s of type ~s is not "
-                           "a modifiable string"),
+    uw_throwf(type_error_s, lit("~a: ~s of type ~s is not "
+                                "a modifiable string"),
               self, str_in, typeof(str_in), nao);
   }
 
@@ -5981,7 +5983,7 @@ val replace_str(val str_in, val items, val from, val to)
     seq_iter_init(self, &wh_iter, from);
 
     if (!missingp(to))
-      uw_throwf(error_s,
+      uw_throwf(type_error_s,
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
@@ -6150,10 +6152,11 @@ static void cat_str_measure(struct cat_str *cs, val item, val self)
     return;
   }
 
-  uw_throwf(error_s, lit("~a: ~s is neither a character, string nor sequence"),
+  uw_throwf(type_error_s, lit("~a: ~s is neither a character, "
+                              "string nor sequence"),
             self, item, nao);
 oflow:
-  uw_throwf(error_s, lit("~a: string length overflow"), self, nao);
+  uw_throwf(alloc_error_s, lit("~a: string length overflow"), self, nao);
 }
 
 static void cat_str_alloc(struct cat_str *cs)
@@ -6339,7 +6342,7 @@ val fmt_str_sep(val sep, val str, val self)
 
   if (i < lstr) {
     free(out);
-    uw_throwf(error_s, lit("~a: string length overflow"), self, nao);
+    uw_throwf(alloc_error_s, lit("~a: string length overflow"), self, nao);
   }
 
   *ptr = 0;
@@ -6356,7 +6359,7 @@ val split_str_keep(val str, val sep, val keep_sep_opt, val count_opt)
   cnum cnt = c_num(if3(count, count, negone), self);
 
   if (count && cnt < 0)
-    uw_throwf(error_s, lit("~a: count must be nonnegative"), self, nao);
+    uw_throwf(range_error_s, lit("~a: count must be nonnegative"), self, nao);
 
   if (count == zero)
     return cons(str, nil);
@@ -6477,7 +6480,8 @@ val spln(val count, val sep, val arg1, val arg2)
   val self = lit("spln");
 
   if (null_or_missing_p(count))
-    uw_throwf(error_s, lit("~a: count ~s isn't an integer"), self, count, nao);
+    uw_throwf(type_error_s, lit("~a: count ~s isn't an integer"),
+              self, count, nao);
 
   return if3(missingp(arg2),
              split_str_keep(arg1, sep, arg2, count),
@@ -6533,7 +6537,8 @@ val tok_str(val str, val tok_regex, val keep_sep_opt, val count_opt)
   cnum cnt = c_num(if3(count, count, negone), self);
 
   if (count && cnt < 0)
-    uw_throwf(error_s, lit("~a: count must be nonnegative"), self, nao);
+    uw_throwf(range_error_s, lit("~a: count must be nonnegative"),
+              self, nao);
 
   if (count == zero)
     return if2(keep_sep || slen != zero, cons(str, nil));
@@ -6607,7 +6612,8 @@ val tokn(val count, val tok_regex, val arg1, val arg2)
   val self = lit("tokn");
 
   if (null_or_missing_p(count))
-    uw_throwf(error_s, lit("~a: count ~s isn't an integer"), self, count, nao);
+    uw_throwf(type_error_s, lit("~a: count ~s isn't an integer"), self,
+              count, nao);
 
   return if3(missingp(arg2),
              tok_str(arg1, tok_regex, arg2, count),
@@ -6766,7 +6772,7 @@ val cmp_str(val astr, val bstr)
       return zero;
     }
   default:
-    uw_throwf(error_s, lit("~a: invalid operands ~s ~s"),
+    uw_throwf(type_error_s, lit("~a: invalid operands ~s ~s"),
               self, astr, bstr, nao);
   }
 }
@@ -6842,7 +6848,7 @@ val int_str(val str, val base)
   if (base == chr('c')) {
     b = (zerox ? 16 : (octzero ? 8 : 10));
   } else if (b < 2 || b > 36) {
-     uw_throwf(error_s, lit("~a: invalid base ~s"), self, base, nao);
+     uw_throwf(numeric_error_s, lit("~a: invalid base ~s"), self, base, nao);
   } else if (zerox) {
     /* If we have a 0x prefix, and base is not #\c
      * then that is just a zero followed by junk.
@@ -7354,7 +7360,7 @@ val chr_str(val str, val ind)
   }
 
   if (index < 0 || !length_str_gt(str, ind))
-    uw_throwf(error_s, lit("~a: ~s is out of range for string ~s"),
+    uw_throwf(range_error_s, lit("~a: ~s is out of range for string ~s"),
               self, ind, str, nao);
 
   if (lazy_stringp(str)) {
@@ -7371,7 +7377,7 @@ val chr_str_set(val str, val ind, val chr)
   cnum index = c_num(ind, self);
 
   if (is_lit(str)) {
-    uw_throwf(error_s, lit("~a: cannot modify literal string ~s"),
+    uw_throwf(type_error_s, lit("~a: cannot modify literal string ~s"),
               self, str, nao);
   }
 
@@ -7381,7 +7387,7 @@ val chr_str_set(val str, val ind, val chr)
   }
 
   if (index < 0 || !length_str_gt(str, ind))
-    uw_throwf(error_s, lit("~a: ~s is out of range for string ~s"),
+    uw_throwf(range_error_s, lit("~a: ~s is out of range for string ~s"),
               self, ind, str, nao);
 
 
@@ -7448,7 +7454,7 @@ val symbol_package(val sym)
 val make_sym(val name)
 {
   if (!stringp(name)) {
-    uw_throwf(error_s, lit("make-sym: name ~s isn't a string"), name, nao);
+    uw_throwf(type_error_s, lit("make-sym: name ~s isn't a string"), name, nao);
   } else {
     val obj = make_obj();
     obj->s.type = SYM;
@@ -7487,9 +7493,11 @@ val make_package(val name, val weak)
   if (find_package(name)) {
     uw_throwf(error_s, lit("make-package: ~s exists already"), name, nao);
   } else if (!stringp(name)) {
-    uw_throwf(error_s, lit("make-package: name ~s isn't a string"), name, nao);
+    uw_throwf(type_error_s, lit("make-package: name ~s isn't a string"),
+              name, nao);
   } else if (length(name) == zero) {
-    uw_throwf(error_s, lit("make-package: package name can't be empty string"),
+    uw_throwf(type_error_s,
+              lit("make-package: package name can't be empty string"),
               nao);
   } else {
     val obj = make_package_common(name, weak);
@@ -7649,7 +7657,7 @@ val use_sym_as(val symbol, val name, val package_in)
   if (symbolp(name))
     name = symbol_name(name);
   else if (!stringp(name))
-    uw_throwf(error_s,
+    uw_throwf(type_error_s,
               lit("~a: ~s: name must be specified as string or symbol"),
               self, name, nao);
 
@@ -7897,7 +7905,7 @@ val find_symbol(val name, val package_in, val notfound_val_in)
   val package = get_package(self, package_in, t);
 
   if (!stringp(name))
-    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, name, nao);
+    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, name, nao);
 
   {
     val cell = gethash_e(self, package->pk.symhash, name);
@@ -7914,7 +7922,7 @@ val find_symbol_fb(val name, val package_in, val notfound_val_in)
   val package = get_package(self, package_in, t);
 
   if (!stringp(name))
-    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, name, nao);
+    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, name, nao);
 
   {
     val cell = gethash_e(self, package->pk.symhash, name);
@@ -7957,7 +7965,7 @@ val intern_intrinsic(val str, val package_in)
   val package = get_package(self, package_in, t);
 
   if (!stringp(str))
-    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
+    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
   return intern(str, package);
 }
@@ -8081,7 +8089,7 @@ val intern_fallback_intrinsic(val str, val package_in)
   val package = get_package(self, package_in, t);
 
   if (!stringp(str))
-    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
+    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
   return intern_fallback(str, package);
 }
@@ -8108,7 +8116,7 @@ val get_current_package(void)
   val pkg = cdr(pkg_binding);
   if (type(pkg) != PKG) {
     rplacd(pkg_binding, user_package);
-    uw_throwf(error_s, lit("variable *package* non-package "
+    uw_throwf(type_error_s, lit("variable *package* non-package "
                            "value ~s (reset to sane value)"),
               pkg, nao);
   }
@@ -8551,10 +8559,11 @@ val func_interp(val env, val form)
 val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic)
 {
   if (fixparam > FIXPARAM_MAX) {
-    uw_throwf(error_s, lit("closure in ~s with more than ~s fixed parameters"),
+    uw_throwf(range_error_s, lit("closure in ~s with more than ~s "
+                                 "fixed parameters"),
               desc, num(FIXPARAM_MAX), nao);
   } else if (fixparam < 0 || reqargs < 0 || reqargs > fixparam) {
-    uw_throwf(error_s, lit("closure in ~s with bogus parameters"),
+    uw_throwf(range_error_s, lit("closure in ~s with bogus parameters"),
               desc, nao);
   } else {
     val obj = make_obj();
@@ -8588,7 +8597,7 @@ val func_get_form(val fun)
   val self = lit("func-get-form");
   type_check(self, fun, FUN);
   if (fun->f.functype != FINTERP)
-    uw_throwf(error_s, lit("~a: ~a is not an interpreted function"),
+    uw_throwf(type_error_s, lit("~a: ~a is not an interpreted function"),
               self, fun, nao);
   return fun->f.f.interp_fun;
 }
@@ -8699,7 +8708,7 @@ static NORETURN void callerror(val fun, val msg)
   else
     fun = format(nil, lit("object ~s called as function"), fun, nao);
 
-  uw_throwf(error_s, lit("~a: ~a"), fun, msg, nao);
+  uw_throwf(type_error_s, lit("~a: ~a"), fun, msg, nao);
   abort();
 }
 
@@ -9787,12 +9796,12 @@ val vec_set_length(val vec, val length)
     cnum old_alloc = c_num(vec->v.vec[vec_alloc], self);
 
     if (new_length < 0)
-      uw_throwf(error_s, lit("~a: negative length ~s specified"),
+      uw_throwf(range_error_s, lit("~a: negative length ~s specified"),
                 self, length, nao);
 
     if (new_length > INT_PTR_MAX - 2)
     {
-      uw_throwf(error_s, lit("~a: cannot extend to length ~s"),
+      uw_throwf(alloc_error_s, lit("~a: cannot extend to length ~s"),
                 self, length, nao);
     }
 
@@ -9834,7 +9843,7 @@ val vecref(val vec, val ind)
   if (index < 0)
     index = len + index;
   if (index < 0 || index >= len)
-    uw_throwf(error_s, lit("~a: ~s is out of range for vector ~s"),
+    uw_throwf(range_error_s, lit("~a: ~s is out of range for vector ~s"),
               self, ind, vec, nao);
   return vec->v.vec[index];
 }
@@ -9847,7 +9856,7 @@ loc vecref_l(val vec, val ind)
   if (index < 0)
     index = len + index;
   if (index < 0 || index >= len)
-    uw_throwf(error_s, lit("~a: ~s is out of range for vector ~s"),
+    uw_throwf(range_error_s, lit("~a: ~s is out of range for vector ~s"),
               self, ind, vec, nao);
   return mkloc(vec->v.vec[index], vec);
 }
@@ -10004,7 +10013,7 @@ val replace_vec(val vec_in, val items, val from, val to)
     seq_iter_init(self, &item_iter, items);
 
     if (!missingp(to))
-      uw_throwf(error_s,
+      uw_throwf(type_error_s,
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
@@ -10118,12 +10127,12 @@ val replace_obj(val obj, val items, val from, val to)
   val lambda_set_meth = get_special_slot(obj, lambda_set_m);
 
   if (!lambda_set_meth)
-    uw_throwf(error_s, lit("~a: object ~s lacks ~s method"),
+    uw_throwf(type_error_s, lit("~a: object ~s lacks ~s method"),
               self, obj, lambda_set_s, nao);
 
   if (listp(from)) {
     if (!missingp(to))
-      uw_throwf(error_s,
+      uw_throwf(type_error_s,
                 lit("~a: to-arg not applicable when from-arg is a list"),
                 self, nao);
 
@@ -10151,11 +10160,13 @@ val fill_vec(val vec, val item, val from_in, val to_in)
     to += l;
 
   if (from < 0 || from > l)
-    uw_throwf(error_s, lit("~a: from index ~s is out of range for vector ~s"),
+    uw_throwf(range_error_s,
+              lit("~a: from index ~s is out of range for vector ~s"),
               self, num(from), vec, nao);
 
   if (to < 0 || to > l)
-    uw_throwf(error_s, lit("~a: to index ~s is out of range for vector ~s"),
+    uw_throwf(range_error_s,
+              lit("~a: to index ~s is out of range for vector ~s"),
               self, num(to), vec, nao);
 
   if (from >= to)
@@ -10208,7 +10219,7 @@ val cat_vec(val list)
 
   return vec;
 toobig:
-  uw_throwf(error_s, lit("~a: resulting vector too large"), self, nao);
+  uw_throwf(alloc_error_s, lit("~a: resulting vector too large"), self, nao);
 }
 
 val nested_vec_of_v(val initval, struct args *args)
@@ -10793,12 +10804,12 @@ val int_cptr(val cptr)
 mem_t *cptr_handle(val cptr, val type_sym, val self)
 {
   if (type(cptr) != CPTR) {
-    uw_throwf(error_s, lit("~a: ~s isn't a cptr"), self, cptr, nao);
+    uw_throwf(type_error_s, lit("~a: ~s isn't a cptr"), self, cptr, nao);
   } else {
     mem_t *ptr = cptr->cp.handle;
 
     if (type_sym && cptr->cp.cls != type_sym && (ptr != 0 || cptr->cp.cls))
-      uw_throwf(error_s, lit("~a: cptr ~s isn't of type ~s"), self, cptr,
+      uw_throwf(type_error_s, lit("~a: cptr ~s isn't of type ~s"), self, cptr,
                 type_sym, nao);
 
     return ptr;
@@ -11123,9 +11134,9 @@ static cnum calc_win_size(cnum ra)
 {
   cnum ws = 2 * ra + 1;
   if (ra < 1)
-    uw_throwf(error_s, lit("window-map: range must be nonnegative"), nao);
+    uw_throwf(range_error_s, lit("window-map: range must be nonnegative"), nao);
   if (ws > 1025)
-    uw_throwf(error_s, lit("window-map: window size exceeds 1025"), nao);
+    uw_throwf(range_error_s, lit("window-map: window size exceeds 1025"), nao);
   return ws;
 }
 
@@ -12706,7 +12717,7 @@ val mismatch(val left, val right, val testfun_in, val keyfun_in)
     break;
   }
 
-  uw_throwf(error_s, lit("mismatch: invalid arguments ~!~s and ~s"),
+  uw_throwf(type_error_s, lit("mismatch: invalid arguments ~!~s and ~s"),
             left, right, nao);
 }
 
@@ -12830,7 +12841,7 @@ val rmismatch(val left, val right, val testfun_in, val keyfun_in)
     break;
   }
 
-  uw_throwf(error_s, lit("rmismatch: invalid arguments ~!~s and ~s"),
+  uw_throwf(type_error_s, lit("rmismatch: invalid arguments ~!~s and ~s"),
             left, right, nao);
 }
 
@@ -13515,7 +13526,8 @@ val refset(val seq, val ind, val newval)
     {
       val nthcons = nthcdr(ind, seq);
       if (nilp(nthcons))
-        uw_throwf(error_s, lit("refset: ~s has no assignable location at ~s"),
+        uw_throwf(range_error_s,
+                  lit("refset: ~s has no assignable location at ~s"),
                   seq, ind, nao);
       (void) rplaca(nthcons, newval);
       return newval;
@@ -13693,11 +13705,11 @@ val dwim_set(val place_p, val seq, varg vargs)
     }
   }
 notplace:
-  uw_throwf(error_s, lit("~a: mutated object must be place"), self, nao);
+  uw_throwf(type_error_s, lit("~a: mutated object must be place"), self, nao);
 fewargs:
-  uw_throwf(error_s, lit("~a: missing required arguments"), self, nao);
+  uw_throwf(type_error_s, lit("~a: missing required arguments"), self, nao);
 excargs:
-  uw_throwf(error_s, lit("~a: too many arguments"), self, nao);
+  uw_throwf(type_error_s, lit("~a: too many arguments"), self, nao);
 }
 
 val dwim_del(val place_p, val seq, val ind_range)
@@ -13707,7 +13719,7 @@ val dwim_del(val place_p, val seq, val ind_range)
   case CONS:
   case LCONS:
     if (!place_p)
-      uw_throwf(error_s, lit("index/range delete: list form must be place"),
+      uw_throwf(type_error_s, lit("index/range delete: list form must be place"),
                 nao);
     break;
   case COBJ:
@@ -14275,7 +14287,7 @@ val rangeref(val range, val ind)
 
     return plus(fr, eind);
   err:
-    uw_throwf(error_s, lit("~a: ~s is out of range for ~s"),
+    uw_throwf(range_error_s, lit("~a: ~s is out of range for ~s"),
               self, ind, range, nao);
   }
 
