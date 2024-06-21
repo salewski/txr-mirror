@@ -40805,9 +40805,10 @@ macro for deleting a place.
 
 .SS* Permutations and Combinations
 
-.coNP Function @ perm
+.coNP Functions @ perm and @ permi
 .synb
 .mets (perm < seq <> [ len ])
+.mets (permi < seq <> [ len ])
 .syne
 .desc
 The
@@ -40820,6 +40821,13 @@ permutations of formed by items taken from
 The permutations do not use any element of
 .meta seq
 more than once.
+
+The
+.code permi
+function has identical argument semantics, but returns an iterator
+instead of a lazy list: an object meeting the same conventions
+as the return value of
+.codn iter-begin .
 
 Argument
 .metn len ,
@@ -40851,9 +40859,10 @@ requires more items than are available.
 
 The permutations are lexicographically ordered.
 
-.coNP Function @ rperm
+.coNP Functions @ rperm and @ rpermi
 .synb
 .mets (rperm < seq << len )
+.mets (rpermi < seq << len )
 .syne
 .desc
 The
@@ -40867,6 +40876,13 @@ formed by items taken from
 .meta seq
 can appear more than
 once in the permutations.
+
+The
+.code rpermi
+function has identical argument semantics, but returns an iterator
+instead of a lazy list: an object meeting the same conventions
+as the return value of
+.codn iter-begin .
 
 The permutations which are returned are sequences of the same kind as
 .metn seq .
@@ -40913,9 +40929,10 @@ That is to say, the permutations are lexicographically ordered.
                          (1 1) (1 2) (2 0) (2 1) (2 2))
 .brev
 
-.coNP Function @ comb
+.coNP Functions @ comb and @ combi
 .synb
 .mets (comb < seq << len )
+.mets (combi < seq << len )
 .syne
 .desc
 The
@@ -40932,6 +40949,13 @@ more than once. If
 .meta seq
 contains no duplicates, then
 the combinations contain no duplicates.
+
+The
+.code combi
+function has identical argument semantics, but returns an iterator
+instead of a lazy list: an object meeting the same conventions
+as the return value of
+.codn iter-begin .
 
 Argument
 .meta len
@@ -40971,9 +40995,10 @@ is a hash table.
      (mappend* (op comb s) (range 0 (length s))))
 .brev
 
-.coNP Function @ rcomb
+.coNP Functions @ rcomb and @ rcombi
 .synb
 .mets (rcomb < seq << len )
+.mets (rcombi < seq << len )
 .syne
 .desc
 The
@@ -40987,6 +41012,13 @@ repeating combinations formed by taking items taken from
 an element of
 .meta seq
 more than once.
+
+The
+.code rcombi
+function has identical argument semantics, but returns an iterator
+instead of a lazy list: an object meeting the same conventions
+as the return value of
+.codn iter-begin .
 
 Argument
 .meta len
