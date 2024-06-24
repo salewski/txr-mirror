@@ -7902,7 +7902,9 @@ void eval_init(void)
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
   reg_fun(intern(lit("permi"), user_package), func_n2o(permi, 1));
   reg_fun(intern(lit("comb"), user_package), func_n2(comb));
+  reg_fun(intern(lit("combi"), user_package), func_n2(combi));
   reg_fun(intern(lit("rcomb"), user_package), func_n2(rcomb));
+  reg_fun(intern(lit("rcombi"), user_package), func_n2(rcombi));
 
   reg_fun(intern(lit("return*"), user_package), func_n2o(return_star, 1));
   reg_fun(intern(lit("abscond*"), system_package), func_n2o(abscond_star, 1));

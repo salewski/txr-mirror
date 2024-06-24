@@ -31,4 +31,6 @@ val permi(val seq, val k);
 val rperm(val seq, val k);
 val rpermi(val seq, val k);
 val comb(val seq, val k);
+val combi(val seq, val k);
 val rcomb(val seq, val k);
+val rcombi(val seq, val k);

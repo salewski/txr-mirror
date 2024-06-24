@@ -451,3 +451,44 @@
   (rperm 1..4 0) (nil)
   (comb 1..4 0) (nil)
   (rcomb 1..4 0) (nil))
+
+(mtest
+  (combi #() -1) :error
+  (combi #(1) -1) :error
+  (combi () -1) :error
+  (combi '(1) -1) :error
+  (combi "" -1) :error
+  (combi "a" -1) :error)
+
+(mtest
+  (rcombi #() -1) :error
+  (rcombi #(1) -1) :error
+  (rcombi () -1) :error
+  (rcombi '(1) -1) :error
+  (rcombi "" -1) :error
+  (rcombi "a" -1) :error)
+
+(mtest
+  (permi #() -1) :error
+  (permi #(1) -1) :error
+  (permi () -1) :error
+  (permi '(1) -1) :error
+  (permi "" -1) :error
+  (permi "a" -1) :error)
+
+(mtest
+  (rpermi #() -1) :error
+  (rpermi #(1) -1) :error
+  (rpermi () -1) :error
+  (rpermi '(1) -1) :error
+  (rpermi "" -1) :error
+  (rpermi "a" -1) :error)
+
+(let ((s "abcdef")
+      (v #(0 1 2 3 4))
+      (l '(0 1 2 3 4)))
+  (each ((fn [list comb rcomb perm rperm])
+         (fi [list combi rcombi permi rpermi]))
+    (each ((i 0..6))
+      (each ((o [list s v l]))
+        (vtest (list-seq [fi o i]) [fn o i])))))

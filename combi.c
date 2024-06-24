@@ -271,15 +271,17 @@ static int permi_get(struct seq_iter *it, val *pval)
 {
   val state = it->inf.obj;
 
-  if (it->ul.next) {
-    if (it->ui.iter || perm_while_fun(state)) {
-      it->ui.iter = nil;
-      *pval = perm_seq_gen_fun(state);
-      return 1;
-    }
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    it->ul.next = nao;
+    return 1;
   }
 
-  it->ul.next = nil;
+  if (perm_while_fun(state)) {
+    *pval = perm_seq_gen_fun(state);
+    return 1;
+  }
+
   return 0;
 }
 
@@ -287,17 +289,23 @@ static int permi_peek(struct seq_iter *it, val *pval)
 {
   val state = it->inf.obj;
 
-  if (it->ul.next) {
-    if (it->ui.iter || perm_while_fun(state)) {
-      it->ui.iter = t;
-      *pval = state;
-      *pval = perm_seq_gen_fun(state);
-      return 1;
-    }
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    return 1;
   }
 
-  it->ul.next = nil;
+  if (perm_while_fun(state)) {
+    it->ul.next = *pval = perm_seq_gen_fun(state);
+    return 1;
+  }
+
   return 0;
+}
+
+static void permi_mark(struct seq_iter *it)
+{
+  if (it->ul.next != nao)
+    gc_mark(it->ul.next);
 }
 
 static void permi_clone(const struct seq_iter *sit, struct seq_iter *dit)
@@ -311,9 +319,10 @@ static void permi_clone(const struct seq_iter *sit, struct seq_iter *dit)
   set(vecref_l(state_copy, two), copy_vec(c));
 }
 
-static struct seq_iter_ops permi_ops = seq_iter_ops_init_clone(permi_get,
-                                                               permi_peek,
-                                                               permi_clone);
+static struct seq_iter_ops permi_ops = seq_iter_ops_init_full(permi_get,
+                                                              permi_peek,
+                                                              permi_mark,
+                                                              permi_clone);
 
 static val permi_iter(val state)
 {
@@ -324,8 +333,8 @@ static val permi_iter(val state)
   it->inf.type = NIL;
   it->inf.kind = SEQ_NOTSEQ;
 
-  it->ui.iter = nil;
-  it->ul.next = t;
+  it->ul.next = nao;
+
   it->ops = &permi_ops;
 
   obj = cobj(coerce(mem_t *, it), seq_iter_cls, &seq_iter_cobj_ops);
@@ -481,10 +490,9 @@ static int rpermi_get(struct seq_iter *it, val *pval)
 {
   val env = it->inf.obj;
 
-  if (it->ul.next) {
-    *pval = it->ui.iter;
-    it->ui.iter = nil;
-    it->ul.next = 0;
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    it->ul.next = nao;
     return 1;
   }
 
@@ -500,19 +508,23 @@ static int rpermi_peek(struct seq_iter *it, val *pval)
 {
   val env = it->inf.obj;
 
-  if (it->ul.next) {
-    *pval = it->ui.iter;
-    it->ui.iter = nil;
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
     return 1;
   }
 
   if (rperm_while_fun(env)) {
-    it->ui.iter = *pval = rperm_seq_gen_fun(env);
-    it->ul.next = t;
+    it->ul.next = *pval = rperm_seq_gen_fun(env);
     return 1;
   }
 
   return 0;
+}
+
+static void rpermi_mark(struct seq_iter *it)
+{
+  if (it->ul.next != nao)
+    gc_mark(it->ul.next);
 }
 
 static void rpermi_clone(const struct seq_iter *sit, struct seq_iter *dit)
@@ -532,9 +544,10 @@ static void rpermi_clone(const struct seq_iter *sit, struct seq_iter *dit)
   dit->inf.obj = nenv;
 }
 
-static struct seq_iter_ops rpermi_ops = seq_iter_ops_init_clone(rpermi_get,
-                                                                rpermi_peek,
-                                                                rpermi_clone);
+static struct seq_iter_ops rpermi_ops = seq_iter_ops_init_full(rpermi_get,
+                                                               rpermi_peek,
+                                                               rpermi_mark,
+                                                               rpermi_clone);
 
 val rpermi(val seq, val k)
 {
@@ -550,6 +563,8 @@ val rpermi(val seq, val k)
 
     it->inf.obj = env;
     it->inf.kind = SEQ_NOTSEQ;
+
+    it->ul.next = nao;
 
     it->ops = &rpermi_ops;
 
@@ -758,6 +773,92 @@ val comb(val seq, val k)
   }
 }
 
+static int combi_get(struct seq_iter *it, val *pval)
+{
+  val state = it->inf.obj;
+  val seq = it->ui.iter;
+
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    it->ul.next = nao;
+    return 1;
+  }
+
+  if (comb_while_fun(state)) {
+    val item = comb_list_gen_fun(state);
+    *pval = make_like(item, seq);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int combi_peek(struct seq_iter *it, val *pval)
+{
+  val state = it->inf.obj;
+  val seq = it->ui.iter;
+
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    return 1;
+  }
+
+  if (comb_while_fun(state)) {
+    val item = comb_list_gen_fun(state);
+    it->ul.next = *pval = make_like(item, seq);
+    return 1;
+  }
+
+  return 0;
+}
+
+static void combi_mark(struct seq_iter *it)
+{
+  gc_mark(it->ui.iter);
+  if (it->ul.next != nao)
+    gc_mark(it->ul.next);
+}
+
+static void combi_clone(const struct seq_iter *sit, struct seq_iter *dit)
+{
+  *dit = *sit;
+  dit->inf.obj = copy_vec(sit->inf.obj);
+}
+
+static struct seq_iter_ops combi_ops = seq_iter_ops_init_full(combi_get,
+                                                              combi_peek,
+                                                              combi_mark,
+                                                              combi_clone);
+
+
+val combi(val seq, val k)
+{
+  check_k(k, lit("combi"));
+
+  if (k == zero) {
+    return cons(make_like(nil, seq), nil);
+  } else if (gt(k, length(seq))) {
+    return nil;
+  } else {
+    val state = comb_init(list_seq(seq), k);
+    struct seq_iter *it = coerce(struct seq_iter *, chk_calloc(1, sizeof *it));
+    val obj;
+
+    it->inf.obj = state;
+    it->inf.kind = SEQ_NOTSEQ;
+    it->ui.iter = seq;
+    it->ul.next = nao;
+
+    it->ops = &combi_ops;
+
+    obj = cobj(coerce(mem_t *, it), seq_iter_cls, &seq_iter_cobj_ops);
+
+    gc_hint(seq);
+
+    return obj;
+  }
+}
+
 static val rcomb_while_fun(val state)
 {
   return car(state);
@@ -890,3 +991,90 @@ val rcomb(val seq, val k)
     return rcomb_seq(seq, k);
   }
 }
+
+static int rcombi_get(struct seq_iter *it, val *pval)
+{
+  val state = it->inf.obj;
+  val seq = it->ui.iter;
+
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    it->ul.next = nao;
+    return 1;
+  }
+
+  if (rcomb_while_fun(state)) {
+    val item = rcomb_list_gen_fun(state);
+    *pval = make_like(item, seq);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int rcombi_peek(struct seq_iter *it, val *pval)
+{
+  val state = it->inf.obj;
+  val seq = it->ui.iter;
+
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    return 1;
+  }
+
+  if (rcomb_while_fun(state)) {
+    val item = rcomb_list_gen_fun(state);
+    it->ul.next = *pval = make_like(item, seq);
+    return 1;
+  }
+
+  return 0;
+}
+
+static void rcombi_mark(struct seq_iter *it)
+{
+  gc_mark(it->ui.iter);
+  if (it->ul.next != nao)
+    gc_mark(it->ul.next);
+}
+
+static void rcombi_clone(const struct seq_iter *sit, struct seq_iter *dit)
+{
+  *dit = *sit;
+  dit->inf.obj = copy_list(sit->inf.obj);
+}
+
+static struct seq_iter_ops rcombi_ops = seq_iter_ops_init_full(rcombi_get,
+                                                               rcombi_peek,
+                                                               rcombi_mark,
+                                                               rcombi_clone);
+
+
+val rcombi(val seq, val k)
+{
+  check_k(k, lit("rcombi"));
+
+  if (k == zero) {
+    return cons(make_like(nil, seq), nil);
+  } else if (gt(k, length(seq))) {
+    return nil;
+  } else {
+    val state = nreverse(list_vec(vector(k, list_seq(seq))));
+    struct seq_iter *it = coerce(struct seq_iter *, chk_calloc(1, sizeof *it));
+    val obj;
+
+    it->inf.obj = state;
+    it->inf.kind = SEQ_NOTSEQ;
+    it->ui.iter = seq;
+    it->ul.next = nao;
+
+    it->ops = &rcombi_ops;
+
+    obj = cobj(coerce(mem_t *, it), seq_iter_cls, &seq_iter_cobj_ops);
+
+    gc_hint(seq);
+
+    return obj;
+  }
+}
+
