@@ -1694,7 +1694,8 @@ static val h_chr(match_line_ctx *c)
 }
 
 typedef struct {
-  val spec, files, curfile, stream, bindings, data, data_lineno;
+  val spec, files, curfile, stream, bindings, data_lineno;
+  volatile val data;
 } match_files_ctx;
 
 static match_files_ctx mf_all(val spec, val files, val bindings, val data,
@@ -2517,6 +2518,7 @@ static match_files_ctx mf_from_ml(match_line_ctx ml)
 }
 
 static val match_files(match_files_ctx a);
+static val match_files_byref(match_files_ctx *c);
 
 typedef val (*v_match_func)(match_files_ctx *cout);
 
@@ -3091,10 +3093,10 @@ static val v_next_impl(match_files_ctx *c)
           uw_simple_catch_begin;
 
           {
+            volatile val lcs = lazy_stream_cons(stream, nothrow);
+            match_files_ctx nc = mf_file_data(*c, str, stream, lcs, one);
             cons_bind (new_bindings, success,
-                       match_files(mf_file_data(*c, str, stream,
-                                                lazy_stream_cons(stream, nothrow),
-                                                one)));
+                       match_files_byref((lcs = nil, &nc)));
 
             if (success)
               res = cons(new_bindings,
@@ -4954,25 +4956,23 @@ static void open_data_source(match_files_ctx *c)
   }
 }
 
-static val match_files(match_files_ctx c)
+static val match_files_byref(match_files_ctx *c)
 {
-  val stream_in = c.stream;
+  val stream_in = c->stream;
   val res = nil;
 
   uw_simple_catch_begin;
 
-  gc_hint(c.data);
-
   gc_stack_check();
 
-  for (; c.spec; c.spec = rest(c.spec),
-                 c.data = rest(c.data),
-                 c.data_lineno = plus(c.data_lineno, one))
+  for (; c->spec; c->spec = rest(c->spec),
+                  c->data = rest(c->data),
+                  c->data_lineno = plus(c->data_lineno, one))
 repeat_spec_same_data:
   {
-    spec_bind (specline, first_spec, c.spec);
+    spec_bind (specline, first_spec, c->spec);
 
-    open_data_source(&c);
+    open_data_source(c);
 
     /* Line with nothing but a single directive or call: vertical mode. */
     if (consp(first_spec) && !rest(specline)) {
@@ -4984,12 +4984,12 @@ repeat_spec_same_data:
         /* It's literal text; go to horizontal processing below */
       } else if ((entry = gethash(v_directive_table, sym))) {
         v_match_func vmf = coerce(v_match_func, cptr_get(entry));
-        val result = vmf(&c);
+        val result = vmf(c);
 
         set_last_form_evaled(lfe_save);
 
         if (result == next_spec_k) {
-          if ((c.spec = rest(c.spec)) == nil)
+          if ((c->spec = rest(c->spec)) == nil)
             break;
           goto repeat_spec_same_data;
         } else if (result == decline_k) {
@@ -5001,12 +5001,12 @@ repeat_spec_same_data:
       } else if (gethash(h_directive_table,sym)) {
         /* Lone horizontal-only directive: go to horizontal processing */
       } else {
-        val result = v_fun(&c);
+        val result = v_fun(c);
 
         set_last_form_evaled(lfe_save);
 
         if (result == next_spec_k) {
-          if ((c.spec = rest(c.spec)) == nil)
+          if ((c->spec = rest(c->spec)) == nil)
             break;
           goto repeat_spec_same_data;
         } else if (result == decline_k) {
@@ -5023,23 +5023,23 @@ repeat_spec_same_data:
       }
     }
 
-    open_data_source(&c);
+    open_data_source(c);
 
-    if (consp(c.data) && car(c.data))
+    if (consp(c->data) && car(c->data))
     {
-      val dataline = car(c.data);
+      val dataline = car(c->data);
 
       cons_bind (new_bindings, success,
-                 match_line_completely(ml_all(c.bindings, specline,
+                 match_line_completely(ml_all(c->bindings, specline,
                                               dataline, zero,
-                                              c.data, c.data_lineno,
-                                              c.curfile, c.stream)));
+                                              c->data, c->data_lineno,
+                                              c->curfile, c->stream)));
 
       if (!success)
         goto out;
 
-      c.bindings = new_bindings;
-    } else if (consp(c.data) || nilp(c.data)) {
+      c->bindings = new_bindings;
+    } else if (consp(c->data) || nilp(c->data)) {
       debuglf(specline, lit("spec ran out of data"), nao);
       goto out;
     } else {
@@ -5047,17 +5047,22 @@ repeat_spec_same_data:
     }
   }
 
-  res = cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
+  res = cons(c->bindings, if3(c->data, cons(c->data, c->data_lineno), t));
 
 out:
   uw_unwind {
-    if (c.stream && c.stream != stream_in)
-      close_stream(c.stream, nil);
+    if (c->stream && c->stream != stream_in)
+      close_stream(c->stream, nil);
   }
 
   uw_catch_end;
 
   return res;
+}
+
+static val match_files(match_files_ctx c)
+{
+  return match_files_byref(&c);
 }
 
 val match_filter(val name, val arg, val other_args)
