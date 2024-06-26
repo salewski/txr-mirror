@@ -99,3 +99,21 @@
   "abcdefghijklmnopqrstuvwxyz"
   (iter-cat) nil
   (list-seq (iter-cat nil)) nil)
+
+(mtest
+  (copy-iter nil) nil
+  (copy-iter '(1 2 3)) (1 2 3)
+  (copy-iter 42) 42
+  (copy-iter #\a) #\a)
+
+(each ((obj '("abcde" #(0 1 2 3 4) "a".."z" 0..9 1.0..10.0)))
+  (let* ((i0 (iter-begin obj))
+         (i1 (copy-iter i0))
+         (i2 (iter-step (copy-iter i1)))
+         (l0 (list-seq i0))
+         (l1 (list-seq i1))
+         (l2 (list-seq i2)))
+   (mtest
+     (equal l0 l1) t
+     (equal l1 l2) nil
+     (equal (cdr l1) l2) t)))
