@@ -492,3 +492,15 @@
     (each ((i 0..6))
       (each ((o [list s v l]))
         (vtest (list-seq [fi o i]) [fn o i])))))
+
+(each ((fi [list combi rcombi permi rpermi]))
+  (let* ((i0 [fi '(0 1 2 3 4) 1])
+         (i1 (copy-iter i0))
+         (i2 (iter-step (copy-iter i1)))
+         (l0 (list-seq i0))
+         (l1 (list-seq i1))
+         (l2 (list-seq i2)))
+   (mtest
+     (equal l0 l1) t
+     (equal l1 l2) nil
+     (equal (cdr l1) l2) t)))
