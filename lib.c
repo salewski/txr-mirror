@@ -1305,6 +1305,7 @@ val iter_begin(val obj)
   case CHR:
   case NUM:
   case BGNUM:
+  case FLNUM:
     return obj;
   case COBJ:
     if (obj_struct_p(obj)) {
@@ -1351,6 +1352,7 @@ val iter_more(val iter)
     return if2(c_ch(iter) <= 0x10FFFF, t);
   case NUM:
   case BGNUM:
+  case FLNUM:
     return t;
   case COBJ:
     if (iter->co.cls == seq_iter_cls)
@@ -1378,6 +1380,7 @@ val iter_item(val iter)
   case CHR:
   case NUM:
   case BGNUM:
+  case FLNUM:
     return iter;
   case COBJ:
     if (iter->co.cls == seq_iter_cls)
@@ -1407,6 +1410,7 @@ val iter_step(val iter)
   case CHR:
   case NUM:
   case BGNUM:
+  case FLNUM:
     return plus(iter, one);
   case CONS:
   case LCONS:
@@ -1454,6 +1458,7 @@ val iter_reset(val iter, val obj)
   case CHR:
   case NUM:
   case BGNUM:
+  case FLNUM:
     return obj;
   case COBJ:
     if (iter->co.cls == seq_iter_cls)
@@ -1514,6 +1519,7 @@ val copy_iter(val iter)
   case CHR:
   case NUM:
   case BGNUM:
+  case FLNUM:
     return iter;
   case COBJ:
     if (iter->co.cls == seq_iter_cls) {

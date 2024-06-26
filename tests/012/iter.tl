@@ -95,15 +95,28 @@
    115792089237316195423570985008687907853269984665640564039457584007913129639933))
 
 (mtest
+  (take 3 (list-seq 1.0)) (1.0 2.0 3.0)
+  (take 3 (list-seq #\a)) (#\a #\b #\c)
+  (take 3 (list-seq 1)) (1 2 3))
+
+(mtest
   (str-seq (iter-cat "abc" "def" "ghi" #\j..(succ #\z)))
   "abcdefghijklmnopqrstuvwxyz"
   (iter-cat) nil
   (list-seq (iter-cat nil)) nil)
 
 (mtest
+  (iter-begin nil) nil
+  (iter-begin '(1 2 3)) (1 2 3)
+  (iter-begin 42) 42
+  (iter-begin 3.14) 3.14
+  (iter-begin #\a) #\a)
+
+(mtest
   (copy-iter nil) nil
   (copy-iter '(1 2 3)) (1 2 3)
   (copy-iter 42) 42
+  (copy-iter 3.14) 3.14
   (copy-iter #\a) #\a)
 
 (each ((obj '("abcde" #(0 1 2 3 4) "a".."z" 0..9 1.0..10.0)))
