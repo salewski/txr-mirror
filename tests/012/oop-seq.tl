@@ -68,9 +68,22 @@
 
 (let ((ints (new integers item 1 to 10)))
   (mtest
-    (length-< ints 11) t)
+    (length-< ints 11) t
     (length-< ints 10) nil
-    (length-< ints 9) nil)
+    (length-< ints 9) nil))
+
+(test
+  (copy-iter (new counter-iter-fast)) :error)
+
+(defstruct copyable-iter ()
+  (stamp 0)
+  (:method copy (me)
+    (new copyable-iter stamp (succ me.stamp))))
+
+(let* ((c0 (new copyable-iter stamp 42))
+       (c1 (copy-iter c0)))
+  (vtest c0.stamp 42)
+  (vtest c1.stamp 43))
 
 ;; The following reproduced a segfault when the change was made to allow del to
 ;; work with structs that have lambda and lambda-set.
