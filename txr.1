@@ -62988,7 +62988,7 @@ Note that it permits no whitespace characters:
 .mets < mode := { < selector [ + ] | + }
 .mets < selector := { r | w | a | m | T }
 .mets < options := { b | x | l | u | i | n | < digit |
-.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \  <> z[ digit ] | < redirection }
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \  <> z[ digit ] | < redirection | >> ? fdno }
 .mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
 .onom
 
@@ -63160,6 +63160,17 @@ in mode strings that are passed to the
 function; the syntax performs I/O redirections in the child process
 created by that function, and is described in that function's
 documentation.
+.meIP >> ? fdno
+Like
+.metn redirection ,
+this option refers to syntax which only has an effect in
+mode strings that are passed to the
+.code open-process
+function. The syntax selects an alternative file descriptor
+to connect to the returned stream. This is described in the
+documentation for
+.code open-process
+function.
 .RE
 .IP
 The
@@ -66217,6 +66228,31 @@ specifies a process pipe that is open for reading, capturing the
 output of the process. In that process, standard error is redirected
 to standard output, standard input is connected to the null device,
 and descriptor 27 is redirected to descriptor 31.
+
+The
+.meta mode-string
+argument of
+.code open-process
+also supports a special
+.mono
+.meti >> ? fdno
+.onom
+syntax. This syntax specifies an alternative file descriptor in
+the process to which the returned stream should be connected.
+By default, when the process is opened for writing, its standard
+output descriptpr 1 is used, and when it is opened for reading,
+its standard input descriptor 0 is used. This option overrides the
+choice of descriptor. The
+.meta fdno
+portion of the syntax must be a sequence of decimal digits, immediately
+following the
+.code ?
+character. For example, the mode string
+.str ?2
+specifies that the process is to be open for input, such that
+the input stream captures the standard error output of
+that process. In this situation, the standard output will not be
+captured; it remains unredirected.
 
 The
 .code open-subprocess

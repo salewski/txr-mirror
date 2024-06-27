@@ -1584,6 +1584,20 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
         nredir++;
         break;
       }
+    case '?':
+      {
+        wchar_t *past;
+        long val = wcstol(ms + 1, &past, 10);
+
+        if (past == ms + 1 || val < 0 || val >= INT_MAX) {
+          m.malformed = 1;
+          return m;
+        }
+
+        m.streamfd = val;
+        ms = past - 1;
+        break;
+      }
     case 'z':
       m.gzip = 1;
       if (isdigit(convert(unsigned char, ms[1]))) {
@@ -4526,6 +4540,8 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   struct save_fds sfds;
   val ret = nil;
   int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
+  int streamfd_in = m.streamfd != -1 ? m.streamfd : STDIN_FILENO;
+  int streamfd_out = m.streamfd != -1 ? m.streamfd : STDOUT_FILENO;
 
   args = default_null_arg(args);
   fun = default_null_arg(fun);
@@ -4579,13 +4595,13 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
     fds_clobber(&sfds, fds_flags);
 
     if (input) {
-      dup2(fd[1], STDOUT_FILENO);
-      if (fd[1] != STDOUT_FILENO) /* You never know */
+      dup2(fd[1], streamfd_out);
+      if (fd[1] != streamfd_out) /* You never know */
         close(fd[1]);
       close(fd[0]);
     } else {
-      dup2(fd[0], STDIN_FILENO);
-      if (fd[0] != STDIN_FILENO) /* You never know */
+      dup2(fd[0], streamfd_in);
+      if (fd[0] != streamfd_in) /* You never know */
         close(fd[0]);
       close(fd[1]);
     }
