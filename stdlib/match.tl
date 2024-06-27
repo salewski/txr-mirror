@@ -566,10 +566,10 @@
                          vars (cons success-p cm.(get-vars))
                          var-exprs (list loop)
                          test-expr success-p)))
-      (new compiled-match
-           pattern scan-syntax
-           obj-var obj-var
-           guard-chain (list guard))))))
+        (new compiled-match
+             pattern scan-syntax
+             obj-var obj-var
+             guard-chain (list guard))))))
 
 (defun compile-exprs-match (exprs-syntax uexprs var-list)
   (let ((upats (cdr exprs-syntax))
