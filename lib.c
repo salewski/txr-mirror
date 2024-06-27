@@ -7459,16 +7459,13 @@ val symbol_package(val sym)
 
 val make_sym(val name)
 {
-  if (!stringp(name)) {
-    uw_throwf(type_error_s, lit("make-sym: name ~s isn't a string"), name, nao);
-  } else {
-    val obj = make_obj();
-    obj->s.type = SYM;
-    obj->s.name = name;
-    obj->s.package = nil;
-    obj->s.slot_cache = 0;
-    return obj;
-  }
+  val self = lit("make-sym");
+  val obj = make_obj();
+  obj->s.type = SYM;
+  obj->s.name = (c_str(name, self), name);
+  obj->s.package = nil;
+  obj->s.slot_cache = 0;
+  return obj;
 }
 
 val gensym(val prefix_in)
@@ -7496,15 +7493,15 @@ static val make_package_common(val name, val weak)
 
 val make_package(val name, val weak)
 {
+  val self = lit("make-package");
+
+  (void) c_str(name, self);
+
   if (find_package(name)) {
-    uw_throwf(error_s, lit("make-package: ~s exists already"), name, nao);
-  } else if (!stringp(name)) {
-    uw_throwf(type_error_s, lit("make-package: name ~s isn't a string"),
-              name, nao);
+    uw_throwf(error_s, lit("~a: ~s exists already"), self, name, nao);
   } else if (length(name) == zero) {
     uw_throwf(type_error_s,
-              lit("make-package: package name can't be empty string"),
-              nao);
+              lit("~a: package name can't be empty string"), self, nao);
   } else {
     val obj = make_package_common(name, weak);
     mpush(cons(name, obj), cur_package_alist_loc);
@@ -7662,10 +7659,8 @@ val use_sym_as(val symbol, val name, val package_in)
 
   if (symbolp(name))
     name = symbol_name(name);
-  else if (!stringp(name))
-    uw_throwf(type_error_s,
-              lit("~a: ~s: name must be specified as string or symbol"),
-              self, name, nao);
+  else
+    (void) c_str(name, self);
 
   if (symbol_package(symbol) != package) {
     val found = gethash_e(self, package->pk.symhash, name);
@@ -7910,8 +7905,7 @@ val find_symbol(val name, val package_in, val notfound_val_in)
   val self = lit("find-symbol");
   val package = get_package(self, package_in, t);
 
-  if (!stringp(name))
-    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, name, nao);
+  (void) c_str(name, self);
 
   {
     val cell = gethash_e(self, package->pk.symhash, name);
@@ -7927,8 +7921,7 @@ val find_symbol_fb(val name, val package_in, val notfound_val_in)
   val self = lit("find-symbol-fb");
   val package = get_package(self, package_in, t);
 
-  if (!stringp(name))
-    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, name, nao);
+  (void) c_str(name, self);
 
   {
     val cell = gethash_e(self, package->pk.symhash, name);
@@ -7970,8 +7963,7 @@ val intern_intrinsic(val str, val package_in)
   val self = lit("intern");
   val package = get_package(self, package_in, t);
 
-  if (!stringp(str))
-    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, str, nao);
+  (void) c_str(str, self);
 
   return intern(str, package);
 }
@@ -8094,8 +8086,7 @@ val intern_fallback_intrinsic(val str, val package_in)
   val self = lit("intern-fb");
   val package = get_package(self, package_in, t);
 
-  if (!stringp(str))
-    uw_throwf(type_error_s, lit("~a: name ~s isn't a string"), self, str, nao);
+  (void) c_str(str, self);
 
   return intern_fallback(str, package);
 }
