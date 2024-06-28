@@ -1,3 +1,87 @@
+                                    TXR 295
+                                   2024-06-28
+
+
+  Features:
+
+  - TXR Pattern language:
+    - Promising solution found for spurious retention problem that has
+      plagued the project from nearly its beginning!
+      - Fix allows large files to be scanned without consuming more
+        and more memory.
+
+  - Lazy lists:
+    - New function lcons-force: recursively force.
+
+  - Printer:
+    - pprint prints buf objects as hexadecimal, rather than dumping
+      raw bytes.
+
+  - Quasistrings:
+    - Buffer objects interpolated into quasistrings now appear in hex as
+      contiguous digits, rather than as space-separated decimal numbers.
+    - Buffer and string values now support separation:
+      - if var is a string @{var ":"} will interpose : between
+        the characters.
+      - if it is a buffer, : will be interposed between pairs of
+        hex digits, not individual digits.
+
+  - Subprocesses:
+    - New functions for filtering data through external processes:
+      - map-command-lines, map-process-lines
+      - map-command-str, map-process-str
+      - map-command-buf, map-process-buf
+    - New mode option supported by open-process and related functions:
+      - mode syntax ?num, where num is a decimal number, specifies
+        an alternative file descriptor to be used as the data source
+        or sink by the returned stream.
+
+  - Structural Pattern Matching:
+    - new @(scan-all <pat>) pattern: like @(scan <pat>) but
+      gets all matches.
+
+  - Sequence iteration:
+    - New iter-cat function for mapping over multiple sequences as one.
+    - New copy-iter function to duplicate an iterator, at its current
+      iteration point, so the original and copy independently walk
+      the rest of the sequence.
+    - iter-begin and related functions now recognize floating-point
+      numbers and work with them directly, just like with integers,
+      rather than returning an opaque, stateful iterator object.
+
+  - Hash tables:
+    - New function copy-hash-iter.
+
+  - Combinations/Permutations:
+    - New functions permi, rpermi, combi and rcombi which
+      are like their counterparts without "i", but produce iterators
+      rather than lazy lists.
+
+  - Compiler:
+    - Update list of effect-free functions.
+
+  - Sequences:
+    - interpose function uses seq_iter and seq_build.
+    - length can now measure a string range like "AA".."ZZ".
+    - string ranges are no longer ascending or descending,
+      the individual characters are.
+      - Thus ranges like "AC".."CA" work: the left letter
+        counts up, the rightmost one counts down.
+
+  - Lib:
+    - lot of functions that were throwing exceptions of type
+      error now throw more specific type.
+
+  Bugs
+
+  - gc:
+    - inadequate marking in some iterator types.
+    - protect the symbols used for cobj_class registration.
+    - quantile: missing run-time type check for the state object,
+      being of the expected type.
+
+
+
                                     TXR 294
                                    2024-03-17
 
