@@ -571,6 +571,33 @@
              obj-var obj-var
              guard-chain (list guard))))))
 
+(defun compile-scan-all-match (scan-syntax obj-var var-list)
+  (mac-param-bind *match-form* (t pattern) scan-syntax
+    (with-gensyms (iter)
+      (let* ((in-vars var-list.vars)
+             (cm (compile-match pattern iter var-list))
+             (cm-vars cm.(get-vars))
+             (collect-vars (diff cm-vars in-vars))
+             (collect-gens [mapcar gensym collect-vars])
+             (loop ^(for ((,iter ,obj-var))
+                         (,iter t)
+                         ((set ,iter (cdr ,iter)))
+                       ,cm.(wrap-guards
+                             ^(progn ,*(mapcar (ret ^(push ,@1 ,@2))
+                                               collect-vars
+                                               collect-gens)))))
+             (guard (new match-guard
+                         vars cm-vars
+                         temps collect-gens
+                         test-expr ^(progn
+                                      ,loop
+                                      ,*(mapcar (ret ^(set ,@1 (nreverse ,@2)))
+                                                collect-vars collect-gens)))))
+        (new compiled-match
+             pattern scan-syntax
+             obj-var obj-var
+             guard-chain (list guard))))))
+
 (defun compile-exprs-match (exprs-syntax uexprs var-list)
   (let ((upats (cdr exprs-syntax))
         (utemps (mapcar (ret (gensym)) uexprs)))
@@ -609,6 +636,7 @@
                    (not (compile-not-match exp obj-var var-list))
                    (hash (compile-hash-match exp obj-var var-list))
                    (usr:scan (compile-scan-match exp obj-var var-list))
+                   (usr:scan-all (compile-scan-all-match exp obj-var var-list))
                    (exprs (compile-exprs-match exp obj-var var-list))
                    (sys:quasi (compile-match exp obj-var var-list))
                    (t (iflet ((xfun [*match-macro* op]))

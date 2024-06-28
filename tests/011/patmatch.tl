@@ -612,6 +612,14 @@
   (match @(sme (@a) (@b) @x) '(0 1 . 2) (list a b x)) (0 1 2)
   (match @(sme (@a) (@b) @(evenp @x)) '(0 1 . 2) (list a b x)) (0 1 2))
 
+(mtest
+  (match @(scan (b @x)) '(1 2 3 4 b 5 b 6 7 8) x) :error
+  (match @(scan (b @x . @nil)) '(1 2 3 4 b 5 b 6 7 8) x) 5)
+
+(mtest
+  (match @(scan-all (b @x)) '(1 2 3 4 b 5 b 6 7 8) x) :error
+  (match @(scan-all (b @x . @nil)) '(1 2 3 4 b 5 b 6 7 8) x) (5 6))
+
 (compile-only
   (eval-only
     (with-compile-opts (nil unused)

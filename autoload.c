@@ -840,7 +840,8 @@ static val quips_instantiate(void)
 static val match_set_entries(val fun)
 {
   val name_noload[] = {
-    lit("all*"), lit("as"), lit("with"), lit("scan"), lit("sme"),
+    lit("all*"), lit("as"), lit("with"), lit("scan"), lit("scan-all"),
+    lit("sme"),
     nil
   };
   val name[] = {

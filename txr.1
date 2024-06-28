@@ -47666,9 +47666,10 @@ operator.
   -> ((2 4) (b d))
 .brev
 
-.coNP Pattern Operator @ scan
+.coNP Pattern Operators @ scan and @ scan-all
 .synb
-.mets @(scan << pattern )
+.mets @(scan << pattern ))
+.mets @(scan-all << pattern ))
 .syne
 .desc
 The
@@ -47690,6 +47691,14 @@ Thus, a list object, possibly improper, matches
 under
 .code scan
 if any suffix of that object matches.
+
+The
+.code scan-all
+pattern matches the object in the same way. However, instead of
+finding the leftmost match, it finds all matches. Every variable
+that occurs inside
+.meta pattern
+is bound to a list of the matches which correspond to that variable.
 
 .TP* Examples:
 
@@ -47728,6 +47737,14 @@ if any suffix of that object matches.
                '(1 2 3 . #(4 5))
     (list x y))
   -> (4 5)
+
+  ;; Pattern doesn't match list:
+  (match @(scan-all (b @x)) '(1 2 3 4 b 5 b 6 7 8) x)
+  -> error
+
+  ;; x bound to list of items that follow b symbol:
+  (match @(scan-all (b @x . @nil)) '(1 2 3 4 b 5 b 6 7 8) x)
+  -> (5 6)
 .brev
 
 .coNP Pattern Operators @ and and @ or
