@@ -1693,10 +1693,11 @@ static val h_chr(match_line_ctx *c)
   return next_spec_k;
 }
 
-typedef struct {
-  val spec, files, curfile, stream, bindings, data_lineno;
-  volatile val data;
+typedef struct match_files_ctx {
+  val spec, files, curfile, stream, bindings, data, data_lineno;
 } match_files_ctx;
+
+static match_files_ctx *mf_current;
 
 static match_files_ctx mf_all(val spec, val files, val bindings, val data,
                               val curfile, val stream);
@@ -2526,6 +2527,14 @@ typedef val (*v_match_func)(match_files_ctx *cout);
   val specline = first(spec);                           \
   val first_spec = first(specline)
 
+static void step_data(match_files_ctx *c)
+{
+  val next = rest(c->data);
+  if (c == mf_current)
+    rcyc_cons(c->data);
+  c->data = next;
+}
+
 static val v_var_compat(match_files_ctx *c)
 {
   (void) c;
@@ -2591,7 +2600,7 @@ static val v_skip(match_files_ctx *c)
       uw_block_begin(nil, result);
 
       while (c->data && min && reps_min < cmin) {
-        c->data = rest(c->data);
+        step_data(c);
         c->data_lineno = plus(c->data_lineno, one);
         reps_min++;
       }
@@ -2632,7 +2641,7 @@ static val v_skip(match_files_ctx *c)
         debuglf(skipspec, lit("skip didn't match ~a:~d"), c->curfile,
                 c->data_lineno, nao);
 
-        c->data = rest(c->data);
+        step_data(c);
         c->data_lineno = plus(c->data_lineno, one);
       }
 
@@ -2691,7 +2700,7 @@ static val v_fuzz(match_files_ctx *c)
 
         if (!c->data)
           break;
-        c->data = rest(c->data);
+        step_data(c);
         c->data_lineno = plus(c->data_lineno, one);
         c->spec = rest(c->spec);
         if (!c->spec) {
@@ -3090,20 +3099,27 @@ static val v_next_impl(match_files_ctx *c)
 
         if (stream) {
           val res = nil;
+          match_files_ctx *saved_curr = mf_current;
           uw_simple_catch_begin;
 
           {
             volatile val lcs = lazy_stream_cons(stream, nothrow);
             match_files_ctx nc = mf_file_data(*c, str, stream, lcs, one);
-            cons_bind (new_bindings, success,
-                       match_files_byref((lcs = nil, &nc)));
 
-            if (success)
-              res = cons(new_bindings,
-                         if3(c->data, cons(c->data, c->data_lineno), t));
+            mf_current = &nc;
+
+            {
+              cons_bind (new_bindings, success,
+                         match_files_byref(&nc));
+
+              if (success)
+                res = cons(new_bindings,
+                           if3(c->data, cons(c->data, c->data_lineno), t));
+            }
           }
 
           uw_unwind {
+            mf_current = saved_curr;
             if (!noclose)
               close_stream(stream, nil);
           }
@@ -3393,7 +3409,7 @@ static val v_gather(match_files_ctx *c)
       c->data = nil;
     } else {
       c->data_lineno = plus(c->data_lineno, one);
-      c->data = rest(c->data);
+      step_data(c);
       debuglf(specline, lit("gather advancing by one line to ~d"), c->data_lineno, nao);
     }
   }
@@ -3779,7 +3795,7 @@ next_collect:
         if ((gap || max) && ++maxcounter > cmax)
           break;
         c->data_lineno = plus(c->data_lineno, one);
-        c->data = rest(c->data);
+        step_data(c);
       }
     }
   }
@@ -4966,7 +4982,7 @@ static val match_files_byref(match_files_ctx *c)
   gc_stack_check();
 
   for (; c->spec; c->spec = rest(c->spec),
-                  c->data = rest(c->data),
+                  step_data(c),
                   c->data_lineno = plus(c->data_lineno, one))
 repeat_spec_same_data:
   {
@@ -5142,20 +5158,36 @@ val include(val specline)
 
 val extract(val spec, val files, val predefined_bindings)
 {
-  val result = match_files(mf_all(spec, files, predefined_bindings,
-                                  t, nil, nil));
-  cons_bind (bindings, success, result);
+  match_files_ctx c = mf_all(spec, files, predefined_bindings, t, nil, nil);
+  match_files_ctx *saved_curr = mf_current;
+  val result = nil;
 
-  if (opt_print_bindings) {
-    if (bindings) {
-      bindings = nreverse(bindings);
-      rplaca(result, bindings);
-      dump_bindings(bindings);
+  uw_simple_catch_begin;
+
+  mf_current = &c;
+ 
+  result = match_files_byref(&c);
+
+  {
+    cons_bind (bindings, success, result);
+
+    if (opt_print_bindings) {
+      if (bindings) {
+        bindings = nreverse(bindings);
+        rplaca(result, bindings);
+        dump_bindings(bindings);
+      }
+
+      if (!success)
+        put_line(lit("false"), std_output);
     }
-
-    if (!success)
-      put_line(lit("false"), std_output);
   }
+
+  uw_unwind {
+    mf_current = saved_curr;
+  }
+
+  uw_catch_end;
 
   return result;
 }
