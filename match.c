@@ -1693,11 +1693,10 @@ static val h_chr(match_line_ctx *c)
   return next_spec_k;
 }
 
-typedef struct match_files_ctx {
+typedef struct {
   val spec, files, curfile, stream, bindings, data, data_lineno;
+  int top;
 } match_files_ctx;
-
-static match_files_ctx *mf_current;
 
 static match_files_ctx mf_all(val spec, val files, val bindings, val data,
                               val curfile, val stream);
@@ -2455,6 +2454,7 @@ static match_files_ctx mf_all(val spec, val files, val bindings,
   c.bindings = bindings;
   c.data = data;
   c.data_lineno = if3(data, one, zero);
+  c.top = 0;
   return c;
 }
 
@@ -2464,6 +2464,7 @@ static match_files_ctx mf_args(match_files_ctx c)
   nc.data = c.files;
   nc.curfile = lit("args");
   nc.data_lineno = one;
+  nc.top = 0;
   return nc;
 }
 
@@ -2472,6 +2473,7 @@ static match_files_ctx mf_data(match_files_ctx c, val data, val data_lineno)
   match_files_ctx nc = c;
   nc.data = data;
   nc.data_lineno = data_lineno;
+  nc.top = 0;
   return nc;
 }
 
@@ -2479,6 +2481,7 @@ static match_files_ctx mf_spec(match_files_ctx c, val spec)
 {
   match_files_ctx nc = c;
   nc.spec = spec;
+  nc.top = 0;
   return nc;
 }
 
@@ -2488,6 +2491,7 @@ static match_files_ctx mf_spec_bindings(match_files_ctx c, val spec,
   match_files_ctx nc = c;
   nc.spec = spec;
   nc.bindings = bindings;
+  nc.top = 0;
   return nc;
 }
 
@@ -2500,6 +2504,7 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
   nc.stream = stream;
   nc.data = data;
   nc.data_lineno = data_lineno;
+  nc.top = 0;
   return nc;
 }
 
@@ -2514,6 +2519,7 @@ static match_files_ctx mf_from_ml(match_line_ctx ml)
   mf.bindings = ml.bindings;
   mf.data = nil;
   mf.data_lineno = ml.data_lineno;
+  mf.top = 0;
 
   return mf;
 }
@@ -2530,7 +2536,7 @@ typedef val (*v_match_func)(match_files_ctx *cout);
 static void step_data(match_files_ctx *c)
 {
   val next = rest(c->data);
-  if (c == mf_current)
+  if (c->top)
     rcyc_cons(c->data);
   c->data = next;
 }
@@ -3099,27 +3105,20 @@ static val v_next_impl(match_files_ctx *c)
 
         if (stream) {
           val res = nil;
-          match_files_ctx *saved_curr = mf_current;
           uw_simple_catch_begin;
 
           {
             volatile val lcs = lazy_stream_cons(stream, nothrow);
             match_files_ctx nc = mf_file_data(*c, str, stream, lcs, one);
+            cons_bind (new_bindings, success,
+                       (nc.top = 1, match_files_byref(&nc)));
 
-            mf_current = &nc;
-
-            {
-              cons_bind (new_bindings, success,
-                         match_files_byref(&nc));
-
-              if (success)
-                res = cons(new_bindings,
-                           if3(c->data, cons(c->data, c->data_lineno), t));
-            }
+            if (success)
+              res = cons(new_bindings,
+                         if3(c->data, cons(c->data, c->data_lineno), t));
           }
 
           uw_unwind {
-            mf_current = saved_curr;
             if (!noclose)
               close_stream(stream, nil);
           }
@@ -5159,35 +5158,19 @@ val include(val specline)
 val extract(val spec, val files, val predefined_bindings)
 {
   match_files_ctx c = mf_all(spec, files, predefined_bindings, t, nil, nil);
-  match_files_ctx *saved_curr = mf_current;
-  val result = nil;
+  val result = match_files_byref((c.top = 1, &c));
+  cons_bind (bindings, success, result);
 
-  uw_simple_catch_begin;
-
-  mf_current = &c;
- 
-  result = match_files_byref(&c);
-
-  {
-    cons_bind (bindings, success, result);
-
-    if (opt_print_bindings) {
-      if (bindings) {
-        bindings = nreverse(bindings);
-        rplaca(result, bindings);
-        dump_bindings(bindings);
-      }
-
-      if (!success)
-        put_line(lit("false"), std_output);
+  if (opt_print_bindings) {
+    if (bindings) {
+      bindings = nreverse(bindings);
+      rplaca(result, bindings);
+      dump_bindings(bindings);
     }
-  }
 
-  uw_unwind {
-    mf_current = saved_curr;
+    if (!success)
+      put_line(lit("false"), std_output);
   }
-
-  uw_catch_end;
 
   return result;
 }
