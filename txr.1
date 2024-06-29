@@ -20947,18 +20947,30 @@ if and only if,
 .meta left-obj
 and
 .meta right-obj
-are actually the same object. The
-.code eq
-test is implemented
-by comparing the raw bit pattern of the value, whether or not it is
-an immediate value or a pointer to a heaped object.
+are the same object.
+
 Two character values are
 .code eq
 if they are the same character, and two fixnum integers
 are
 .code eq
-if they have the same value.  All other object representations are actually
-pointers, and are
+if they have the same value.
+
+Whether two identical floating-point values are always
+.code eq
+depends on how \*(TX has been built.
+
+On 64 bit systems, \*(TX is usually built with to support unboxed floating-point
+numbers, which may be reliably compared with
+.codn eq .
+On 32 bit targets, floating-point values are pointers to heap-allocated values,
+and so two identical values might not be
+.codn eq .
+Note that even in 64 bit build of \*(TX, the build configuration can override
+the selection so that floating-point values are heap-allocated.
+
+All other object representations are
+pointers to heap-allocated objects. Two such values are
 .code eq
 if and only if they point to the same object in memory.
 So, for instance, two bignum integers might not be
@@ -20972,7 +20984,7 @@ and two strings might not be eq even if they hold identical text.
 
 The
 .code eql
-function is slightly less strict than
+function is less strict than
 .codn eq .
 The difference between
 .code eql
