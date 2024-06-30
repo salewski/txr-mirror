@@ -5077,6 +5077,7 @@ out:
 
 static val match_files(match_files_ctx c)
 {
+  c.top = 0;
   return match_files_byref(&c);
 }
 
