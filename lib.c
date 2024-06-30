@@ -4996,6 +4996,7 @@ val lcons_cdr(val lcons)
 
 void rcyc_cons(val cons)
 {
+  cons->c.type = CONS;
   cons->c.cdr = recycled_conses;
   cons->c.car = nil;
   recycled_conses = cons;
