@@ -4837,6 +4837,7 @@ static val v_data(match_files_ctx *c)
   if (!args || rest(args))
     sem_error(specline, lit("data directive takes one argument"), nao);
 
+  c->top = 0;
   c->bindings = dest_bind(specline, c->bindings, pat, c->data, eql_f);
 
   if (c->bindings == t) {
