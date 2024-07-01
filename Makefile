@@ -74,7 +74,9 @@ STDLIB_TLOS := $(patsubst %.tl,%.tlo,$(STDLIB_SRCS))
 
 STDLIB_EARLY_TLOS := $(addprefix stdlib/,optimize.tlo param.tlo \
                                  compiler.tlo place.tlo asm.tlo)
-STDLIB_LATE_TLOS := $(filter-out $(STDLIB_EARLY_TLOS),$(STDLIB_TLOS))
+STDLIB_MIDDLE_TLOS := $(addprefix stdlib/,build.tlo op.tlo struct.tlo error.tlo)
+STDLIB_LATE_TLOS := $(filter-out $(STDLIB_EARLY_TLOS),$(STDLIB_TLOS) \
+                                 $(STDLIB_MIDDLE_TLOS))
 
 ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir),\
@@ -217,7 +219,8 @@ endif
 
 .PHONY: all
 
-all: $(BUILD_TARGETS) $(STDLIB_EARLY_TLOS) $(STDLIB_LATE_TLOS)
+all: $(BUILD_TARGETS) $(STDLIB_EARLY_TLOS) $(STDLIB_MIDDLE_TLOS) \
+     $(STDLIB_LATE_TLOS)
 
 $(PROG): $(OPT_OBJS) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,$(OPT_FLAGS))
