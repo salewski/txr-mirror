@@ -7787,6 +7787,8 @@ void eval_init(void)
   reg_fun(intern(lit("ssort"), user_package), func_n3o(ssort, 1));
   reg_fun(intern(lit("nshuffle"), user_package), func_n2o(nshuffle, 1));
   reg_fun(intern(lit("shuffle"), user_package), func_n2o(shuffle, 1));
+  reg_fun(intern(lit("cnshuffle"), user_package), func_n2o(cnshuffle, 1));
+  reg_fun(intern(lit("cshuffle"), user_package), func_n2o(cshuffle, 1));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
   reg_fun(intern(lit("rfind"), user_package), func_n4o(rfind, 2));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));

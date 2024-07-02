@@ -11664,7 +11664,7 @@ val ssort(val seq, val lessfun, val keyfun)
   abort();
 }
 
-val nshuffle(val seq, val randstate)
+static val nshuffle_impl(val seq, val randstate, int cyclic, val self)
 {
   seq_info_t si = seq_info(seq);
 
@@ -11674,7 +11674,7 @@ val nshuffle(val seq, val randstate)
   case SEQ_LISTLIKE:
     if (cdr(seq))
     {
-      val v = nshuffle(vec_list(seq), randstate);
+      val v = nshuffle_impl(vec_list(seq), randstate, cyclic, self);
       val i, l;
 
       for (l = seq, i = zero; l; i = succ(i), l = cdr(l))
@@ -11692,7 +11692,7 @@ val nshuffle(val seq, val randstate)
         return seq;
 
       for (i = pred(n); ge(i, one); i = pred(i)) {
-        val j = random(rs, succ(i));
+        val j = random(rs, if3(cyclic, i, succ(i)));
         val t = ref(seq, i);
         refset(seq, i, ref(seq, j));
         refset(seq, j, t);
@@ -11702,18 +11702,38 @@ val nshuffle(val seq, val randstate)
     }
   case SEQ_NOTSEQ:
   case SEQ_TREELIKE:
-    unsup_obj(lit("nshuffle"), seq);
+    unsup_obj(self, seq);
   }
 
   abort();
 }
 
+val nshuffle(val seq, val randstate)
+{
+  return nshuffle_impl(seq, randstate, 0, lit("nshuffle"));
+}
+
 val shuffle(val seq, val randstate)
 {
+  val self = lit("shuffle");
   if (seqp(seq))
-    return nshuffle(copy(seq), randstate);
-  type_mismatch(lit("nshuffle: ~s is not a sequence"), seq, nao);
+    return nshuffle_impl(copy(seq), randstate, 0, self);
+  type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
 }
+
+val cnshuffle(val seq, val randstate)
+{
+  return nshuffle_impl(seq, randstate, 1, lit("cnshuffle"));
+}
+
+val cshuffle(val seq, val randstate)
+{
+  val self = lit("cshuffle");
+  if (seqp(seq))
+    return nshuffle_impl(copy(seq), randstate, 1, self);
+  type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
+}
+
 
 static val multi_sort_less(val funcs_cons, val llist, val rlist)
 {

@@ -1384,6 +1384,8 @@ val snsort(val seq, val lessfun, val keyfun);
 val ssort(val seq, val lessfun, val keyfun);
 val nshuffle(val seq, val randstate);
 val shuffle(val seq, val randstate);
+val cnshuffle(val seq, val randstate);
+val cshuffle(val seq, val randstate);
 val multi_sort(val lists, val funcs, val key_funcs);
 val sort_group(val seq, val keyfun, val lessfun);
 val unique(val seq, val keyfun, varg hashv_args);
