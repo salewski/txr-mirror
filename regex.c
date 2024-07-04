@@ -81,6 +81,8 @@ typedef struct regex {
  * REGM_INCOMPLETE: no match at this character, but matching can continue.
  * REGM_FAIL: no more state transitions are possible.
  * REGM_MATCH: match (accept state) for this character.
+ * REGM_MATCH_DONE: match (accept state) for this character, and no more
+ * moves are possible.
  *
  * When the end of the input is encountered, or a REGM_FAIL,
  * then regex_machine_feed is called one more time with
@@ -88,6 +90,7 @@ typedef struct regex {
  * REGM_INCOMPLETE: there was a partial match for the input.
  * REGM_FAIL: none of the input matched.
  * REGM_MATCH: the input was completely matched
+ * REGM_MATCH_DONE: not returned.
  *
  * Note that a REGM_FAIL (no transitions) during the character feeding phase
  * can turn into REGM_INCOMPLETE (partial match) when the match is sealed with
@@ -96,7 +99,8 @@ typedef struct regex {
 typedef enum regm_result {
   REGM_INCOMPLETE,
   REGM_FAIL,
-  REGM_MATCH
+  REGM_MATCH,
+  REGM_MATCH_DONE
 } regm_result_t;
 
 typedef union regex_machine regex_machine_t;
@@ -230,6 +234,8 @@ union nfa_state {
 #define nfa_accept_state_p(s) ((s)->a.kind == nfa_accept)
 #define nfa_empty_state_p(s) ((s)->a.kind == nfa_accept || \
                               (s)->a.kind == nfa_empty)
+#define nfa_has_transitions(s) ((s)->a.kind != nfa_empty || \
+                                (s)->e.trans0 || (s)->e.trans1)
 
 struct nfa_machine {
   int is_nfa;           /* common member */
@@ -1272,10 +1278,11 @@ static nfa_t nfa_optimize(nfa_t nfa)
  * (Transitions that don't do not consume and match an input character).
  */
 static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
-                       int nstates, unsigned visited, int *accept)
+                       int nstates, unsigned visited, int *accept, int *more)
 {
   int i, nout = 0;
   int stackp = 0;
+  int moreset = 0;
 
   /* First, add all states in the input set to the closure,
      push them on the stack, and mark them as visited. */
@@ -1288,6 +1295,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
     set[nout++] = s;
     if (nfa_accept_state_p(s))
       *accept = 1;
+    if (!moreset && nfa_has_transitions(s))
+      moreset = *more = 1;
   }
 
   while (stackp) {
@@ -1305,6 +1314,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         set[nout++] = e0;
         if (nfa_accept_state_p(e0))
           *accept = 1;
+        if (!moreset && nfa_has_transitions(e0))
+          *more = 1;
       }
 
       if (nfa_test_set_visited(e1, visited)) {
@@ -1312,6 +1323,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         set[nout++] = e1;
         if (nfa_accept_state_p(e1))
           *accept = 1;
+        if (!moreset && nfa_has_transitions(e1))
+          *more = 1;
       }
     }
   }
@@ -1327,9 +1340,9 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
  */
 static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
                             int nstates, wchar_t ch,
-                            unsigned visited, int *accept)
+                            unsigned visited, int *accept, int *more)
 {
-  int i, nout, stackp;
+  int i, nout, stackp, moreset = 0;
 
   /*
    * Compute the move set from a given set of NFA states. The move
@@ -1371,6 +1384,8 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         set[nout++] = mov;
         if (nfa_accept_state_p(mov))
           *accept = 1;
+        if (!moreset && nfa_has_transitions(mov))
+          *more = 1;
       }
     }
   }
@@ -1390,6 +1405,8 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         set[nout++] = e0;
         if (nfa_accept_state_p(e0))
           *accept = 1;
+        if (!moreset && nfa_has_transitions(e0))
+          *more = 1;
       }
 
       if (nfa_test_set_visited(e1, visited)) {
@@ -1397,6 +1414,8 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         set[nout++] = e1;
         if (nfa_accept_state_p(e1))
           *accept = 1;
+        if (!moreset && nfa_has_transitions(e0))
+          *more = 1;
       }
     }
   }
@@ -1434,13 +1453,13 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
   nfa_state_t **set = coerce(nfa_state_t **, alloca(nstates * sizeof *set));
   nfa_state_t **stack = coerce(nfa_state_t **, alloca(nstates * sizeof *stack));
   int nclos = 0;
-  int accept = 0;
+  int accept = 0, more = 0;
 
   nfa_handle_wraparound(nfa.start, &visited);
 
   if (nfa.start) {
     set[0] = nfa.start;
-    nclos = nfa_closure(stack, set, 1, nstates, ++visited, &accept);
+    nclos = nfa_closure(stack, set, 1, nstates, ++visited, &accept, &more);
   }
 
   if (accept)
@@ -1449,17 +1468,17 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
   for (; *ptr != 0; ptr++) {
     wchar_t ch = *ptr;
 
-    accept = 0;
+    accept = more = 0;
 
     nfa_handle_wraparound(nfa.start, &visited);
 
     nclos = nfa_move_closure(stack, set, nclos,
-                             nstates, ch, ++visited, &accept);
+                             nstates, ch, ++visited, &accept, &more);
 
     if (accept)
       last_accept_pos = ptr + 1;
 
-    if (nclos == 0) /* dead end; no match */
+    if (nclos == 0 || more == 0) /* dead end */
       break;
   }
 
@@ -2470,7 +2489,7 @@ static cnum regex_run(val compiled_regex, const wchar_t *str)
 
 static void regex_machine_reset(regex_machine_t *regm)
 {
-  int accept = 0;
+  int accept = 0, more = 0;
 
   regm->n.last_accept_pos = -1;
   regm->n.count = 0;
@@ -2484,7 +2503,7 @@ static void regex_machine_reset(regex_machine_t *regm)
       regm->n.set[0] = s;
       regm->n.nclos = nfa_closure(regm->n.stack, regm->n.set, 1,
                                   regm->n.nstates,
-                                  regm->n.visited, &accept);
+                                  regm->n.visited, &accept, &more);
       s->a.visited = regm->n.visited;
     } else {
       regm->n.nclos = 0;
@@ -2541,7 +2560,7 @@ static regm_result_t regex_machine_infer_init_state(regex_machine_t *regm)
 
 static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
 {
-  int accept = 0;
+  int accept = 0, more = 0;
 
   if (regm->n.is_nfa) {
     nfa_handle_wraparound(regm->n.nfa.start, &regm->n.visited);
@@ -2552,14 +2571,14 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
       regm->n.nclos = nfa_move_closure(regm->n.stack,
                                        regm->n.set, regm->n.nclos,
                                        regm->n.nstates, ch, ++regm->n.visited,
-                                       &accept);
+                                       &accept, &more);
 
       if (regm->n.nfa.start)
         regm->n.nfa.start->a.visited = regm->n.visited;
 
       if (accept) {
         regm->n.last_accept_pos = regm->n.count;
-        return REGM_MATCH;
+        return more ? REGM_MATCH : REGM_MATCH_DONE;
       }
 
       return (regm->n.nclos != 0) ? REGM_INCOMPLETE : REGM_FAIL;
@@ -2573,15 +2592,14 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
 
       if ((accept = reg_nullable(regm->d.deriv))) {
         regm->d.last_accept_pos = regm->d.count;
-        return REGM_MATCH;
+        return regm->d.deriv ? REGM_MATCH : REGM_MATCH_DONE;
       }
 
       return (regm->d.deriv != t) ? REGM_INCOMPLETE : REGM_FAIL;
     }
   }
 
-  /* Reached if the null character is
-     consumed, or NFA/derivation hit a transition dead end. */
+  /* Reached if the null character is consumed. */
 
   if (regm->n.last_accept_pos == regm->n.count)
     return REGM_MATCH;
@@ -2645,13 +2663,18 @@ again:
         }
         break;
       }
+
+      if (last_res == REGM_MATCH_DONE)
+        break;
     }
 
-    last_res = regex_machine_feed(&regm, 0);
+    if (last_res != REGM_MATCH_DONE)
+      last_res = regex_machine_feed(&regm, 0);
 
     switch (last_res) {
     case REGM_INCOMPLETE:
     case REGM_MATCH:
+    case REGM_MATCH_DONE:
       retval = cons(pos, num(regex_machine_match_span(&regm)));
       regex_machine_cleanup(&regm);
       return retval;
@@ -2736,15 +2759,17 @@ val match_regex(val str, val reg, val pos)
 
   for (i = pos; length_str_gt(str, i); i = plus(i, one)) {
     last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
-    if (last_res == REGM_FAIL)
+    if (last_res == REGM_FAIL || last_res == REGM_MATCH_DONE)
       break;
   }
 
-  last_res = regex_machine_feed(&regm, 0);
+  if (last_res != REGM_MATCH_DONE)
+    last_res = regex_machine_feed(&regm, 0);
 
   switch (last_res) {
   case REGM_INCOMPLETE:
   case REGM_MATCH:
+  case REGM_MATCH_DONE:
     retval = plus(pos, num(regex_machine_match_span(&regm)));
     regex_machine_cleanup(&regm);
     return retval;
@@ -2809,23 +2834,28 @@ val match_regex_right(val str, val regex, val end)
 
   while (le(pos, end)) {
     regex_machine_t regm;
-    val i ;
+    val i;
     regm_result_t last_res = REGM_INCOMPLETE;
 
     regex_machine_init(self, &regm, regex);
 
     for (i = pos; lt(i, end); i = plus(i, one)) {
       last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
-      if (last_res == REGM_FAIL)
+      if (last_res == REGM_FAIL || last_res == REGM_MATCH_DONE)
         break;
     }
 
-    last_res = regex_machine_feed(&regm, 0);
+    if (last_res != REGM_MATCH_DONE)
+      last_res = regex_machine_feed(&regm, 0);
 
     switch (last_res) {
+    case REGM_MATCH_DONE:
+      if (!lt(plus(i, one), end)) {
     case REGM_MATCH:
-      regex_machine_cleanup(&regm);
-      return minus(end, pos);
+        regex_machine_cleanup(&regm);
+        return minus(end, pos);
+      }
+      /* fallthrough */
     case REGM_INCOMPLETE:
     case REGM_FAIL:
       regex_machine_cleanup(&regm);
@@ -2861,7 +2891,7 @@ val regex_prefix_match(val reg, val str, val pos)
 
   for (i = pos; length_str_gt(str, i); i = plus(i, one)) {
     last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
-    if (last_res == REGM_FAIL)
+    if (last_res == REGM_FAIL || last_res == REGM_MATCH_DONE)
       break;
   }
 
@@ -2870,6 +2900,7 @@ val regex_prefix_match(val reg, val str, val pos)
   switch (last_res) {
   case REGM_INCOMPLETE:
   case REGM_MATCH:
+  case REGM_MATCH_DONE:
     return t;
   default:
   case REGM_FAIL:
@@ -3173,6 +3204,7 @@ static val scan_until_common(val self, val regex, val stream_in,
           goto out_match;
         break;
       case REGM_MATCH:
+      case REGM_MATCH_DONE:
         goto out_match;
       }
       break;
@@ -3201,6 +3233,9 @@ static val scan_until_common(val self, val regex, val stream_in,
 
       regex_machine_reset(&regm);
       continue;
+    case REGM_MATCH_DONE:
+      match = stack;
+      goto out_match;
     case REGM_MATCH:
       push(ch, &stack);
       match = stack;
