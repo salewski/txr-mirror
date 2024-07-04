@@ -3237,7 +3237,6 @@ static val scan_until_common(val self, val regex, val stream_in,
       match = stack;
       goto out_match;
     case REGM_MATCH:
-      push(ch, &stack);
       match = stack;
       continue;
     case REGM_INCOMPLETE:
