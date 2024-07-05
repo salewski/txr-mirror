@@ -1870,7 +1870,6 @@ static ucnum struct_inst_hash(val obj, int *count, ucnum seed)
   for (sl = 0; sl < nslots; sl++) {
     ucnum hash = equal_hash(si->slot[sl], count, seed);
     out += hash;
-    out &= NUM_MAX;
   }
 
   return out;

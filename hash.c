@@ -775,14 +775,11 @@ static ucnum hash_hash_op(val obj, int *count, ucnum seed)
   }
 
   out += equal_hash(h->userdata, count, seed);
-  out &= NUM_MAX;
 
   us_hash_iter_init(&hi, obj);
 
-  while ((*count)-- > 0 && (cell = hash_iter_next(&hi)) != nil) {
+  while ((*count)-- > 0 && (cell = hash_iter_next(&hi)) != nil)
     out += equal_hash(cell, count, seed);
-    out &= NUM_MAX;
-  }
 
   return out;
 }
