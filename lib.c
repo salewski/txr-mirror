@@ -14820,6 +14820,16 @@ static int check_emit_circle(val obj, val out, struct strm_ctx *ctx, val self)
   return 0;
 }
 
+static void out_json_sym(val sym, val out, struct strm_ctx *ctx)
+{
+  put_char(chr('"'), out);
+  if (ctx)
+    obj_print_impl(sym, out, nil, ctx);
+  else
+    obj_print(sym, out, nil);
+  put_char(chr('"'), out);
+}
+
 static void out_json_rec(val obj, val out, enum json_fmt jf,
                          struct strm_ctx *ctx)
 {
@@ -15020,6 +15030,58 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
             force_br = 1;
         }
       }
+      set_indent(out, save_indent);
+      put_char(chr('}'), out);
+      if (force_br)
+        force_break(out);
+      return;
+    }
+    if (structp(obj)) {
+      val ty = typeof(obj);
+      val sl = slots(ty);
+      val iter;
+      val save_indent;
+      int force_br = 0;
+
+      if (jf == json_fmt_standard) {
+        put_string(lit("{\n"), out);
+        save_indent = inc_indent_abs(out, two);
+        put_string(lit("\"__type\" : "), out);
+        out_json_sym(ty, out, ctx);
+
+        for (iter = sl; iter; iter = cdr(iter)) {
+          val slsym = car(iter);
+
+          if (static_slot_p(ty, slsym))
+            continue;
+
+          put_string(lit(",\n"), out);
+          out_json_sym(slsym, out, ctx);
+          put_string(lit(" : "), out);
+          out_json_rec(slot(obj, slsym), out, jf, ctx);
+        }
+        put_string(lit("\n"), out);
+      } else {
+        put_char(chr('{'), out);
+        save_indent = inc_indent(out, zero);
+        put_string(lit("\"__type\":"), out);
+        out_json_sym(ty, out, ctx);
+
+        for (iter = sl; iter; iter = cdr(iter)) {
+          val slsym = car(iter);
+
+          if (static_slot_p(ty, slsym))
+            continue;
+
+          put_string(lit(","), out);
+          if (width_check(out, nil))
+            force_br = 1;
+          out_json_sym(slsym, out, ctx);
+          put_string(lit(":"), out);
+          out_json_rec(slot(obj, slsym), out, jf, ctx);
+        }
+      }
+
       set_indent(out, save_indent);
       put_char(chr('}'), out);
       if (force_br)

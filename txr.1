@@ -84092,6 +84092,22 @@ A list of object is rendered in the same way as vector, in the JSON
 .code []
 notation. When such JSON notation is parsed, a vector is produced.
 
+A structure object is rendered into JSON using the
+.code {}
+object notation. The keys of the objects are the names of the
+symbols of the object type's non-static slots, appearing as a
+string. The values are the values of the slots. They must be JSON-conforming
+objects.
+The first entry of the object is a key named
+.str __type
+whose value is the structure type symbol, appearing as a string.
+Both the slot symbols and the type symbol may appear with a package
+qualifier, depending on the relationship of the symbols to the current
+package, according to similar rules as if the symbol were printed
+by the
+.code print
+function.
+
 When integer objects are output, they may not constitute valid JSON, since the
 JSON specification supports only IEEE 64 bit floating-point numbers. JSON
 numbers are read as floating-point.
