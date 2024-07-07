@@ -139,6 +139,11 @@ enum json_fmt {
   json_fmt_standard
 };
 
+struct json_opts {
+  enum json_fmt fmt : 4;
+  unsigned flat : 1;
+};
+
 loc lookup_var_l(val env, val sym);
 
 extern val from_start_k, from_current_k, from_end_k;

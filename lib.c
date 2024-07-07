@@ -14830,7 +14830,7 @@ static void out_json_sym(val sym, val out, struct strm_ctx *ctx)
   put_char(chr('"'), out);
 }
 
-static void out_json_rec(val obj, val out, enum json_fmt jf,
+static void out_json_rec(val obj, val out, struct json_opts jo,
                          struct strm_ctx *ctx)
 {
   val self = lit("print");
@@ -14861,7 +14861,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
         int force_br = 0;
         val iter, next;
 
-        if (jf == json_fmt_standard) {
+        if (!jo.flat && jo.fmt == json_fmt_standard) {
           put_string(lit("{\n"), out);
           save_indent = inc_indent_abs(out, two);
         } else {
@@ -14872,18 +14872,18 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
         for (iter = cddr(obj), next = nil; iter; iter = next) {
           val pair = car(iter);
           val k = car(pair), v = cadr(pair);
-          if (jf == json_fmt_standard || consp(k) || consp(v)) {
-            if (jf != json_fmt_standard && next)
+          if (jo.fmt == json_fmt_standard || consp(k) || consp(v)) {
+            if (jo.fmt != json_fmt_standard && next)
               put_char(chr(' '), out);
-            out_json_rec(k, out, jf, ctx);
+            out_json_rec(k, out, jo, ctx);
             put_string(lit(" : "), out);
           } else {
-            out_json_rec(k, out, jf, ctx);
+            out_json_rec(k, out, jo, ctx);
             put_char(chr(':'), out);
           }
-          out_json_rec(v, out, jf, ctx);
+          out_json_rec(v, out, jo, ctx);
 
-          if (jf == json_fmt_standard) {
+          if (!jo.flat && jo.fmt == json_fmt_standard) {
             if ((next = cdr(iter)) != 0)
               put_string(lit(",\n"), out);
             else
@@ -14905,7 +14905,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
         int force_br = 0;
         val iter, next;
 
-        if (jf == json_fmt_standard) {
+        if (!jo.flat && jo.fmt == json_fmt_standard) {
           put_string(lit("[\n"), out);
           save_indent = inc_indent_abs(out, two);
         } else {
@@ -14916,8 +14916,8 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
         for (iter = cadr(obj), next = nil; iter; iter = next) {
           val elem = car(iter);
           next = cdr(iter);
-          out_json_rec(elem, out, jf, ctx);
-          if (jf == json_fmt_standard) {
+          out_json_rec(elem, out, jo, ctx);
+          if (!jo.flat && jo.fmt == json_fmt_standard) {
             if (next)
               put_string(lit(",\n"), out);
             else
@@ -14954,7 +14954,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
       val elem;
       seq_iter_init(self, &si, obj);
 
-      if (jf == json_fmt_standard) {
+      if (!jo.flat && jo.fmt == json_fmt_standard) {
         put_string(lit("[\n"), out);
         save_indent = inc_indent_abs(out, two);
       } else {
@@ -14965,8 +14965,8 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
       if (seq_get(&si, &elem)) for (;;) {
         val nxelem;
         int more = seq_get(&si, &nxelem);
-        out_json_rec(elem, out, jf, ctx);
-        if (jf == json_fmt_standard) {
+        out_json_rec(elem, out, jo, ctx);
+        if (!jo.flat && jo.fmt == json_fmt_standard) {
           if (more)
             put_string(lit(",\n"), out);
           else
@@ -14996,7 +14996,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
 
       us_hash_iter_init(&hi, obj);
 
-      if (jf == json_fmt_standard) {
+      if (!jo.flat && jo.fmt == json_fmt_standard) {
         put_string(lit("{\n"), out);
         save_indent = inc_indent_abs(out, two);
       } else {
@@ -15007,24 +15007,24 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
       for (next = nil, cell = hash_iter_next(&hi); cell; cell = next) {
         val k = car(cell), v = cdr(cell);
 
-        if (jf == json_fmt_standard || consp(k) || consp(v)) {
-          if (jf != json_fmt_standard && next)
+        if (jo.fmt == json_fmt_standard || consp(k) || consp(v)) {
+          if (jo.fmt != json_fmt_standard && next)
             put_char(chr(' '), out);
-          out_json_rec(k, out, jf, ctx);
+          out_json_rec(k, out, jo, ctx);
           put_string(lit(" : "), out);
         } else {
-          out_json_rec(k, out, jf, ctx);
+          out_json_rec(k, out, jo, ctx);
           put_char(chr(':'), out);
         }
-        out_json_rec(v, out, jf, ctx);
-        if (jf == json_fmt_standard) {
+        out_json_rec(v, out, jo, ctx);
+        if (!jo.flat && jo.fmt == json_fmt_standard) {
           if ((next = hash_iter_next(&hi)) != 0)
             put_string(lit(",\n"), out);
           else
             put_char(chr('\n'), out);
         } else if ((next = hash_iter_next(&hi)) != 0) {
           put_char(chr(','), out);
-          if (jf == json_fmt_standard)
+          if (!jo.flat && jo.fmt == json_fmt_standard)
             put_char(chr('\n'), out);
           else if (width_check(out, nil))
             force_br = 1;
@@ -15043,7 +15043,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
       val save_indent;
       int force_br = 0;
 
-      if (jf == json_fmt_standard) {
+      if (!jo.flat && jo.fmt == json_fmt_standard) {
         put_string(lit("{\n"), out);
         save_indent = inc_indent_abs(out, two);
         put_string(lit("\"__type\" : "), out);
@@ -15058,7 +15058,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
           put_string(lit(",\n"), out);
           out_json_sym(slsym, out, ctx);
           put_string(lit(" : "), out);
-          out_json_rec(slot(obj, slsym), out, jf, ctx);
+          out_json_rec(slot(obj, slsym), out, jo, ctx);
         }
         put_string(lit("\n"), out);
       } else {
@@ -15078,7 +15078,7 @@ static void out_json_rec(val obj, val out, enum json_fmt jf,
             force_br = 1;
           out_json_sym(slsym, out, ctx);
           put_string(lit(":"), out);
-          out_json_rec(slot(obj, slsym), out, jf, ctx);
+          out_json_rec(slot(obj, slsym), out, jo, ctx);
         }
       }
 
@@ -15112,12 +15112,13 @@ static void out_json(val op, val obj, val out, struct strm_ctx *ctx)
   val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                        num_fast(indent_data));
   val jfsym = cdr(lookup_var(nil, print_json_format_s));
-  enum json_fmt jf = if3(jfsym == standard_k,
-                         json_fmt_standard,
-                         json_fmt_default);
+  struct json_opts jo = {
+    if3(jfsym == standard_k, json_fmt_standard, json_fmt_default),
+    0
+  };
   if (op == sys_qquote_s)
     put_char(chr('^'), out);
-  out_json_rec(obj, out, jf, ctx);
+  out_json_rec(obj, out, jo, ctx);
   set_indent_mode(out, save_mode);
 }
 
@@ -15814,11 +15815,12 @@ val put_json(val obj, val stream_in, val flat)
                                        num_fast(indent_data)));
   val isave = get_indent(stream);
   val jfsym = cdr(lookup_var(nil, print_json_format_s));
-  enum json_fmt jf = if3(jfsym == standard_k,
-                         json_fmt_standard,
-                         json_fmt_default);
+  struct json_opts jo = {
+    if3(jfsym == standard_k, json_fmt_standard, json_fmt_default),
+    flat != nil
+  };
   uw_simple_catch_begin;
-  out_json_rec(obj, stream, jf, 0);
+  out_json_rec(obj, stream, jo, 0);
   uw_unwind {
     set_indent_mode(stream, imode);
     set_indent(stream, isave);
