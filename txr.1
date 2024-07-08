@@ -34701,14 +34701,14 @@ argument may also be any other object type that is suitable as input to the
 .code iter-begin
 function. In this situation, assigning to
 .code sub
-syntax produces an error. The behavior is complex. In cases where the
+syntax produces an error. Furthermore, in cases where the
 .meta from
 and
 .meta to
 arguments imply that a suffix of
 .meta sequence
-is required, an iterator may be returned which traverses the suffix
-of the sequence. In other cases, a list of the elements selected by
+is required, an lazy list of the suffix of the iterated sequence
+will be returned. In other cases, a regular list of the elements selected by
 .code sub
 is returned.
 

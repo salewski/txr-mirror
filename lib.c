@@ -3014,7 +3014,7 @@ static val sub_iter(val obj, val from, val to)
   if (!to) {
     do {
       if (ge(idx, from))
-        return iter_dynamic(&iter);
+        return list_seq(iter_dynamic(&iter));
       idx = succ(idx);
     } while (seq_get(&iter, &elem));
   } else {
