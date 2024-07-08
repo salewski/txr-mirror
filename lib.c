@@ -4209,6 +4209,8 @@ static val partition_func(val base, val lcons)
                       raw_index);
       val index_rebased = minus(index, base);
 
+      indices = iter_step(indices);
+
       if (le(index_rebased, zero)) {
         continue;
       } else {
@@ -4218,8 +4220,7 @@ static val partition_func(val base, val lcons)
         if (rest) {
           val fun = us_lcons_fun(lcons);
           us_func_set_env(fun, index);
-          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest,
-                                                  iter_step(indices)));
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
         } else {
           us_rplacd(lcons, nil);
         }
@@ -4249,6 +4250,8 @@ static val split_func(val base, val lcons)
                       raw_index);
       val index_rebased = minus(index, base);
 
+      indices = iter_step(indices);
+
       if (minusp(index_rebased)) {
         continue;
       } else {
@@ -4259,8 +4262,7 @@ static val split_func(val base, val lcons)
         if (rest) {
           val fun = us_lcons_fun(lcons);
           us_func_set_env(fun, index);
-          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest,
-                                                  iter_step(indices)));
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
         } else {
           us_rplacd(lcons, cons(rsub, nil));
         }
@@ -4290,6 +4292,8 @@ static val split_star_func(val base, val lcons)
                       raw_index);
       val index_rebased = minus(index, base);
 
+      indices = iter_step(indices);
+
       if (minusp(index_rebased)) {
         continue;
       } else {
@@ -4300,8 +4304,7 @@ static val split_star_func(val base, val lcons)
         if (rest) {
           val fun = us_lcons_fun(lcons);
           us_func_set_env(fun, succ(index));
-          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest,
-                                                  iter_step(indices)));
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
         } else {
           us_rplacd(lcons, cons(rsub, nil));
         }
