@@ -896,6 +896,8 @@
   (interpose 1 "ab") (#\a 1 #\b))
 
 (mtest
+  (split nil -3) nil
+  (split nil -2) nil
   (split nil -1) nil
   (split nil 0) nil
   (split nil 1) nil
@@ -905,6 +907,8 @@
   (split nil '(1)) nil)
 
 (mtest
+  (split #() -3) nil
+  (split #() -2) nil
   (split #() -1) nil
   (split #() 0) nil
   (split #() 1) nil
@@ -914,6 +918,8 @@
   (split #() '(1)) nil)
 
 (mtest
+  (split "" -3) nil
+  (split "" -2) nil
   (split "" -1) nil
   (split "" 0) nil
   (split "" 1) nil
@@ -922,6 +928,8 @@
   (split "" '(1)) nil)
 
 (mtest
+  (split 2..2 -3) nil
+  (split 2..2 -2) nil
   (split 2..2 -1) nil
   (split 2..2 0) nil
   (split 2..2 1) nil
@@ -931,6 +939,8 @@
   (split 2..2 '(1)) nil)
 
 (mtest
+  (split '(a) -3) ((a))
+  (split '(a) -2) ((a))
   (split '(a) -1) (nil (a))
   (split '(a) 0) (nil (a))
   (split '(a) 1) ((a) nil)
@@ -941,6 +951,8 @@
   (split '(a) '(1)) ((a) nil))
 
 (mtest
+  (split #(a) -3) (#(a))
+  (split #(a) -2) (#(a))
   (split #(a) -1) (#() #(a))
   (split #(a) 0) (#() #(a))
   (split #(a) 1) (#(a) #())
@@ -951,6 +963,8 @@
   (split #(a) '(1)) (#(a) #()))
 
 (mtest
+  (split "a" -3) ("a")
+  (split "a" -2) ("a")
   (split "a" -1) ("" "a")
   (split "a" 0) ("" "a")
   (split "a" 1) ("a" "")
@@ -961,6 +975,8 @@
   (split "a" '(1)) ("a" ""))
 
 (mtest
+  (split 2..3 -3) ((2))
+  (split 2..3 -2) ((2))
   (split 2..3 -1) (nil (2))
   (split 2..3 0) (nil (2))
   (split 2..3 1) ((2) nil)
@@ -971,6 +987,9 @@
   (split 2..3 '(1)) ((2) nil))
 
 (mtest
+  (split '(a b) -4) ((a b))
+  (split '(a b) -3) ((a b))
+  (split '(a b) -2) (nil (a b))
   (split '(a b) -1) ((a) (b))
   (split '(a b) 0) (nil (a b))
   (split '(a b) 1) ((a) (b))
@@ -984,6 +1003,9 @@
   (split '(a b) '(-1 2)) ((a) (b) nil))
 
 (mtest
+  (split #(a b) -4) (#(a b))
+  (split #(a b) -3) (#(a b))
+  (split #(a b) -2) (#() #(a b))
   (split #(a b) -1) (#(a) #(b))
   (split #(a b) 0) (#() #(a b))
   (split #(a b) 1) (#(a) #(b))
@@ -997,6 +1019,9 @@
   (split #(a b) '(-1 2)) (#(a) #(b) #()))
 
 (mtest
+  (split "ab" -4) ("ab")
+  (split "ab" -3) ("ab")
+  (split "ab" -2) ("" "ab")
   (split "ab" -1) ("a" "b")
   (split "ab" 0) ("" "ab")
   (split "ab" 1) ("a" "b")
@@ -1010,6 +1035,9 @@
   (split "ab" '(-1 2)) ("a" "b" ""))
 
 (mtest
+  (split 2..4 -4) ((2 3))
+  (split 2..4 -3) ((2 3))
+  (split 2..4 -2) (nil (2 3))
   (split 2..4 -1) ((2) (3))
   (split 2..4 0) (nil (2 3))
   (split 2..4 1) ((2) (3))
