@@ -4312,7 +4312,7 @@ static val split_star_func(val base, val lcons)
         us_rplaca(lcons, first);
       }
     } else {
-      us_rplaca(lcons, seq);
+      us_rplaca(lcons, sub(seq, zero, t));
       us_rplacd(lcons, nil);
     }
     break;
