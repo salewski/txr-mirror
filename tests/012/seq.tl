@@ -1315,6 +1315,8 @@
   (split* 2..5 '(2 3)) ((2 3) nil))
 
 (mtest
+  (partition nil -3) nil
+  (partition nil -2) nil
   (partition nil -1) nil
   (partition nil 0) nil
   (partition nil 1) nil
@@ -1323,6 +1325,8 @@
   (partition nil '(1)) nil)
 
 (mtest
+  (partition #() -3) nil
+  (partition #() -2) nil
   (partition #() -1) nil
   (partition #() 0) nil
   (partition #() 1) nil
@@ -1331,6 +1335,8 @@
   (partition #() '(1)) nil)
 
 (mtest
+  (partition "" -3) nil
+  (partition "" -2) nil
   (partition "" -1) nil
   (partition "" 0) nil
   (partition "" 1) nil
@@ -1339,6 +1345,8 @@
   (partition "" '(1)) nil)
 
 (mtest
+  (partition 2..2 -3) nil
+  (partition 2..2 -2) nil
   (partition 2..2 -1) nil
   (partition 2..2 0) nil
   (partition 2..2 1) nil
@@ -1347,6 +1355,8 @@
   (partition 2..2 '(1)) nil)
 
 (mtest
+  (partition '(a) -3) ((a))
+  (partition '(a) -2) ((a))
   (partition '(a) -1) ((a))
   (partition '(a) 0) ((a))
   (partition '(a) 1) ((a))
@@ -1356,6 +1366,8 @@
   (partition '(a) '(1)) ((a)))
 
 (mtest
+  (partition #(a) -3) (#(a))
+  (partition #(a) -2) (#(a))
   (partition #(a) -1) (#(a))
   (partition #(a) 0) (#(a))
   (partition #(a) 1) (#(a))
@@ -1365,6 +1377,8 @@
   (partition #(a) '(1)) (#(a)))
 
 (mtest
+  (partition "a" -3) ("a")
+  (partition "a" -2) ("a")
   (partition "a" -1) ("a")
   (partition "a" 0) ("a")
   (partition "a" 1) ("a")
@@ -1374,6 +1388,8 @@
   (partition "a" '(1)) ("a"))
 
 (mtest
+  (partition 2..3 -3) ((2))
+  (partition 2..3 -2) ((2))
   (partition 2..3 -1) ((2))
   (partition 2..3 0) ((2))
   (partition 2..3 1) ((2))
@@ -1383,6 +1399,8 @@
   (partition 2..3 '(1)) ((2)))
 
 (mtest
+  (partition '(a b) -3) ((a b))
+  (partition '(a b) -2) ((a b))
   (partition '(a b) -1) ((a) (b))
   (partition '(a b) 0) ((a b))
   (partition '(a b) 1) ((a) (b))
@@ -1396,6 +1414,8 @@
   (partition '(a b) '(-1 2)) ((a) (b)))
 
 (mtest
+  (partition #(a b) -3) (#(a b))
+  (partition #(a b) -2) (#(a b))
   (partition #(a b) -1) (#(a) #(b))
   (partition #(a b) 0) (#(a b))
   (partition #(a b) 1) (#(a) #(b))
@@ -1409,6 +1429,8 @@
   (partition #(a b) '(-1 2)) (#(a) #(b)))
 
 (mtest
+  (partition "ab" -3) ("ab")
+  (partition "ab" -2) ("ab")
   (partition "ab" -1) ("a" "b")
   (partition "ab" 0) ("ab")
   (partition "ab" 1) ("a" "b")
@@ -1422,6 +1444,8 @@
   (partition "ab" '(-1 2)) ("a" "b"))
 
 (mtest
+  (partition 2..4 -3) ((2 3))
+  (partition 2..4 -2) ((2 3))
   (partition 2..4 -1) ((2) (3))
   (partition 2..4 0) ((2 3))
   (partition 2..4 1) ((2) (3))
@@ -1435,6 +1459,9 @@
   (partition 2..4 '(-1 2)) ((2) (3)))
 
 (mtest
+  (partition '(a b c) -4) ((a b c))
+  (partition '(a b c) -3) ((a b c))
+  (partition '(a b c) -2) ((a) (b c))
   (partition '(a b c) -1) ((a b) (c))
   (partition '(a b c) 0) ((a b c))
   (partition '(a b c) 1) ((a) (b c))
@@ -1449,6 +1476,9 @@
   (partition '(a b c) '(2 3)) ((a b) (c)))
 
 (mtest
+  (partition #(a b c) -4) (#(a b c))
+  (partition #(a b c) -3) (#(a b c))
+  (partition #(a b c) -2) (#(a) #(b c))
   (partition #(a b c) -1) (#(a b) #(c))
   (partition #(a b c) 0) (#(a b c))
   (partition #(a b c) 1) (#(a) #(b c))
@@ -1463,6 +1493,9 @@
   (partition #(a b c) '(2 3)) (#(a b) #(c)))
 
 (mtest
+  (partition "abc" -4) ("abc")
+  (partition "abc" -3) ("abc")
+  (partition "abc" -2) ("a" "bc")
   (partition "abc" -1) ("ab" "c")
   (partition "abc" 0) ("abc")
   (partition "abc" 1) ("a" "bc")
@@ -1477,6 +1510,9 @@
   (partition "abc" '(2 3)) ("ab" "c"))
 
 (mtest
+  (partition 2..5 -4) ((2 3 4))
+  (partition 2..5 -3) ((2 3 4))
+  (partition 2..5 -2) ((2) (3 4))
   (partition 2..5 -1) ((2 3) (4))
   (partition 2..5 0) ((2 3 4))
   (partition 2..5 1) ((2) (3 4))
