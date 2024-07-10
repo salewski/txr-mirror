@@ -4228,7 +4228,7 @@ static val partition_func(val base, val lcons)
         us_rplaca(lcons, first);
       }
     } else {
-      us_rplaca(lcons, seq);
+      us_rplaca(lcons, sub(seq, zero, t));
       us_rplacd(lcons, nil);
     }
     break;
@@ -4335,7 +4335,7 @@ static val partition_split_common(val seq, val indices,
   indices = nullify(indices);
 
   if (!indices)
-    return cons(seq, nil);
+    return cons(sub(seq, zero, t), nil);
 
   if (!seqp(indices))
     indices = cons(indices, nil);

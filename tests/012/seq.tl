@@ -894,3 +894,413 @@
   (interpose 1 "") ""
   (interpose 1 "a") "a"
   (interpose 1 "ab") (#\a 1 #\b))
+
+(mtest
+  (split nil -1) nil
+  (split nil 0) nil
+  (split nil 1) nil
+  (split nil '()) nil
+  (split nil '(-1)) nil
+  (split nil '(0)) nil
+  (split nil '(1)) nil)
+
+(mtest
+  (split #() -1) nil
+  (split #() 0) nil
+  (split #() 1) nil
+  (split #() '()) nil
+  (split #() '(-1)) nil
+  (split #() '(0)) nil
+  (split #() '(1)) nil)
+
+(mtest
+  (split "" -1) nil
+  (split "" 0) nil
+  (split "" 1) nil
+  (split "" '(-1)) nil
+  (split "" '(0)) nil
+  (split "" '(1)) nil)
+
+(mtest
+  (split 2..2 -1) nil
+  (split 2..2 0) nil
+  (split 2..2 1) nil
+  (split 2..2 '()) nil
+  (split 2..2 '(-1)) nil
+  (split 2..2 '(0)) nil
+  (split 2..2 '(1)) nil)
+
+(mtest
+  (split '(a) -1) (nil (a))
+  (split '(a) 0) (nil (a))
+  (split '(a) 1) ((a) nil)
+  (split '(a) 2) ((a) nil) ;; questionable behavior
+  (split '(a) '()) ((a))
+  (split '(a) '(-1)) (nil (a))
+  (split '(a) '(0)) (nil (a))
+  (split '(a) '(1)) ((a) nil))
+
+(mtest
+  (split #(a) -1) (#() #(a))
+  (split #(a) 0) (#() #(a))
+  (split #(a) 1) (#(a) #())
+  (split #(a) 2) (#(a) #()) ;; questionable behavior
+  (split #(a) '()) (#(a))
+  (split #(a) '(-1)) (#() #(a))
+  (split #(a) '(0)) (#() #(a))
+  (split #(a) '(1)) (#(a) #()))
+
+(mtest
+  (split "a" -1) ("" "a")
+  (split "a" 0) ("" "a")
+  (split "a" 1) ("a" "")
+  (split "a" 2) ("a" "") ;; questionable behavior
+  (split "a" '()) ("a")
+  (split "a" '(-1)) ("" "a")
+  (split "a" '(0)) ("" "a")
+  (split "a" '(1)) ("a" ""))
+
+(mtest
+  (split 2..3 -1) (nil (2))
+  (split 2..3 0) (nil (2))
+  (split 2..3 1) ((2) nil)
+  (split 2..3 2) ((2) nil) ;; questionable behavior
+  (split 2..3 '()) ((2))
+  (split 2..3 '(-1)) (nil (2))
+  (split 2..3 '(0)) (nil (2))
+  (split 2..3 '(1)) ((2) nil))
+
+(mtest
+  (split '(a b) -1) ((a) (b))
+  (split '(a b) 0) (nil (a b))
+  (split '(a b) 1) ((a) (b))
+  (split '(a b) 2) ((a b) nil)
+  (split '(a b) 3) ((a b) nil) ;; questionable behavior
+  (split '(a b) '(0 -1)) (nil (a) (b))
+  (split '(a b) '(0 1)) (nil (a) (b))
+  (split '(a b) '(0 -1 2)) (nil (a) (b) nil)
+  (split '(a b) '(0 1 2)) (nil (a) (b) nil)
+  (split '(a b) '(1 2)) ((a) (b) nil)
+  (split '(a b) '(-1 2)) ((a) (b) nil))
+
+(mtest
+  (split #(a b) -1) (#(a) #(b))
+  (split #(a b) 0) (#() #(a b))
+  (split #(a b) 1) (#(a) #(b))
+  (split #(a b) 2) (#(a b) #())
+  (split #(a b) 3) (#(a b) #()) ;; questionable behavior
+  (split #(a b) '(0 -1)) (#() #(a) #(b))
+  (split #(a b) '(0 1)) (#() #(a) #(b))
+  (split #(a b) '(0 -1 2)) (#() #(a) #(b) #())
+  (split #(a b) '(0 1 2)) (#() #(a) #(b) #())
+  (split #(a b) '(1 2)) (#(a) #(b) #())
+  (split #(a b) '(-1 2)) (#(a) #(b) #()))
+
+(mtest
+  (split "ab" -1) ("a" "b")
+  (split "ab" 0) ("" "ab")
+  (split "ab" 1) ("a" "b")
+  (split "ab" 2) ("ab" "")
+  (split "ab" 3) ("ab" "") ;; questionable behavior
+  (split "ab" #(0 -1)) ("" "a" "b")
+  (split "ab" '(0 1)) ("" "a" "b")
+  (split "ab" '(0 -1 2)) ("" "a" "b" "")
+  (split "ab" '(0 1 2)) ("" "a" "b" "")
+  (split "ab" '(1 2)) ("a" "b" "")
+  (split "ab" '(-1 2)) ("a" "b" ""))
+
+(mtest
+  (split 2..4 -1) ((2) (3))
+  (split 2..4 0) (nil (2 3))
+  (split 2..4 1) ((2) (3))
+  (split 2..4 2) ((2 3) nil)
+  (split 2..4 3) ((2 3) nil)
+  (split 2..4 '(0 -1)) (nil (2) (3))
+  (split 2..4 '(0 1)) (nil (2) (3))
+  (split 2..4 '(0 -1 2)) (nil (2) (3) nil)
+  (split 2..4 '(0 1 2)) (nil (2) (3) nil)
+  (split 2..4 '(1 2)) ((2) (3) nil)
+  (split 2..4 '(-1 2)) ((2) (3) nil))
+
+(mtest
+  (split '(a b c) -1) ((a b) (c))
+  (split '(a b c) 0) (nil (a b c))
+  (split '(a b c) 1) ((a) (b c))
+  (split '(a b c) 2) ((a b) (c))
+  (split '(a b c) 3) ((a b c) nil)
+  (split '(a b c) 4) ((a b c) nil)
+  (split '(a b c) '(0 1)) (nil (a) (b c))
+  (split '(a b c) '(0 2)) (nil (a b) (c))
+  (split '(a b c) '(0 3)) (nil (a b c) nil)
+  (split '(a b c) '(1 2)) ((a) (b) (c))
+  (split '(a b c) '(1 3)) ((a) (b c) nil)
+  (split '(a b c) '(2 3)) ((a b) (c) nil))
+
+(mtest
+  (split #(a b c) -1) (#(a b) #(c))
+  (split #(a b c) 0) (#() #(a b c))
+  (split #(a b c) 1) (#(a) #(b c))
+  (split #(a b c) 2) (#(a b) #(c))
+  (split #(a b c) 3) (#(a b c) #())
+  (split #(a b c) 4) (#(a b c) #())
+  (split #(a b c) '(0 1)) (#() #(a) #(b c))
+  (split #(a b c) '(0 2)) (#() #(a b) #(c))
+  (split #(a b c) '(0 3)) (#() #(a b c) #())
+  (split #(a b c) '(1 2)) (#(a) #(b) #(c))
+  (split #(a b c) '(1 3)) (#(a) #(b c) #())
+  (split #(a b c) '(2 3)) (#(a b) #(c) #()))
+
+(mtest
+  (split "abc" -1) ("ab" "c")
+  (split "abc" 0) ("" "abc")
+  (split "abc" 1) ("a" "bc")
+  (split "abc" 2) ("ab" "c")
+  (split "abc" 3) ("abc" "")
+  (split "abc" 4) ("abc" "")
+  (split "abc" '(0 1)) ("" "a" "bc")
+  (split "abc" '(0 2)) ("" "ab" "c")
+  (split "abc" '(0 3)) ("" "abc" "")
+  (split "abc" '(1 2)) ("a" "b" "c")
+  (split "abc" '(1 3)) ("a" "bc" "")
+  (split "abc" '(2 3)) ("ab" "c" ""))
+
+(mtest
+  (split 2..5 -1) ((2 3) (4))
+  (split 2..5 0) (nil (2 3 4))
+  (split 2..5 1) ((2) (3 4))
+  (split 2..5 2) ((2 3) (4))
+  (split 2..5 3) ((2 3 4) nil)
+  (split 2..5 4) ((2 3 4) nil)
+  (split 2..5 '(0 1)) (nil (2) (3 4))
+  (split 2..5 '(0 2)) (nil (2 3) (4))
+  (split 2..5 '(0 3)) (nil (2 3 4) nil)
+  (split 2..5 '(1 2)) ((2) (3) (4))
+  (split 2..5 '(1 3)) ((2) (3 4) nil)
+  (split 2..5 '(2 3)) ((2 3) (4) nil))
+
+(mtest
+  (split* nil -1) nil
+  (split* nil 0) nil
+  (split* nil 1) nil
+  (split* nil '(-1)) nil
+  (split* nil '(0)) nil
+  (split* nil '(1)) nil)
+
+(mtest
+  (split* #() -1) nil
+  (split* #() 0) nil
+  (split* #() 1) nil
+  (split* #() '(-1)) nil
+  (split* #() '(0)) nil
+  (split* #() '(1)) nil)
+
+(mtest
+  (split* "" -1) nil
+  (split* "" 0) nil
+  (split* "" 1) nil
+  (split* "" '(-1)) nil
+  (split* "" '(0)) nil
+  (split* "" '(1)) nil)
+
+(mtest
+  (split* 2..2 -1) nil
+  (split* 2..2 0) nil
+  (split* 2..2 1) nil
+  (split* 2..2 '(-1)) nil
+  (split* 2..2 '(0)) nil
+  (split* 2..2 '(1)) nil)
+
+(mtest
+  (split* '(a) -1) (nil nil)
+  (split* '(a) 0) (nil nil)
+  (split* '(a) 1) ((a) nil)
+  (split* '(a) 2) ((a) nil) ;; questionable behavior
+  (split* '(a) '(-1)) (nil nil)
+  (split* '(a) '(0)) (nil nil)
+  (split* '(a) '(1)) ((a) nil))
+
+(mtest
+  (split* #(a) -1) (#() #())
+  (split* #(a) 0) (#() #())
+  (split* #(a) 1) (#(a) #())
+  (split* #(a) 2) (#(a) #()) ;; questionable behavior
+  (split* #(a) '(-1)) (#() #())
+  (split* #(a) '(0)) (#() #())
+  (split* #(a) '(1)) (#(a) #()))
+
+
+(mtest
+  (partition nil -1) nil
+  (partition nil 0) nil
+  (partition nil 1) nil
+  (partition nil '(-1)) nil
+  (partition nil '(0)) nil
+  (partition nil '(1)) nil)
+
+(mtest
+  (partition #() -1) nil
+  (partition #() 0) nil
+  (partition #() 1) nil
+  (partition #() '(-1)) nil
+  (partition #() '(0)) nil
+  (partition #() '(1)) nil)
+
+(mtest
+  (partition "" -1) nil
+  (partition "" 0) nil
+  (partition "" 1) nil
+  (partition "" '(-1)) nil
+  (partition "" '(0)) nil
+  (partition "" '(1)) nil)
+
+(mtest
+  (partition 2..2 -1) nil
+  (partition 2..2 0) nil
+  (partition 2..2 1) nil
+  (partition 2..2 '(-1)) nil
+  (partition 2..2 '(0)) nil
+  (partition 2..2 '(1)) nil)
+
+(mtest
+  (partition '(a) -1) ((a))
+  (partition '(a) 0) ((a))
+  (partition '(a) 1) ((a))
+  (partition '(a) 2) ((a))
+  (partition '(a) '(-1)) ((a))
+  (partition '(a) '(0)) ((a))
+  (partition '(a) '(1)) ((a)))
+
+(mtest
+  (partition #(a) -1) (#(a))
+  (partition #(a) 0) (#(a))
+  (partition #(a) 1) (#(a))
+  (partition #(a) 2) (#(a))
+  (partition #(a) '(-1)) (#(a))
+  (partition #(a) '(0)) (#(a))
+  (partition #(a) '(1)) (#(a)))
+
+(mtest
+  (partition "a" -1) ("a")
+  (partition "a" 0) ("a")
+  (partition "a" 1) ("a")
+  (partition "a" 2) ("a")
+  (partition "a" '(-1)) ("a")
+  (partition "a" '(0)) ("a")
+  (partition "a" '(1)) ("a"))
+
+(mtest
+  (partition 2..3 -1) ((2))
+  (partition 2..3 0) ((2))
+  (partition 2..3 1) ((2))
+  (partition 2..3 2) ((2))
+  (partition 2..3 '(-1)) ((2))
+  (partition 2..3 '(0)) ((2))
+  (partition 2..3 '(1)) ((2)))
+
+(mtest
+  (partition '(a b) -1) ((a) (b))
+  (partition '(a b) 0) ((a b))
+  (partition '(a b) 1) ((a) (b))
+  (partition '(a b) 2) ((a b))
+  (partition '(a b) 3) ((a b))
+  (partition '(a b) '(0 -1)) ((a) (b))
+  (partition '(a b) '(0 1)) ((a) (b))
+  (partition '(a b) '(0 -1 2)) ((a) (b))
+  (partition '(a b) '(0 1 2)) ((a) (b))
+  (partition '(a b) '(1 2)) ((a) (b))
+  (partition '(a b) '(-1 2)) ((a) (b)))
+
+(mtest
+  (partition #(a b) -1) (#(a) #(b))
+  (partition #(a b) 0) (#(a b))
+  (partition #(a b) 1) (#(a) #(b))
+  (partition #(a b) 2) (#(a b))
+  (partition #(a b) 3) (#(a b))
+  (partition #(a b) '(0 -1)) (#(a) #(b))
+  (partition #(a b) '(0 1)) (#(a) #(b))
+  (partition #(a b) '(0 -1 2)) (#(a) #(b))
+  (partition #(a b) '(0 1 2)) (#(a) #(b))
+  (partition #(a b) '(1 2)) (#(a) #(b))
+  (partition #(a b) '(-1 2)) (#(a) #(b)))
+
+(mtest
+  (partition "ab" -1) ("a" "b")
+  (partition "ab" 0) ("ab")
+  (partition "ab" 1) ("a" "b")
+  (partition "ab" 2) ("ab")
+  (partition "ab" 3) ("ab")
+  (partition "ab" #(0 -1)) ("a" "b")
+  (partition "ab" '(0 1)) ("a" "b")
+  (partition "ab" '(0 -1 2)) ("a" "b")
+  (partition "ab" '(0 1 2)) ("a" "b")
+  (partition "ab" '(1 2)) ("a" "b")
+  (partition "ab" '(-1 2)) ("a" "b"))
+
+(mtest
+  (partition 2..4 -1) ((2) (3))
+  (partition 2..4 0) ((2 3))
+  (partition 2..4 1) ((2) (3))
+  (partition 2..4 2) ((2 3))
+  (partition 2..4 3) ((2 3))
+  (partition 2..4 '(0 -1)) ((2) (3))
+  (partition 2..4 '(0 1)) ((2) (3))
+  (partition 2..4 '(0 -1 2)) ((2) (3))
+  (partition 2..4 '(0 1 2)) ((2) (3))
+  (partition 2..4 '(1 2)) ((2) (3))
+  (partition 2..4 '(-1 2)) ((2) (3)))
+
+(mtest
+  (partition '(a b c) -1) ((a b) (c))
+  (partition '(a b c) 0) ((a b c))
+  (partition '(a b c) 1) ((a) (b c))
+  (partition '(a b c) 2) ((a b) (c))
+  (partition '(a b c) 3) ((a b c))
+  (partition '(a b c) 4) ((a b c))
+  (partition '(a b c) '(0 1)) ((a) (b c))
+  (partition '(a b c) '(0 2)) ((a b) (c))
+  (partition '(a b c) '(0 3)) ((a b c))
+  (partition '(a b c) '(1 2)) ((a) (b) (c))
+  (partition '(a b c) '(1 3)) ((a) (b c))
+  (partition '(a b c) '(2 3)) ((a b) (c)))
+
+(mtest
+  (partition #(a b c) -1) (#(a b) #(c))
+  (partition #(a b c) 0) (#(a b c))
+  (partition #(a b c) 1) (#(a) #(b c))
+  (partition #(a b c) 2) (#(a b) #(c))
+  (partition #(a b c) 3) (#(a b c))
+  (partition #(a b c) 4) (#(a b c))
+  (partition #(a b c) '(0 1)) (#(a) #(b c))
+  (partition #(a b c) '(0 2)) (#(a b) #(c))
+  (partition #(a b c) '(0 3)) (#(a b c))
+  (partition #(a b c) '(1 2)) (#(a) #(b) #(c))
+  (partition #(a b c) '(1 3)) (#(a) #(b c))
+  (partition #(a b c) '(2 3)) (#(a b) #(c)))
+
+(mtest
+  (partition "abc" -1) ("ab" "c")
+  (partition "abc" 0) ("abc")
+  (partition "abc" 1) ("a" "bc")
+  (partition "abc" 2) ("ab" "c")
+  (partition "abc" 3) ("abc")
+  (partition "abc" 4) ("abc")
+  (partition "abc" '(0 1)) ("a" "bc")
+  (partition "abc" '(0 2)) ("ab" "c")
+  (partition "abc" '(0 3)) ("abc")
+  (partition "abc" '(1 2)) ("a" "b" "c")
+  (partition "abc" '(1 3)) ("a" "bc")
+  (partition "abc" '(2 3)) ("ab" "c"))
+
+(mtest
+  (partition 2..5 -1) ((2 3) (4))
+  (partition 2..5 0) ((2 3 4))
+  (partition 2..5 1) ((2) (3 4))
+  (partition 2..5 2) ((2 3) (4))
+  (partition 2..5 3) ((2 3 4))
+  (partition 2..5 4) ((2 3 4))
+  (partition 2..5 '(0 1)) ((2) (3 4))
+  (partition 2..5 '(0 2)) ((2 3) (4))
+  (partition 2..5 '(0 3)) ((2 3 4))
+  (partition 2..5 '(1 2)) ((2) (3) (4))
+  (partition 2..5 '(1 3)) ((2) (3 4))
+  (partition 2..5 '(2 3)) ((2 3) (4)))
