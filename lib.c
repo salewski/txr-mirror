@@ -4240,19 +4240,20 @@ static val partition_func(val base, val lcons)
 static val split_func(val base, val lcons)
 {
   us_cons_bind (seq, indices, lcons);
-  val len = nil;
+  val le = nil;
 
   for (;;) {
     if (iter_more(indices)) {
+      val len = if3(le, le, le = length(seq));
       val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
-                      plus(raw_index, if3(len, len, len = length(seq))),
+                      plus(raw_index, len),
                       raw_index);
       val index_rebased = minus(index, base);
 
       indices = iter_step(indices);
 
-      if (minusp(index_rebased)) {
+      if (minusp(index_rebased) || gt(index_rebased, len)) {
         continue;
       } else {
         val first = sub(seq, zero, index_rebased);
@@ -4282,19 +4283,20 @@ static val split_func(val base, val lcons)
 static val split_star_func(val base, val lcons)
 {
   us_cons_bind (seq, indices, lcons);
-  val len = nil;
+  val le = nil;
 
   for (;;) {
     if (iter_more(indices)) {
+      val len = if3(le, le, le = length(seq));
       val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
-                      plus(raw_index, if3(len, len, len = length(seq))),
+                      plus(raw_index, len),
                       raw_index);
       val index_rebased = minus(index, base);
 
       indices = iter_step(indices);
 
-      if (minusp(index_rebased)) {
+      if (minusp(index_rebased) || gt(index_rebased, len)) {
         continue;
       } else {
         val first = sub(seq, zero, index_rebased);
