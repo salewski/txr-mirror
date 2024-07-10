@@ -1107,6 +1107,10 @@
   (split 2..5 '(2 3)) ((2 3) (4) nil))
 
 (mtest
+  (split "abcdef" '(4 -1)) ("abcd" "e" "f")
+  (split "abcdef" '(4 5)) ("abcd" "e" "f"))
+
+(mtest
   (split* nil -3) nil
   (split* nil -2) nil
   (split* nil -1) nil
@@ -1203,12 +1207,12 @@
   (split* '(a b) 1) ((a) nil)
   (split* '(a b) 2) ((a b) nil)
   (split* '(a b) 3) ((a b))
-  (split* '(a b) '(0 -1)) (nil (b)) ;; questionable
-  (split* '(a b) '(0 1)) (nil nil nil)  ;; questionabble
-  (split* '(a b) '(0 -1 2)) (nil (b) nil) ;; questionable
-  (split* '(a b) '(0 1 2)) (nil nil nil) ;; questionable
+  (split* '(a b) '(0 -1)) (nil nil nil)
+  (split* '(a b) '(0 1)) (nil nil nil)
+  (split* '(a b) '(0 -1 2)) (nil nil nil)
+  (split* '(a b) '(0 1 2)) (nil nil nil)
   (split* '(a b) '(1 2)) ((a) nil)
-  (split* '(a b) '(-1 2)) ((a) nil)) ;; questionable
+  (split* '(a b) '(-1 2)) ((a) nil))
 
 (mtest
   (split* #(a b) -4) (#(a b))
@@ -1219,12 +1223,12 @@
   (split* #(a b) 1) (#(a) #())
   (split* #(a b) 2) (#(a b) #())
   (split* #(a b) 3) (#(a b))
-  (split* #(a b) '(0 -1)) (#() #(b)) ;; questionable
-  (split* #(a b) '(0 1)) (#() #() #()) ;; questionable
-  (split* #(a b) '(0 -1 2)) (#() #(b) #()) ;; questionable
-  (split* #(a b) '(0 1 2)) (#() #() #()) ;; questionable
-  (split* #(a b) '(1 2)) (#(a) #()) ;; questionable
-  (split* #(a b) '(-1 2)) (#(a) #())) ;; questionable
+  (split* #(a b) '(0 -1)) (#() #() #())
+  (split* #(a b) '(0 1)) (#() #() #())
+  (split* #(a b) '(0 -1 2)) (#() #() #())
+  (split* #(a b) '(0 1 2)) (#() #() #())
+  (split* #(a b) '(1 2)) (#(a) #())
+  (split* #(a b) '(-1 2)) (#(a) #()))
 
 (mtest
   (split* "ab" -4) ("ab")
@@ -1235,12 +1239,12 @@
   (split* "ab" 1) ("a" "")
   (split* "ab" 2) ("ab" "")
   (split* "ab" 3) ("ab")
-  (split* "ab" #(0 -1)) ("" "b") ;; questionable
-  (split* "ab" '(0 1)) ("" "" "") ;; questionable
-  (split* "ab" '(0 -1 2)) ("" "b" "") ;; questionable
-  (split* "ab" '(0 1 2)) ("" "" "") ;; questionable
-  (split* "ab" '(1 2)) ("a" "") ;; questionable
-  (split* "ab" '(-1 2)) ("a" "")) ;; questionable
+  (split* "ab" #(0 -1)) ("" "" "")
+  (split* "ab" '(0 1)) ("" "" "")
+  (split* "ab" '(0 -1 2)) ("" "" "")
+  (split* "ab" '(0 1 2)) ("" "" "")
+  (split* "ab" '(1 2)) ("a" "")
+  (split* "ab" '(-1 2)) ("a" ""))
 
 (mtest
   (split* 2..4 -4) ((2 3))
@@ -1251,9 +1255,9 @@
   (split* 2..4 1) ((2) nil)
   (split* 2..4 2) ((2 3) nil)
   (split* 2..4 3) ((2 3))
-  (split* 2..4 '(0 -1)) (nil (3))
+  (split* 2..4 '(0 -1)) (nil nil nil)
   (split* 2..4 '(0 1)) (nil nil nil)
-  (split* 2..4 '(0 -1 2)) (nil (3) nil)
+  (split* 2..4 '(0 -1 2)) (nil nil nil)
   (split* 2..4 '(0 1 2)) (nil nil nil)
   (split* 2..4 '(1 2)) ((2) nil)
   (split* 2..4 '(-1 2)) ((2) nil))
@@ -1313,6 +1317,10 @@
   (split* 2..5 '(1 2)) ((2) nil nil)
   (split* 2..5 '(1 3)) ((2) (4) nil)
   (split* 2..5 '(2 3)) ((2 3) nil))
+
+(mtest
+  (split* "abcdef" '(4 -1)) ("abcd" "" "")
+  (split* "abcdef" '(4 5)) ("abcd" "" ""))
 
 (mtest
   (partition nil -3) nil
@@ -1525,3 +1533,7 @@
   (partition 2..5 '(1 2)) ((2) (3) (4))
   (partition 2..5 '(1 3)) ((2) (3 4))
   (partition 2..5 '(2 3)) ((2 3) (4)))
+
+(mtest
+  (partition "abcdef" '(4 -1)) ("abcd" "e" "f")
+  (partition "abcdef" '(4 5)) ("abcd" "e" "f"))

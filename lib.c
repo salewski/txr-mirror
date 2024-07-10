@@ -4205,7 +4205,8 @@ static val partition_func(val base, val lcons)
     if (iter_more(indices)) {
       val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
-                      plus(raw_index, if3(len, len, len = length(seq))),
+                      plus(plus(raw_index, if3(len, len, len = length(seq))),
+                           base),
                       raw_index);
       val index_rebased = minus(index, base);
 
@@ -4247,7 +4248,7 @@ static val split_func(val base, val lcons)
       val len = if3(le, le, le = length(seq));
       val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
-                      plus(raw_index, len),
+                      plus(plus(raw_index, len), base),
                       raw_index);
       val index_rebased = minus(index, base);
 
@@ -4290,7 +4291,7 @@ static val split_star_func(val base, val lcons)
       val len = if3(le, le, le = length(seq));
       val raw_index = iter_item(indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
-                      plus(raw_index, len),
+                      plus(plus(raw_index, len), base),
                       raw_index);
       val index_rebased = minus(index, base);
 
