@@ -37204,8 +37204,10 @@ to its value. The sequence index positions thus denoted by
 shall be strictly nondecreasing. Each successive element
 is expected to designate an index position at least as high
 as all previous elements, otherwise the behavior is unspecified.
-Leading index positions which are (still) negative, or zero, are effectively
-ignored.
+Index values which are still negative after the addition of the
+sequence length are ignored, as are index values greater than
+the sequence length. Nondecreasing means that repeated values
+are permitted; they have the same effect as a single value.
 
 If
 .meta index-seq
@@ -37310,6 +37312,14 @@ as the corresponding arguments of the
 function, with the following difference: the index positions indicated by
 .code index-seq
 are required to be strictly increasing, rather than nondecreasing.
+As with
+.codn partition ,
+this consideration applies to the transformed indices, after the
+displacement of negative values by the length of the sequence.
+If any element of
+.meta index-seq
+is not higher than the previous element, the behavior is unspecified.
+
 
 If the second argument is of the form
 .metn index-seq ,
