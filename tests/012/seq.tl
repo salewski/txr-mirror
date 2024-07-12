@@ -1537,3 +1537,42 @@
 (mtest
   (partition "abcdef" '(4 -1)) ("abcd" "e" "f")
   (partition "abcdef" '(4 5)) ("abcd" "e" "f"))
+
+(mtest
+  (where (op eq #\z) "") nil
+  (where (op eq #\z) "abc") nil
+  (where (op eq 'z) #()) nil
+  (where (op eq 'z) #(a b c)) nil
+  (where (op eq 'z) '()) nil
+  (where (op eq 'z) '(a b c)) nil
+  (where (op eq 10) 1..4) nil
+  (where (op eq 10) 1..1) nil)
+
+(mtest
+  (where (op eq #\c) "abcabc") (2 5)
+  (where (op eq 'c) #(a b c a b c)) (2 5)
+  (where (op eq 'c) '(a b c a b c)) (2 5)
+  (where (op eq 3) 0..9) (3))
+
+(mtest
+  [[wheref oddp] '()] nil
+  [[wheref oddp] '(1 2 3 4 5 6)] (0 2 4))
+
+(mtest
+  [(whereq #\c) "abcabc"] (2 5)
+  [(whereq 'c) #(a b c a b c)] (2 5)
+  [(whereq 'c) '(a b c a b c)] (2 5)
+  [(whereq 3) 0..9] (3))
+
+(mtest
+  [(whereql #\c) "abcabc"] (2 5)
+  [(whereq 'c) #(a b c a b c)] (2 5)
+  [(whereql 'c) '(a b c a b c)] (2 5)
+  [(whereql 3) 0..9] (3))
+
+(mtest
+  [(wherequal #xFFFFFFFFFFFFFFFFFFFF) '(#xFFFFFFFFFFFFFFFFFFFF)] (0)
+  [(wherequal 'c) #(a b c a b c)] (2 5)
+  [(wherequal 'c) '(a b c a b c)] (2 5)
+  [(wherequal 3) '(3 3.0 b c a b c)] (0)
+  [(wherequal 3) 0..9] (3))

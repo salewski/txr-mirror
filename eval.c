@@ -7829,6 +7829,10 @@ void eval_init(void)
   reg_fun(intern(lit("contains"), user_package), func_n4o(contains, 2));
   reg_fun(intern(lit("search-all"), user_package), func_n4o(search_all, 2));
   reg_fun(intern(lit("where"), user_package), func_n2(where));
+  reg_fun(intern(lit("wheref"), user_package), func_n1(wheref));
+  reg_fun(intern(lit("whereq"), user_package), func_n1(whereq));
+  reg_fun(intern(lit("whereql"), user_package), func_n1(whereql));
+  reg_fun(intern(lit("wherequal"), user_package), func_n1(wherequal));
   reg_fun(intern(lit("select"), user_package), func_n2(sel));
   reg_fun(intern(lit("reject"), user_package), func_n2(reject));
   reg_fun(intern(lit("relate"), user_package), func_n3o(relate, 2));

@@ -36777,6 +36777,95 @@ as an argument.  If a
 value is returned, then the zero-based index of
 that element is added to a list. Finally, the list is returned.
 
+.coNP Function @ wheref
+.synb
+.mets (wheref << function)
+.syne
+.desc
+The
+.code wheref
+function is a combinator related to the
+.code where
+function. 
+
+The
+.code wheref
+function returns a function that takes one argument. When a sequence is
+passed to that function, it returns the index positions where
+the sequence elements satisfy the given
+.metn function ,
+which must be capable of taking one argument.
+
+Certain uses of
+.code where
+can be expressed more briefly using
+.codn wheref ,
+according to the following equivalence:
+
+.verb
+  (where f s)  <--> [(wheref f) s]
+.brev
+
+.TP* Example:
+
+.verb
+  ;; partition list of integers by odd, using where:
+
+  [partition 0..10 (op where oddp)]
+  --> ((0) (1 2) (3 4) (5 6) (7 8) (9))
+
+  ;; using wheref
+  [partition 0..10 [wheref oddp]]
+  --> ((0) (1 2) (3 4) (5 6) (7 8) (9))
+.brev
+
+.coNP Functions @, whereq @ whereql and @ wherequal
+.synb
+.mets (whereq << object )
+.mets (whereql << object )
+.mets (wherequal << object )
+.syne
+.desc
+The functions
+.codn whereq ,
+.code whereql
+and
+.code wherequal
+are combinators related to the
+.code where
+function.
+
+The
+.code whereq
+function returns a function that takes one argument. When a sequence is passed
+to that function, it returns the index positions where the elements of
+the sequence are
+.code eq
+to
+.metn object .
+
+The
+.code whereql
+function differs only in that the test is
+.code eql
+rather than
+.codn eq ,
+and the
+.code wherequal
+function uses
+.code equal
+equality.
+
+.TP* Example:
+
+.verb
+  ;; indices where the string has a 'c', using where:
+  (where (op eq #\c) "abcabc") -> (2 5)
+
+  ;; same, using whereq:
+  [(whereq #\c) "abcabc"] -> (2 5)
+.brev
+
 .coNP Function @ rmismatch
 .synb
 .mets (rmismatch < left-seq < right-seq >> [ testfun <> [ keyfun ]])

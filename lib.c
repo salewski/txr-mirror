@@ -14053,6 +14053,46 @@ val where(val func, val seq)
   }
 }
 
+static val wheref_fun(val func, val seq)
+{
+  val iter = iter_begin(seq);
+  val index = zero;
+
+  for (;;) {
+    if (!iter_more(iter))
+      return nil;
+    if (funcall1(func, iter_item(iter)))
+      break;
+    iter = iter_step(iter);
+    index = succ(index);
+  }
+
+  iter = iter_step(iter);
+  return make_lazy_cons_car_cdr(func_f1(iter, lazy_where_func),
+                                index, func);
+}
+
+val wheref(val func)
+{
+  return func_f1(func, wheref_fun);
+}
+
+
+val whereq(val obj)
+{
+  return func_f1(pa_12_1(eq_f, obj), wheref_fun);
+}
+
+val whereql(val obj)
+{
+  return func_f1(pa_12_1(eql_f, obj), wheref_fun);
+}
+
+val wherequal(val obj)
+{
+  return func_f1(pa_12_1(equal_f, obj), wheref_fun);
+}
+
 val sel(val seq, val where_in)
 {
   val self = lit("select");
