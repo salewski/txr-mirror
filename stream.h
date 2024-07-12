@@ -142,6 +142,7 @@ enum json_fmt {
 struct json_opts {
   enum json_fmt fmt : 4;
   unsigned flat : 1;
+  unsigned type : 1;
 };
 
 loc lookup_var_l(val env, val sym);
@@ -162,7 +163,7 @@ extern val get_error_s, get_error_str_s, clear_error_s, get_fd_s;
 
 extern val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 extern val pprint_flo_format_s, print_base_s, print_circle_s;
-extern val print_json_format_s;
+extern val print_json_format_s, print_json_type_s;
 
 #if HAVE_SOCKETS
 extern val socket_error_s;

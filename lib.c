@@ -15088,12 +15088,17 @@ static void out_json_rec(val obj, val out, struct json_opts jo,
       val iter;
       val save_indent;
       int force_br = 0;
+      int first = 1;
 
       if (!jo.flat && jo.fmt == json_fmt_standard) {
         put_string(lit("{\n"), out);
         save_indent = inc_indent_abs(out, two);
-        put_string(lit("\"__type\" : "), out);
-        out_json_sym(ty, out, ctx);
+
+        if (jo.type) {
+          put_string(lit("\"__type\" : "), out);
+          out_json_sym(ty, out, ctx);
+          first = 0;
+        }
 
         for (iter = sl; iter; iter = cdr(iter)) {
           val slsym = car(iter);
@@ -15101,7 +15106,9 @@ static void out_json_rec(val obj, val out, struct json_opts jo,
           if (static_slot_p(ty, slsym))
             continue;
 
-          put_string(lit(",\n"), out);
+          if (!first)
+            put_string(lit(",\n"), out);
+          first = 0;
           out_json_sym(slsym, out, ctx);
           put_string(lit(" : "), out);
           out_json_rec(slot(obj, slsym), out, jo, ctx);
@@ -15110,8 +15117,12 @@ static void out_json_rec(val obj, val out, struct json_opts jo,
       } else {
         put_char(chr('{'), out);
         save_indent = inc_indent(out, zero);
-        put_string(lit("\"__type\":"), out);
-        out_json_sym(ty, out, ctx);
+
+        if (jo.type) {
+          put_string(lit("\"__type\":"), out);
+          out_json_sym(ty, out, ctx);
+          first = 0;
+        }
 
         for (iter = sl; iter; iter = cdr(iter)) {
           val slsym = car(iter);
@@ -15119,7 +15130,9 @@ static void out_json_rec(val obj, val out, struct json_opts jo,
           if (static_slot_p(ty, slsym))
             continue;
 
-          put_string(lit(","), out);
+          if (!first)
+            put_string(lit(","), out);
+          first = 0;
           if (width_check(out, nil))
             force_br = 1;
           out_json_sym(slsym, out, ctx);
@@ -15158,9 +15171,11 @@ static void out_json(val op, val obj, val out, struct strm_ctx *ctx)
   val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                        num_fast(indent_data));
   val jfsym = cdr(lookup_var(nil, print_json_format_s));
+  val type = cdr(lookup_var(nil, print_json_type_s));
   struct json_opts jo = {
     if3(jfsym == standard_k, json_fmt_standard, json_fmt_default),
-    0
+    0,
+    type != nil
   };
   if (op == sys_qquote_s)
     put_char(chr('^'), out);
@@ -15861,9 +15876,11 @@ val put_json(val obj, val stream_in, val flat)
                                        num_fast(indent_data)));
   val isave = get_indent(stream);
   val jfsym = cdr(lookup_var(nil, print_json_format_s));
+  val type = cdr(lookup_var(nil, print_json_type_s));
   struct json_opts jo = {
     if3(jfsym == standard_k, json_fmt_standard, json_fmt_default),
-    flat != nil
+    flat != nil,
+    type != nil
   };
   uw_simple_catch_begin;
   out_json_rec(obj, stream, jo, 0);

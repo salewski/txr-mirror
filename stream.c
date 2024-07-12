@@ -95,7 +95,7 @@ val get_error_s, get_error_str_s, clear_error_s, get_fd_s;
 
 val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 val pprint_flo_format_s, print_base_s, print_circle_s;
-val print_json_format_s;
+val print_json_format_s, print_json_type_s;
 
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, addr_k, fd_k, byte_oriented_k;
@@ -5587,6 +5587,7 @@ void stream_init(void)
           num_fast(10));
   reg_var(print_circle_s = intern(lit("*print-circle*"), user_package), nil);
   reg_var(print_json_format_s = intern(lit("*print-json-format*"), user_package), nil);
+  reg_var(print_json_type_s = intern(lit("*print-json-type*"), user_package), t);
 
 #if HAVE_ISATTY
   if (isatty(fileno(stdin)) == 1) {

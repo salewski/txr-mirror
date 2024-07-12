@@ -84197,9 +84197,13 @@ object notation. The keys of the objects are the names of the
 symbols of the object type's non-static slots, appearing as a
 string. The values are the values of the slots. They must be JSON-conforming
 objects.
-The first entry of the object is a key named
+If the special variable
+.code *print-json-type*
+is true, the object includes a key named
 .str __type
 whose value is the structure type symbol, appearing as a string.
+When present, this key occurs first in the printed representation,
+before any other keys.
 Both the slot symbols and the type symbol may appear with a package
 qualifier, depending on the relationship of the symbols to the current
 package, according to similar rules as if the symbol were printed
@@ -84650,6 +84654,17 @@ then a default format is used in which braces, brackets
 and elements appear on the same line, subject to automatic
 breaking and indentation, similar to the way Lisp nested
 list structure is printed.
+
+.coNP Special Variable @ *print-json-type*
+.desc
+The
+.code *print-json-type*
+variable, whose initial value is
+.codn t ,
+controls whether the
+.str __type
+field is included when a structure object is
+printed as JSON.
 
 .coNP Variable @ *read-bad-json*
 .desc
