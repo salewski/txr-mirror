@@ -46703,11 +46703,10 @@ cannot express the idea of matching a list whose first element is the symbol
 and whose third element is
 .codn 42 .
 Moreover, every position in the tree pattern much specify a variable
-which captures the corresponding element of the structure. For instance,
-a pattern which matches a three-element list must specify three variables,
-one for each list position. This is because macro-style parameter lists are
-oriented toward writing macros, and macros usually make use of every parameter
-position.
+which captures the corresponding element of the structure or else the symbol
+.code t
+to indicate that no variable is to be captured. There are no other
+pattern matching operators.
 
 .NP* User-Defined Patterns
 
