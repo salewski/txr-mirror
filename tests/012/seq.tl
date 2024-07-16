@@ -464,6 +464,28 @@
   [find-max-key '("alpha" "charlie" "aardvark" "bravo") less upcase-str] "AARDVARK"
   [find-max-key #H(() (a 1) (b 2) (c 3)) : cdr] 3)
 
+(mtest
+  (find-maxes nil) nil
+  (find-maxes '(1 1 1 1 1)) (1 1 1 1 1)
+  (find-maxes '(2 1 1 1 1)) (2)
+  (find-maxes '(2 1 1 1 2)) (2 2)
+  (find-maxes '(2 1 2 1 2)) (2 2 2))
+
+(mtest
+  (find-maxes #()) #()
+  (find-maxes '(1 1 1 1 1)) (1 1 1 1 1)
+  (find-maxes '(2 1 1 1 1)) (2)
+  (find-maxes '(2 1 1 1 2)) (2 2)
+  (find-maxes '(2 1 2 1 2)) (2 2 2))
+
+(mtest
+  (find-maxes "") ""
+  (find-maxes "abracadabra") "rr"
+  (find-mins "abracadabra") "aaaaa")
+
+(test
+  (find-mins -10..11 : [callf * pppred ppred]) (2 3))
+
 (defvarl fn (do and
               (chr-isdigit @1)
               (not (chr-isdigit @2))))

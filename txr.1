@@ -37729,6 +37729,27 @@ is the one that is reported. See the notes under
 .code pos-max
 regarding duplicate maxima.
 
+.coNP Functions @ find-maxes and @ find-mins
+.synb
+.mets (find-maxes < iterable >> [ testfun <> [ keyfun ]])
+.mets (find-mins < iterable >> [ testfun <> [ keyfun ]])
+.syne
+.desc
+The
+.code find-maxes
+and
+.code find-mins
+functions have the same argument conventions as, respectively,
+.code find-max
+and
+.codn find-min .
+These functions differ in that they return a sequence of all the elements of
+.meta iterable
+which maximize the value of
+.metn keyfun .
+The returned sequence is of the same kind as
+.metn iterable .
+
 .coNP Functions @ find-max-key and @ find-min-key
 .synb
 .mets (find-max-key < iterable [ testfun <> [ keyfun ]])
@@ -37736,9 +37757,9 @@ regarding duplicate maxima.
 .syne
 .desc
 The
-.code find-min-key
-and
 .code find-max-key
+and
+.code find-min-key
 functions have the same argument conventions as, respectively,
 .code find-max
 and

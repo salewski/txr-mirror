@@ -12055,6 +12055,38 @@ val find_max(val seq, val testfun_in, val keyfun_in)
   return nil;
 }
 
+val find_maxes(val seq, val testfun_in, val keyfun_in)
+{
+  val self = lit("find-maxes");
+  val testfun = default_arg(testfun_in, greater_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
+  seq_iter_t iter;
+  val elem;
+  seq_build_t build;
+
+  seq_iter_init(self, &iter, seq);
+  seq_build_init(self, &build, seq);
+
+  if (seq_get(&iter, &elem)) {
+    val maxkey = funcall1(keyfun, elem);
+
+    seq_add(&build, elem);
+
+    while (seq_get(&iter, &elem)) {
+      val key = funcall1(keyfun, elem);
+      if (funcall2(testfun, key, maxkey)) {
+        maxkey = key;
+        seq_build_init(self, &build, seq);
+        seq_add(&build, elem);
+      } else if (!funcall2(testfun, maxkey, key)) {
+        seq_add(&build, elem);
+      }
+    }
+  }
+
+  return seq_finish(&build);
+}
+
 val find_max_key(val seq, val testfun_in, val keyfun_in)
 {
   val self = lit("find-max-key");
@@ -12083,6 +12115,11 @@ val find_max_key(val seq, val testfun_in, val keyfun_in)
 val find_min(val seq, val testfun, val keyfun)
 {
   return find_max(seq, default_arg(testfun, less_f), keyfun);
+}
+
+val find_mins(val seq, val testfun, val keyfun)
+{
+  return find_maxes(seq, default_arg(testfun, less_f), keyfun);
 }
 
 val find_min_key(val seq, val testfun, val keyfun)
