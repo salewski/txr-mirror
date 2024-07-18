@@ -228,7 +228,8 @@
   ^(sys:make-struct-lit ',name ',plist))
 
 (defun sys:check-slot (form slot)
-  (unless (or (sys:slot-types slot)
+  (unless (or (not (bindable slot))
+              (sys:slot-types slot)
               (sys:static-slot-types slot))
     (compile-defr-warning form ^(slot . ,slot)
                           "~s isn't the name of a struct slot"
