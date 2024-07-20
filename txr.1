@@ -22296,7 +22296,7 @@ type for that kind of sequence. The resulting sequence is of the same
 kind, and includes that atom:
 .verb
   (append #(1 2) 3) -> #(1 2 3)
-  (append "ab" #\c) -> "abc"
+  (append "ab" #\ec) -> "abc"
   (append "ab" 3) -> ;; error
 .brev
 .IP 7.
@@ -36936,10 +36936,10 @@ equality.
 
 .verb
   ;; indices where the string has a 'c', using where:
-  (where (op eq #\c) "abcabc") -> (2 5)
+  (where (op eq #\ec) "abcabc") -> (2 5)
 
   ;; same, using whereq:
-  [(whereq #\c) "abcabc"] -> (2 5)
+  [(whereq #\ec) "abcabc"] -> (2 5)
 .brev
 
 .coNP Function @ rmismatch
@@ -39644,8 +39644,8 @@ is otherwise ignored.
   (tuples* 2 "abc") -> ("ab" "bc")
   (tuples* 3 "abc") -> ("abc")
   (tuples* 4 "abc") -> nil
-  (tuples* 4 "abc" #\z) -> ("abcz")
-  (tuples* 6 "abc" #\z) -> ("abczzz")
+  (tuples* 4 "abc" #\ez) -> ("abcz")
+  (tuples* 6 "abc" #\ez) -> ("abczzz")
   (tuples* 6 "abc" 4) -> error
   (tuples* 2 '(a b c)) -> ((a b) (b c))
   (take 3 (tuples* 3 0)) -> ((0 1 2) (1 2 3) (2 3 4))
