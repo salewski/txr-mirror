@@ -159,3 +159,39 @@
   (new node left (succ me.left) right (succ me.right)))
 
 (test (copy (new node left 1 right 2)) #S(node left 2 right 3))
+
+(defstruct cust-slots ()
+  a
+  (:method slot (me slot) ^(slot ,slot))
+  (:method slotset (me slot new) ^(slotset ,slot ,new))
+  (:function static-slot (type slot) ^(static-slot ,slot))
+  (:function static-slot-set (type slot new) ^(static-slot-set ,slot ,new)))
+
+(defstruct no-cust-slots ()
+  a)
+
+(defstruct get-type ()
+  (:function static-slot (type slot) type)
+  (:function static-slot-set (type slot new) type))
+
+(let ((o (new cust-slots)))
+  (mtest
+    o.a nil
+    o.b (slot b)
+    (set o.b 3) (slotset b 3)
+    (static-slot 'cust-slots 'b) (static-slot b)
+    (static-slot-set 'cust-slots 'b 3) (static-slot-set b 3)))
+
+(let ((o (new no-cust-slots)))
+  (mtest
+    o.a nil
+    o.b :error
+    (set o.b 3) :error
+    (static-slot 'no-cust-slots 'b) :error
+    (static-slot-set 'no-cust-slots 'b 3) :error))
+
+(mvtest
+  (static-slot 'get-type 'b) (find-struct-type 'get-type)
+  (static-slot (find-struct-type 'get-type) 'b) (find-struct-type 'get-type)
+  (static-slot-set 'get-type 'b 3) (find-struct-type 'get-type)
+  (static-slot-set (find-struct-type 'get-type) 'b 3) (find-struct-type 'get-type))

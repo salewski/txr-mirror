@@ -33631,6 +33631,82 @@ any output output pertaining to
 .metn object 's
 representation.
 
+.coNP Methods @ slot and @ slot-set
+.synb
+.mets << object .(slot << slot-name )
+.mets << object .(slot-set < slot-name << new-value )
+.syne
+.desc
+Defining these methods allows a struct type to handle the situation
+when a nonexistent slot is accessed.
+
+The
+.code slot
+method, if it exists, is invoked if a slot named
+.meta slot-name
+is accessed by the
+.code slot
+function, or equivalent syntax, and that slot does not exist.
+The value returned by the method is taken to be the nonexistent
+slot's value.
+
+When a value is stored in a slot named
+.meta slot-name
+by the
+.code slotset
+function, or equivalent syntax, and the slot does not exist, then the
+.code slotset
+method is invoked, if it exists. 
+It is recommended that the
+.code slotset
+function return
+.metn new-value ,
+since the value returned propagates out of the
+.code slotset
+function, which in all other cases returns
+.metn new-value ,
+which is important to the implementation of syntactic places
+that designate slots.
+
+.coNP Functions @ static-slot and @ static-slot-set
+.synb
+.mets << object .[static-slot < type << slot-name )
+.mets << object .[static-slot-set < type < slot-name << new-value )
+.syne
+.desc
+The
+.code static-slot
+and
+.code static-slot-set
+functions are analogous to the
+.code slot
+and
+.codn slotset ,
+methods. These functions, if they exist, are only invoked
+when a static slot lookup fails.  Static slot lookups occur through the
+.code static-slot
+and
+.code static-slot-set
+functions, which can be used directly and are used in certain
+situations. For instance when
+.code "(meth ...)"
+syntax is looked up with
+.codn symbol-function ,
+static slot lookup is used. It is recommended that for simulating the
+existence of structure functions and methods, these methods be used.
+
+The
+.metn type ,
+argument is an object of type
+.code struct-type
+giving the structure type on which the static slot lookup is taking
+place.
+
+It is recommended that the
+.code static-slot-set
+function return
+.metn new-value .
+
 .coNP Method @ lambda
 .synb
 .mets << object .(lambda << arg *)

@@ -28,7 +28,7 @@
 
 extern val struct_type_s, meth_s, print_s, make_struct_lit_s;
 extern val init_k, postinit_k;
-extern val slot_s, derived_s;
+extern val slot_s, slotset_s, static_slot_s, static_slot_set_s, derived_s;
 extern val lambda_set_s;
 extern val iter_begin_s, iter_more_s, iter_item_s, iter_step_s, iter_reset_s;
 
@@ -39,7 +39,7 @@ enum special_slot {
   equal_m, copy_m, nullify_m, from_list_m, lambda_m, lambda_set_m,
   length_m, length_lt_m, car_m, cdr_m, rplaca_m, rplacd_m,
   iter_begin_m, iter_more_m, iter_item_m, iter_step_m, iter_reset_m,
-  plus_m,
+  plus_m, slot_m, slotset_m, static_slot_m, static_slot_set_m,
   num_special_slots
 };
 

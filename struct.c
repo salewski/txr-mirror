@@ -105,7 +105,7 @@ struct struct_inst {
 
 val struct_type_s, meth_s, print_s, make_struct_lit_s;
 val init_k, postinit_k;
-val slot_s, derived_s;
+val slot_s, slotset_s, static_slot_s, static_slot_set_s, derived_s;
 
 val copy_s, nullify_s, from_list_s, lambda_set_s;
 
@@ -115,7 +115,7 @@ static val *special_sym[num_special_slots] = {
   &equal_s, &copy_s, &nullify_s, &from_list_s, &lambda_s, &lambda_set_s,
   &length_s, &length_lt_s, &car_s, &cdr_s, &rplaca_s, &rplacd_s,
   &iter_begin_s, &iter_more_s, &iter_item_s, &iter_step_s, &iter_reset_s,
-  &plus_s
+  &plus_s, &slot_s, &slotset_s, &static_slot_s, &static_slot_set_s
 };
 
 static struct cobj_class *struct_type_cls;
@@ -148,6 +148,9 @@ void struct_init(void)
   init_k = intern(lit("init"), keyword_package);
   postinit_k = intern(lit("postinit"), keyword_package);
   slot_s = intern(lit("slot"), user_package);
+  slotset_s = intern(lit("slotset"), user_package);
+  static_slot_s = intern(lit("static-slot"), user_package);
+  static_slot_set_s = intern(lit("static-slot-set"), user_package);
   derived_s = intern(lit("derived"), user_package);
   copy_s = intern(lit("copy"), user_package);
   nullify_s = intern(lit("nullify"), user_package);
@@ -193,10 +196,9 @@ void struct_init(void)
   reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
   reg_fun(intern(lit("reset-struct"), user_package), func_n1(reset_struct));
   reg_fun(slot_s, func_n2(slot));
-  reg_fun(intern(lit("slotset"), user_package), func_n3(slotset));
-  reg_fun(intern(lit("static-slot"), user_package), func_n2(static_slot));
-  reg_fun(intern(lit("static-slot-set"), user_package),
-          func_n3(static_slot_set));
+  reg_fun(slotset_s, func_n3(slotset));
+  reg_fun(static_slot_s, func_n2(static_slot));
+  reg_fun(static_slot_set_s, func_n3(static_slot_set));
   reg_fun(intern(lit("test-dirty"), user_package), func_n1(test_dirty));
   reg_fun(intern(lit("test-clear-dirty"), user_package), func_n1(test_clear_dirty));
   reg_fun(intern(lit("clear-dirty"), user_package), func_n1(clear_dirty));
@@ -1275,6 +1277,13 @@ val slot(val strct, val sym)
       return deref(ptr);
   }
 
+  {
+    val slot_meth = get_special_slot(strct, slot_m);
+
+    if (slot_meth)
+      return funcall2(slot_meth, strct, sym);
+  }
+
   no_such_slot(self, si->type->self, sym);
 }
 
@@ -1287,6 +1296,13 @@ val maybe_slot(val strct, val sym)
     loc ptr = lookup_slot_load(strct, si, sym);
     if (!nullocp(ptr))
       return deref(ptr);
+  }
+
+  {
+    val slot_meth = get_special_slot(strct, slot_m);
+
+    if (slot_meth)
+      return funcall2(slot_meth, strct, sym);
   }
 
   return nil;
@@ -1311,6 +1327,13 @@ val slotset(val strct, val sym, val newval)
     }
   }
 
+  {
+    val slotset_meth = get_special_slot(strct, slotset_m);
+
+    if (slotset_meth)
+      return funcall3(slotset_meth, strct, sym, newval);
+  }
+
   no_such_slot(self, si->type->self, sym);
 }
 
@@ -1323,6 +1346,13 @@ val static_slot(val stype, val sym)
     loc ptr = lookup_static_slot_load(st, sym);
     if (!nullocp(ptr))
       return deref(ptr);
+  }
+
+  {
+    val static_slot_meth = get_special_slot_by_type(st->self, static_slot_m);
+
+    if (static_slot_meth)
+      return funcall2(static_slot_meth, st->self, sym);
   }
 
   no_such_static_slot(self, stype, sym);
@@ -1339,6 +1369,14 @@ val static_slot_set(val stype, val sym, val newval)
       invalidate_special_slot_nonexistence(st);
       return set(ptr, newval);
     }
+  }
+
+  {
+    val static_slot_set_meth = get_special_slot_by_type(st->self,
+                                                        static_slot_set_m);
+
+    if (static_slot_set_meth)
+      return funcall3(static_slot_set_meth, st->self, sym, newval);
   }
 
   no_such_static_slot(self, stype, sym);
