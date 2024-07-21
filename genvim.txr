@@ -159,6 +159,7 @@ syn match txr_qat "@at" nextgroup=@{txr-qelem} contained
 syn match txr_dot "\." contained
 syn match txr_ident "[@alnum@glyph]*[@alpha@glyph^][@alnum@glyph^]*" contained
 syn match txr_braced_ident "\(#\?:\)\?[[@alnum@glyph^/]\+" contained
+syn match tl_ident "#\?:"@(if txr-p " contained")
 syn match tl_ident "\(#\?:\)\?[@alnum@glyph/]\+[@alnum@glyph^/#]*"@(if txr-p " contained")
 syn match txr_pnum "#[xob][+\-]\?[@alnum,]\+" contains=txr_xnum,txr_bnum,txr_onum@(if txr-p " contained")
 syn match txr_xnum "#x[+\-]\?@hexsep" containedin=txr_pnum contained
@@ -169,7 +170,6 @@ syn match txr_num "[+\-]\?@digsep\?[.]@digsep\([eE][+\-]\?[@dig]\+\)\?"@(if txr-
 syn match txr_num "[+\-]\?@digsep[.]\?\([eE][+\-]\?[@dig]\+\)"@(if txr-p " contained")
 syn match txr_badnum "[+\-]\?@digsep\?[.]@digsep\([@{alpha-noe}@glyph^/#]\|[eE][^+\-@dig]\|[eE][+/-]\?$\|[eE][+\-][^0-9]\)"@(if txr-p " contained")
 syn match txr_badnum "[+\-]\?@digsep[.]\?\([@{alpha-noe}@glyph^/#]\|[eE][^+\-@dig]\|[eE][+/-]\?$\|[eE][+\-][^0-9]\)"@(if txr-p " contained")
-syn match tl_ident "#\?:"@(if txr-p " contained")
 syn match tl_splice "[ \t,]\|,[*]"@(if txr-p " contained")
 
 syn match txr_unquote "," contained
