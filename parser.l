@@ -325,31 +325,33 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
 %%
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>{NUM} {
-  val str = string_own(utf8_dup_from(yytext));
+  wchar_t *wtxt = utf8_dup_from(yytext);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num(10));
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return NUMBER;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>{NUMSEP} {
-  val str = string_own(utf8_dup_from(remove_char(yytext, ',')));
+  wchar_t *wtxt = utf8_dup_from(remove_char(yytext, ','));
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num(10));
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return NUMBER;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>{XNUMSEP}|{ONUMSEP}|{BNUMSEP} {
-  val str = string_own(utf8_dup_from(remove_char(yytext + 2, ',')));
+  wchar_t *wtxt = utf8_dup_from(remove_char(yytext + 2, ','));
   int base;
 
   switch (yytext[1]) {
@@ -363,7 +365,8 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num_fast(base));
+  yylval->val = int_str_wc(wtxt, num_fast(base));
+  free(wtxt);
   return NUMBER;
 }
 
@@ -448,48 +451,52 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
 
 <NESTED,BRACED,QSILIT,QWLIT>@{NUM} |
 <QSPECIAL>{NUM} {
-  val str = string_own(utf8_dup_from(yytext + 1));
+  wchar_t *wtxt = utf8_dup_from(yytext + 1);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(10));
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return METANUM;
 }
 
 <NESTED,QSILIT,QWLIT>@{XNUM} |
 <QSPECIAL>{XNUM} {
-  val str = string_own(utf8_dup_from(yytext + 3));
+  wchar_t *wtxt = utf8_dup_from(yytext + 3);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(16));
+  yylval->val = int_str_wc(wtxt, num(16));
+  free(wtxt);
   return METANUM;
 }
 
 <NESTED,QSILIT,QWLIT>@{ONUM} |
 <QSPECIAL>{ONUM} {
-  val str = string_own(utf8_dup_from(yytext + 3));
+  wchar_t *wtxt = utf8_dup_from(yytext + 3);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(8));
+  yylval->val = int_str_wc(wtxt, num(8));
+  free(wtxt);
   return METANUM;
 }
 
 <NESTED,QSILIT,QWLIT,QSPECIAL>@{BNUM} {
-  val str = string_own(utf8_dup_from(yytext + 3));
+  wchar_t *wtxt = utf8_dup_from(yytext + 3);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(2));
+  yylval->val = int_str_wc(wtxt, num(2));
+  free(wtxt);
   return METANUM;
 }
 
@@ -818,14 +825,16 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
 }
 
 <NESTED,BRACED,JSON>#{DIG}+= {
-  val str = string_own(utf8_dup_from(yytext + 1));
-  yylval->val = int_str(str, num(10));
+  wchar_t *wtxt = utf8_dup_from(yytext + 1);
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return HASH_N_EQUALS;
 }
 
 <NESTED,BRACED,JSON>#{DIG}+# {
-  val str = string_own(utf8_dup_from(yytext + 1));
-  yylval->val = int_str(str, num(10));
+  wchar_t *wtxt = utf8_dup_from(yytext + 1);
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return HASH_N_HASH;
 }
 

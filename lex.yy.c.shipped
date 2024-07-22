@@ -4259,7 +4259,7 @@ goto find_rule; \
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "parser.l"
-/* Copyright 2009-2023
+/* Copyright 2009-2024
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
@@ -4914,37 +4914,39 @@ case 1:
 YY_RULE_SETUP
 #line 327 "parser.l"
 {
-  val str = string_own(utf8_dup_from(yytext));
+  wchar_t *wtxt = utf8_dup_from(yytext);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num(10));
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return NUMBER;
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 339 "parser.l"
+#line 340 "parser.l"
 {
-  val str = string_own(utf8_dup_from(remove_char(yytext, ',')));
+  wchar_t *wtxt = utf8_dup_from(remove_char(yytext, ','));
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num(10));
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return NUMBER;
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 351 "parser.l"
+#line 353 "parser.l"
 {
-  val str = string_own(utf8_dup_from(remove_char(yytext + 2, ',')));
+  wchar_t *wtxt = utf8_dup_from(remove_char(yytext + 2, ','));
   int base;
 
   switch (yytext[1]) {
@@ -4958,13 +4960,14 @@ YY_RULE_SETUP
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num_fast(base));
+  yylval->val = int_str_wc(wtxt, num_fast(base));
+  free(wtxt);
   return NUMBER;
 }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 370 "parser.l"
+#line 373 "parser.l"
 {
   int base = 0;
   val str = string_own(utf8_dup_from(yytext + 2));
@@ -4989,7 +4992,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 392 "parser.l"
+#line 395 "parser.l"
 {
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -5004,7 +5007,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 404 "parser.l"
+#line 407 "parser.l"
 {
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -5020,12 +5023,12 @@ YY_RULE_SETUP
 }
 	YY_BREAK
 case 7:
-#line 420 "parser.l"
+#line 423 "parser.l"
 case 8:
-#line 421 "parser.l"
+#line 424 "parser.l"
 case 9:
 YY_RULE_SETUP
-#line 421 "parser.l"
+#line 424 "parser.l"
 {
   val str = string_utf8(yytext);
 
@@ -5049,7 +5052,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 437 "parser.l"
+#line 440 "parser.l"
 {
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -5063,74 +5066,78 @@ YY_RULE_SETUP
 }
 	YY_BREAK
 case 11:
-#line 450 "parser.l"
+#line 453 "parser.l"
 case 12:
 YY_RULE_SETUP
-#line 450 "parser.l"
+#line 453 "parser.l"
 {
-  val str = string_own(utf8_dup_from(yytext + 1));
+  wchar_t *wtxt = utf8_dup_from(yytext + 1);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(10));
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return METANUM;
 }
 	YY_BREAK
 case 13:
-#line 462 "parser.l"
+#line 466 "parser.l"
 case 14:
 YY_RULE_SETUP
-#line 462 "parser.l"
+#line 466 "parser.l"
 {
-  val str = string_own(utf8_dup_from(yytext + 3));
+  wchar_t *wtxt = utf8_dup_from(yytext + 3);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(16));
+  yylval->val = int_str_wc(wtxt, num(16));
+  free(wtxt);
   return METANUM;
 }
 	YY_BREAK
 case 15:
-#line 474 "parser.l"
+#line 479 "parser.l"
 case 16:
 YY_RULE_SETUP
-#line 474 "parser.l"
+#line 479 "parser.l"
 {
-  val str = string_own(utf8_dup_from(yytext + 3));
+  wchar_t *wtxt = utf8_dup_from(yytext + 3);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(8));
+  yylval->val = int_str_wc(wtxt, num(8));
+  free(wtxt);
   return METANUM;
 }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 485 "parser.l"
+#line 491 "parser.l"
 {
-  val str = string_own(utf8_dup_from(yytext + 3));
+  wchar_t *wtxt = utf8_dup_from(yytext + 3);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
-  yylval->val = int_str(str, num(2));
+  yylval->val = int_str_wc(wtxt, num(2));
+  free(wtxt);
   return METANUM;
 }
 	YY_BREAK
 case 18:
-#line 497 "parser.l"
+#line 504 "parser.l"
 case 19:
-#line 498 "parser.l"
+#line 505 "parser.l"
 case 20:
 YY_RULE_SETUP
-#line 498 "parser.l"
+#line 505 "parser.l"
 {
   yyerrorf(yyg, lit("cramped floating-point literal: "
                     "space needed between ~a and dot."),
@@ -5147,12 +5154,12 @@ YY_RULE_SETUP
 }
 	YY_BREAK
 case 21:
-#line 515 "parser.l"
+#line 522 "parser.l"
 case 22:
-#line 516 "parser.l"
+#line 523 "parser.l"
 case 23:
 YY_RULE_SETUP
-#line 516 "parser.l"
+#line 523 "parser.l"
 {
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -5164,10 +5171,10 @@ YY_RULE_SETUP
 }
 	YY_BREAK
 case 24:
-#line 527 "parser.l"
+#line 534 "parser.l"
 case 25:
 YY_RULE_SETUP
-#line 527 "parser.l"
+#line 534 "parser.l"
 {
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -5183,7 +5190,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 540 "parser.l"
+#line 547 "parser.l"
 {
   return directive_tok(yyg, ALL, 0);
 }
@@ -5195,28 +5202,28 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 544 "parser.l"
+#line 551 "parser.l"
 {
   return directive_tok(yyg, SOME, NESTED);
 }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 548 "parser.l"
+#line 555 "parser.l"
 {
   return directive_tok(yyg, NONE, 0);
 }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 552 "parser.l"
+#line 559 "parser.l"
 {
   return directive_tok(yyg, MAYBE, 0);
 }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 556 "parser.l"
+#line 563 "parser.l"
 {
   return directive_tok(yyg, CASES, 0);
 }
@@ -5228,7 +5235,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 560 "parser.l"
+#line 567 "parser.l"
 {
   return directive_tok(yyg, BLOCK, NESTED);
 }
@@ -5240,7 +5247,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 564 "parser.l"
+#line 571 "parser.l"
 {
   return directive_tok(yyg, CHOOSE, NESTED);
 }
@@ -5252,28 +5259,28 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 568 "parser.l"
+#line 575 "parser.l"
 {
   return directive_tok(yyg, GATHER, NESTED);
 }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 572 "parser.l"
+#line 579 "parser.l"
 {
   return directive_tok(yyg, AND, 0);
 }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 576 "parser.l"
+#line 583 "parser.l"
 {
   return directive_tok(yyg, OR, 0);
 }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 580 "parser.l"
+#line 587 "parser.l"
 {
   return directive_tok(yyg, END, 0);
 }
@@ -5285,7 +5292,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 584 "parser.l"
+#line 591 "parser.l"
 {
   return directive_tok(yyg, COLLECT, NESTED);
 }
@@ -5297,7 +5304,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 588 "parser.l"
+#line 595 "parser.l"
 {
   return directive_tok(yyg, COLL, NESTED);
 }
@@ -5309,7 +5316,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 592 "parser.l"
+#line 599 "parser.l"
 {
   return directive_tok(yyg, UNTIL, NESTED);
 }
@@ -5321,7 +5328,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 596 "parser.l"
+#line 603 "parser.l"
 {
   return directive_tok(yyg, OUTPUT, NESTED);
 }
@@ -5333,7 +5340,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 600 "parser.l"
+#line 607 "parser.l"
 {
   return directive_tok(yyg, REPEAT, NESTED);
 }
@@ -5345,7 +5352,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 604 "parser.l"
+#line 611 "parser.l"
 {
   return directive_tok(yyg, PUSH, NESTED);
 }
@@ -5357,21 +5364,21 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 608 "parser.l"
+#line 615 "parser.l"
 {
   return directive_tok(yyg, REP, NESTED);
 }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 612 "parser.l"
+#line 619 "parser.l"
 {
   return directive_tok(yyg, SINGLE, 0);
 }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 616 "parser.l"
+#line 623 "parser.l"
 {
   return directive_tok(yyg, FIRST, 0);
 }
@@ -5383,14 +5390,14 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 620 "parser.l"
+#line 627 "parser.l"
 {
   return directive_tok(yyg, LAST, NESTED);
 }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 624 "parser.l"
+#line 631 "parser.l"
 {
   return directive_tok(yyg, EMPTY, 0);
 }
@@ -5402,7 +5409,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 628 "parser.l"
+#line 635 "parser.l"
 {
   return directive_tok(yyg, MOD, NESTED);
 }
@@ -5414,7 +5421,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 632 "parser.l"
+#line 639 "parser.l"
 {
   return directive_tok(yyg, MODLAST, NESTED);
 }
@@ -5426,14 +5433,14 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 636 "parser.l"
+#line 643 "parser.l"
 {
   return directive_tok(yyg, DEFINE, NESTED);
 }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 640 "parser.l"
+#line 647 "parser.l"
 {
   return directive_tok(yyg, TRY, 0);
 }
@@ -5445,14 +5452,14 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 644 "parser.l"
+#line 651 "parser.l"
 {
   return directive_tok(yyg, CATCH, NESTED);
 }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 648 "parser.l"
+#line 655 "parser.l"
 {
   return directive_tok(yyg, FINALLY, 0);
 }
@@ -5464,7 +5471,7 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 652 "parser.l"
+#line 659 "parser.l"
 {
   return directive_tok(yyg, IF, NESTED);
 }
@@ -5476,21 +5483,21 @@ YY_LINENO_REWIND_TO(yy_cp - 1);
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 656 "parser.l"
+#line 663 "parser.l"
 {
   return directive_tok(yyg, ELIF, NESTED);
 }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 660 "parser.l"
+#line 667 "parser.l"
 {
   return directive_tok(yyg, ELSE, 0);
 }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 664 "parser.l"
+#line 671 "parser.l"
 {
   yy_push_state(BRACED, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5499,7 +5506,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 670 "parser.l"
+#line 677 "parser.l"
 {
  yy_push_state(NESTED, yyscanner);
  yylval->lineno = yyextra->lineno;
@@ -5508,7 +5515,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 676 "parser.l"
+#line 683 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return (opt_compat && opt_compat <= 248) ? OLD_AT : '@';
@@ -5516,7 +5523,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 681 "parser.l"
+#line 688 "parser.l"
 {
   yylval->chr = '*';
   return SPLICE;
@@ -5524,7 +5531,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 686 "parser.l"
+#line 693 "parser.l"
 {
   yylval->chr = yytext[0];
   return yytext[0];
@@ -5532,7 +5539,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 691 "parser.l"
+#line 698 "parser.l"
 {
   yy_pop_state(yyscanner);
   if (yy_top_state(yyscanner) == INITIAL
@@ -5547,7 +5554,7 @@ case 63:
 yyg->yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 700 "parser.l"
+#line 707 "parser.l"
 {
   yyerrorf(yyg, lit("cramped floating-point literal: "
                     "space or 0 needed between ~a and dot."),
@@ -5564,7 +5571,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 715 "parser.l"
+#line 722 "parser.l"
 {
   yy_pop_state(yyscanner);
   if (yy_top_state(yyscanner) == INITIAL
@@ -5576,14 +5583,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 724 "parser.l"
+#line 731 "parser.l"
 {
   /* Eat whitespace in directive */
 }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 728 "parser.l"
+#line 735 "parser.l"
 {
   yy_push_state(STRLIT, yyscanner);
   return '"';
@@ -5591,7 +5598,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 733 "parser.l"
+#line 740 "parser.l"
 {
   yy_push_state(CHRLIT, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5600,7 +5607,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 739 "parser.l"
+#line 746 "parser.l"
 {
   yy_push_state(BUFLIT, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5609,7 +5616,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 745 "parser.l"
+#line 752 "parser.l"
 {
   yy_push_state(REGEX, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5618,7 +5625,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 751 "parser.l"
+#line 758 "parser.l"
 {
   yy_push_state(QSILIT, yyscanner);
   return '`';
@@ -5626,7 +5633,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 756 "parser.l"
+#line 763 "parser.l"
 {
   yy_push_state(WLIT, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5635,7 +5642,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 762 "parser.l"
+#line 769 "parser.l"
 {
   yy_push_state(WLIT, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5644,7 +5651,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 768 "parser.l"
+#line 775 "parser.l"
 {
   yy_push_state(QWLIT, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5653,7 +5660,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 774 "parser.l"
+#line 781 "parser.l"
 {
   yy_push_state(QWLIT, yyscanner);
   yylval->lineno = yyextra->lineno;
@@ -5662,14 +5669,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 780 "parser.l"
+#line 787 "parser.l"
 {
   return '#';
 }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 784 "parser.l"
+#line 791 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return HASH_H;
@@ -5677,7 +5684,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 789 "parser.l"
+#line 796 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return HASH_S;
@@ -5685,7 +5692,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 794 "parser.l"
+#line 801 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return HASH_R;
@@ -5693,7 +5700,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 799 "parser.l"
+#line 806 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return HASH_N;
@@ -5701,7 +5708,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 804 "parser.l"
+#line 811 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return HASH_T;
@@ -5709,7 +5716,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 809 "parser.l"
+#line 816 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   yy_push_state(JSON, yyscanner);
@@ -5718,7 +5725,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 815 "parser.l"
+#line 822 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return HASH_SEMI;
@@ -5726,25 +5733,27 @@ YY_RULE_SETUP
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 820 "parser.l"
+#line 827 "parser.l"
 {
-  val str = string_own(utf8_dup_from(yytext + 1));
-  yylval->val = int_str(str, num(10));
+  wchar_t *wtxt = utf8_dup_from(yytext + 1);
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return HASH_N_EQUALS;
 }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 826 "parser.l"
+#line 834 "parser.l"
 {
-  val str = string_own(utf8_dup_from(yytext + 1));
-  yylval->val = int_str(str, num(10));
+  wchar_t *wtxt = utf8_dup_from(yytext + 1);
+  yylval->val = int_str_wc(wtxt, num(10));
+  free(wtxt);
   return HASH_N_HASH;
 }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 832 "parser.l"
+#line 841 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
   return (opt_compat && opt_compat <= 185) ? OLD_DOTDOT : DOTDOT;
@@ -5752,7 +5761,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 837 "parser.l"
+#line 846 "parser.l"
 {
   yy_pop_state(yyscanner);
   yylval->lexeme = chk_strdup(L"@");
@@ -5762,14 +5771,14 @@ YY_RULE_SETUP
 case 87:
 /* rule 87 can match eol */
 YY_RULE_SETUP
-#line 843 "parser.l"
+#line 852 "parser.l"
 {
   yyextra->lineno++;
 }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 847 "parser.l"
+#line 856 "parser.l"
 {
   yy_push_state(REGEX, yyscanner);
   return '/';
@@ -5777,7 +5786,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 852 "parser.l"
+#line 861 "parser.l"
 {
   yylval->chr = '.';
   return CONSDOT;
@@ -5785,7 +5794,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 857 "parser.l"
+#line 866 "parser.l"
 {
   yylval->chr = '.';
   return LAMBDOT;
@@ -5793,7 +5802,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 862 "parser.l"
+#line 871 "parser.l"
 {
   yylval->chr = '.';
   return UREFDOT;
@@ -5801,7 +5810,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 867 "parser.l"
+#line 876 "parser.l"
 {
   yylval->chr = '.';
   return '.';
@@ -5809,7 +5818,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 872 "parser.l"
+#line 881 "parser.l"
 {
   yylval->chr = '.';
   return OREFDOT;
@@ -5817,7 +5826,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 877 "parser.l"
+#line 886 "parser.l"
 {
   yylval->chr = '.';
   return UOREFDOT;
@@ -5826,7 +5835,7 @@ YY_RULE_SETUP
 case 95:
 /* rule 95 can match eol */
 YY_RULE_SETUP
-#line 882 "parser.l"
+#line 891 "parser.l"
 {
   if (YYSTATE == SPECIAL)
     yy_pop_state(yyscanner);  /* @\ continuation */
@@ -5835,7 +5844,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 888 "parser.l"
+#line 897 "parser.l"
 {
   wchar_t lexeme[2];
   lexeme[0] = char_esc(yytext[1]);
@@ -5847,7 +5856,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 897 "parser.l"
+#line 906 "parser.l"
 {
   wchar_t lexeme[2];
   lexeme[0] = num_esc(yyg, yytext + 1);
@@ -5866,28 +5875,28 @@ YY_RULE_SETUP
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 913 "parser.l"
+#line 922 "parser.l"
 {
   yyerrorf(yyg, lit("\\x escape without digits"), nao);
 }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 917 "parser.l"
+#line 926 "parser.l"
 {
   yyerrorf(yyg, lit("unrecognized escape \\~a"), chr(yytext[1]), nao);
 }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 921 "parser.l"
+#line 930 "parser.l"
 {
   /* comment */
 }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 925 "parser.l"
+#line 934 "parser.l"
 {
   val ch = chr_str(string_utf8(yytext), zero);
   if (chr_isspace(ch))
@@ -5907,7 +5916,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 942 "parser.l"
+#line 951 "parser.l"
 {
   yyerrprepf(yyg, lit("non-UTF-8 byte #x~02x in directive"),
              num(convert(unsigned char, yytext[0])), nao);
@@ -5916,7 +5925,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 948 "parser.l"
+#line 957 "parser.l"
 {
   yylval->chr = '/';
   return (YYSTATE == SREGEX) ? REGCHAR : '/';
@@ -5924,7 +5933,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 953 "parser.l"
+#line 962 "parser.l"
 {
   yylval->chr = char_esc(yytext[1]);
   return REGCHAR;
@@ -5932,7 +5941,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 958 "parser.l"
+#line 967 "parser.l"
 {
   yylval->chr = num_esc(yyg, yytext + 1);
   return REGCHAR;
@@ -5940,7 +5949,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 963 "parser.l"
+#line 972 "parser.l"
 {
   yylval->chr = yytext[1];
   return REGTOKEN;
@@ -5949,7 +5958,7 @@ YY_RULE_SETUP
 case 107:
 /* rule 107 can match eol */
 YY_RULE_SETUP
-#line 968 "parser.l"
+#line 977 "parser.l"
 {
   yyextra->lineno++;
 }
@@ -5957,7 +5966,7 @@ YY_RULE_SETUP
 case 108:
 /* rule 108 can match eol */
 YY_RULE_SETUP
-#line 972 "parser.l"
+#line 981 "parser.l"
 {
   yyextra->lineno++;
   yyerrprepf(yyg, lit("newline in regex"), nao);
@@ -5967,7 +5976,7 @@ YY_RULE_SETUP
 case 109:
 /* rule 109 can match eol */
 YY_RULE_SETUP
-#line 978 "parser.l"
+#line 987 "parser.l"
 {
   yyextra->lineno++;
   yylval->chr = yytext[0];
@@ -5976,7 +5985,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 984 "parser.l"
+#line 993 "parser.l"
 {
   yylval->chr = yytext[0];
   return yytext[0];
@@ -5984,7 +5993,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 989 "parser.l"
+#line 998 "parser.l"
 {
   yylval->chr = yytext[1];
   return REGCHAR;
@@ -5992,7 +6001,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 994 "parser.l"
+#line 1003 "parser.l"
 {
   if (opt_compat && opt_compat <= 105) {
     yylval->chr = yytext[1];
@@ -6008,7 +6017,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 1007 "parser.l"
+#line 1016 "parser.l"
 {
   yyerrprepf(yyg, lit("dangling backslash in regex"), nao);
   return ERRTOK;
@@ -6016,7 +6025,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 1012 "parser.l"
+#line 1021 "parser.l"
 {
   wchar_t wchr[8];
   if (utf8_from_buf(wchr, coerce(unsigned char *, yytext), yyleng) != 2) {
@@ -6029,7 +6038,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 1022 "parser.l"
+#line 1031 "parser.l"
 {
   yylval->chr = convert(unsigned char, yytext[0]) + 0xDC00;
   return REGCHAR;
@@ -6037,7 +6046,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 1027 "parser.l"
+#line 1036 "parser.l"
 {
   yylval->lexeme = utf8_dup_from(yytext);
   return SPACE;
@@ -6045,7 +6054,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 1032 "parser.l"
+#line 1041 "parser.l"
 {
   yylval->lexeme = utf8_dup_from(yytext);
   return TEXT;
@@ -6054,7 +6063,7 @@ YY_RULE_SETUP
 case 118:
 /* rule 118 can match eol */
 YY_RULE_SETUP
-#line 1037 "parser.l"
+#line 1046 "parser.l"
 {
   yyextra->lineno++;
   return '\n';
@@ -6062,7 +6071,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 1042 "parser.l"
+#line 1051 "parser.l"
 {
   yy_push_state(SPECIAL, yyscanner);
   return '*';
@@ -6070,7 +6079,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 1047 "parser.l"
+#line 1056 "parser.l"
 {
   yy_push_state(SPECIAL, yyscanner);
 }
@@ -6078,7 +6087,7 @@ YY_RULE_SETUP
 case 121:
 /* rule 121 can match eol */
 YY_RULE_SETUP
-#line 1051 "parser.l"
+#line 1060 "parser.l"
 {
   /* eat whole line comment */
   yyextra->lineno++;
@@ -6086,14 +6095,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 1056 "parser.l"
+#line 1065 "parser.l"
 {
   /* comment to end of line */
 }
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 1060 "parser.l"
+#line 1069 "parser.l"
 {
   yy_pop_state(yyscanner);
   return yytext[0];
@@ -6101,7 +6110,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 1065 "parser.l"
+#line 1074 "parser.l"
 {
   yy_pop_state(yyscanner);
   return yytext[0];
@@ -6109,7 +6118,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 1070 "parser.l"
+#line 1079 "parser.l"
 {
   yylval->chr = char_esc(yytext[1]);
   return LITCHAR;
@@ -6117,7 +6126,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 1075 "parser.l"
+#line 1084 "parser.l"
 {
   yylval->chr = char_esc(yytext[1]);
   return LITCHAR;
@@ -6126,7 +6135,7 @@ YY_RULE_SETUP
 case 127:
 /* rule 127 can match eol */
 YY_RULE_SETUP
-#line 1080 "parser.l"
+#line 1089 "parser.l"
 {
   yyextra->lineno++;
 }
@@ -6134,7 +6143,7 @@ YY_RULE_SETUP
 case 128:
 /* rule 128 can match eol */
 YY_RULE_SETUP
-#line 1084 "parser.l"
+#line 1093 "parser.l"
 {
   yyextra->lineno++;
 
@@ -6144,7 +6153,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 1092 "parser.l"
+#line 1101 "parser.l"
 {
   yylval->chr = num_esc(yyg, yytext+1);
   return LITCHAR;
@@ -6152,21 +6161,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 1097 "parser.l"
+#line 1106 "parser.l"
 {
   yyerrorf(yyg, lit("\\x escape without digits"), nao);
 }
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 1101 "parser.l"
+#line 1110 "parser.l"
 {
   yyerrorf(yyg, lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 1105 "parser.l"
+#line 1114 "parser.l"
 {
   yylval->chr = num_esc(yyg, yytext);
   return LITCHAR;
@@ -6174,7 +6183,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 1110 "parser.l"
+#line 1119 "parser.l"
 {
   yylval->lexeme = utf8_dup_from(yytext);
   return SYMTOK;
@@ -6182,7 +6191,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 1115 "parser.l"
+#line 1124 "parser.l"
 {
   yylval->lexeme = utf8_dup_from(yytext);
   return SYMTOK; /* hack */
@@ -6191,7 +6200,7 @@ YY_RULE_SETUP
 case 135:
 /* rule 135 can match eol */
 YY_RULE_SETUP
-#line 1120 "parser.l"
+#line 1129 "parser.l"
 {
   yyerrprepf(yyg, lit("newline in string literal"), nao);
   yyextra->lineno++;
@@ -6202,7 +6211,7 @@ YY_RULE_SETUP
 case 136:
 /* rule 136 can match eol */
 YY_RULE_SETUP
-#line 1127 "parser.l"
+#line 1136 "parser.l"
 {
   yyerrprepf(yyg, lit("newline in character literal"), nao);
   yyextra->lineno++;
@@ -6213,7 +6222,7 @@ YY_RULE_SETUP
 case 137:
 /* rule 137 can match eol */
 YY_RULE_SETUP
-#line 1134 "parser.l"
+#line 1143 "parser.l"
 {
   yyerrprepf(yyg, lit("newline in string quasiliteral"), nao);
   yyextra->lineno++;
@@ -6224,7 +6233,7 @@ YY_RULE_SETUP
 case 138:
 /* rule 138 can match eol */
 YY_RULE_SETUP
-#line 1141 "parser.l"
+#line 1150 "parser.l"
 {
   yyextra->lineno++;
 
@@ -6241,7 +6250,7 @@ case 139:
 yyg->yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 1152 "parser.l"
+#line 1161 "parser.l"
 {
   yy_push_state(QSPECIAL, yyscanner);
   return yytext[0];
@@ -6249,7 +6258,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 1157 "parser.l"
+#line 1166 "parser.l"
 {
   yyerrprepf(yyg, lit("malformed @ expression in quasiliteral"), nao);
   return ERRTOK;
@@ -6257,14 +6266,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 1162 "parser.l"
+#line 1171 "parser.l"
 {
   return ' ';
 }
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 1166 "parser.l"
+#line 1175 "parser.l"
 {
   yy_pop_state(yyscanner);
   return yytext[0];
@@ -6272,7 +6281,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
-#line 1171 "parser.l"
+#line 1180 "parser.l"
 {
   yylval->chr = char_esc(yytext[1]);
   return LITCHAR;
@@ -6280,7 +6289,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 1176 "parser.l"
+#line 1185 "parser.l"
 {
   wchar_t ch0, ch1;
   yytext[6] = 0;
@@ -6292,7 +6301,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 1185 "parser.l"
+#line 1194 "parser.l"
 {
   wchar_t ch = num_esc(yyg, yytext + 1);
   yylval->chr = if3(ch, ch, 0xDC00);
@@ -6301,14 +6310,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 1191 "parser.l"
+#line 1200 "parser.l"
 {
   yyerrorf(yyg, lit("JSON \\u escape needs four digits"), nao);
 }
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 1195 "parser.l"
+#line 1204 "parser.l"
 {
   yyerrorf(yyg, lit("unrecognized JSON escape: \\~a"), chr(yytext[1]), nao);
 }
@@ -6316,7 +6325,7 @@ YY_RULE_SETUP
 case 148:
 /* rule 148 can match eol */
 YY_RULE_SETUP
-#line 1199 "parser.l"
+#line 1208 "parser.l"
 {
   yyerrprepf(yyg, lit("newline in JSON string"), nao);
   yyextra->lineno++;
@@ -6326,7 +6335,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 1206 "parser.l"
+#line 1215 "parser.l"
 {
   wchar_t wchr[8];
   if (utf8_from_buf(wchr, coerce(unsigned char *, yytext), yyleng) != 2) {
@@ -6339,7 +6348,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 1216 "parser.l"
+#line 1225 "parser.l"
 {
   yylval->chr = strtol(yytext, 0, 16);
   return LITCHAR;
@@ -6347,28 +6356,28 @@ YY_RULE_SETUP
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 1221 "parser.l"
+#line 1230 "parser.l"
 {
   return '\'';
 }
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 1225 "parser.l"
+#line 1234 "parser.l"
 {
 }
 	YY_BREAK
 case 153:
 /* rule 153 can match eol */
 YY_RULE_SETUP
-#line 1228 "parser.l"
+#line 1237 "parser.l"
 {
   yyextra->lineno++;
 }
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 1232 "parser.l"
+#line 1241 "parser.l"
 {
   yyerrorf(yyg, lit("bad character ~s in buffer literal"),
            chr(yytext[0]), nao);
@@ -6376,7 +6385,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 1237 "parser.l"
+#line 1246 "parser.l"
 {
   yylval->chr = convert(unsigned char, yytext[0]) + 0xDC00;
   return LITCHAR;
@@ -6384,7 +6393,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 156:
 YY_RULE_SETUP
-#line 1242 "parser.l"
+#line 1251 "parser.l"
 {
   if ((yylval->val = flo_str_utf8(yytext)) == nil)
     out_of_range_float(yyg, yytext);
@@ -6398,7 +6407,7 @@ YY_LINENO_REWIND_TO(yy_bp + 4);
 yyg->yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 1248 "parser.l"
+#line 1257 "parser.l"
 {
   yylval->val = t;
   return JSKW;
@@ -6411,7 +6420,7 @@ YY_LINENO_REWIND_TO(yy_bp + 5);
 yyg->yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 1253 "parser.l"
+#line 1262 "parser.l"
 {
   yylval->val = nil;
   return JSKW;
@@ -6424,7 +6433,7 @@ YY_LINENO_REWIND_TO(yy_bp + 4);
 yyg->yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 1258 "parser.l"
+#line 1267 "parser.l"
 {
   yylval->val = null_s;
   return JSKW;
@@ -6432,7 +6441,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
-#line 1263 "parser.l"
+#line 1272 "parser.l"
 {
   if (strcmp("true", yytext) == 0) {
     yylval->val = t;
@@ -6457,7 +6466,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
-#line 1285 "parser.l"
+#line 1294 "parser.l"
 {
   yy_push_state(JLIT, yyscanner);
   return yytext[0];
@@ -6465,7 +6474,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 162:
 YY_RULE_SETUP
-#line 1290 "parser.l"
+#line 1299 "parser.l"
 {
   yy_push_state(JMARKER, yyscanner);
   yy_push_state(NESTED, yyscanner);
@@ -6474,7 +6483,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 1296 "parser.l"
+#line 1305 "parser.l"
 {
   yy_push_state(JMARKER, yyscanner);
   yy_push_state(NESTED, yyscanner);
@@ -6483,7 +6492,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
-#line 1302 "parser.l"
+#line 1311 "parser.l"
 {
   return yytext[0];
 }
@@ -6491,20 +6500,20 @@ YY_RULE_SETUP
 case 165:
 /* rule 165 can match eol */
 YY_RULE_SETUP
-#line 1306 "parser.l"
+#line 1315 "parser.l"
 {
   yyextra->lineno++;
 }
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 1310 "parser.l"
+#line 1319 "parser.l"
 {
 }
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-#line 1313 "parser.l"
+#line 1322 "parser.l"
 {
   yyerrorf(yyg, lit("bad character ~s in JSON literal"),
            chr(yytext[0]), nao);
@@ -6512,17 +6521,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 168:
 YY_RULE_SETUP
-#line 1318 "parser.l"
+#line 1327 "parser.l"
 {
   internal_error("scanner processed input JMARKER state");
 }
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
-#line 1322 "parser.l"
+#line 1331 "parser.l"
 ECHO;
 	YY_BREAK
-#line 6526 "lex.yy.c"
+#line 6535 "lex.yy.c"
 			case YY_STATE_EOF(INITIAL):
 			case YY_STATE_EOF(SPECIAL):
 			case YY_STATE_EOF(BRACED):
@@ -7735,7 +7744,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 1322 "parser.l"
+#line 1331 "parser.l"
 
 
 static int directive_tok(scanner_t *yyscanner, int tok, int state)

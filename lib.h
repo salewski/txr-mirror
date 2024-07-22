@@ -1135,6 +1135,7 @@ val str_lt(val astr, val bstr);
 val str_gt(val astr, val bstr);
 val str_le(val astr, val bstr);
 val str_ge(val astr, val bstr);
+val int_str_wc(const wchar_t *, val base);
 val int_str(val str, val base);
 val flo_str_utf8(const char *);
 val flo_str(val str);

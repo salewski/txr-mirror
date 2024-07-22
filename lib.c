@@ -6817,10 +6817,9 @@ val str_ge(val astr, val bstr)
   return if2(cmp == zero || cmp == one, t);
 }
 
-val int_str(val str, val base)
+val int_str_wc(const wchar_t *wcs, val base)
 {
   val self = lit("int-str");
-  const wchar_t *wcs = c_str(str, self);
   wchar_t *ptr;
   long value;
   cnum b = c_num(default_arg(base, num_fast(10)), self);
@@ -6882,8 +6881,6 @@ val int_str(val str, val base)
     val bignum = make_bignum();
     mp_err err = mp_read_radix(mp(bignum), wcs, b);
 
-    gc_hint(str);
-
     if (err != MP_OKAY)
       return nil;
 
@@ -6904,6 +6901,15 @@ val int_str(val str, val base)
     return num(value);
 
   return bignum_from_long(value);
+}
+
+val int_str(val str, val base)
+{
+  val self = lit("int-str");
+  const wchar_t *wcs = c_str(str, self);
+  val out = int_str_wc(wcs, base);
+  gc_hint(str);
+  return out;
 }
 
 val flo_str_utf8(const char *str)
