@@ -6395,8 +6395,13 @@ case 156:
 YY_RULE_SETUP
 #line 1251 "parser.l"
 {
-  if ((yylval->val = flo_str_utf8(yytext)) == nil)
+  if (yyextra->read_json_int && !strpbrk(yytext, ".eE")) {
+    wchar_t *wtxt = utf8_dup_from(yytext);
+    yylval->val = int_str_wc(wtxt, num(10));
+    free(wtxt);
+  } else if ((yylval->val = flo_str_utf8(yytext)) == nil) {
     out_of_range_float(yyg, yytext);
+  }
   return NUMBER;
 }
 	YY_BREAK
@@ -6407,7 +6412,7 @@ YY_LINENO_REWIND_TO(yy_bp + 4);
 yyg->yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 1257 "parser.l"
+#line 1262 "parser.l"
 {
   yylval->val = t;
   return JSKW;
@@ -6420,7 +6425,7 @@ YY_LINENO_REWIND_TO(yy_bp + 5);
 yyg->yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 1262 "parser.l"
+#line 1267 "parser.l"
 {
   yylval->val = nil;
   return JSKW;
@@ -6433,7 +6438,7 @@ YY_LINENO_REWIND_TO(yy_bp + 4);
 yyg->yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 1267 "parser.l"
+#line 1272 "parser.l"
 {
   yylval->val = null_s;
   return JSKW;
@@ -6441,7 +6446,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
-#line 1272 "parser.l"
+#line 1277 "parser.l"
 {
   if (strcmp("true", yytext) == 0) {
     yylval->val = t;
@@ -6466,7 +6471,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
-#line 1294 "parser.l"
+#line 1299 "parser.l"
 {
   yy_push_state(JLIT, yyscanner);
   return yytext[0];
@@ -6474,7 +6479,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 162:
 YY_RULE_SETUP
-#line 1299 "parser.l"
+#line 1304 "parser.l"
 {
   yy_push_state(JMARKER, yyscanner);
   yy_push_state(NESTED, yyscanner);
@@ -6483,7 +6488,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 1305 "parser.l"
+#line 1310 "parser.l"
 {
   yy_push_state(JMARKER, yyscanner);
   yy_push_state(NESTED, yyscanner);
@@ -6492,7 +6497,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
-#line 1311 "parser.l"
+#line 1316 "parser.l"
 {
   return yytext[0];
 }
@@ -6500,20 +6505,20 @@ YY_RULE_SETUP
 case 165:
 /* rule 165 can match eol */
 YY_RULE_SETUP
-#line 1315 "parser.l"
+#line 1320 "parser.l"
 {
   yyextra->lineno++;
 }
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 1319 "parser.l"
+#line 1324 "parser.l"
 {
 }
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-#line 1322 "parser.l"
+#line 1327 "parser.l"
 {
   yyerrorf(yyg, lit("bad character ~s in JSON literal"),
            chr(yytext[0]), nao);
@@ -6521,17 +6526,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 168:
 YY_RULE_SETUP
-#line 1327 "parser.l"
+#line 1332 "parser.l"
 {
   internal_error("scanner processed input JMARKER state");
 }
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
-#line 1331 "parser.l"
+#line 1336 "parser.l"
 ECHO;
 	YY_BREAK
-#line 6535 "lex.yy.c"
+#line 6540 "lex.yy.c"
 			case YY_STATE_EOF(INITIAL):
 			case YY_STATE_EOF(SPECIAL):
 			case YY_STATE_EOF(BRACED):
@@ -7744,7 +7749,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 1331 "parser.l"
+#line 1336 "parser.l"
 
 
 static int directive_tok(scanner_t *yyscanner, int tok, int state)

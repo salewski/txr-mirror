@@ -84788,6 +84788,32 @@ tolerance in the area of JSON parsing.
   --> #H(() (3.0 4.0))
 .brev
 
+.coNP Variable @ *read-json-int*
+.desc
+This dynamic variable, initialized to a value of
+.codn nil ,
+controls whether the parser reads some JSON numbers as integer objects.
+
+If the value of the variable is true, then whenever a JSON number is
+scanned which does not contain a
+.code .
+(decimal point) character or the letters
+.code e
+or
+.code E
+indicating an exponent field, it is converted to an integer object
+rather than a floating-point value. It is unspecified whether the number
+is converted to integer or floating-point if the exponent
+.code e
+or
+.code E
+is present, with a positive exponent value.
+
+If this variable is
+.codn nil ,
+then JSON numbers are all converted to floating point.
+
+
 .SH* FOREIGN FUNCTION INTERFACE
 
 On platforms where it is supported, \*(TX provides a feature called the

@@ -68,6 +68,7 @@ struct parser {
   int rec_source_loc;
   int read_unknown_structs;
   int read_bad_json;
+  int read_json_int;
 };
 #endif
 

@@ -1249,8 +1249,13 @@ NJPUNC  [^(){},:\[\]"~*^ \t\r\n]
 }
 
 <JSON>{JNUM} {
-  if ((yylval->val = flo_str_utf8(yytext)) == nil)
+  if (yyextra->read_json_int && !strpbrk(yytext, ".eE")) {
+    wchar_t *wtxt = utf8_dup_from(yytext);
+    yylval->val = int_str_wc(wtxt, num(10));
+    free(wtxt);
+  } else if ((yylval->val = flo_str_utf8(yytext)) == nil) {
     out_of_range_float(yyg, yytext);
+  }
   return NUMBER;
 }
 
