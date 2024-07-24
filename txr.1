@@ -34410,22 +34410,22 @@ of the language may specify additional iterable objects.
 
 .coNP Functions @ make-like and @ seq-like
 .synb
-.mets (make-like < list << object )
+.mets (make-like < seq << object )
 .mets (seq-like < object << arg *)
 .syne
 .desc
 The
 .code make-like
 function's
-.meta list
-argument must be a list.  If
+.meta seq
+argument must be a sequence.  If
 .meta object
 is a sequence type,
 then
 .meta list
 is converted to the same type of sequence, if possible, and returned.
 Otherwise the original
-.meta list
+.meta seq
 is returned.
 
 Conversion is supported to string and vector type, plus
@@ -34438,7 +34438,7 @@ is an object of a structure type which has a static function
 then
 .code make-like
 calls that function, passing to it, and the resulting value is returned.
-.meta list
+.meta seq
 and returns whatever value that function returns.
 
 If
@@ -34484,10 +34484,10 @@ The result of
 .code seq-like
 is consistent with what the
 .code make-like
-function would return if given a list of the
+function would return if given a sequence of the
 .meta arg
 values as the
-.meta list
+.meta seq
 argument. That is to say, the following equivalence holds:
 
 .verb

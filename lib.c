@@ -2419,46 +2419,25 @@ val copy_list(val list)
 
 val make_like(val list, val thatobj)
 {
-  if (list != thatobj) {
-    switch (type(thatobj)) {
-    case VEC:
-      return vec_list(list);
-    case STR:
-    case LIT:
-    case LSTR:
-      if (!opt_compat || opt_compat > 101) {
-        if (!list)
-          return null_string;
-      }
-      if (is_chr(car(list)))
-        return cat_str(list, nil);
-      break;
-    case BUF:
-      if (!list)
-        return make_buf(zero, zero, zero);
-      if (integerp(car(list)))
-        return buf_list(list);
-      break;
-    case COBJ:
-      if (thatobj->co.cls == seq_iter_cls)
-      {
-        struct seq_iter *si = coerce(struct seq_iter *, thatobj->co.handle);
-        return make_like(list, si->inf.obj);
-      }
-      if (obj_struct_p(thatobj)) {
-        val from_list_meth = get_special_slot(thatobj, from_list_m);
-        if (from_list_meth)
-          return funcall1(from_list_meth, list);
-      }
-      if (thatobj->co.cls == carray_cls)
-        return carray_list(list, carray_type(thatobj), nil);
-      break;
-    case NIL:
-    case CONS:
-    case LCONS:
-    default:
-      break;
-    }
+  val self = lit("make-like");
+  type_t tli = type(list);
+  type_t tbj = type(thatobj);
+
+  if (tli != tbj &&
+      !(tli == NIL && tbj == CONS) &&
+      !(tli == CONS && tbj == NIL))
+  {
+    seq_iter_t it;
+    seq_build_t bu;
+    val elem;
+
+    seq_build_init(self, &bu, thatobj);
+    seq_iter_init(self, &it, list);
+
+    while (seq_get(&it, &elem))
+      seq_add(&bu, elem);
+
+    return seq_finish(&bu);
   }
 
   return list;

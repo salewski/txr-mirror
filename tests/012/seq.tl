@@ -309,7 +309,7 @@
   (tuples* 3 #() 1) (#(1 1 1)))
 
 (test
-  (lforce (tuples* 3 "a" 1)) :error)
+  (lforce (tuples* 3 "a" 1)) ((#\a 1 1)))
 
 (mtest
   (take 3 (tuples* 3 (range 0))) ((0 1 2) (1 2 3) (2 3 4))
@@ -1602,9 +1602,11 @@
 (mtest
   (make-like '(1 2 3) "") (1 2 3)
   (make-like '(#\a #\b #\c) "") "abc"
-  (make-like '(#\a #\b 3) "") :error
+  (make-like '(#\a #\b 3) "") (#\a #\b 3)
   (make-like '(1 2 3) #()) #(1 2 3)
-  (make-like '(1 2 3) #b'') #b'010203')
+  (make-like '(1 2 3) #b'') #b'010203'
+  (make-like #(1 2 3) nil) (1 2 3)
+  (make-like #(1 2 3) '(x)) (1 2 3))
 
 (mtest
   (seq-like "" 1 2 3) (1 2 3)
