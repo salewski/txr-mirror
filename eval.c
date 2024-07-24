@@ -5864,7 +5864,7 @@ static val mapdov(val fun, varg lists)
   return map_common(lit("mapdo"), fun, lists, 0, mapdo);
 }
 
-static val zip_fun(val ziparg0, varg args)
+static val seq_like(val ziparg0, varg args)
 {
   seq_build_t bu;
   cnum index = 0;
@@ -5898,7 +5898,7 @@ static val zipv(varg zipargs)
       func = func_n0v(vectorv);
       break;
     default:
-      func = func_f0v(ziparg0, zip_fun);
+      func = func_f0v(ziparg0, seq_like);
       break;
     }
 
@@ -7813,6 +7813,7 @@ void eval_init(void)
   reg_fun(intern(lit("list-seq"), user_package), func_n1(list_seq));
   reg_fun(intern(lit("vec-seq"), user_package), func_n1(vec_seq));
   reg_fun(intern(lit("str-seq"), user_package), func_n1(str_seq));
+  reg_fun(intern(lit("seq-like"), user_package), func_n1v(seq_like));
   reg_fun(intern(lit("length"), user_package), length_f);
   reg_fun(intern(lit("len"), user_package), length_f);
   reg_fun(length_lt_s, func_n2(length_lt));

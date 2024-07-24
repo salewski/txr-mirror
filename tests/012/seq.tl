@@ -1598,3 +1598,17 @@
   [(wherequal 'c) '(a b c a b c)] (2 5)
   [(wherequal 3) '(3 3.0 b c a b c)] (0)
   [(wherequal 3) 0..9] (3))
+
+(mtest
+  (make-like '(1 2 3) "") (1 2 3)
+  (make-like '(#\a #\b #\c) "") "abc"
+  (make-like '(#\a #\b 3) "") :error
+  (make-like '(1 2 3) #()) #(1 2 3)
+  (make-like '(1 2 3) #b'') #b'010203')
+
+(mtest
+  (seq-like "" 1 2 3) (1 2 3)
+  (seq-like "" #\a #\b #\c) "abc"
+  (seq-like "" #\a #\b 3) (#\a #\b 3)
+  (seq-like #() 1 2 3) #(1 2 3)
+  (seq-like #b'' 1 2 3) #b'010203')

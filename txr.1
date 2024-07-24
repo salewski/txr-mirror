@@ -34408,24 +34408,28 @@ Additional objects that are not sequences are also iterable:
 numeric or character ranges, and numbers. Future revisions
 of the language may specify additional iterable objects.
 
-.coNP Function @ make-like
+.coNP Functions @ make-like and @ seq-like
 .synb
 .mets (make-like < list << object )
+.mets (seq-like < object << arg *)
 .syne
 .desc
 The
+.code make-like
+function's
 .meta list
 argument must be a list.  If
 .meta object
 is a sequence type,
 then
 .meta list
-is converted to the same type of sequence and returned.
+is converted to the same type of sequence, if possible, and returned.
 Otherwise the original
 .meta list
 is returned.
 
-Conversion is supported to string and vector type.
+Conversion is supported to string and vector type, plus
+additional types as follows.
 
 Conversion to a structure type is possible for structures. If
 .meta object
@@ -34464,6 +34468,31 @@ available, then
 .code make-like
 takes that sequence in place of
 .metn object ,
+
+The
+.code seq-like
+function creates, if possible, a sequence of the same kind as
+.meta object
+populated by the remaining
+.meta arg
+values. If some of the
+.meta arg
+values are not suitable elements for a sequence of that type,
+then a list of those values is returned.
+
+The result of
+.code seq-like
+is consistent with what the
+.code make-like
+function would return if given a list of the
+.meta arg
+values as the
+.meta list
+argument. That is to say, the following equivalence holds:
+
+.verb
+  (make-like (list a0 a1 ...) o)  <->  (seq-like o a0 a1 ...)
+.brev
 
 Note: the
 .code make-like
