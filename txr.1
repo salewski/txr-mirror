@@ -38388,19 +38388,10 @@ elements of
 must be iterable.  These iterables are understood to be
 columns; transpose exchanges rows and columns, returning a sequence of the rows
 which make up the columns.  The returned sequence is of the same kind as
-.metn iterable ,
-and the rows are also the same kind of sequence as the first column
-of the original sequence. The number of rows returned is limited by the
-shortest column among the sequences.
-
-All of the input sequences (the elements of
-.metn iterable )
-must have elements
-which are compatible with the first sequence. This means that if the first
-element of
-.meta iterable
-is a string, then the remaining sequences must be
-strings, or else sequences of characters, or of strings.
+.metn iterable .
+The rows are also the same kind of sequence as the first element
+of the original sequence, if possible, otherwise they are lists. The number of
+rows returned is limited by the shortest column among the sequences.
 
 The
 .code zip
@@ -38413,6 +38404,22 @@ on a list of the arguments. The following equivalences hold:
 
    [apply zip x] <--> (transpose x)
 .brev
+
+A special requirement applies when the first argument of
+.code zip
+or the first element of the
+.meta iterable
+argument of
+.code transpose
+is a string. In this situation, the tuples which emerge are strings,
+if possible. The special requirement is that column elements which are
+strings are treated as individual items and appended to the row strings.
+For example,
+.code "(zip \(dqab\(dq #(\(dqrst\(dq \(dqxyz\(dq))"
+produces
+.codn "(\(dqarst\(dq \(dqbxyz\(dq)" ,
+rather than
+.codn "((\(dqa\(dq \(dqrst\(dq) (\(dqb\(dq \(dqxyz\(dq))" .
 
 .TP* Examples:
 .verb

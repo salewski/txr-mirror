@@ -5874,6 +5874,16 @@ static val seq_like(val ziparg0, varg args)
   return seq_finish(&bu);
 }
 
+static val zip_strcat(varg args)
+{
+  seq_build_t bu;
+  cnum index = 0;
+  seq_build_strcat_init(&bu);
+  while (args_more(args, index))
+    seq_add(&bu, args_get(args, &index));
+  return seq_finish(&bu);
+}
+
 static val zipv(varg zipargs)
 {
   if (!args_more(zipargs, 0))
@@ -5884,18 +5894,10 @@ static val zipv(varg zipargs)
     val func = nil;
 
     switch (type(ziparg0)) {
-    case NIL:
-    case CONS:
-    case LCONS:
-      func = list_f;
-      break;
     case STR:
     case LSTR:
     case LIT:
-      func = join_f;
-      break;
-    case VEC:
-      func = func_n0v(vectorv);
+      func = func_n0v(zip_strcat);
       break;
     default:
       func = func_f0v(ziparg0, seq_like);

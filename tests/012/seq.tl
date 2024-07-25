@@ -844,6 +844,9 @@
 (test
   (zip "ab" '(#\i #\j) #("x" "y")) ("aix" "bjy"))
 
+(test
+  (zip "abc" '(#\a 2 3)) ("aa" (#\b 2) (#\c 3)))
+
 (vtest
   [apply mapcar join (list-seq "aaa".."zzz")]
   (transpose (list-seq "aaa".."zzz")))

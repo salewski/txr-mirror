@@ -1597,6 +1597,16 @@ static void seq_build_str_add(seq_build_t *bu, val item)
   }
 }
 
+static void seq_build_strcat_add(seq_build_t *bu, val item)
+{
+  if (chrp(item) || stringp(item)) {
+    string_extend(bu->obj, item, nil);
+  } else {
+    seq_build_convert_to_list(bu, list_str(bu->obj));
+    bu->ops->add(bu, item);
+  }
+}
+
 static void seq_build_str_finish(seq_build_t *bu)
 {
   string_finish(bu->obj);
@@ -1667,6 +1677,13 @@ static struct seq_build_ops
                                   seq_build_generic_pend,
                                   seq_build_str_finish,
                                   seq_build_obj_mark);
+
+static struct seq_build_ops
+  sb_strcat_ops = seq_build_ops_init(seq_build_strcat_add,
+                                     seq_build_generic_pend,
+                                     seq_build_generic_pend,
+                                     seq_build_str_finish,
+                                     seq_build_obj_mark);
 
 static struct seq_build_ops
   sb_buf_ops = seq_build_ops_init(seq_build_buf_add,
@@ -1770,6 +1787,12 @@ void seq_build_init(val self, seq_build_t *bu, val likeobj)
     bu->ops = &sb_list_ops;
     break;
   }
+}
+
+void seq_build_strcat_init(seq_build_t *bu)
+{
+  bu->obj = string(L"");
+  bu->ops = &sb_strcat_ops;
 }
 
 void seq_add(seq_build_t *bu, val item)
