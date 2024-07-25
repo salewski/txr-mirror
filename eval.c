@@ -6982,7 +6982,7 @@ val tprint(val obj, val out)
     seq_iter_t iter;
     val elem;
 
-    seq_iter_init_with_info(self, &iter, si, 0);
+    seq_iter_init_with_info(self, &iter, si);
 
     while (seq_get(&iter, &elem))
       tprint(elem, out);

@@ -824,59 +824,6 @@ val seq_geti(seq_iter_t *it)
   return v;
 }
 
-static void seq_iter_rewind(seq_iter_t *it)
-{
-  switch (it->inf.type) {
-  case RNG:
-    {
-      val rf = from(it->inf.obj);
-
-      switch (type(rf)) {
-      case NUM:
-        it->ui.cn = c_n(rf);
-        break;
-      case CHR:
-        it->ui.cn = c_ch(rf);
-        break;
-      case BGNUM:
-        it->ui.vn = rf;
-        break;
-      default:
-        break;
-      }
-    }
-    break;
-  case CHR:
-    it->ui.cn = c_chr(it->inf.obj);
-    break;
-  case NUM:
-  case BGNUM:
-  case FLNUM:
-    it->ui.vn = it->inf.obj;
-    break;
-  default:
-    switch (it->inf.kind) {
-    case SEQ_NIL:
-      it->ui.iter = nil;
-      break;
-    case SEQ_LISTLIKE:
-      it->ui.iter = it->inf.obj;
-      break;
-    case SEQ_VECLIKE:
-      it->ui.index = 0;
-      break;
-    case SEQ_HASHLIKE:
-      it->ui.iter = hash_reset(it->ui.iter, it->inf.obj);
-      break;
-    case SEQ_TREELIKE:
-      it->ui.iter = tree_reset(it->ui.iter, it->inf.obj, colon_k, colon_k);
-      break;
-    default:
-      break;
-    }
-  }
-}
-
 static int seq_iter_get_cat(seq_iter_t *it, val *pval)
 {
   val dargs = it->ul.dargs;
@@ -1008,8 +955,7 @@ static void seq_iter_clone(seq_iter_t *dit, const seq_iter_t *sit)
     *dit = *sit;
 }
 
-void seq_iter_init_with_info(val self, seq_iter_t *it,
-                             seq_info_t si, int support_rewind)
+void seq_iter_init_with_info(val self, seq_iter_t *it, seq_info_t si)
 {
   it->inf = si;
 
@@ -1020,7 +966,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
       val rt = to(it->inf.obj);
 
       if (rt == colon_k || rt == t) {
-        seq_iter_init_with_info(self, it, seq_info(rf), support_rewind);
+        seq_iter_init_with_info(self, it, seq_info(rf));
         break;
       }
 
@@ -1115,7 +1061,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
       default:
         unsup_obj(self, it->inf.obj);
       } else {
-        seq_iter_init_with_info(self, it, seq_info(nil), support_rewind);
+        seq_iter_init_with_info(self, it, seq_info(nil));
         break;
       }
     }
@@ -1164,9 +1110,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
     }
     if (it->inf.obj->co.cls == tree_iter_cls)
     {
-      it->ui.iter = if3(support_rewind,
-                        copy_tree_iter(it->inf.obj),
-                        it->inf.obj);
+      it->ui.iter = it->inf.obj;
       it->ul.len = 0;
       it->ops = &si_tree_ops;
       break;
@@ -1183,8 +1127,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
       it->ui.iter = it->inf.obj;
       it->ul.len = 0;
       it->ops = &si_list_ops;
-      if (!support_rewind)
-        it->inf.obj = nil;
+      it->inf.obj = nil;
       break;
     case SEQ_VECLIKE:
       it->ui.index = 0;
@@ -1209,12 +1152,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
 
 void seq_iter_init(val self, seq_iter_t *it, val obj)
 {
-  seq_iter_init_with_info(self, it, seq_info(obj), 0);
-}
-
-static void seq_iter_init_with_rewind(val self, seq_iter_t *it, val obj)
-{
-  seq_iter_init_with_info(self, it, seq_info(obj), 1);
+  seq_iter_init_with_info(self, it, seq_info(obj));
 }
 
 val seq_getpos(val self, seq_iter_t *it)
@@ -1324,7 +1262,7 @@ val iter_begin(val obj)
         val si_obj, iter;
         struct seq_iter *si = coerce(struct seq_iter *,
                                      chk_calloc(1, sizeof *si));
-        seq_iter_init_with_info(self, si, sinf, 0);
+        seq_iter_init_with_info(self, si, sinf);
         iter = si->ui.iter;
         si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_cobj_ops);
         gc_hint(iter);
@@ -1465,7 +1403,7 @@ val iter_reset(val iter, val obj)
     {
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       seq_info_t sinf = seq_info(obj);
-      seq_iter_init_with_info(self, si, sinf, 0);
+      seq_iter_init_with_info(self, si, sinf);
       if (si->ops->mark)
         mut(iter);
       return iter;
@@ -2494,7 +2432,7 @@ val nullify(val obj)
   {
     seq_iter_t iter;
     val elem;
-    seq_iter_init_with_info(self, &iter, si, 0);
+    seq_iter_init_with_info(self, &iter, si);
     return if2(seq_peek(&iter, &elem), obj);
   }
 
@@ -11962,7 +11900,7 @@ val find(val item, val seq, val testfun_in, val keyfun_in)
       val elem;
       seq_iter_t it;
 
-      seq_iter_init_with_info(self, &it, si, 0);
+      seq_iter_init_with_info(self, &it, si);
 
       while (seq_get(&it, &elem)) {
         val key = funcall1(keyfun, elem);
@@ -11992,7 +11930,7 @@ val rfind(val item, val seq, val testfun_in, val keyfun_in)
       val elem;
       seq_iter_t it;
 
-      seq_iter_init_with_info(self, &it, si, 0);
+      seq_iter_init_with_info(self, &it, si);
 
       while (seq_get(&it, &elem)) {
         val key = funcall1(keyfun, elem);
@@ -13208,14 +13146,14 @@ val diff(val seq1, val seq2, val testfun, val keyfun)
   keyfun = default_arg(keyfun, identity_f);
 
   seq_iter_init(self, &si1, seq1);
-  seq_iter_init_with_rewind(self, &si2, seq2);
+  seq_iter_init(self, &si2, seq2);
 
   while (seq_get(&si1, &el1)) {
     val el1_key = funcall1(keyfun, el1);
     val el2;
     int found = 0;
 
-    seq_iter_rewind(&si2);
+    seq_iter_init(self, &si2, seq2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);
@@ -13315,13 +13253,13 @@ val isec(val seq1, val seq2, val testfun, val keyfun)
   keyfun = default_arg(keyfun, identity_f);
 
   seq_iter_init(self, &si1, seq1);
-  seq_iter_init_with_rewind(self, &si2, seq2);
+  seq_iter_init(self, &si2, seq2);
 
   while (seq_get(&si1, &el1)) {
     val el1_key = funcall1(keyfun, el1);
     val el2;
 
-    seq_iter_rewind(&si2);
+    seq_iter_init(self, &si2, seq2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);
@@ -13347,13 +13285,13 @@ val isecp(val seq1, val seq2, val testfun, val keyfun)
   keyfun = default_arg(keyfun, identity_f);
 
   seq_iter_init(self, &si1, seq1);
-  seq_iter_init_with_rewind(self, &si2, seq2);
+  seq_iter_init(self, &si2, seq2);
 
   while (seq_get(&si1, &el1)) {
     val el1_key = funcall1(keyfun, el1);
     val el2;
 
-    seq_iter_rewind(&si2);
+    seq_iter_init(self, &si2, seq2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);

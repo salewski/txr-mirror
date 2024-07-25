@@ -762,8 +762,7 @@ val subtypep(val sub, val sup);
 val typep(val obj, val type);
 seq_info_t seq_info(val cobj);
 void seq_iter_mark_op(struct seq_iter *it);
-void seq_iter_init_with_info(val self, seq_iter_t *it,
-                             seq_info_t si, int support_rewind);
+void seq_iter_init_with_info(val self, seq_iter_t *it, seq_info_t si);
 void seq_iter_init(val self, seq_iter_t *it, val obj);
 INLINE int seq_get(seq_iter_t *it, val *pval) { return it->ops->get(it, pval); }
 INLINE int seq_peek(seq_iter_t *it, val *pval) { return it->ops->peek(it, pval); }
