@@ -13034,7 +13034,7 @@ literal.
 .meIP >> #J json-syntax
 Introduces a JSON literal.
 .meIP >> #J^ json-syntax
-Introduces a JSON quasiliteral, allowing unquoting and splicing of Lisp expressions.
+Introduces a JSON quasiquote, allowing unquoting and splicing of Lisp expressions.
 
 The implementation of JSON syntax is based on, and intended to conform with
 the IETF RFC 8259 document. Only \*(TX's extensions to JSON syntax are described
@@ -47299,7 +47299,7 @@ In JSON syntax, unquotes are given the same above treatment as
 .coIP ~`...quasilit...`
 Similarly, quasiliterals are supported in JSON syntax.
 .meIP #H(() >> ( k0 << v0 ) >> ( k1 << v1 ) ...)
-Hash quasiliteral syntax is translated according to the
+Hash quasiquote syntax is translated according to the
 .mono
 .meti @(hash <> ([ k0 ] <> [ v0 ]) <> ([ k0 ] <> [ v0 ]) ...)
 .onom
@@ -47312,13 +47312,13 @@ That is to say, it must be of the form
 where the first element is
 .codn () .
 .meIP >> #S( type < e0 < e1 ...)
-Structure quasiliteral syntax is translated according to the
+Structure quasiquote syntax is translated according to the
 .mono
 .meti @(struct <> [ type ] <> [ e0 ] <> [ e1 ] ...)
 .onom
 pattern.
 .meIP >> #( e0 < e1 ...)
-Vector quasiliteral syntax is translated according to the
+Vector quasiquote syntax is translated according to the
 .mono
 .meti <> #([ e0 ] <> [ e1 ] ...)
 .onom
@@ -47352,7 +47352,7 @@ A nested quasiquote pattern is diagnosed as an error.
 .meIP >> ,* expr
 Splicing syntax is diagnosed as an error.
 .meIP >> ~* expr
-Splicing JSON syntax is diagnosed as an error inside a JSON quasiliteral.
+Splicing JSON syntax is diagnosed as an error inside a JSON quasiquote.
 .meIP >> ~* expr
 .meIP < obj
 Any other quasiquoted object is left untranslated.
@@ -84240,7 +84240,7 @@ etc.
 .desc
 The
 .code json
-macro exists in support of the JSON literal and quasiliteral
+macro exists in support of the JSON literal and quasiquote
 .mono
 .meti >> #J json-syntax
 .onom
