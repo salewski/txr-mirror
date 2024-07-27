@@ -47509,11 +47509,15 @@ which target keys, values or both.
 
 An important concept in the requirements governing the operation of the
 .code hash
-operator is that of a trivial pattern.
+operator is that of a
+.IR "trivial pattern" .
 
-A pattern is nontrivial if it is a variable or operator pattern.
-A pattern is also nontrivial if it is a list, vector or range pattern
-containing at least one nontrivial pattern. Otherwise, it is trivial.
+A pattern is
+.I nontrivial
+if it is a variable or operator.
+A quasiliteral pattern that contains variables or operators is nontrivial.
+A pattern is also nontrivial if it is a list, vector, range or quasiquote
+pattern containing at least one nontrivial pattern. Otherwise, it is trivial.
 
 The
 .code hash
