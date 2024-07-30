@@ -36224,11 +36224,11 @@ is compared to
 
 .coNP Functions @, remove-if @, keep-if @, separate @ remove-if* and @ keep-if*
 .synb
-.mets (remove-if < predicate-function < sequence <> [ key-function ])
-.mets (keep-if < predicate-function < sequence <> [ key-function ])
-.mets (separate < predicate-function < sequence <> [ key-function ])
-.mets (remove-if* < predicate-function < sequence <> [ key-function ])
-.mets (keep-if* < predicate-function < sequence <> [ key-function ])
+.mets (remove-if < predfun < sequence >> [ keyfun <> [ mapfun ]])
+.mets (keep-if < predfun < sequence >> [ keyfun <> [ mapfun ]])
+.mets (separate < predfun < sequence >> [ keyfun <> [ mapfun ]])
+.mets (remove-if* < predfun < sequence >> [ keyfun <> [ mapfun ]])
+.mets (keep-if* < predfun < sequence >> [ keyfun <> [ mapfun ]])
 .syne
 .desc
 The
@@ -36236,23 +36236,41 @@ The
 function produces a sequence whose contents are those of
 .meta sequence
 but with those elements removed which satisfy
-.metn predicate-function .
+.metn predfun .
 Those elements which are not removed appear in the same order.
 The result sequence may share substructure with the input sequence,
 and may even be the same sequence object if no items are removed.
 
 The optional
-.meta key-function
+.meta keyfun
 specifies how each element from the
 .meta sequence
 is transformed to an argument to
-.metn predicate-function .
+.metn predfun .
 If this argument is omitted
 then the predicate function is applied to the elements directly, a behavior
 which is identical to
-.meta key-function
+.meta keyfun
 being
 .codn "(fun identity)" .
+
+The optional
+.meta mapfun
+argument specifies a function which is applied to the elements of
+.meta sequence
+that are identified for retention, mapping them to the actual values that are
+accumulated into the output. In the absence of this argument, the behavior is
+to accumulate the elements themselves.
+
+If
+.meta keyfun
+and
+.meta mapfun
+are the same object, it is unspecified whether
+.meta mapfun
+is called, or whether the result of
+.meta keyfun
+is used.
 
 The
 .code keep-if
@@ -36287,9 +36305,9 @@ respectively,
 on
 .meta sequence
 (with the
-.meta predicate-function
+.meta predfun
 and
-.meta key-function
+.meta keyfun
 arguments passed through).
 One of the two elements may share substructure with the input sequence,
 and may even be the same sequence object if all items are either kept or
@@ -36336,8 +36354,8 @@ but produce lazy lists.
 
 .coNP Functions @ keep-keys-if and @ separate-keys
 .synb
-.mets (keep-keys-if < predicate-fun < sequence <> [ key-fun ])
-.mets (separate-keys < predicate-fun < sequence <> [ key-fun ])
+.mets (keep-keys-if < predfun < sequence >> [ keyfun <> [ mapfun ]])
+.mets (separate-keys < predfun < sequence <> [[ keyfun ])
 .syne
 .desc
 The functions
@@ -36353,21 +36371,43 @@ rather than accumulating the elements of the input
 .codn sequence ,
 they accumulate the transformed values of those elements, as projected
 through the
-.metn key-fun .
+.metn keyfun .
 
-Thus when
-.meta key-fun
+If all arguments of
+.code keep-keys-if
+are specified, then it behaves exactly like
+.code keep-if
+for those same arguments. The same is true if both the
+.meta keyfun
+and
+.meta mapfun
+arguments are omitted, or if
+.meta keyfun
+is specified as
+.codn identity .
+
+The difference between
+.code keep-keys-if
+and
+.code keep-if
+is the defaulting of the
+.meta mapfun
+argument. If
+.meta mapfun
+is omitted, then it defaults to being the same function as the
+.meta keyfun
+argument.
+
+In the case of
+.codn separate-keys-if ,
+when
+.meta keyfun
 is omitted, thus defaulting to
 .codn identity ,
 or else explicitly specified as
 .code identity
-or equivalent function, the behavior of these functions is the
-almost the same as that of
-.code keep-if
-and
+or equivalent function, the behavior is same as that of
 .codn separate .
-However, there may be a difference in whether the output shares structure with
-.metn sequence .
 
 .TP* Example:
 

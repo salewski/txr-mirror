@@ -1617,3 +1617,7 @@
   (seq-like "" #\a #\b 3) (#\a #\b 3)
   (seq-like #() 1 2 3) #(1 2 3)
   (seq-like #b'' 1 2 3) #b'010203')
+
+(mtest
+  [keep-if (lop find "aiueo") "vertebrate" : chr-toupper] "EEAE"
+  [remove-if (lop find "aiueo") "vertebrate" : chr-toupper] "VRTBRT")

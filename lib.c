@@ -3418,9 +3418,11 @@ static val rem_impl(val (*eqfun)(val, val), val self,
   return seq_finish(&bu);
 }
 
-static val rem_if_impl(val pred, val seq, val keyfun_in, val self)
+static val rem_if_impl(val pred, val seq, val keyfun_in, val mapfun_in,
+                       val self)
 {
   val keyfun = default_null_arg(keyfun_in);
+  val mapfun = default_null_arg(mapfun_in);
   seq_iter_t it;
   seq_build_t bu;
   val elem;
@@ -3430,8 +3432,15 @@ static val rem_if_impl(val pred, val seq, val keyfun_in, val self)
 
   while (seq_get(&it, &elem)) {
     val key = keyfun ? funcall1(keyfun, elem) : elem;
-    if (!funcall1(pred, key))
+    if (!funcall1(pred, key)) {
+      if (mapfun) {
+        if (mapfun == keyfun)
+          elem = key;
+        else
+          elem = funcall1(mapfun, elem);
+      }
       seq_add(&bu, elem);
+    }
   }
 
   return seq_finish(&bu);
@@ -3467,35 +3476,20 @@ val keepqual(val obj, val seq, val keyfun)
   return rem_impl(nequal, lit("keepqual"), obj, seq, keyfun);
 }
 
-val remove_if(val pred, val seq, val keyfun)
+val remove_if(val pred, val seq, val keyfun, val mapfun)
 {
-  return rem_if_impl(pred, seq, keyfun, lit("remove-if"));
+  return rem_if_impl(pred, seq, keyfun, mapfun, lit("remove-if"));
 }
 
-val keep_if(val pred, val seq, val keyfun)
+val keep_if(val pred, val seq, val keyfun, val mapfun)
 {
-  return rem_if_impl(notf(pred), seq, keyfun, lit("keep-if"));
+  return rem_if_impl(notf(pred), seq, keyfun, mapfun, lit("keep-if"));
 }
 
-val keep_keys_if(val pred, val seq, val keyfun_in)
+val keep_keys_if(val pred, val seq, val keyfun_in, val mapfun_in)
 {
-  val self = lit("keep-keys-if");
-  val keyfun = default_null_arg(keyfun_in);
-  seq_iter_t it;
-  seq_build_t bu;
-  val elem;
-
-  seq_iter_init(self, &it, seq);
-  seq_build_init(self, &bu, seq);
-
-  while (seq_get(&it, &elem)) {
-    val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-    if (funcall1(pred, key))
-      seq_add(&bu, key);
-  }
-
-  return seq_finish(&bu);
+  val mapfun = default_arg(mapfun_in, keyfun_in);
+  return rem_if_impl(notf(pred), seq, keyfun_in, mapfun, lit("keep-keys-if"));
 }
 
 val separate(val pred, val seq, val keyfun_in)
