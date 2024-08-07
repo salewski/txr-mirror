@@ -1,3 +1,77 @@
+                                    TXR 296
+                                   2024-08-07
+
+                         Fifteenth Anniversary Edition
+
+
+  Features
+
+  - Lib:
+    - new cshuffle, cnshuffle functions which output cyclic permutations
+
+  - sequences:
+    - new wheref, whereq, whereql and wherequal functions:
+      companions to where.
+    - new functions find-maxes and find-mins: find multiple minimal/maximal
+      elements.
+    - new mapfun argument in keep-if, remove-if and keep-keys-if, allowing
+      output to be mapped through function.
+    - zip, transpose: more permissive; will not fail when trying to
+      produce strings, but a non-character object occurs.
+    - seq-like: new function which makes a sequence out of its second
+      and subsequent arguments which is of the same kind, if possible,
+      as its first argument.
+
+  - OOP:
+    - structs can now have special methods slot and slot-set
+      and special functions static-slot and static-slot set
+      - these dynamically handle the case when a slot is not found.
+
+  - JSON:
+    - JSON printing now renders struct objects.
+    - A "__type" property is emitted, giving the type.
+      - can be disabled by making *print-json-type* nil.
+    - new *read-json-int* variable
+      - controls whether JSON integers are read as integer objects or float.
+      - integers are defined as numbers without a decimal point, e or E.
+
+  Bugs
+
+  - TXR Pattern Language:
+    - spurious retention problem solved
+    - allows, e.g. @(repeat) through huge files without runaway memory.
+
+  - regex:
+    - the read-until-match function now avoids all unnecessary consumption
+      of input.
+      - this means that if data is being delimited by regex out of
+        a real-time source such as a socket, it will not hang waiting
+        for more input that is not yet available, even though the
+        record has already been delimited.
+      - GNU Awk's record separation has similar issues.
+
+  - hash tables:
+    - hash codes of struct instances and hash table objects being
+      wrongly reduced into positive fixnum range instead of using the
+      full pointer-sized unsigned type.
+      - forgotten change not made six years ago.
+
+  - JSON:
+    - flat-p argument in put-json and put-jsons now works correctly;
+      no stray newlines are emitted.
+
+  - sequences:
+    - sub function was returning an iterator in some cases resulting
+      in odd results like:
+      (partition 1..10 '(2 3)) -> ((1 2) (3) #<seq-iter: a24c380>)
+    - partition, split and split*
+      - infinite looping regression
+      - handling of negative indices (that are still negative after
+        subtracting length).
+    - split, split*: poor behavior for indices beyond length
+
+
+
                                     TXR 295
                                    2024-06-28
 

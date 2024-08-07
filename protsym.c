@@ -117,30 +117,31 @@ extern val output_s, pack_s, package_alist_s, package_s, panic_s;
 extern val parser_s, path_exists_s, path_not_found_s, path_permission_s, path_s;
 extern val pct_fun_s, pkg_s, plus_s, plusp_s, postinit_k;
 extern val pprint_flo_format_s, print_base_s, print_circle_s, print_flo_digits_s, print_flo_format_s;
-extern val print_flo_precision_s, print_json_format_s, print_s, process_error_s, prof_s;
-extern val prog1_s, prog2_s, progn_s, progv_s, promise_forced_s;
-extern val promise_inprogress_s, promise_s, ptr_in_d_s, ptr_in_s, ptr_out_d_s;
-extern val ptr_out_s, ptr_out_s_s, ptr_s, push_s, put_buf_s;
-extern val put_byte_s, put_char_s, put_string_s, qquote_s, qref_s;
-extern val quant_state_s, quasi_s, quasilist_s, query_error_s, quote_s;
-extern val r_atan2_s, r_ceil_s, r_copysign_s, r_drem_s, r_expt_s;
-extern val r_fdim_s, r_floor_s, r_fmax_s, r_fmin_s, r_hypot_s;
-extern val r_jn_s, r_ldexp_s, r_lognot_s, r_logtrunc_s, r_mod_s;
-extern val r_nextafter_s, r_remainder_s, r_round_s, r_scalb_s, r_scalbln_s;
-extern val r_trunc_s, r_yn_s, random_state_s, random_state_var_s, random_warmup_s;
-extern val range_error_s, range_s, rcons_s, rdev_k, rdev_s;
-extern val read_bad_json_s, read_unknown_structs_s, real_time_k, rebind_s, rec_source_loc_s;
-extern val recip_s, reflect_k, regex_s, remainder_s, rep_s;
-extern val repeat_s, repeat_spec_k, require_s, resolve_k, rest_s;
-extern val restart_s, return_from_s, return_s, rfilt_k, rint_s;
-extern val rlim_s, round1_s, round_s, rplaca_s, rplacd_s;
-extern val sbit_s, scalb_s, scalbln_s, sec_s, seek_s;
-extern val self_path_s, seq_iter_s, sequence_s, set_prop_s, set_s;
-extern val setq_s, setqf_s, short_s, shortest_k, sign_extend_s;
-extern val significand_s, signum_s, sin_s, single_s, sinh_s;
-extern val size_k, size_s, skip_s, slot_s, some_s;
-extern val space_k, special_s, splice_s, sqrt_s, square_s;
-extern val stack_overflow_s, standard_k, stat_s, stddebug_s, stderr_s;
+extern val print_flo_precision_s, print_json_format_s, print_json_type_s, print_s, process_error_s;
+extern val prof_s, prog1_s, prog2_s, progn_s, progv_s;
+extern val promise_forced_s, promise_inprogress_s, promise_s, ptr_in_d_s, ptr_in_s;
+extern val ptr_out_d_s, ptr_out_s, ptr_out_s_s, ptr_s, push_s;
+extern val put_buf_s, put_byte_s, put_char_s, put_string_s, qquote_s;
+extern val qref_s, quant_state_s, quasi_s, quasilist_s, query_error_s;
+extern val quote_s, r_atan2_s, r_ceil_s, r_copysign_s, r_drem_s;
+extern val r_expt_s, r_fdim_s, r_floor_s, r_fmax_s, r_fmin_s;
+extern val r_hypot_s, r_jn_s, r_ldexp_s, r_lognot_s, r_logtrunc_s;
+extern val r_mod_s, r_nextafter_s, r_remainder_s, r_round_s, r_scalb_s;
+extern val r_scalbln_s, r_trunc_s, r_yn_s, random_state_s, random_state_var_s;
+extern val random_warmup_s, range_error_s, range_s, rcons_s, rdev_k;
+extern val rdev_s, read_bad_json_s, read_json_int_s, read_unknown_structs_s, real_time_k;
+extern val rebind_s, rec_source_loc_s, recip_s, reflect_k, regex_s;
+extern val remainder_s, rep_s, repeat_s, repeat_spec_k, require_s;
+extern val resolve_k, rest_s, restart_s, return_from_s, return_s;
+extern val rfilt_k, rint_s, rlim_s, round1_s, round_s;
+extern val rplaca_s, rplacd_s, sbit_s, scalb_s, scalbln_s;
+extern val sec_s, seek_s, self_path_s, seq_iter_s, sequence_s;
+extern val set_prop_s, set_s, setq_s, setqf_s, short_s;
+extern val shortest_k, sign_extend_s, significand_s, signum_s, sin_s;
+extern val single_s, sinh_s, size_k, size_s, skip_s;
+extern val slot_s, slotset_s, some_s, space_k, special_s;
+extern val splice_s, sqrt_s, square_s, stack_overflow_s, standard_k;
+extern val stat_s, static_slot_s, static_slot_set_s, stddebug_s, stderr_s;
 extern val stdin_s, stdio_stream_s, stdnull_s, stdout_s, str_d_s;
 extern val str_s, str_s_s, stream_s, string_k, string_s;
 extern val struct_lit_s, struct_s, struct_type_s, switch_s, sym_s;
@@ -291,30 +292,31 @@ val *protected_sym[] = {
   &parser_s, &path_exists_s, &path_not_found_s, &path_permission_s, &path_s,
   &pct_fun_s, &pkg_s, &plus_s, &plusp_s, &postinit_k,
   &pprint_flo_format_s, &print_base_s, &print_circle_s, &print_flo_digits_s, &print_flo_format_s,
-  &print_flo_precision_s, &print_json_format_s, &print_s, &process_error_s, &prof_s,
-  &prog1_s, &prog2_s, &progn_s, &progv_s, &promise_forced_s,
-  &promise_inprogress_s, &promise_s, &ptr_in_d_s, &ptr_in_s, &ptr_out_d_s,
-  &ptr_out_s, &ptr_out_s_s, &ptr_s, &push_s, &put_buf_s,
-  &put_byte_s, &put_char_s, &put_string_s, &qquote_s, &qref_s,
-  &quant_state_s, &quasi_s, &quasilist_s, &query_error_s, &quote_s,
-  &r_atan2_s, &r_ceil_s, &r_copysign_s, &r_drem_s, &r_expt_s,
-  &r_fdim_s, &r_floor_s, &r_fmax_s, &r_fmin_s, &r_hypot_s,
-  &r_jn_s, &r_ldexp_s, &r_lognot_s, &r_logtrunc_s, &r_mod_s,
-  &r_nextafter_s, &r_remainder_s, &r_round_s, &r_scalb_s, &r_scalbln_s,
-  &r_trunc_s, &r_yn_s, &random_state_s, &random_state_var_s, &random_warmup_s,
-  &range_error_s, &range_s, &rcons_s, &rdev_k, &rdev_s,
-  &read_bad_json_s, &read_unknown_structs_s, &real_time_k, &rebind_s, &rec_source_loc_s,
-  &recip_s, &reflect_k, &regex_s, &remainder_s, &rep_s,
-  &repeat_s, &repeat_spec_k, &require_s, &resolve_k, &rest_s,
-  &restart_s, &return_from_s, &return_s, &rfilt_k, &rint_s,
-  &rlim_s, &round1_s, &round_s, &rplaca_s, &rplacd_s,
-  &sbit_s, &scalb_s, &scalbln_s, &sec_s, &seek_s,
-  &self_path_s, &seq_iter_s, &sequence_s, &set_prop_s, &set_s,
-  &setq_s, &setqf_s, &short_s, &shortest_k, &sign_extend_s,
-  &significand_s, &signum_s, &sin_s, &single_s, &sinh_s,
-  &size_k, &size_s, &skip_s, &slot_s, &some_s,
-  &space_k, &special_s, &splice_s, &sqrt_s, &square_s,
-  &stack_overflow_s, &standard_k, &stat_s, &stddebug_s, &stderr_s,
+  &print_flo_precision_s, &print_json_format_s, &print_json_type_s, &print_s, &process_error_s,
+  &prof_s, &prog1_s, &prog2_s, &progn_s, &progv_s,
+  &promise_forced_s, &promise_inprogress_s, &promise_s, &ptr_in_d_s, &ptr_in_s,
+  &ptr_out_d_s, &ptr_out_s, &ptr_out_s_s, &ptr_s, &push_s,
+  &put_buf_s, &put_byte_s, &put_char_s, &put_string_s, &qquote_s,
+  &qref_s, &quant_state_s, &quasi_s, &quasilist_s, &query_error_s,
+  &quote_s, &r_atan2_s, &r_ceil_s, &r_copysign_s, &r_drem_s,
+  &r_expt_s, &r_fdim_s, &r_floor_s, &r_fmax_s, &r_fmin_s,
+  &r_hypot_s, &r_jn_s, &r_ldexp_s, &r_lognot_s, &r_logtrunc_s,
+  &r_mod_s, &r_nextafter_s, &r_remainder_s, &r_round_s, &r_scalb_s,
+  &r_scalbln_s, &r_trunc_s, &r_yn_s, &random_state_s, &random_state_var_s,
+  &random_warmup_s, &range_error_s, &range_s, &rcons_s, &rdev_k,
+  &rdev_s, &read_bad_json_s, &read_json_int_s, &read_unknown_structs_s, &real_time_k,
+  &rebind_s, &rec_source_loc_s, &recip_s, &reflect_k, &regex_s,
+  &remainder_s, &rep_s, &repeat_s, &repeat_spec_k, &require_s,
+  &resolve_k, &rest_s, &restart_s, &return_from_s, &return_s,
+  &rfilt_k, &rint_s, &rlim_s, &round1_s, &round_s,
+  &rplaca_s, &rplacd_s, &sbit_s, &scalb_s, &scalbln_s,
+  &sec_s, &seek_s, &self_path_s, &seq_iter_s, &sequence_s,
+  &set_prop_s, &set_s, &setq_s, &setqf_s, &short_s,
+  &shortest_k, &sign_extend_s, &significand_s, &signum_s, &sin_s,
+  &single_s, &sinh_s, &size_k, &size_s, &skip_s,
+  &slot_s, &slotset_s, &some_s, &space_k, &special_s,
+  &splice_s, &sqrt_s, &square_s, &stack_overflow_s, &standard_k,
+  &stat_s, &static_slot_s, &static_slot_set_s, &stddebug_s, &stderr_s,
   &stdin_s, &stdio_stream_s, &stdnull_s, &stdout_s, &str_d_s,
   &str_s, &str_s_s, &stream_s, &string_k, &string_s,
   &struct_lit_s, &struct_s, &struct_type_s, &switch_s, &sym_s,
