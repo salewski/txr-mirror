@@ -7354,7 +7354,12 @@ void eval_init(void)
   reg_fun(intern(lit("length-list"), user_package), func_n1(length_list));
   reg_fun(intern(lit("length-list-<"), user_package), func_n2(length_list_lt));
 
-  reg_fun(intern(lit("mapcar"), user_package), func_n1v(mapcarv));
+  {
+    val mapcar_f = func_n1v(mapcarv);
+    reg_fun(intern(lit("mapcar"), user_package), mapcar_f);
+    reg_fun(intern(lit("map"), user_package), mapcar_f);
+  }
+
   reg_fun(intern(lit("mapcar*"), user_package), func_n1v(lazy_mapcarv));
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));

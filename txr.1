@@ -38119,9 +38119,10 @@ and
 .code hash-diff
 should be used instead.
 
-.coNP Functions @, mapcar @, mappend @ mapcar* and @ mappend*
+.coNP Functions @, mapcar @, map @, mappend @ mapcar* and @ mappend*
 .synb
 .mets (mapcar < function << iterable *)
+.mets (map < function << iterable *)
 .mets (mappend < function << iterable *)
 .mets (mapcar* < function << iterable *)
 .mets (mappend* < function << iterable *)
@@ -38160,6 +38161,12 @@ The return values of the function are collected into a new sequence which is
 returned. The returned sequence is of the same kind as the leftmost
 input sequence, unless the accumulated values cannot be elements of that type of
 sequence, in which case a list is returned.
+
+The functions
+.code mapcar
+and
+.code map
+are synonyms.
 
 The
 .code mappend
