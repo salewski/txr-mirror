@@ -1369,7 +1369,8 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
       continue;
     }
 
-    /* The state matches the character, so add it to the move set.
+    /* The state has a transition on the character, add the transition's
+       destination set to the move set.
        C trick: all character-transitioning state types have the
        pointer to the next state in the same position,
        among a common set of leading struct members in the union,
