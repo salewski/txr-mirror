@@ -234,8 +234,8 @@ union nfa_state {
 #define nfa_accept_state_p(s) ((s)->a.kind == nfa_accept)
 #define nfa_empty_state_p(s) ((s)->a.kind == nfa_accept || \
                               (s)->a.kind == nfa_empty)
-#define nfa_has_transitions(s) ((s)->a.kind != nfa_empty || \
-                                (s)->e.trans0 || (s)->e.trans1)
+#define nfa_has_transitions(s) ((s)->a.kind != nfa_empty && \
+                                ((s)->e.trans0 || (s)->e.trans1))
 
 struct nfa_machine {
   int is_nfa;           /* common member */
