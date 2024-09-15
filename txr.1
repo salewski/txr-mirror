@@ -56676,10 +56676,9 @@ matched by
 is included in the returned string. It defaults to
 .codn nil .
 
-The accumulation of characters is terminated by a match on
+The accumulation of characters is terminated by a non-empty match on
 .metn regex ,
 the end of the stream, or an error.
-
 This means that characters are read from the stream and accumulated while the
 stream has more characters available, and while its prefix does not match
 .metn regex .
