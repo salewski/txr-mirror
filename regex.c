@@ -1292,7 +1292,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 
     s->a.visited = visited;
     stack[stackp++] = s;
-    set[nout++] = s;
+    if (!nfa_empty_state_p(s))
+      set[nout++] = s;
     if (nfa_accept_state_p(s))
       *accept = 1;
     if (!moreset && nfa_has_transitions(s))
@@ -1311,7 +1312,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 
       if (nfa_test_set_visited(e0, visited)) {
         stack[stackp++] = e0;
-        set[nout++] = e0;
+        if (!nfa_empty_state_p(e0))
+          set[nout++] = e0;
         if (nfa_accept_state_p(e0))
           *accept = 1;
         if (!moreset && nfa_has_transitions(e0))
@@ -1320,7 +1322,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 
       if (nfa_test_set_visited(e1, visited)) {
         stack[stackp++] = e1;
-        set[nout++] = e1;
+        if (!nfa_empty_state_p(e1))
+          set[nout++] = e1;
         if (nfa_accept_state_p(e1))
           *accept = 1;
         if (!moreset && nfa_has_transitions(e1))
@@ -1382,7 +1385,8 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 
       if (nfa_test_set_visited(mov, visited)) {
         stack[stackp++] = mov;
-        set[nout++] = mov;
+        if (!nfa_empty_state_p(mov))
+          set[nout++] = mov;
         if (nfa_accept_state_p(mov))
           *accept = 1;
         if (!moreset && nfa_has_transitions(mov))
@@ -1403,7 +1407,8 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 
       if (nfa_test_set_visited(e0, visited)) {
         stack[stackp++] = e0;
-        set[nout++] = e0;
+        if (!nfa_empty_state_p(e0))
+          set[nout++] = e0;
         if (nfa_accept_state_p(e0))
           *accept = 1;
         if (!moreset && nfa_has_transitions(e0))
@@ -1412,7 +1417,8 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 
       if (nfa_test_set_visited(e1, visited)) {
         stack[stackp++] = e1;
-        set[nout++] = e1;
+        if (!nfa_empty_state_p(e1))
+          set[nout++] = e1;
         if (nfa_accept_state_p(e1))
           *accept = 1;
         if (!moreset && nfa_has_transitions(e0))
