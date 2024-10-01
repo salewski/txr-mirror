@@ -13564,7 +13564,7 @@ val refset(val seq, val ind, val newval)
     }
     /* fallthrough */
   default:
-    type_mismatch(lit("refset: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("refset: ~s is not a modifiable sequence"), seq, nao);
   }
   return newval;
 }
@@ -13593,7 +13593,7 @@ val replace(val seq, val items, val from, val to)
       return replace_obj(seq, items, from, to);
     /* fallthrough */
   default:
-    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
+    type_mismatch(lit("~a: ~s is not a modifiable sequence"), self, seq, nao);
   }
 }
 
