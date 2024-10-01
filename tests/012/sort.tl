@@ -96,3 +96,6 @@
 
 (test
   [hist-sort-by upcase-str '("a" "b" "c" "a" "b" "a" "b" "a")] (("A" . 4) ("B" . 3) ("C" . 1)))
+
+(let ((*random-state* (make-random-state 0)))
+  (test (shuffle 1..10) #(4 1 7 6 2 8 3 5 9)))

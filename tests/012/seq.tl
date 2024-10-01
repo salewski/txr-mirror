@@ -1621,3 +1621,6 @@
 (mtest
   [keep-if (lop find "aiueo") "vertebrate" : chr-toupper] "EEAE"
   [remove-if (lop find "aiueo") "vertebrate" : chr-toupper] "VRTBRT")
+
+(test
+  (copy 1..10) #(1 2 3 4 5 6 7 8 9))

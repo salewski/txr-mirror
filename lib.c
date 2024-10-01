@@ -13344,6 +13344,8 @@ val copy(val seq)
     return copy_buf(seq);
   case FUN:
     return copy_fun(seq);
+  case RNG:
+    return vec_seq(seq);
   case TNOD:
     return copy_tnode(seq);
   case CPTR:

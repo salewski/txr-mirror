@@ -21585,6 +21585,10 @@ as if by:
 .mono
 .meti (copy-iter << object )
 .onom
+.coIP rng
+.mono
+.meti (vec-seq << object )
+.onom
 .RE
 
 .IP
@@ -21593,7 +21597,7 @@ For all other types of
 the invocation is erroneous.
 
 Except in the case when
-.meta sequence
+.meta object
 is
 .codn nil ,
 .code copy
@@ -21601,27 +21605,13 @@ returns a value that
 is distinct from (not
 .code eq
 to)
-.metn sequence .
-This is different from
-the behavior of
-.mono
-.meti >> [ sequence 0..t]
-.onom
-or
-.mono
-.meti (sub < sequence 0 t)
-.onom
-which recognize
-that they need not make a copy of
-.metn sequence ,
-and just return it.
-
-Note however, that the elements of the returned sequence may be
-eq to elements of the original sequence. In other words, copy is
-a deeper copy than just duplicating the
-.code sequence
-value itself,
-but it is not a deep copy.
+.metn object .
+When the object is a sequence,
+the elements of the returned sequence may be
+.code eq
+to elements of the original sequence. In other words,
+.code copy
+is not required to perform a deep copy.
 
 .SS* List Manipulation
 .coNP Function @ cons
