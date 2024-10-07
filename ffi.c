@@ -3916,12 +3916,11 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     tft->out = ffi_struct_out;
 
   if (flexp) {
-    tft->size = offs;
     tft->alloc = ffi_flex_alloc;
     tft->dynsize = ffi_flex_dynsize;
-  } else {
-    tft->size = (offs + most_align - 1) & ~(most_align - 1);
   }
+
+  tft->size = (offs + most_align - 1) & ~(most_align - 1);
 
   tft->align = most_align;
 
