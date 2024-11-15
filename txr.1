@@ -1011,7 +1011,8 @@ If the file has a recognized suffix:
 .strn .tl ,
 .strn .tlo ,
 .strn .tlo.gz ,
-.str  .txr
+.strn .txr ,
+.str .txr-profile
 or
 .strn .txr_profile ,
 then these options have no effect. The suffix determines the
@@ -1040,7 +1041,7 @@ See the section SETUID/SETGID OPERATION.
 
 .coIP --noprofile
 If entering the interactive listener, suppress the reading of the
-.code .txr_profile
+.code .txr-profile
 in the home directory. See the Interactive Profile File subsection in the
 INTERACTIVE LISTENER section of the manual.
 
@@ -83230,7 +83231,8 @@ ends in any of these four suffixes:
 .codn .tlo ,
 .codn .tlo.gz ,
 .codn .tl ,
-.code .txr
+.codn .txr ,
+.code .txr-profile
 or
 .codn .txr_profile .
 
@@ -83288,6 +83290,8 @@ a file results in an error other than non-existence.
 
 If an unsuffixed file is successfully opened, its contents are treated as
 interpreted Lisp.  Files ending in
+.code .txr-profile
+or
 .code .txr_profile
 are also treated as interpreted Lisp. Files ending in
 .code .tlo
@@ -83616,7 +83620,7 @@ are executed first. However, their executions do not interleave.
 Note that
 .code *load-hooks*
 is not processed after the listener reads the
-.code .txr_profile
+.code .txr-profile
 file. Hooks installed by the profile file will activate when the process
 exits.
 
@@ -94318,7 +94322,7 @@ expression.
 Unless the
 .code --noprofile
 option has been used, when the listener starts up, it looks for file called
-.code .txr_profile
+.code .txr-profile
 in the user's home directory, as determined by the
 .code HOME
 environment variable in POSIX environments or the
@@ -94326,7 +94330,19 @@ environment variable in POSIX environments or the
 environment variable on MS Windows. If that variable doesn't exist, no further
 attempt is made to locate this file.
 
-If the file exists, it is subject to security checks. First, the
+If the
+.code .txr-profile
+file does not exist, but
+.code .txr_profile
+exists, then that file is taken as the profile file instead.
+Falling back on
+.code .txr_profile
+is obsolescent and will be removed in some future version of \*(TX.
+The switch to
+.code .txr-profile
+was introduced in \*(TX 297.
+
+If the history file exists, it is subject to security checks. First, the
 .code path-components-safe
 is applied to its path name. The function validates that no component
 of the path name is a directory that is writable to another user, or
@@ -94356,13 +94372,26 @@ option isn't present.
 .SS* History Persistence
 
 The history is maintained in a text file called
-.code .txr_history
+.code .txr-history
 in the user's home directory. Whenever the interactive listener terminates,
 this file is updated with the history contents stored in the listener's
 memory.  The next time the listener starts, it first reloads the history from
 this file, making the most recent
 .code *listener-hist-len*
 expressions of a previous session available for recall.
+
+If the
+.code .txr-history
+file does not exist, but a file called
+.code .txr_history
+exists, then that file is loaded instead and that same file will be
+written to when the history is saved. This behavior is obsolescent;
+support for recognizing a
+.code .txr_history
+file will be removed in a future release of \*(TX.
+The switch to
+.code .txr-history
+was introduced in \*(TX 297.
 
 The history file is maintained in a way that is somewhat
 robust against the loss of history arising from the situation that a user
@@ -94406,7 +94435,7 @@ command.
 
 When the history file is loaded, security checks take place, in exactly
 the same way that the
-.str .txr_profile
+.str .txr-profile
 file is validated. First the path of the history file is checked using
 the function
 .codn path-components-safe ,
@@ -94704,7 +94733,7 @@ The
 .code quip
 function returns a randomly selected string containing a humorous quip,
 quote or witticism. The following code may be added to
-.code .txr_profile
+.code .txr-profile
 to produce a random quip on startup:
 
 .verb
@@ -94714,7 +94743,7 @@ to produce a random quip on startup:
 The
 .code quip
 function was introduced in \*(TX 244. If the
-.code .txr_profile
+.code .txr-profile
 is used with installations of older \*(TX versions, it is recommended to use
 the following, to avoid calling the undefined function, as well as to
 prevent a warning:
@@ -94724,6 +94753,9 @@ prevent a warning:
     (put-line (quip))
     (defun quip ()))
 .brev
+
+In addition, older \*(TX versions require the profile file to be named
+.codn .txr_profile .
 
 .SH* SETUID/SETGID OPERATION
 

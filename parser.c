@@ -538,6 +538,8 @@ void open_txr_file(val first_try_path, val *txr_lisp_p,
     suffix = tlo;
   else if (match_str(first_try_path, lit(".tlo.gz"), negone))
     suffix = tlz;
+  else if (match_str(first_try_path, lit(".txr-profile"), negone))
+    suffix = tl;
   else if (match_str(first_try_path, lit(".txr_profile"), negone))
     suffix = tl;
   else
@@ -1026,12 +1028,17 @@ static void report_path_perm_problem(val name)
 #endif
 }
 
-static void load_rcfile(val name, val psafe_s, val ppriv_s)
+static void load_rcfile(val home, val pexist_s, val psafe_s, val ppriv_s)
 {
   val self = lit("listener");
-  val resolved_name = name;
   val lisp_p = t;
   val stream = nil;
+  val try1 = scat2(home, lit("/.txr-profile"));
+  val try2 = scat2(home, lit("/.txr_profile"));
+
+  val name = if3(funcall1(pexist_s, try1), try1,
+                 if2(funcall1(pexist_s, try2), try2));
+  val resolved_name = name;
 
   if (!funcall1(psafe_s, name)) {
     report_path_perm_problem(name);
@@ -1645,9 +1652,12 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val done = nil;
   val counter = one;
   val home = if3(repl_level == 1, get_home_path(), nil);
-  val histfile = if2(home, scat2(home, lit("/.txr_history")));
-  const wchar_t *histfile_w = if3(home, c_str(histfile, self), NULL);
-  val rcfile = if2(home && !opt_noprofile, scat2(home, lit("/.txr_profile")));
+  val hist1 = if2(home, scat2(home, lit("/.txr-history")));
+  val hist2 = if2(home, scat2(home, lit("/.txr_history")));
+  val histfile;
+  const wchar_t *hist1_w = if3(home, c_str(hist1, self), 0);
+  const wchar_t *hist2_w = if3(home, c_str(hist2, self), 0);
+  const wchar_t *histfile_w = 0;
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
 #if CONFIG_FULL_REPL
@@ -1690,12 +1700,20 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   lino_set_enter_cb(ls, is_balanced_line, 0);
   lino_set_tempfile_suffix(ls, ".tl");
 
-  if (rcfile && funcall1(pexist_s, rcfile))
-    load_rcfile(rcfile, psafe_s, ppriv_s);
+  if (home && !opt_noprofile)
+    load_rcfile(home, pexist_s, psafe_s, ppriv_s);
 
   lino_hist_set_max_len(ls, c_num(cdr(hist_len_var), self));
 
-  if (histfile_w && funcall1(pexist_s, histfile)) {
+  if (hist1_w && funcall1(pexist_s, hist1)) {
+    histfile = hist1;
+    histfile_w = hist1_w;
+  } else if (hist2_w && funcall1(pexist_s, hist2)) {
+    histfile = hist2;
+    histfile_w = hist2_w;
+  }
+
+  if (histfile_w) {
     if (!funcall1(psafe_s, home)) {
       report_path_perm_problem(home);
     } else if (!funcall1(ppriv_s, histfile)) {
@@ -1703,6 +1721,11 @@ val repl(val bindings, val in_stream, val out_stream, val env)
     }
 
     lino_hist_load(ls, histfile_w);
+  }
+
+  if (home && !histfile_w) {
+    histfile = hist1;
+    histfile_w = hist1_w;
   }
 
 #if CONFIG_FULL_REPL

@@ -179,7 +179,7 @@ static void help(void)
 "                       the following argument arg and allows one or more\n"
 "                       copies of it to be to be embedded in the\n"
 "                       encoded arguments. See the manual.\n"
-"--noprofile            Do not read .txr_profile when entering listener.\n"
+"--noprofile            Do not read .txr-profile when entering listener.\n"
 IF_HAVE_FORK_STUFF(
 "--reexec               Re-execute TXR with remaining arguments.\n",
 ""
