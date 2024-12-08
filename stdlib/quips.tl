@@ -116,6 +116,7 @@
     "Evidence of amphoric Lisp macros was recently found in ancient clay jars."
     "Remember, the car function does not make a copy. Thus, caring is sharing."
     "This function call may be monitored for debugging and profiling purposes."
+    "I hope this message finds you Weller-free, using better soldering irons."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
