@@ -5804,7 +5804,7 @@ static val map_common(val self, val fun, varg lists,
                                         chk_malloc(argc * sizeof *iter_array),
                                         alloca(argc * sizeof *iter_array)));
     val buf = if2(over_limit, make_owned_buf(one, coerce(mem_t *, iter_array)));
-    seq_build_t out = { 0 };
+    seq_build_t out = all_zero_init;
     args_decl(args_fun, max(argc, ARGS_MIN));
 
     if (collect_fn != 0)
