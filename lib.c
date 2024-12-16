@@ -564,7 +564,8 @@ static val length_str_range(val from, val to)
     cnum i;
 
     for (i = 0; fs[i]; i++)
-      out = mul(out, num(labs(ts[i] - fs[i]) + 1));
+      out = mul(out, num(labs(convert(long, ts[i]) -
+                              convert(long, fs[i])) + 1));
 
     gc_hint(from);
     gc_hint(to);
