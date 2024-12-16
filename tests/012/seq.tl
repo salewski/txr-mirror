@@ -1624,3 +1624,15 @@
 
 (test
   (copy 1..10) #(1 2 3 4 5 6 7 8 9))
+
+(mtest
+  (length "A".."A") 1
+  (length "A".."B") 2
+  (length "B".."A") 2
+  (length "AA".."AA") 1
+  (length "AA".."AB") 2
+  (length "AB".."AA") 2
+  (length "A".."Z") 26
+  (length "Z".."A") 26
+  (length "AAA".."ZZZ") 17576
+  (length "ZZZ".."AAA") 17576)
