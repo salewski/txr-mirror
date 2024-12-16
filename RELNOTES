@@ -1,3 +1,39 @@
+                                    TXR 297
+                                   2024-12-16
+
+
+  Features
+
+  - Lib:
+    - mapcar now has a synonym, map.
+    - copy: now handles range objects.
+
+  - Listener
+    - TXR now looks for .txr-profile and .txr-history files
+      with a dash; if those are not found, then it falls back on
+      trying .txr_profile and .txr_history (and will save the
+      history to the legacy name).
+
+  Bugs
+
+  - regex:
+    - regression in read-until-match and related function
+    - flaw in NFA state machine such that the new REGM_MATCH_DONE
+      state is not taken advantage of and we still read more
+      characters than necessary to match certain regexes.
+  - ffi: size calculation for structures with a flexible array
+    member is now done in the modern way, not the C99 way that
+    was changed by a defect report.
+  - string ranges:
+    - iteration of string ranges whose endpoints are identical strings
+      was wrongly producing an empty sequence rather than a sequence
+      of length 1 containing that string.
+    - length of reversed string ranges produced incorrect results
+      on some platforms
+  - assembler warning on loongarch64.
+
+
+
                                     TXR 296
                                    2024-08-07
 
