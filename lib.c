@@ -1060,7 +1060,17 @@ void seq_iter_init_with_info(val self, seq_iter_t *it, seq_info_t si)
         /* fallthrough */
       default:
         unsup_obj(self, it->inf.obj);
-      } else {
+      } else switch (type(rf)) {
+      case LIT:
+      case STR:
+      case LSTR:
+        it->ui.vn = copy_str(rf);
+        it->ul.vbound = rt;
+        it->ops = &si_range_str_ops;
+        if (eql(length_str(rf), length_str(rt)))
+          break;
+        unsup_obj(self, it->inf.obj);
+      default:
         seq_iter_init_with_info(self, it, seq_info(nil));
         break;
       }

@@ -67,7 +67,7 @@
   (range* 0 1.25 0.5) (0 0.5 1.0))
 
 (mtest
-  (range "A" "A") nil
+  (range "A" "A") ("A")
   (range "A" "A" 0) :error
   (range "A" "A" -2) :error)
 

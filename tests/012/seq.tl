@@ -1636,3 +1636,15 @@
   (length "Z".."A") 26
   (length "AAA".."ZZZ") 17576
   (length "ZZZ".."AAA") 17576)
+
+(mtest
+  (list-seq "A".."A") ("A")
+  (list-seq "A".."B") ("A" "B")
+  (list-seq "B".."A") ("B" "A")
+  (list-seq "AA".."AA") ("AA")
+  (list-seq "AA".."AB") ("AA" "AB")
+  (list-seq "AB".."AA") ("AB" "AA")
+  (list-seq "A".."D") ("A" "B" "C" "D")
+  (list-seq "D".."A") ("D" "C" "B" "A")
+  (list-seq "AA".."CC") ("AA" "AB" "AC" "BA" "BB" "BC" "CA" "CB" "CC")
+  (list-seq "CC".."AA") ("CC" "CB" "CA" "BC" "BB" "BA" "AC" "AB" "AA"))
