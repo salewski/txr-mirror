@@ -1040,6 +1040,9 @@ static void load_rcfile(val home, val pexist_s, val psafe_s, val ppriv_s)
                  if2(funcall1(pexist_s, try2), try2));
   val resolved_name = name;
 
+  if (!name)
+    return;
+
   if (!funcall1(psafe_s, name)) {
     report_path_perm_problem(name);
     return;
