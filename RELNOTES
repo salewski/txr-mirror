@@ -1,3 +1,15 @@
+                                    TXR 298
+                                   2024-12-17
+
+
+  Bugs
+
+  - listener: regression: txr won't start interactively
+    if ~/.txr-profile or ~/.txr_profile file is not present,
+    terminating with an error about nil being passed to abs-path-p.
+
+
+
                                     TXR 297
                                    2024-12-16
 
